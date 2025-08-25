@@ -1,4 +1,4 @@
-name: Build and Upload
+name: Build, Generate PDF, Upload Artifacts
 
 on:
   push:
@@ -7,19 +7,62 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-pdf:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '18'
+          cache: 'npm'
+
       - name: Install dependencies
         run: npm ci
-      - name: Build
+
+      - name: Build site
         run: npm run build
-      - name: Upload dist
+
+      - name: Install Playwright (browsers & deps)
+        # install browser binaries and system deps needed by Playwright
+        run: |
+          npx playwright install --with-deps chromium
+
+      - name: Serve `dist` (background)
+        # start a small HTTP server for the runner (http-server is fetched by npx)
+        run: |
+          npx http-server ./dist -p 8180 -c-1 >/tmp/http-server.log 2>&1 &
+          # wait for server
+          for i in $(seq 1 20); do
+            if curl -sSf http://localhost:8180 >/dev/null; then
+              echo "server up"
+              break
+            fi
+            sleep 1
+          done
+        env:
+          PORT: 8180
+
+      - name: Generate PDF(s)
+        run: |
+          node scripts/generate-pdf.js
+        # If your script needs environment variables (e.g. to change routes),
+        # define them in Actions secrets and reference them here.
+
+      - name: List dist and show generated PDF
+        run: |
+          ls -la dist || true
+          ls -la dist/*.pdf || true
+
+      - name: Upload generated PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: resume-pdf
+          path: dist/*.pdf
+
+      - name: Upload site dist
         uses: actions/upload-artifact@v4
         with:
           name: site-dist
