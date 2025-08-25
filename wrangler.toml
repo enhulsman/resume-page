@@ -1,0 +1,9 @@
+name = "astro-resume"
+# If you want to serve the static `dist` via a Cloudflare Worker:
+# build the site locally (npm run build) and point 'main' to the worker entry if using a custom worker.
+# For Cloudflare Pages prefer the Pages UI or `wrangler pages` tooling.
+main = "./dist/worker/entry.mjs"
+compatibility_date = "2025-08-25"
+
+[site]
+bucket = "./dist"

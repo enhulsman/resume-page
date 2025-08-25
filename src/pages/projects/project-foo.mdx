@@ -1,0 +1,19 @@
+---
+title: "Project Foo"
+date: 2025-01-23
+tech: ["Astro", "React", "Tailwind"]
+---
+
+import CodeDemo from '../../components/CodeDemo.tsx'
+
+# Project Foo
+
+This is an example case-study. It's written in MDX so you can mix Markdown and components.
+
+**Problem:** show a small interactive demo on a mostly-static site without shipping React everywhere.
+
+**Solution:** use an Astro React island to render a small code sandbox.
+
+<CodeDemo initial={`<html><body><h2 style="font-family: Inter">Hello from the demo!</h2></body></html>`} client:load />
+
+**Outcome:** minimal JS sent to the client, content remains fully static and crawlable.

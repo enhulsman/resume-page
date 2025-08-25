@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+
+const projects = [
+  { title: 'Project Foo', description: 'A compact demo showing interactive islands', href: '/projects/project-foo' },
+  { title: 'Project Bar', description: 'Another neat tool', href: '/projects/project-bar' }
+];
+---
+<BaseLayout title="Your Name — Developer">
+  <Header name="Your Name" role="Fullstack / Systems" />
+
+  <section class="mt-8">
+    <h2 class="text-xl font-semibold">Selected projects</h2>
+    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+      {projects.map(p => (
+        <ProjectCard title={p.title} description={p.description} href={p.href} />
+      ))}
+    </div>
+  </section>
+
+  <section class="mt-8">
+    <h2 class="text-lg font-medium">Skills</h2>
+    <p class="text-sm text-slate-600 mt-2">Python · Bash · React · C/C++ · Java · Rust</p>
+  </section>
+</BaseLayout>
