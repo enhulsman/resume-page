@@ -4,5 +4,5 @@ import react from '@astrojs/react';
 
 export default defineConfig({
   integrations: [mdx(), react()],
-  site: 'https://yourdomain.com',
+  site: 'https://hulsman.dev',
 });

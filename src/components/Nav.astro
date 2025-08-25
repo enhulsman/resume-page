@@ -1,0 +1,21 @@
+---
+const links = [
+  { href: '/', label: 'About' },
+  { href: '/projects', label: 'Projects' },
+];
+---
+<nav class="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/80 border-b border-slate-200">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6">
+    <div class="flex h-14 items-center justify-between">
+      <a href="/" class="font-semibold tracking-tight text-slate-800">{Astro.site?.hostname || 'Resume'}</a>
+      <div class="flex items-center gap-6">
+        {links.map((l) => (
+          <a href={l.href} class="text-sm text-slate-600 hover:text-slate-900 transition-colors">{l.label}</a>
+        ))}
+        <a href="/resume.pdf" class="inline-flex items-center rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 transition-colors" download>
+          Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
