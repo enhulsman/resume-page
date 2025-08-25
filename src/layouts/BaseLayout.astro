@@ -1,19 +1,25 @@
 ---
-const { title = 'Your Name — Full Stack Dev' } = Astro.props;
+const { title = 'Ezra Hulsman — Full Stack Dev', description = 'Software Engineer portfolio and resume' } = Astro.props;
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
 ---
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
+  <title>{title}</title>
+  <meta name="description" content={description} />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/src/styles/global.css" />
+    
   </head>
-  <body class="font-sans">
-    <div class="min-h-screen max-w-4xl mx-auto p-6">
+  <body class="font-sans bg-gradient-to-b from-white to-slate-50">
+    <Nav />
+    <main class="min-h-[70vh] mx-auto max-w-5xl px-4 sm:px-6 py-8">
       <slot />
-    </div>
+    </main>
+    <Footer />
   </body>
 </html>
