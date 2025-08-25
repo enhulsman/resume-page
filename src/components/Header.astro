@@ -5,15 +5,25 @@ const { name = site.name, role = site.role, email = site.email, avatar = '/avata
 
 const normalized = 'ezra.hulsman@gmail.com'.trim().toLowerCase();
 const gravatarHash = normalized ? await md5Hex(normalized) : '';
-const gravatarUrl = gravatarHash ? `https://www.gravatar.com/avatar/${gravatarHash}?s=128&d=404` : avatar;
+const gravatarUrl = gravatarHash ? `https://www.gravatar.com/avatar/${gravatarHash}?s=256&d=404` : avatar;
 ---
 <header class="py-6">
-  <div class="flex items-center gap-5">
-  <img src={gravatarUrl} onerror="this.onerror=null;this.src='/avatar.svg'" alt={name} width={64} height={64} class="h-16 w-16 rounded-full ring-2 ring-indigo-200 object-cover" />
-    <div>
-      <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">{name}</h1>
-      <p class="text-sm text-slate-600">{role} · {location}</p>
-      <p class="text-xs text-slate-500 mt-1">Python · React · Rust · C/C++ · Java · Bash</p>
+  <div class="rounded-2xl border border-slate-200 bg-white/80 p-6 md:p-8 shadow-sm">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-8">
+      <img
+        src={gravatarUrl}
+        onerror="this.onerror=null;this.src='/avatar.svg'"
+        alt={name}
+        width={160}
+        height={160}
+        class="h-32 w-32 md:h-40 md:w-40 rounded-full ring-4 ring-indigo-200/70 object-cover shadow-md"
+      />
+      <div class="text-center sm:text-left">
+        <h1 class="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900">{name}</h1>
+        <p class="mt-1 text-base text-slate-600">{role} · {location}</p>
+        <p class="text-xs text-slate-500 mt-2">Python · React · Rust · C/C++ · Java · Bash</p>
+      </div>
     </div>
   </div>
+  
 </header>
