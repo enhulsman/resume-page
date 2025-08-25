@@ -4,3 +4,10 @@ node_modules/
 dist/
 .venv/
 .DS_Store
+/.wrangler/
+/.dev.vars
+/.mf/
+/.parcel-cache/
+/.rollup.cache/
+/.vite/
+*.log
