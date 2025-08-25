@@ -1,9 +1,15 @@
 ---
-const { name = 'Ezra Hulsman', role = 'Allround Developer', avatar = '/avatar.svg', location = 'Earth' } = Astro.props;
+import { md5Hex } from '../lib/md5';
+import site from '../config/site';
+const { name = site.name, role = site.role, email = site.email, avatar = '/avatar.svg', location = site.location } = Astro.props;
+
+const normalized = 'ezra.hulsman@gmail.com'.trim().toLowerCase();
+const gravatarHash = normalized ? await md5Hex(normalized) : '';
+const gravatarUrl = gravatarHash ? `https://www.gravatar.com/avatar/${gravatarHash}?s=128&d=404` : avatar;
 ---
 <header class="py-6">
   <div class="flex items-center gap-5">
-    <img src={avatar} alt={name} width={64} height={64} class="h-16 w-16 rounded-full ring-2 ring-slate-200 object-cover" />
+  <img src={gravatarUrl} onerror="this.onerror=null;this.src='/avatar.svg'" alt={name} width={64} height={64} class="h-16 w-16 rounded-full ring-2 ring-indigo-200 object-cover" />
     <div>
       <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">{name}</h1>
       <p class="text-sm text-slate-600">{role} · {location}</p>

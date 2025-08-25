@@ -2,34 +2,34 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import ProjectCard from '../components/ProjectCard.astro';
+import site from '../config/site';
 
 const projects = [
   { title: 'Project Foo', description: 'A compact demo showing interactive islands', href: '/projects/project-foo' },
   { title: 'Project Bar', description: 'Another neat tool', href: '/projects/project-bar' }
 ];
 ---
-<BaseLayout title="Ezra Hulsman — Developer" description="Resume and portfolio of Ezra Hulsman, software engineer." >
-  <Header name="Ezra Hulsman" role="Fullstack / Systems" />
+<BaseLayout title={`${site.name} — Developer`} description={`Resume and portfolio of ${site.name}, software engineer.`} >
+  <Header />
 
   <section class="mt-6">
     <div class="rounded-xl border border-slate-200 bg-white/70 p-6">
-      <h2 class="text-xl font-semibold tracking-tight">About</h2>
+      <h2 class="text-xl font-semibold tracking-tight text-slate-900">About <span class="text-indigo-600">me</span></h2>
       <p class="mt-2 text-slate-600 leading-relaxed">
         I build fast, robust systems and delightful UIs. I enjoy working across the stack—from low-level performance
         to polished product experiences. Currently exploring Astro islands, edge runtimes, and typed APIs.
       </p>
       <div class="mt-4 flex flex-wrap gap-2">
-        <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">Astro</span>
-        <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">TypeScript</span>
-        <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">React</span>
-        <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">Rust</span>
+          {site.skills.map((s, i) => (
+            <span class={`inline-flex items-center rounded-full px-3 py-1 text-xs ${['bg-indigo-50 text-indigo-700','bg-violet-50 text-violet-700','bg-cyan-50 text-cyan-700','bg-rose-50 text-rose-700'][i % 4]}`}>{s}</span>
+          ))}
       </div>
     </div>
   </section>
 
   <section class="mt-10">
     <div class="flex items-center justify-between">
-      <h2 class="text-xl font-semibold">Selected projects</h2>
+      <h2 class="text-xl font-semibold text-slate-900">Selected <span class="text-violet-600">projects</span></h2>
       <a href="/projects" class="text-sm text-slate-600 hover:text-slate-900">See all →</a>
     </div>
     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
