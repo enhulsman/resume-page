@@ -10,6 +10,33 @@ export default function ThemeToggle() {
     setCurrentTheme(theme);
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      // Check if click is outside the dropdown container
+      if (!target.closest('[data-theme-dropdown]')) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
+
   const handleThemeChange = (theme: ThemeName) => {
     setCurrentTheme(theme);
     setStoredTheme(theme);
@@ -20,7 +47,7 @@ export default function ThemeToggle() {
   const currentThemeConfig = themes.find(t => t.name === currentTheme) || themes[0];
 
   return (
-    <div className="relative">
+    <div className="relative" data-theme-dropdown>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200 text-theme-secondary hover:text-theme-primary bg-theme-elevated hover:bg-theme-secondary text-sm font-medium shadow-sm border-0"
