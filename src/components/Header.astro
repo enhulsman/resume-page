@@ -1,11 +1,7 @@
 ---
-import { md5Hex } from '../lib/md5';
+import { gravatarUrl } from '../lib/gravatar';
 import site from '../config/site';
-const { name = site.name, role = site.role, email = site.email, avatar = '/avatar.svg', location = site.location } = Astro.props;
-
-const normalized = 'ezra.hulsman@gmail.com'.trim().toLowerCase();
-const gravatarHash = normalized ? await md5Hex(normalized) : '';
-const gravatarUrl = gravatarHash ? `https://www.gravatar.com/avatar/${gravatarHash}?s=256&d=404` : avatar;
+const { name = site.name, role = site.role, location = site.location } = Astro.props;
 ---
 <header class="py-6">
   <div class="card-theme rounded-2xl p-6 md:p-8 shadow-sm">
