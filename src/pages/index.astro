@@ -4,10 +4,19 @@ import Header from '../components/Header.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import site from '../config/site';
 
-const projects = [
-  { title: 'Project Foo', description: 'A compact demo showing interactive islands', href: '/projects/project-foo' },
-  { title: 'Project Bar', description: 'Another neat tool', href: '/projects/project-bar' }
-];
+// Dynamically import all project MDX files
+const projectFiles = await Astro.glob('./projects/*.mdx');
+
+// Filter and transform projects for showcase
+const projects = projectFiles
+  .filter(project => project.frontmatter.showcase === true)
+  .map(project => ({
+    title: project.frontmatter.title || '',
+    description: project.frontmatter.description || '',
+    href: project.url || '',
+    date: project.frontmatter.date
+  }))
+  .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
 ---
 <BaseLayout title={`${site.name} — Developer`} description={`Resume and portfolio of ${site.name}, software engineer.`} >
   <Header />
