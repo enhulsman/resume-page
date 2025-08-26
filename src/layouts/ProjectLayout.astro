@@ -48,14 +48,6 @@ const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
 
 <style>
   /* Enhanced prose styling to match homepage aesthetic */
-  .prose {
-    color: rgb(51 65 85); /* slate-700 */
-  }
-  
-  .dark .prose {
-    color: rgb(203 213 225); /* slate-300 */
-  }
-  
   /* Use very high specificity to override Tailwind's base styles */
   article .prose.custom-prose h1,
   article .prose.custom-prose h2,
@@ -63,155 +55,40 @@ const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
   article .prose.custom-prose h4,
   article .prose.custom-prose h5,
   article .prose.custom-prose h6 {
-    color: rgb(15 23 42); /* slate-900 */
+    color: var(--color-text-primary);
     font-weight: 600;
-    margin-top: 0;
     font-family: inherit;
-  }
-  
-  .dark article .prose.custom-prose h1,
-  .dark article .prose.custom-prose h2,
-  .dark article .prose.custom-prose h3,
-  .dark article .prose.custom-prose h4,
-  .dark article .prose.custom-prose h5,
-  .dark article .prose.custom-prose h6 {
-    color: rgb(248 250 252); /* slate-50 */
+    transition: var(--transition-fast);
   }
   
   article .prose.custom-prose h1 {
     font-size: 1.875rem; /* 30px */
     line-height: 2.25rem; /* 36px */
     font-weight: 700;
-    margin-bottom: 1rem;
   }
   
   article .prose.custom-prose h2 {
     font-size: 1.5rem; /* 24px */
     line-height: 2rem; /* 32px */
-    margin-top: 2rem;
-    margin-bottom: 1rem;
   }
   
   article .prose.custom-prose h3 {
     font-size: 1.25rem; /* 20px */
     line-height: 1.75rem; /* 28px */
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
   }
 
   article .prose.custom-prose h4 {
     font-size: 1.125rem; /* 18px */
     line-height: 1.5rem; /* 24px */
-    margin-top: 1.25rem;
-    margin-bottom: 0.5rem;
   }
 
   article .prose.custom-prose h5 {
     font-size: 1rem; /* 16px */
     line-height: 1.25rem; /* 20px */
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
   }
 
   article .prose.custom-prose h6 {
     font-size: 0.875rem; /* 14px */
     line-height: 1.125rem; /* 18px */
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .prose p {
-    color: rgb(71 85 105); /* slate-600 */
-    line-height: 1.625;
-    margin-bottom: 1rem;
-  }
-  
-  .dark .prose p {
-    color: rgb(203 213 225); /* slate-300 */
-  }
-  
-  .prose strong {
-    color: rgb(15 23 42); /* slate-900 */
-    font-weight: 600;
-  }
-  
-  .dark .prose strong {
-    color: rgb(248 250 252); /* slate-50 */
-  }
-  
-  .prose a {
-    color: rgb(99 102 241); /* indigo-500 */
-    text-decoration: underline;
-    text-decoration-color: rgb(165 180 252); /* indigo-300 */
-    transition: all 0.2s;
-  }
-  
-  .dark .prose a {
-    color: rgb(129 140 248); /* indigo-400 */
-    text-decoration-color: rgb(99 102 241); /* indigo-500 */
-  }
-  
-  .prose a:hover {
-    color: rgb(79 70 229); /* indigo-600 */
-    text-decoration-color: rgb(99 102 241); /* indigo-500 */
-  }
-  
-  .dark .prose a:hover {
-    color: rgb(165 180 252); /* indigo-300 */
-    text-decoration-color: rgb(129 140 248); /* indigo-400 */
-  }
-  
-  .prose ul, .prose ol {
-    color: rgb(71 85 105); /* slate-600 */
-    margin-bottom: 1rem;
-    padding-left: 1.5rem;
-  }
-  
-  .dark .prose ul, .dark .prose ol {
-    color: rgb(203 213 225); /* slate-300 */
-  }
-  
-  .prose li {
-    margin-bottom: 0.5rem;
-  }
-  
-  .prose code {
-    background-color: rgb(241 245 249); /* slate-100 */
-    color: rgb(51 65 85); /* slate-700 */
-    padding: 0.125rem 0.25rem;
-    border-radius: 0.25rem;
-    font-size: 0.875em;
-  }
-  
-  .dark .prose code {
-    background-color: rgb(51 65 85); /* slate-700 */
-    color: rgb(226 232 240); /* slate-200 */
-  }
-  
-  .prose pre {
-    background-color: rgb(15 23 42); /* slate-900 */
-    color: rgb(226 232 240); /* slate-200 */
-    padding: 1rem;
-    border-radius: 0.5rem;
-    overflow-x: auto;
-    margin: 1rem 0;
-  }
-  
-  .dark .prose pre {
-    background-color: rgb(2 6 23); /* slate-950 */
-    color: rgb(241 245 249); /* slate-100 */
-  }
-  
-  .prose blockquote {
-    border-left: 4px solid rgb(165 180 252); /* indigo-300 */
-    padding-left: 1rem;
-    color: rgb(71 85 105); /* slate-600 */
-    font-style: italic;
-    margin: 1rem 0;
-  }
-  
-  .dark .prose blockquote {
-    border-left-color: rgb(99 102 241); /* indigo-500 */
-    color: rgb(203 213 225); /* slate-300 */
   }
 </style>
