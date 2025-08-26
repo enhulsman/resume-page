@@ -162,36 +162,135 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark' | 'gruvbox'>('light');
   
-  // Format the textarea content nicely
-  const formattedInitialHtml = `<!DOCTYPE html>
+  // Format the textarea content nicely with theme awareness
+  const getFormattedInitialHtml = (theme: 'light' | 'dark' | 'gruvbox') => {
+    const themeVariables = getThemeVariables(theme);
+    
+    return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demo</title>
-    <style>
+    <style> 
+      :root {
+        color-scheme: ${theme === 'light' ? 'light' : 'dark'};
+        ${themeVariables}
+      }
+      
       body {
         font-family: Inter, system-ui, sans-serif;
         padding: 20px;
         line-height: 1.6;
+        background: var(--color-bg-primary);
+        color: var(--color-text-primary);
+        transition: var(--transition-theme);
+        margin: 0;
+      }
+      
+      h1 {
+        color: var(--color-text-primary);
+        margin-top: 0;
+      }
+      
+      p {
+        color: var(--color-text-secondary);
+      }
+      
+      a {
+        color: var(--color-accent-primary);
+        text-decoration: none;
+      }
+      
+      a:hover {
+        color: var(--color-accent-hover);
+        text-decoration: underline;
       }
     </style>
   </head>
   <body>
     <h1>Hello from the demo!</h1>
     <p>Edit the HTML in the textarea to see changes.</p>
+    <p>This content automatically adapts to your selected theme!</p>
   </body>
 </html>`;
+  };
 
-  // Initialize with formatted HTML if using default initial value
+  // Clean HTML content for display in textarea (without styles)
+  const getCleanHtmlForDisplay = () => {
+    return `<h1>Hello from the demo!</h1>
+<p>Edit the HTML in the textarea to see changes.</p>
+<p>This content automatically adapts to your selected theme!</p>`;
+  };
+
+  // Generate full HTML with theme-aware styles for iframe
+  const generateFullHtml = (bodyContent: string, theme: 'light' | 'dark' | 'gruvbox') => {
+    const themeVariables = getThemeVariables(theme);
+    
+    return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo</title>
+    <style> 
+      :root {
+        color-scheme: ${theme === 'light' ? 'light' : 'dark'};
+        ${themeVariables}
+      }
+      
+      body {
+        font-family: Inter, system-ui, sans-serif;
+        padding: 20px;
+        line-height: 1.6;
+        background: var(--color-bg-primary);
+        color: var(--color-text-primary);
+        transition: var(--transition-theme);
+        margin: 0;
+      }
+      
+      h1 {
+        color: var(--color-text-primary);
+        margin-top: 0;
+      }
+      
+      p {
+        color: var(--color-text-secondary);
+      }
+      
+      a {
+        color: var(--color-accent-primary);
+        text-decoration: none;
+      }
+      
+      a:hover {
+        color: var(--color-accent-hover);
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    ${bodyContent}
+  </body>
+</html>`;
+  };
+
+  // Initialize with clean HTML if using default initial value
   const [code, setCode] = useState(() => {
-    return reactDemo ? initial : (initial === '<h1>Hello from iframe</h1>' ? formattedInitialHtml : initial);
+    if (reactDemo) return initial;
+    return initial === '<h1>Hello from iframe</h1>' ? getCleanHtmlForDisplay() : initial;
   });
 
   // Listen for theme changes
   useEffect(() => {
     const updateTheme = () => {
-      setCurrentTheme(getCurrentTheme());
+      const newTheme = getCurrentTheme();
+      setCurrentTheme(newTheme);
+      
+      // Update HTML demo content if using default content
+      if (!reactDemo && initial === '<h1>Hello from iframe</h1>') {
+        setCode(getCleanHtmlForDisplay());
+      }
     };
 
     // Set initial theme
@@ -212,10 +311,13 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [reactDemo, initial]);
   
-  // Use formatted HTML for display/editing, actual source for iframe
-  const src = reactDemo ? buildReactDemoSrcDoc(currentTheme) : code;
+  // Use different sources for iframe vs display
+  const src = reactDemo 
+    ? buildReactDemoSrcDoc(currentTheme) 
+    : (initial === '<h1>Hello from iframe</h1>' ? generateFullHtml(code, currentTheme) : code);
+  
   const displayCode = reactDemo ? buildReactDemoSrcDoc(currentTheme) : code;
   
   const iframeStyle: React.CSSProperties = { 
