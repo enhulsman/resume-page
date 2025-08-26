@@ -4,31 +4,31 @@ import site from '../config/site';
 ---
 <BaseLayout title={`Contact — ${site.name}`} description={`Get in touch with ${site.name}.`}>
   <header class="mt-2">
-    <h1 class="text-2xl font-semibold tracking-tight">Contact</h1>
-    <p class="text-slate-600 mt-1">Send a message and I'll get back to you soon.</p>
+    <h1 class="text-2xl font-semibold tracking-tight text-theme-primary">Contact</h1>
+    <p class="text-theme-tertiary mt-1">Send a message and I'll get back to you soon.</p>
   </header>
 
   <section class="mt-6">
-  <form class="space-y-5 rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm" data-netlify="true" name="contact" method="POST">
+    <form class="space-y-5 card-theme rounded-xl p-6 shadow-sm" data-netlify="true" name="contact" method="POST">
       <input type="hidden" name="form-name" value="contact" />
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label for="name" class="block text-sm font-medium text-slate-700">Name</label>
-          <input id="name" name="name" required class="mt-1 block rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none" />
+          <label for="name" class="block text-sm font-medium text-theme-secondary">Name</label>
+          <input id="name" name="name" required class="mt-1 block w-full rounded-md border border-theme-primary bg-theme-primary px-3 py-2 text-sm shadow-sm transition focus:border-theme-accent focus:ring-2 focus:ring-theme-accent/20 focus:outline-none text-theme-primary" />
         </div>
         <div>
-          <label for="email" class="block text-sm font-medium text-slate-700">Email</label>
-          <input id="email" type="email" name="email" required class="mt-1 block rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none" />
+          <label for="email" class="block text-sm font-medium text-theme-secondary">Email</label>
+          <input id="email" type="email" name="email" required class="mt-1 block w-full rounded-md border border-theme-primary bg-theme-primary px-3 py-2 text-sm shadow-sm transition focus:border-theme-accent focus:ring-2 focus:ring-theme-accent/20 focus:outline-none text-theme-primary" />
         </div>
       </div>
       <div>
-        <label for="message" class="block text-sm font-medium text-slate-700">Message</label>
-        <textarea id="message" name="message" rows="6" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"></textarea>
+        <label for="message" class="block text-sm font-medium text-theme-secondary">Message</label>
+        <textarea id="message" name="message" rows="6" required class="mt-1 block w-full rounded-md border border-theme-primary bg-theme-primary px-3 py-2 text-sm shadow-sm transition focus:border-theme-accent focus:ring-2 focus:ring-theme-accent/20 focus:outline-none text-theme-primary"></textarea>
       </div>
       <div class="flex items-center justify-between">
-        <p class="text-xs text-slate-500">This form posts to static hosting. You can wire it later to Netlify, Cloudflare, or a custom endpoint.</p>
-        <button type="submit" class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500">Send</button>
+        <p class="text-xs text-theme-muted">This form posts to static hosting. You can wire it later to Netlify, Cloudflare, or a custom endpoint.</p>
+        <button type="submit" class="btn-theme-accent inline-flex items-center rounded-md px-4 py-2 text-sm font-medium shadow-sm">Send</button>
       </div>
     </form>
   </section>

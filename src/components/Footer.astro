@@ -1,14 +1,14 @@
 ---
 import site from '../config/site';
 ---
-<footer class="mt-16 border-t border-slate-200">
-  <div class="mx-auto max-w-5xl px-4 sm:px-6 py-8 text-sm text-slate-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+<footer class="mt-16 border-t border-theme-primary">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 py-8 text-sm text-theme-muted flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
     <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
     <div class="flex items-center gap-4">
-      <a href="/contact" class="text-slate-600 hover:text-indigo-600">Contact</a>
-      <a href={`mailto:${site.email}`} class="text-slate-600 hover:text-indigo-600">Email</a>
-      <a href={site.social.github} class="text-slate-600 hover:text-indigo-600" target="_blank" rel="noreferrer">GitHub</a>
-      <a href={site.social.linkedin} class="text-slate-600 hover:text-indigo-600" target="_blank" rel="noreferrer">LinkedIn</a>
+      <a href="/contact" class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200">Contact</a>
+      <a href={`mailto:${site.email}`} class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200">Email</a>
+      <a href={site.social.github} class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200" target="_blank" rel="noreferrer">GitHub</a>
+      <a href={site.social.linkedin} class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200" target="_blank" rel="noreferrer">LinkedIn</a>
     </div>
   </div>
 </footer>
