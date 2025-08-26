@@ -1,15 +1,19 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProjectCard from '../../components/ProjectCard.astro';
+
 // Auto-discover MDX case studies in this folder
 const entries = await Astro.glob('./*.mdx');
-type Frontmatter = { title?: string; description?: string; tech?: string[]; date?: string };
-const projects = entries.map((m) => ({
-  title: ((m as any).frontmatter?.title as string) ?? 'Untitled',
-  description: ((m as any).frontmatter?.description as string) ?? '',
-  href: m.url as string,
-  tags: (((m as any).frontmatter?.tech as string[]) ?? []),
-}));
+
+const projects = entries
+  .map((m) => ({
+    title: m.frontmatter?.title ?? 'Untitled',
+    description: m.frontmatter?.description ?? '',
+    href: m.url ?? '',
+    tags: m.frontmatter?.tech ?? [],
+    date: m.frontmatter?.date
+  }))
+  .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
 ---
 <BaseLayout title="Projects — Ezra Hulsman" description="Case studies and selected projects by Ezra Hulsman.">
   <header class="mt-2">
