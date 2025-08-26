@@ -1,12 +1,11 @@
 ---
 title: "Project Foo"
-date: 2025-01-23
+date: 2025-08-23
 tech: ["Astro", "React", "Tailwind"]
+layout: "../../layouts/ProjectLayout.astro"
 ---
 
 import CodeDemo from '../../components/CodeDemo.tsx'
-
-# Project Foo
 
 This is an example case-study. It's written in MDX so you can mix Markdown and components.
 
@@ -14,6 +13,6 @@ This is an example case-study. It's written in MDX so you can mix Markdown and c
 
 **Solution:** use an Astro React island to render a small code sandbox.
 
-<CodeDemo reactDemo height="40rem" width="30rem" client:load />
+<CodeDemo reactDemo height="40rem" client:load />
 
 **Outcome:** minimal JS sent to the client, content remains fully static and crawlable.

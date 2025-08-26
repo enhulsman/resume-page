@@ -54,8 +54,37 @@ function buildReactDemoSrcDoc(): string {
 
 export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', reactDemo = false, height = '36rem', width = '100%' }: CodeDemoProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const [code, setCode] = useState(initial);
+  
+  // Format the textarea content nicely
+  const formattedInitialHtml = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo</title>
+    <style>
+      body {
+        font-family: Inter, system-ui, sans-serif;
+        padding: 20px;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello from the demo!</h1>
+    <p>Edit the HTML in the textarea to see changes.</p>
+  </body>
+</html>`;
+
+  // Initialize with formatted HTML if using default initial value
+  const [code, setCode] = useState(() => {
+    return reactDemo ? initial : (initial === '<h1>Hello from iframe</h1>' ? formattedInitialHtml : initial);
+  });
+  
+  // Use formatted HTML for display/editing, actual source for iframe
   const src = reactDemo ? buildReactDemoSrcDoc() : code;
+  const displayCode = reactDemo ? buildReactDemoSrcDoc() : code;
+  
   const iframeStyle: React.CSSProperties = { 
     height: typeof height === 'number' ? `${height}px` : height,
     width: typeof width === 'number' ? `${width}px` : width
@@ -67,24 +96,35 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
     : 'mt-4 grid grid-cols-1 md:grid-cols-2 gap-4';
   return (
     <div className={containerClass}>
-      {!isReactDemo && (
-        <textarea
-          value={src}
-          onChange={(e) => setCode(e.target.value)}
-          className="w-full h-48 p-2 border rounded"
-        />
-      )}
+      {/* Show textarea for editing in both modes */}
       <div className="border rounded overflow-hidden">
         {/*
           Use srcDoc to inject the HTML instead of accessing the iframe's document.
           This avoids cross-origin restrictions caused by sandboxed iframes.
-        */}
+          */}
         <iframe
           ref={iframeRef}
           sandbox="allow-scripts"
           srcDoc={src}
           className="w-full"
           style={iframeStyle}
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700">
+          {reactDemo ? 'React Demo Source (read-only)' : 'Editable HTML'}
+        </label>
+        <textarea
+          value={displayCode}
+          onChange={reactDemo ? undefined : (e) => {
+            const newCode = e.target.value;
+            setCode(newCode);
+          }}
+          readOnly={reactDemo}
+          className={`w-full h-96 p-3 border rounded-lg font-mono text-sm ${
+            reactDemo ? 'bg-slate-50 text-slate-600' : 'bg-white'
+          }`}
+          style={{ fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace' }}
         />
       </div>
     </div>

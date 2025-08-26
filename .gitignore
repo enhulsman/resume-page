@@ -4,11 +4,12 @@ node_modules/
 dist/
 .venv/
 .DS_Store
-/.wrangler/
+.vscode/
+.wrangler/
 /dev.vars
 /.mf/
 /.parcel-cache/
 /.rollup.cache/
 /.vite/
 *.log
-public/react-demo-app.iife.js
+public/react-demo-app.iife*
