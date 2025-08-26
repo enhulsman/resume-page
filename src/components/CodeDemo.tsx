@@ -13,20 +13,37 @@ type CodeDemoProps = {
   width?: string | number;
 };
 
-function buildReactDemoSrcDoc(currentTheme: 'light' | 'dark' | 'gruvbox' = 'light'): string {
+function buildReactDemoSrcDoc(): string {
   // Build an HTML shell that loads React, ReactDOM, then a precompiled IIFE bundle.
-  const themeVariables = getThemeVariables(currentTheme);
-  
+  // This version will listen for theme updates via postMessage
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>React Demo</title>
-  <style>
+  <style id="theme-styles">
     :root {
-      color-scheme: ${currentTheme === 'light' ? 'light' : 'dark'};
-      ${themeVariables}
+      color-scheme: light;
+      /* Default light theme - will be updated dynamically */
+      --color-bg-primary: rgb(255 255 255);
+      --color-bg-secondary: rgb(248 250 252);
+      --color-bg-tertiary: rgb(241 245 249);
+      --color-bg-elevated: rgba(255 255 255 / 0.7);
+      --color-text-primary: rgb(15 23 42);
+      --color-text-secondary: rgb(51 65 85);
+      --color-text-tertiary: rgb(71 85 105);
+      --color-text-muted: rgb(100 116 139);
+      --color-border-primary: rgb(226 232 240);
+      --color-border-secondary: rgb(203 213 225);
+      --color-accent-primary: rgb(99 102 241);
+      --color-accent-hover: rgb(79 70 229);
+      --color-accent-light: rgb(165 180 252);
+      --color-success: rgb(34 197 94);
+      --color-warning: rgb(245 158 11);
+      --color-error: rgb(239 68 68);
+      --transition-theme: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     * { box-sizing: border-box; }
@@ -154,6 +171,30 @@ function buildReactDemoSrcDoc(currentTheme: 'light' | 'dark' | 'gruvbox' = 'ligh
   </header>
   <div id="root" class="container"></div>
   <script src="/react-demo-app.iife.js"></script>
+  <script>
+    // Theme update functionality
+    function updateTheme(theme, themeVariables) {
+      const styleElement = document.getElementById('theme-styles');
+      if (styleElement) {
+        const colorScheme = theme === 'light' ? 'light' : 'dark';
+        const newCSS = styleElement.textContent.replace(
+          /:root\\s*\\{[^}]*\\}/,
+          \`:root { color-scheme: \${colorScheme}; \${themeVariables} }\`
+        );
+        styleElement.textContent = newCSS;
+      }
+    }
+    
+    // Listen for theme updates from parent
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'THEME_UPDATE') {
+        updateTheme(event.data.theme, event.data.themeVariables);
+      }
+    });
+    
+    // Request initial theme from parent
+    window.parent.postMessage({ type: 'REQUEST_THEME' }, '*');
+  </script>
 </body>
 </html>`;
 }
@@ -161,6 +202,11 @@ function buildReactDemoSrcDoc(currentTheme: 'light' | 'dark' | 'gruvbox' = 'ligh
 export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', reactDemo = false, height = '36rem', width = '100%' }: CodeDemoProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark' | 'gruvbox'>('light');
+  
+  // Store the initial React demo HTML to prevent reloading on theme changes
+  const [reactDemoSrc] = useState(() => {
+    return reactDemo ? buildReactDemoSrcDoc() : null;
+  });
   
   // Format the textarea content nicely with theme awareness
   const getFormattedInitialHtml = (theme: 'light' | 'dark' | 'gruvbox') => {
@@ -287,7 +333,17 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
       const newTheme = getCurrentTheme();
       setCurrentTheme(newTheme);
       
-      // Update HTML demo content if using default content
+      // Send theme update to React demo iframe via postMessage
+      if (reactDemo && iframeRef.current) {
+        const themeVariables = getThemeVariables(newTheme);
+        iframeRef.current.contentWindow?.postMessage({
+          type: 'THEME_UPDATE',
+          theme: newTheme,
+          themeVariables: themeVariables
+        }, '*');
+      }
+      
+      // Update HTML demo content if using default content (but not React demo)
       if (!reactDemo && initial === '<h1>Hello from iframe</h1>') {
         setCode(getCleanHtmlForDisplay());
       }
@@ -295,6 +351,20 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
 
     // Set initial theme
     updateTheme();
+
+    // Listen for messages from iframe (e.g., theme requests)
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'REQUEST_THEME' && reactDemo && iframeRef.current) {
+        const themeVariables = getThemeVariables(currentTheme);
+        iframeRef.current.contentWindow?.postMessage({
+          type: 'THEME_UPDATE',
+          theme: currentTheme,
+          themeVariables: themeVariables
+        }, '*');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
 
     // Listen for theme changes via mutation observer
     const observer = new MutationObserver((mutations) => {
@@ -310,15 +380,18 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
       attributeFilter: ['data-theme']
     });
 
-    return () => observer.disconnect();
-  }, [reactDemo, initial]);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [reactDemo, initial, currentTheme]);
   
   // Use different sources for iframe vs display
   const src = reactDemo 
-    ? buildReactDemoSrcDoc(currentTheme) 
+    ? (reactDemoSrc || buildReactDemoSrcDoc())
     : (initial === '<h1>Hello from iframe</h1>' ? generateFullHtml(code, currentTheme) : code);
   
-  const displayCode = reactDemo ? buildReactDemoSrcDoc(currentTheme) : code;
+  const displayCode = reactDemo ? (reactDemoSrc || buildReactDemoSrcDoc()) : code;
   
   const iframeStyle: React.CSSProperties = { 
     height: typeof height === 'number' ? `${height}px` : height,
