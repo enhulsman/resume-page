@@ -5,9 +5,10 @@ dist/
 .venv/
 .DS_Store
 /.wrangler/
-/.dev.vars
+/dev.vars
 /.mf/
 /.parcel-cache/
 /.rollup.cache/
 /.vite/
 *.log
+public/react-demo-app.iife.js
