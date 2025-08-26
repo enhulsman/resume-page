@@ -6,7 +6,7 @@ import Footer from '../components/Footer.astro';
 import '../styles/global.css';
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" class="bg-gradient-to-b from-white to-slate-50 min-h-full">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,7 +16,7 @@ import '../styles/global.css';
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     
   </head>
-  <body class="font-sans bg-gradient-to-b from-white to-slate-50">
+  <body class="font-sans min-h-full">
     <Nav />
     <main class="min-h-[70vh] mx-auto max-w-5xl px-4 sm:px-6 py-8">
       <slot />

@@ -1,19 +1,23 @@
 ---
 title: "Project Bar"
-date: 2025-01-23
+date: 2025-08-25
 tech: ["Astro", "React", "Tailwind"]
+layout: "../../layouts/ProjectLayout.astro"
 ---
 
 import CodeDemo from '../../components/CodeDemo.tsx'
 
 # Project Bar
 
+<br/>
 This is a second example case-study. It's written in MDX so you can mix Markdown and components.
 
 **Problem:** show a small interactive demo on a mostly-static site without shipping React everywhere.
 
 **Solution:** use an Astro React island to render a small code sandbox.
 
-<CodeDemo initial={`<html><body><h2 style="font-family: Inter">Hello from the demo!</h2></body></html>`} client:load />
+<CodeDemo client:load />
+
+**Advanced Demo:** For a more complex React example, see [Project Foo](/projects/project-foo).
 
 **Outcome:** minimal JS sent to the client, content remains fully static and crawlable.

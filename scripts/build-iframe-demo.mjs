@@ -9,7 +9,8 @@ mkdirSync(dirname(outFile), { recursive: true });
 const isProd = process.env.NODE_ENV === 'production' || process.env.BUILD === 'production';
 
 const watch = process.argv.includes('--watch');
-await build({
+
+const buildOptions = {
   entryPoints: [resolve(process.cwd(), 'src/components/react-demo-app.tsx')],
   outfile: outFile,
   bundle: true,
@@ -21,12 +22,18 @@ await build({
   loader: { '.ts': 'ts', '.tsx': 'tsx' },
   // React and ReactDOM are provided as globals by the HTML shell in the iframe.
   external: [],
-  watch: watch && {
+};
+
+// Only add watch option if actually watching
+if (watch) {
+  buildOptions.watch = {
     onRebuild(error) {
       if (error) console.error('Rebuild failed:', error);
       else console.log('Rebuilt iframe demo');
     }
-  }
-});
+  };
+}
+
+await build(buildOptions);
 if (watch) console.log('Watching iframe demo...');
 console.log(`Built iframe demo -> ${outFile}`);
