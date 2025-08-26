@@ -8,7 +8,7 @@ const gravatarHash = normalized ? await md5Hex(normalized) : '';
 const gravatarUrl = gravatarHash ? `https://www.gravatar.com/avatar/${gravatarHash}?s=256&d=404` : avatar;
 ---
 <header class="py-6">
-  <div class="rounded-2xl border border-slate-200 bg-white/80 p-6 md:p-8 shadow-sm">
+  <div class="card-theme rounded-2xl p-6 md:p-8 shadow-sm">
     <div class="flex flex-row items-center flex-nowrap gap-4 sm:gap-6">
       <img
         src={gravatarUrl}
@@ -19,11 +19,10 @@ const gravatarUrl = gravatarHash ? `https://www.gravatar.com/avatar/${gravatarHa
         class="w-24 h-24 sm:w-28 sm:h-28 md:w-40 md:h-40 rounded-full ring-4 ring-indigo-200/70 object-cover shadow-md shrink-0"
       />
       <div class="flex-1 min-w-0 break-words text-left">
-        <h1 class="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900">{name}</h1>
-        <p class="mt-1 text-base text-slate-600">{role} · {location}</p>
-        <p class="text-xs text-slate-500 mt-2">Python · React · Rust · C/C++ · Java · Bash</p>
+        <h1 class="text-3xl md:text-4xl font-semibold tracking-tight text-theme-primary">{name}</h1>
+        <p class="mt-1 text-base text-theme-tertiary">{role} · {location}</p>
+        <p class="text-xs text-theme-muted mt-2">Python · React · Rust · C/C++ · Java · Bash</p>
       </div>
     </div>
   </div>
-  
 </header>

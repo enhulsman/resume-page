@@ -13,15 +13,20 @@ const projects = [
   <Header />
 
   <section class="mt-6">
-    <div class="rounded-xl border border-slate-200 bg-white/70 p-6">
-      <h2 class="text-xl font-semibold tracking-tight text-slate-900">About <span class="text-indigo-600">me</span></h2>
-      <p class="mt-2 text-slate-600 leading-relaxed">
+    <div class="card-theme rounded-xl p-6">
+      <h2 class="text-xl font-semibold tracking-tight text-theme-primary">About <span class="text-theme-accent">me</span></h2>
+      <p class="mt-2 text-theme-tertiary leading-relaxed">
         I build fast, robust systems and delightful UIs. I enjoy working across the stack—from low-level performance
         to polished product experiences. Currently exploring Astro islands, edge runtimes, and typed APIs.
       </p>
       <div class="mt-4 flex flex-wrap gap-2">
           {site.skills.map((s, i) => (
-            <span class={`inline-flex items-center rounded-full px-3 py-1 text-xs ${['bg-indigo-50 text-indigo-700','bg-violet-50 text-violet-700','bg-cyan-50 text-cyan-700','bg-rose-50 text-rose-700'][i % 4]}`}>{s}</span>
+            <span class={`inline-flex items-center rounded-full px-3 py-1 text-xs ${[
+              'bg-indigo-50 text-indigo-700',
+              'bg-violet-50 text-violet-700',
+              'bg-cyan-50 text-cyan-700',
+              'bg-rose-50 text-rose-700'
+            ][i % 4]}`}>{s}</span>
           ))}
       </div>
     </div>
@@ -29,8 +34,8 @@ const projects = [
 
   <section class="mt-10">
     <div class="flex items-center justify-between">
-      <h2 class="text-xl font-semibold text-slate-900">Selected <span class="text-violet-600">projects</span></h2>
-      <a href="/projects" class="text-sm text-slate-600 hover:text-slate-900">See all →</a>
+      <h2 class="text-xl font-semibold text-theme-primary">Selected <span class="text-theme-accent">projects</span></h2>
+      <a href="/projects" class="text-sm text-theme-tertiary hover:text-theme-primary transition-colors duration-200">See all →</a>
     </div>
     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
       {projects.map(p => (
@@ -40,7 +45,7 @@ const projects = [
   </section>
 
   <section class="mt-10">
-    <h2 class="text-xl font-semibold">Contact</h2>
-    <p class="mt-2 text-sm text-slate-600">I'm open to interesting opportunities. Email me at <a class="underline" href="mailto:info@hulsman.dev">info@hulsman.dev</a>.</p>
+    <h2 class="text-xl font-semibold text-theme-primary">Contact</h2>
+    <p class="mt-2 text-sm text-theme-tertiary">I'm open to interesting opportunities. Email me at <a class="underline text-theme-accent hover:text-theme-accent transition-colors duration-200" href="mailto:info@hulsman.dev">info@hulsman.dev</a>.</p>
   </section>
 </BaseLayout>
