@@ -1,16 +1,35 @@
 ---
+import { md5Hex } from '../lib/md5';
 import site from '../config/site';
 import ThemeToggle from './ThemeToggle.tsx';
+import { gravatarUrl } from '../lib/gravatar';
+
 const links = [
   { href: '/', label: 'About' },
   { href: '/projects', label: 'Projects' },
   { href: '/contact', label: 'Contact' },
 ];
+
+// Get current path to determine if we're on home page
+const currentPath = Astro.url.pathname;
+const isHomePage = currentPath === '/';
 ---
 <nav class="sticky top-0 z-40 backdrop-blur bg-theme-elevated border-b border-theme-primary">
   <div class="mx-auto max-w-5xl px-4 sm:px-6">
     <div class="flex h-14 items-center justify-between">
-      <a href="/" class="font-semibold tracking-tight text-theme-primary transition-colors duration-200">{site.name}</a>
+      <div class="flex items-center gap-3">
+        <a href="/" class="font-semibold tracking-tight text-theme-primary transition-colors duration-200">{site.name}</a>
+        {!isHomePage && (
+          <img
+            src={gravatarUrl}
+            onerror="this.onerror=null;this.src='/avatar.svg'"
+            alt={site.name}
+            width={32}
+            height={32}
+            class="w-8 h-8 rounded-full ring-2 ring-indigo-200/50 object-cover shadow-sm"
+          />
+        )}
+      </div>
       <div class="flex items-center gap-4">
         <div class="flex items-center gap-6">
           {links.map((l) => (
