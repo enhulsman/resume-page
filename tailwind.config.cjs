@@ -3,6 +3,13 @@ module.exports = {
   darkMode: 'class', // Enable class-based dark mode
   theme: {
     extend: {
+      screens: {
+        'xs': '460px', // Custom breakpoint for your specific needs
+        // sm: '640px' (default)
+        // md: '768px' (default)  
+        // lg: '1024px' (default)
+        // xl: '1280px' (default)
+      },
       colors: {
         // Custom theme colors for better dark mode support
         primary: {
