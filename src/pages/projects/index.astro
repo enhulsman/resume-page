@@ -17,10 +17,10 @@ const projects = entries
 ---
 <BaseLayout title="Projects — Ezra Hulsman" description="Case studies and selected projects by Ezra Hulsman.">
   <header class="mt-2">
-    <h1 class="text-2xl font-semibold tracking-tight text-theme-primary">Projects <span class="text-theme-accent">gallery</span></h1>
-    <p class="text-theme-tertiary mt-1">Small, focused write-ups for selected work.</p>
+    <h1 class="text-responsive-lg font-semibold tracking-tight text-theme-primary">Projects <span class="text-theme-accent">gallery</span></h1>
+    <p class="text-theme-tertiary mt-1 text-responsive-base">Small, focused write-ups for selected work.</p>
   </header>
-  <section class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+  <section class="mt-4 sm:mt-6 grid-responsive-2 gap-4 sm:gap-5">
     {projects.map(p => (
       <ProjectCard title={p.title} description={p.description} href={p.href} tags={p.tags} />
     ))}
