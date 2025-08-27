@@ -122,8 +122,8 @@ function buildReactDemoSrcDoc(): string {
       max-width: 100%;
     }
     
-    /* Switch to single column earlier for better readability */
-    @media (max-width: 300px) {
+    /* Switch to single column much earlier for better readability */
+    @media (max-width: 450px) {
       .grid {
         grid-template-columns: 1fr;
         gap: 8px;
@@ -321,7 +321,7 @@ function buildReactDemoSrcDoc(): string {
 </html>`;
 }
 
-export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', reactDemo = false, height = '44rem', width = '100%' }: CodeDemoProps) {
+export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', reactDemo = false, height = '48rem', width = '100%' }: CodeDemoProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark' | 'gruvbox'>('light');
   
@@ -537,7 +537,7 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
           ref={iframeRef}
           sandbox="allow-scripts"
           srcDoc={src}
-          className="w-full bg-[var(--color-bg-primary)] min-w-0 h-96 sm:h-[44rem]"
+          className="w-full bg-[var(--color-bg-primary)] min-w-0 h-[40rem] sm:h-[35rem]"
           style={{ minWidth: '240px' }}
         />
       </div>
