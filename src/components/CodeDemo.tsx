@@ -55,24 +55,31 @@ function buildReactDemoSrcDoc(): string {
       background: var(--color-bg-primary);
       color: var(--color-text-secondary);
       transition: var(--transition-theme);
+      overflow-x: hidden;
     }
     
     header {
-      padding: 16px 20px;
+      padding: 8px 12px;
       border-bottom: 1px solid var(--color-border-primary);
       background: var(--color-bg-secondary);
       color: var(--color-text-primary);
+      overflow-x: hidden;
     }
     
     .container {
-      padding: 16px 20px;
+      padding: 8px 12px;
       background: var(--color-bg-primary);
+      min-width: 0;
+      overflow-x: hidden;
     }
     
     nav {
       display: flex;
-      gap: 8px;
+      gap: 4px;
       flex-wrap: wrap;
+      max-width: 100%;
+      overflow-x: auto;
+      padding-bottom: 2px;
     }
     
     button {
@@ -80,10 +87,12 @@ function buildReactDemoSrcDoc(): string {
       border: 1px solid var(--color-border-primary);
       background: var(--color-bg-primary);
       color: var(--color-text-primary);
-      border-radius: 8px;
+      border-radius: 6px;
       padding: 8px 12px;
       cursor: pointer;
       transition: var(--transition-fast);
+      font-size: 13px;
+      flex-shrink: 0;
     }
     
     button:hover {
@@ -106,8 +115,83 @@ function buildReactDemoSrcDoc(): string {
     
     .grid {
       display: grid;
-      gap: 12px;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      max-width: 100%;
+    }
+    
+    /* Responsive breakpoints - adjusted for iframe constraints */
+    
+    /* 230px-260px: Compact horizontal navigation, reduced spacing */
+    @media (max-width: 260px) and (min-width: 230px) {
+      header {
+        padding: 8px 10px;
+      }
+      
+      .container {
+        padding: 8px 10px;
+      }
+      
+      nav {
+        gap: 4px;
+      }
+      
+      button {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+      
+      .card {
+        padding: 8px 10px;
+      }
+    }
+    
+    /* 229px and below: Vertical navigation, minimal padding, single column */
+    @media (max-width: 229px) {
+      header {
+        padding: 8px 10px;
+      }
+      
+      .container {
+        padding: 8px 10px;
+      }
+      
+      nav {
+        gap: 4px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      button {
+        padding: 10px 8px;
+        font-size: 12px;
+        text-align: center;
+        width: 100%;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      
+      .card {
+        padding: 10px 12px;
+      }
+      
+      .row {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      
+      input, textarea {
+        font-size: 14px;
+        padding: 8px 10px;
+      }
     }
     
     input, textarea {
@@ -128,23 +212,36 @@ function buildReactDemoSrcDoc(): string {
     
     .muted {
       color: var(--color-text-muted);
-      font-size: 12px;
+      font-size: 11px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+      line-height: 1.3;
+    }
+    
+    @media (max-width: 229px) {
+      .muted {
+        font-size: 10px;
+        line-height: 1.2;
+      }
     }
     
     .row {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
+      flex-wrap: wrap;
     }
     
     .space {
-      height: 8px;
+      height: 6px;
     }
     
     .todo {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      flex-wrap: wrap;
     }
     
     .todo input[type="checkbox"] {
@@ -199,7 +296,7 @@ function buildReactDemoSrcDoc(): string {
 </html>`;
 }
 
-export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', reactDemo = false, height = '36rem', width = '100%' }: CodeDemoProps) {
+export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', reactDemo = false, height = '40rem', width = '100%' }: CodeDemoProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark' | 'gruvbox'>('light');
   
@@ -395,17 +492,18 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
   
   const iframeStyle: React.CSSProperties = { 
     height: typeof height === 'number' ? `${height}px` : height,
-    width: typeof width === 'number' ? `${width}px` : width
+    width: typeof width === 'number' ? `${width}px` : width,
+    minWidth: '280px'
   };
 
   const isReactDemo = !!reactDemo;
   const containerClass = isReactDemo
-    ? 'mt-4 grid grid-cols-1 gap-4'
-    : 'mt-4 grid grid-cols-1 md:grid-cols-2 gap-4';
+    ? 'mt-4 grid grid-cols-1 gap-3 sm:gap-4'
+    : 'mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4';
   return (
     <div className={containerClass}>
       {/* Show textarea for editing in both modes */}
-      <div className="border border-[var(--color-border-primary)] rounded-lg overflow-hidden bg-[var(--color-bg-secondary)]">
+      <div className="border border-[var(--color-border-primary)] rounded-lg overflow-hidden bg-[var(--color-bg-secondary)] min-w-0">
         {/*
           Use srcDoc to inject the HTML instead of accessing the iframe's document.
           This avoids cross-origin restrictions caused by sandboxed iframes.
@@ -414,11 +512,11 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
           ref={iframeRef}
           sandbox="allow-scripts"
           srcDoc={src}
-          className="w-full bg-[var(--color-bg-primary)]"
-          style={iframeStyle}
+          className="w-full bg-[var(--color-bg-primary)] min-w-0 h-96 sm:h-[40rem]"
+          style={{ minWidth: '240px' }}
         />
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 min-w-0">
         <label className="text-sm font-medium text-[var(--color-text-primary)]">
           {reactDemo ? 'React Demo Source (read-only)' : 'Editable HTML'}
         </label>
@@ -429,7 +527,7 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
             setCode(newCode);
           }}
           readOnly={reactDemo}
-          className={`w-full h-96 p-3 border border-[var(--color-border-primary)] rounded-lg font-mono text-sm transition-[var(--transition-fast)] ${
+          className={`w-full h-80 sm:h-96 p-2 sm:p-3 border border-[var(--color-border-primary)] rounded-lg font-mono text-xs sm:text-sm transition-[var(--transition-fast)] min-w-0 ${
             reactDemo 
               ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]' 
               : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]'
