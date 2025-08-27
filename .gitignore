@@ -6,7 +6,7 @@ dist/
 .DS_Store
 .vscode/
 .wrangler/
-/dev.vars
+.dev.vars
 /.mf/
 /.parcel-cache/
 /.rollup.cache/
