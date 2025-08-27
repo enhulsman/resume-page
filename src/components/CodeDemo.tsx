@@ -92,7 +92,7 @@ function buildReactDemoSrcDoc(): string {
       cursor: pointer;
       transition: var(--transition-fast);
       font-size: 13px;
-      flex-shrink: 0;
+      flex-shrink: 1;
     }
     
     button:hover {
@@ -132,8 +132,16 @@ function buildReactDemoSrcDoc(): string {
     
     /* Responsive breakpoints - adjusted for iframe constraints */
     
-    /* 230px-260px: Compact horizontal navigation, reduced spacing */
-    @media (max-width: 260px) and (min-width: 230px) {
+    /* 370px device = 296px iframe: Buttons start shrinking when they would wrap */
+    @media (max-width: 296px) {
+      .row[role="tablist"] button {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+    }
+    
+    /* 334px device = 260px iframe and above: Compact horizontal navigation */
+    @media (max-width: 260px) and (min-width: 262px) {
       header {
         padding: 8px 10px;
       }
@@ -142,11 +150,7 @@ function buildReactDemoSrcDoc(): string {
         padding: 8px 10px;
       }
       
-      nav {
-        gap: 4px;
-      }
-      
-      button {
+      .row[role="tablist"] button {
         padding: 6px 8px;
         font-size: 12px;
       }
@@ -161,7 +165,42 @@ function buildReactDemoSrcDoc(): string {
       }
     }
     
-    /* 229px and below: Vertical navigation, minimal padding, single column */
+    /* 335px device = 266px iframe: Navigation tabs switch to vertical layout */
+    @media (max-width: 266px) {
+      /* Target the navigation row specifically using the tablist role */
+      .row[role="tablist"] {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+      }
+      
+      /* Target navigation buttons specifically */
+      .row[role="tablist"] button {
+        width: 100%;
+        text-align: center;
+        padding: 8px 12px;
+        flex-shrink: 0;
+      }
+      
+      header {
+        padding: 8px 10px;
+      }
+      
+      .container {
+        padding: 8px 10px;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+      
+      .card {
+        padding: 8px 10px;
+      }
+    }
+    
+    /* 303px device = 229px iframe and below: Minimal padding, single column */
     @media (max-width: 229px) {
       header {
         padding: 8px 10px;
@@ -171,17 +210,9 @@ function buildReactDemoSrcDoc(): string {
         padding: 8px 10px;
       }
       
-      nav {
-        gap: 4px;
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      button {
-        padding: 10px 8px;
+      .row[role="tablist"] button {
+        padding: 8px;
         font-size: 12px;
-        text-align: center;
-        width: 100%;
       }
       
       .grid {
@@ -212,6 +243,9 @@ function buildReactDemoSrcDoc(): string {
       background: var(--color-bg-primary);
       color: var(--color-text-primary);
       transition: var(--transition-fast);
+      resize: vertical;
+      min-height: 2.5rem;
+      box-sizing: border-box;
     }
     
     input:focus, textarea:focus {
@@ -537,7 +571,7 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
           ref={iframeRef}
           sandbox="allow-scripts"
           srcDoc={src}
-          className="w-full bg-[var(--color-bg-primary)] min-w-0 h-[40rem] sm:h-[35rem]"
+          className="w-full bg-[var(--color-bg-primary)] min-w-0 h-[45rem] sm:h-[35rem]"
           style={{ minWidth: '240px' }}
         />
       </div>
