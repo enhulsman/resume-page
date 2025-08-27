@@ -111,13 +111,23 @@ function buildReactDemoSrcDoc(): string {
       padding: 12px 14px;
       background: var(--color-bg-secondary);
       color: var(--color-text-primary);
+      overflow: hidden;
+      word-wrap: break-word;
     }
     
     .grid {
       display: grid;
       gap: 10px;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       max-width: 100%;
+    }
+    
+    /* Switch to single column earlier for better readability */
+    @media (max-width: 300px) {
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
     }
     
     /* Responsive breakpoints - adjusted for iframe constraints */
@@ -217,6 +227,8 @@ function buildReactDemoSrcDoc(): string {
       overflow-wrap: break-word;
       hyphens: auto;
       line-height: 1.3;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     
     @media (max-width: 229px) {
@@ -235,6 +247,19 @@ function buildReactDemoSrcDoc(): string {
     
     .space {
       height: 6px;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    
+    .muted.space {
+      height: auto;
+      min-height: 6px;
+      padding-top: 6px;
+      width: 100%;
+      max-width: 100%;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
     
     .todo {
@@ -296,7 +321,7 @@ function buildReactDemoSrcDoc(): string {
 </html>`;
 }
 
-export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', reactDemo = false, height = '40rem', width = '100%' }: CodeDemoProps) {
+export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', reactDemo = false, height = '44rem', width = '100%' }: CodeDemoProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark' | 'gruvbox'>('light');
   
@@ -512,7 +537,7 @@ export default function CodeDemo({ initial = '<h1>Hello from iframe</h1>', react
           ref={iframeRef}
           sandbox="allow-scripts"
           srcDoc={src}
-          className="w-full bg-[var(--color-bg-primary)] min-w-0 h-96 sm:h-[40rem]"
+          className="w-full bg-[var(--color-bg-primary)] min-w-0 h-96 sm:h-[44rem]"
           style={{ minWidth: '240px' }}
         />
       </div>
