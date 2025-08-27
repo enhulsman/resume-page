@@ -357,7 +357,7 @@ body {
   /* Card responsive styling */
   .card-responsive {
     @apply card-theme p-4 sm:p-6 rounded-lg sm:rounded-xl;
-    min-width: 280px;
+    min-width: auto;
   }
 
   /* Hide elements responsively */
@@ -393,7 +393,7 @@ body {
     /* Ensure cards don't shrink too much but stay full width */
     .card-theme,
     .card-responsive {
-      min-width: 256px;
+      min-width: auto;
       width: 100%;
     }
 
