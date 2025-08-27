@@ -15,8 +15,43 @@ const currentPath = Astro.url.pathname;
 const isHomePage = currentPath === '/';
 ---
 <nav class="sticky top-0 z-40 backdrop-blur bg-theme-elevated border-b border-theme-primary">
-  <div class="mx-auto max-w-5xl px-4 sm:px-6">
-    <div class="flex h-14 items-center justify-between">
+  <div class="mx-auto max-w-5xl px-3 sm:px-6">
+    <!-- Mobile Layout (< sm) -->
+    <div class="sm:hidden">
+      <!-- Top Row: Name + Actions -->
+      <div class="flex h-12 items-center justify-between">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <a href="/" class="font-semibold tracking-tight text-theme-primary transition-colors duration-200 truncate">{site.name}</a>
+          {!isHomePage && (
+            <img
+              src={gravatarUrl}
+              onerror="this.onerror=null;this.src='/avatar.svg'"
+              alt={site.name}
+              width={24}
+              height={24}
+              class="w-6 h-6 rounded-full ring-1 ring-indigo-200/50 object-cover shadow-sm flex-shrink-0"
+            />
+          )}
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <ThemeToggle client:load />
+          <a href="/resume.pdf" class="btn-theme-accent inline-flex items-center rounded-md px-2 py-1 text-xs font-medium shadow-sm hover:opacity-95 transition-all duration-200" download>
+            PDF
+          </a>
+        </div>
+      </div>
+      <!-- Bottom Row: Navigation Links -->
+      <div class="flex h-10 items-center justify-center border-t border-theme-primary/20">
+        <div class="flex items-center gap-6">
+          {links.map((l) => (
+            <a href={l.href} class="text-sm text-theme-tertiary hover:text-theme-primary transition-colors duration-200">{l.label}</a>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Layout (≥ sm) -->
+    <div class="hidden sm:flex h-14 items-center justify-between">
       <div class="flex items-center gap-3">
         <a href="/" class="font-semibold tracking-tight text-theme-primary transition-colors duration-200">{site.name}</a>
         {!isHomePage && (
@@ -31,7 +66,7 @@ const isHomePage = currentPath === '/';
         )}
       </div>
       <div class="flex items-center gap-4">
-        <div class="flex items-center gap-6">
+        <div class="hidden sm:flex items-center gap-6">
           {links.map((l) => (
             <a href={l.href} class="text-sm text-theme-tertiary hover:text-theme-primary transition-colors duration-200">{l.label}</a>
           ))}
@@ -39,7 +74,7 @@ const isHomePage = currentPath === '/';
         <div class="flex items-center gap-3">
           <ThemeToggle client:load />
           <a href="/resume.pdf" class="btn-theme-accent inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium shadow-sm hover:opacity-95 transition-all duration-200" download>
-            Download PDF
+            <span class="hidden lg:inline">Download </span>PDF
           </a>
         </div>
       </div>

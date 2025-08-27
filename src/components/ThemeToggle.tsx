@@ -50,10 +50,10 @@ export default function ThemeToggle() {
     <div className="relative" data-theme-dropdown>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200 text-theme-secondary hover:text-theme-primary bg-theme-elevated hover:bg-theme-secondary text-sm font-medium shadow-sm border-0"
+        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-md transition-all duration-200 text-theme-secondary hover:text-theme-primary bg-theme-elevated hover:bg-theme-secondary text-xs sm:text-sm font-medium shadow-sm border-0"
         aria-label="Toggle theme"
       >
-        <span className="text-base">{currentThemeConfig.icon}</span>
+        <span className="text-sm sm:text-base">{currentThemeConfig.icon}</span>
         <span className="hidden sm:inline">
           {currentThemeConfig.displayName}
         </span>
@@ -76,18 +76,18 @@ export default function ThemeToggle() {
           />
           
           {/* Dropdown */}
-          <div className="absolute right-0 mt-1 py-1 w-40 bg-theme-elevated border border-theme-primary rounded-md shadow-lg z-20">
+          <div className="absolute right-0 mt-1 py-1 w-36 sm:w-40 bg-theme-elevated border border-theme-primary rounded-md shadow-lg z-20">
             {themes.map((theme) => (
               <button
                 key={theme.name}
                 onClick={() => handleThemeChange(theme.name)}
-                className={`w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-theme-secondary transition-colors duration-150 text-sm font-medium ${
+                className={`w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-theme-secondary transition-colors duration-150 text-xs sm:text-sm font-medium ${
                   currentTheme === theme.name 
                     ? 'text-theme-accent bg-theme-secondary' 
                     : 'text-theme-secondary hover:text-theme-primary'
                 }`}
               >
-                <span className="text-base">{theme.icon}</span>
+                <span className="text-sm sm:text-base">{theme.icon}</span>
                 <span>{theme.displayName}</span>
                 {currentTheme === theme.name && (
                   <svg className="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20">
