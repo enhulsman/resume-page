@@ -29,10 +29,26 @@
   --color-accent-hover: rgb(79 70 229);
   --color-accent-light: rgb(165 180 252);
   
+  /* Skill Badge Colors */
+  --color-accent-alpha: rgba(99 102 241 / 0.1);
+  --color-accent-border: rgba(99 102 241 / 0.2);
+  --color-secondary-alpha: rgba(51 65 85 / 0.5);
+  --color-tertiary-alpha: rgba(71 85 105 / 0.3);
+  --color-border: var(--color-border-primary);
+  
   /* Status Colors */
   --color-success: rgb(34 197 94);
   --color-warning: rgb(245 158 11);
   --color-error: rgb(239 68 68);
+  --color-info: rgb(59 130 246);
+  
+  /* Badge Alpha Colors */
+  --color-success-alpha: rgba(34 197 94 / 0.1);
+  --color-success-border: rgba(34 197 94 / 0.2);
+  --color-warning-alpha: rgba(245 158 11 / 0.1);
+  --color-warning-border: rgba(245 158 11 / 0.2);
+  --color-info-alpha: rgba(59 130 246 / 0.1);
+  --color-info-border: rgba(59 130 246 / 0.2);
   
   /* Gradients */
   --gradient-bg: linear-gradient(135deg, rgb(241 245 249) 0%, rgb(226 232 240) 100%);
@@ -65,6 +81,27 @@
   --color-accent-hover: rgb(129 140 248);
   --color-accent-light: rgb(165 180 252);
   
+  /* Skill Badge Colors */
+  --color-accent-alpha: rgba(99 102 241 / 0.15);
+  --color-accent-border: rgba(99 102 241 / 0.3);
+  --color-secondary-alpha: rgba(226 232 240 / 0.15);
+  --color-tertiary-alpha: rgba(203 213 225 / 0.1);
+  --color-border: var(--color-border-primary);
+  
+  /* Status Colors - Same base colors but with dark theme alphas */
+  --color-success: rgb(34 197 94);
+  --color-warning: rgb(245 158 11);
+  --color-error: rgb(239 68 68);
+  --color-info: rgb(59 130 246);
+  
+  /* Badge Alpha Colors */
+  --color-success-alpha: rgba(34 197 94 / 0.15);
+  --color-success-border: rgba(34 197 94 / 0.3);
+  --color-warning-alpha: rgba(245 158 11 / 0.15);
+  --color-warning-border: rgba(245 158 11 / 0.3);
+  --color-info-alpha: rgba(59 130 246 / 0.15);
+  --color-info-border: rgba(59 130 246 / 0.3);
+  
   /* Gradients */
   --gradient-bg: linear-gradient(135deg, rgb(30 41 59) 0%, rgb(15 23 42) 100%);
 }
@@ -91,6 +128,27 @@
   --color-accent-primary: rgb(254 128 25);
   --color-accent-hover: rgb(254 128 25);
   --color-accent-light: rgb(254 128 25);
+  
+  /* Skill Badge Colors */
+  --color-accent-alpha: rgba(254 128 25 / 0.15);
+  --color-accent-border: rgba(254 128 25 / 0.3);
+  --color-secondary-alpha: rgba(213 196 161 / 0.15);
+  --color-tertiary-alpha: rgba(189 174 147 / 0.1);
+  --color-border: var(--color-border-primary);
+  
+  /* Status Colors - Gruvbox variants */
+  --color-success: rgb(184 187 38);  /* Gruvbox green */
+  --color-warning: rgb(254 128 25);  /* Gruvbox orange */
+  --color-error: rgb(204 36 29);     /* Gruvbox red */
+  --color-info: rgb(131 165 152);    /* Gruvbox aqua */
+  
+  /* Badge Alpha Colors */
+  --color-success-alpha: rgba(184 187 38 / 0.15);
+  --color-success-border: rgba(184 187 38 / 0.3);
+  --color-warning-alpha: rgba(254 128 25 / 0.15);
+  --color-warning-border: rgba(254 128 25 / 0.3);
+  --color-info-alpha: rgba(131 165 152 / 0.15);
+  --color-info-border: rgba(131 165 152 / 0.3);
   
   /* Gradients */
   --gradient-bg: linear-gradient(135deg, rgb(60 56 54) 0%, rgb(40 40 40) 100%);
@@ -179,12 +237,36 @@ body {
     color: var(--color-accent-primary);
     text-decoration: underline;
     text-decoration-color: var(--color-accent-light);
-    transition: var(--transition-fast);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .prose a:hover {
     color: var(--color-accent-hover);
     text-decoration-color: var(--color-accent-primary);
+    transform: scale(1.02);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  }
+
+  /* Global link hover effects */
+  a:not(.btn-theme-accent):not(.card-theme) {
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  a:not(.btn-theme-accent):not(.card-theme):hover {
+    transform: scale(1.02);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  }
+
+  /* Dark theme link shadows */
+  [data-theme="dark"] a:not(.btn-theme-accent):not(.card-theme):hover,
+  [data-theme="dark"] .prose a:hover {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  }
+
+  /* Gruvbox theme link shadows */
+  [data-theme="gruvbox"] a:not(.btn-theme-accent):not(.card-theme):hover,
+  [data-theme="gruvbox"] .prose a:hover {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
   }
   
   .prose ul, .prose ol {
@@ -280,10 +362,30 @@ body {
     background-color: var(--color-bg-elevated);
     border: 1px solid var(--color-border-primary);
     transition: var(--transition-theme);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
   
   .card-theme:hover {
     border-color: var(--color-border-secondary);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Dark theme shadows */
+  [data-theme="dark"] .card-theme {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  }
+  
+  [data-theme="dark"] .card-theme:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Gruvbox theme shadows */
+  [data-theme="gruvbox"] .card-theme {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  }
+  
+  [data-theme="gruvbox"] .card-theme:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
   }
 
   /* ========================================
@@ -434,3 +536,62 @@ body {
     @apply select-none;
   }
 }
+
+/* Skill badge styles - theme aware */
+.skill-badge-primary {
+  @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+  background-color: var(--color-accent-alpha);
+  color: var(--color-accent-primary);
+  border: 1px solid var(--color-accent-border);
+}
+
+.skill-badge-secondary {
+  @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+  background-color: var(--color-secondary-alpha);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.skill-badge-tertiary {
+  @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+  background-color: var(--color-tertiary-alpha);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+/* Interest and Tech badge styles */
+.interest-badge-1 {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  background-color: var(--color-success-alpha);
+  color: var(--color-success);
+  border: 1px solid var(--color-success-border);
+}
+
+.interest-badge-2 {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  background-color: var(--color-warning-alpha);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
+}
+
+.interest-badge-3 {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  background-color: var(--color-accent-alpha);
+  color: var(--color-accent-primary);
+  border: 1px solid var(--color-accent-border);
+}
+
+.tech-badge-1 { @apply interest-badge-1; }
+.tech-badge-2 { @apply interest-badge-2; }
+.tech-badge-3 { @apply interest-badge-3; }
+.tech-badge-4 {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  background-color: var(--color-info-alpha);
+  color: var(--color-info);
+  border: 1px solid var(--color-info-border);
+}
+
+/* Additional theme utilities */
+.text-theme-accent { color: var(--color-accent-primary); }
+.bg-theme-accent-alpha { background-color: var(--color-accent-alpha); }
+.border-theme-accent-alpha { border-color: var(--color-accent-border); }

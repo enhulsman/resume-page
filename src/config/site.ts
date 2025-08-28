@@ -1,15 +1,19 @@
 const site = {
   name: 'Ezra Hulsman',
-  role: 'DevOps Engineer / Pega Developer',
+  role: 'DevOps / Pega Engineer',
   company: 'Anamata',
   location: 'Utrecht, NL 🇳🇱',
-  description: 'DevOps Engineer working with automation, infrastructure, and web development. I enjoy working with Rust, Python, and making systems run smoothly.',
-  skills: [
-    'Linux', 'Python', 'Rust', 'Bash', 'TS/JS', 'React', 'Docker', 'Pega'
-  ],
+  summary: 'Linux-first Junior DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce toil.',
+  // summary: 'DevOps Engineer who builds reliable infrastructure and automation tools. I write Python and Rust, manage CI/CD pipelines, and ensure systems stay running.',
+  skills: {
+    languages: ['Python', 'Rust', 'Bash', 'TypeScript', 'JavaScript'],
+    tools: ['Linux', 'Docker', 'Git', 'CI/CD'],
+    frameworks: ['React', 'Pega', 'Astro']
+  },
   interests: [
     'Formula 1 🏁', 'Open Source', 'System Tinkering', 'All things Raspberry Pi'
   ],
+  quote: '"Proverbs 3:5-7 NIV"',
   social: {
     email: 'info@hulsman.dev',
     website: 'https://hulsman.dev',
