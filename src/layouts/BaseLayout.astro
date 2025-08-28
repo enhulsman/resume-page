@@ -3,7 +3,7 @@ import site from '../config/site';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import '../styles/global.css';
-const { title = `${site.name} — ${site.role}`, description = site.description } = Astro.props;
+const { title = `${site.name} — ${site.role}`, description = site.summary } = Astro.props;
 ---
 <!doctype html>
 <html lang="en" class="min-h-full">
