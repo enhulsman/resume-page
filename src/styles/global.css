@@ -356,7 +356,8 @@ body {
 
   /* Card responsive styling */
   .card-responsive {
-    @apply card-theme p-4 sm:p-6 rounded-lg sm:rounded-xl;
+    @apply card-theme p-4 sm:p-6 rounded-3xl sm:rounded-3xl;
+    /* border-radius: 1.5rem; */
     min-width: auto;
   }
 
