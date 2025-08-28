@@ -3,7 +3,7 @@ const site = {
   role: 'DevOps / Pega Engineer',
   company: 'Anamata',
   location: 'Utrecht, NL 🇳🇱',
-  summary: 'Linux-first Junior DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce toil.',
+  summary: 'Linux-first Junior DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce friction — driven to continuously improve systems and skills.',
   // summary: 'DevOps Engineer who builds reliable infrastructure and automation tools. I write Python and Rust, manage CI/CD pipelines, and ensure systems stay running.',
   skills: {
     languages: ['Python', 'Rust', 'Bash', 'Java', 'TS/JS'],
@@ -28,7 +28,7 @@ const site = {
 
     I spend most of my time writing Python and Rust, setting up CI/CD pipelines, and making sure systems 
     don't break at 3 AM. I genuinely enjoy the challenge of building reliable infrastructure and creating 
-    tools that make other developers' lives easier.
+    tools that make mine and other developers' lives easier.
 
     In my free time, I work on personal projects like HackrsChat (a Rust-based chat app) and contribute 
     to open source when I can. I'm also a big Formula 1 fan - there's something satisfying about both 
