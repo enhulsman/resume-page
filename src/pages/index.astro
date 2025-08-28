@@ -71,6 +71,11 @@ const projects = projectFiles
 
   <section class="mt-8 sm:mt-10">
     <h2 class="text-responsive-lg font-semibold text-theme-primary">Contact</h2>
-    <p class="mt-2 text-responsive-base text-theme-tertiary">I'm always interested in new opportunities and interesting projects. Drop me a line at <a class="underline text-theme-accent hover:text-theme-accent transition-colors duration-200" href="mailto:info@hulsman.dev">info@hulsman.dev</a> or check out my work on <a class="underline text-theme-accent hover:text-theme-accent transition-colors duration-200" href={site.social.github}>GitHub</a>.</p>
+    <p class="mt-2 text-responsive-base text-theme-tertiary">
+      I'm always interested in new opportunities and interesting projects. 
+      Check out my <a class="underline text-theme-accent hover:text-theme-accent transition-colors duration-200" href="/contact">contact page</a>,
+      drop me a line at <a class="underline text-theme-accent hover:text-theme-accent transition-colors duration-200" href={`mailto:${site.social.email}`}>{site.social.email}</a> 
+      or check out my work on <a class="underline text-theme-accent hover:text-theme-accent transition-colors duration-200" href={site.social.GitHub}>GitHub</a>.
+    </p>
   </section>
 </BaseLayout>
