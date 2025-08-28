@@ -6,8 +6,8 @@ const site = {
   summary: 'Linux-first Junior DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce toil.',
   // summary: 'DevOps Engineer who builds reliable infrastructure and automation tools. I write Python and Rust, manage CI/CD pipelines, and ensure systems stay running.',
   skills: {
-    languages: ['Python', 'Rust', 'Bash', 'TypeScript', 'JavaScript'],
-    tools: ['Linux', 'Docker', 'Git', 'CI/CD'],
+    languages: ['Python', 'Rust', 'Bash', 'Java', 'TS/JS'],
+    tools: ['Linux', 'Docker', 'K8s', 'Git', 'CI/CD'],
     frameworks: ['React', 'Pega', 'Astro']
   },
   interests: [
