@@ -23,7 +23,18 @@ const { name = site.name, role = site.role, company = site.company, location = s
           <div class="flex-1 min-w-0">
             <h1 class="text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold tracking-tight text-theme-primary break-words">{name}</h1>
             <p class="text-sm sm:text-base md:text-base lg:text-lg text-theme-secondary mt-1 break-words">
-              {role}{company && ` @ ${company}`}
+              {role}
+              {company && site.social.employer && (
+                <span class="text-theme-tertiary"> @ </span>
+                <a 
+                  href={site.social.employer} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  class="text-theme-accent hover:text-theme-accent-hover underline decoration-dotted underline-offset-2 hover:decoration-solid transition-all duration-200"
+                >
+                  {company}
+                </a>
+              )}
             </p>
             <!-- Location - now shown on all screen sizes -->
             <p class="text-xs sm:text-sm text-theme-tertiary mt-0.5 break-words md:hidden">
@@ -88,10 +99,10 @@ const { name = site.name, role = site.role, company = site.company, location = s
           </div>
         </div>
         
-        <!-- Availability status (desktop only) -->
-        <div class="hidden md:flex items-center gap-2 text-xs text-emerald-600 mb-2">
-          <div class="availability-indicator w-2 h-2 bg-emerald-500 rounded-full"></div>
-          Available for new opportunities
+        <!-- Employment status (desktop only) -->
+        <div class="hidden md:flex items-center gap-2 text-xs text-blue-600 mb-2">
+          <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+          Currently employed • Open to connect
         </div>
         
         <!-- CTAs - vertical on desktop, horizontal on mobile -->
@@ -210,10 +221,10 @@ const { name = site.name, role = site.role, company = site.company, location = s
       
       <!-- Fifth section: Mobile CTAs with availability status (mobile order 5, hidden on desktop) -->
       <div class="md:hidden order-5">
-        <!-- Availability status -->
-        <div class="flex items-center gap-2 text-xs text-emerald-600 mb-3">
-          <div class="availability-indicator w-2 h-2 bg-emerald-500 rounded-full"></div>
-          Available for new opportunities
+        <!-- Employment status -->
+        <div class="flex items-center gap-2 text-xs text-blue-600 mb-3">
+          <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+          Currently employed • Open to connect
         </div>
         
         <!-- CTA Buttons -->

@@ -19,6 +19,7 @@ const site = {
     website: 'https://hulsman.dev',
     GitHub: 'https://github.com/arc891', // Capitalized brands to keep correct casing
     LinkedIn: 'https://www.linkedin.com/in/ezra-hulsman',
+    employer: 'https://anamata.nl',
     // Twitter: 'https://twitter.com/yourname',
     // Mastodon: 'https://mastodon.social/@yourname',
   },
