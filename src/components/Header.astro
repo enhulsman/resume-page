@@ -53,11 +53,14 @@ const { name = site.name, role = site.role, company = site.company, location = s
         <div class="hidden md:flex flex-col gap-3 mb-6">
           <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
             <div class="flex items-center gap-2 text-theme-tertiary">
-              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-              </svg>
-              <a href={`mailto:${site.social.email}`} class="hover:text-theme-accent transition-colors break-all">
-                {site.social.email}
+              <a 
+                href={`mailto:${site.social.email}`} 
+                class="flex items-center gap-2 text-theme-tertiary hover:text-theme-accent transition-colors"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <span class="whitespace-nowrap">{site.social.email}</span>
               </a>
             </div>
             <a 
