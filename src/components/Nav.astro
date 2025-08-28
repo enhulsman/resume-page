@@ -15,7 +15,7 @@ const currentPath = Astro.url.pathname;
 const isHomePage = currentPath === '/';
 ---
 <nav class="sticky top-0 z-40 backdrop-blur bg-theme-elevated border-b border-theme-primary">
-  <div class="mx-auto max-w-5xl px-3 sm:px-6">
+  <div class="mx-auto max-w-6xl px-3 sm:px-6">
     <!-- Mobile Layout (< sm) -->
     <div class="sm:hidden">
       <!-- Top Row: Name + Actions -->
@@ -68,13 +68,13 @@ const isHomePage = currentPath === '/';
       <div class="flex items-center gap-4">
         <div class="hidden sm:flex items-center gap-6">
           {links.map((l) => (
-            <a href={l.href} class="text-sm text-theme-tertiary hover:text-theme-primary transition-colors duration-200">{l.label}</a>
+            <a href={l.href} class="link-social text-sm">{l.label}</a>
           ))}
         </div>
         <div class="flex items-center gap-3">
           <ThemeToggle client:load />
-          <a href="/resume.pdf" class="btn-theme-accent inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium shadow-sm hover:opacity-95 transition-all duration-200" download>
-            <span class="hidden lg:inline">Download </span>PDF
+          <a href="/resume.pdf" class="btn-theme-accent-enhanced inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200" download>
+            <span class="hidden lg:inline">Download&nbsp;</span>PDF
           </a>
         </div>
       </div>

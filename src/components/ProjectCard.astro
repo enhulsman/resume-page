@@ -7,16 +7,25 @@ interface Props {
 }
 const { title, description, href, tags = [] as string[] } = Astro.props as Props;
 ---
-<article class="card-responsive hover:border-theme-secondary hover:shadow-sm transition-all duration-200">
-  <h3 class="text-responsive-base font-semibold tracking-tight text-theme-primary">
-    <a href={href} class="hover:text-theme-accent transition-colors duration-200">{title}</a>
-  </h3>
-  <p class="text-responsive-sm text-theme-tertiary mt-2 leading-relaxed">{description}</p>
-  {tags && tags.length > 0 && (
-    <div class="mt-3 flex flex-wrap gap-1">
-      {tags.map((t: string) => (
-      <span class="text-xs px-2 py-1 rounded-full bg-theme-secondary text-theme-muted">{t}</span>
-      ))}
+<article class="card-responsive shadow-theme-sm hover:shadow-theme-lg group" style="transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+  <a href={href} class="block h-full no-underline" style="transform: none; transition: none;">
+    <h3 class="text-responsive-base font-semibold tracking-tight text-theme-primary group-hover:text-theme-accent transition-colors duration-200">{title}</h3>
+    <p class="text-responsive-sm text-theme-tertiary mt-2 leading-relaxed" style="transform: none; transition: none;">{description}</p>
+    {tags && tags.length > 0 && (
+      <div class="mt-3 flex flex-wrap gap-1.5" style="transform: none; transition: none;">
+        {tags.map((t: string, i: number) => (
+          <span class={`tech-badge-${(i % 4) + 1}`} style="transform: none; transition: none;">
+            {t}
+          </span>
+        ))}
+      </div>
+    )}
+    <!-- Subtle arrow indicator for interactivity -->
+    <div class="mt-4 flex items-center text-theme-muted group-hover:text-theme-accent transition-colors duration-200">
+      <span class="text-xs font-medium">Read more</span>
+      <svg class="w-3 h-3 ml-1 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
     </div>
-  )}
+  </a>
 </article>

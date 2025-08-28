@@ -2,7 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 
 const { frontmatter } = Astro.props;
-const { title, date, tech = [] } = frontmatter;
+const { title, date, tech = [], preview = "" } = frontmatter;
 
 // Format date if provided
 const formattedDate = date ? new Date(date).toLocaleDateString('en-US', { 
@@ -13,22 +13,26 @@ const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
 ---
 
 <BaseLayout title={title} description={`Case study: ${title}`}>
-  <article class="mx-auto max-w-4xl">
+  <article class="mx-auto max-w-5xl">
     <!-- Project header -->
     <header class="mb-8">
-      <div class="card-theme rounded-3xl p-6">
+      <div class="card-theme rounded-3xl p-6 shadow-theme-md">
         <h1 class="text-3xl font-bold tracking-tight text-theme-primary">{title}</h1>
         
         {formattedDate && (
           <p class="mt-2 text-sm text-theme-muted">{formattedDate}</p>
         )}
-        
+
+        {preview && (
+          <a href={preview} class="mt-4 inline-block text-sm font-medium text-theme-accent hover:underline">
+            Preview of this project
+          </a>
+        )}
+
         {tech.length > 0 && (
           <div class="mt-4 flex flex-wrap gap-2">
             {tech.map((t: String, i: number) => (
-              <span class={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                ['bg-indigo-50 text-indigo-700', 'bg-rose-50 text-rose-700', 'bg-violet-50 text-violet-700', 'bg-cyan-50 text-cyan-700'][i % 4]
-              }`}>
+              <span class={`tech-badge-${(i % 4) + 1}`}>
                 {t}
               </span>
             ))}
@@ -39,7 +43,7 @@ const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
 
     <!-- Main content with prose styling -->
     <div class="prose prose-slate max-w-none custom-prose">
-      <div class="card-theme rounded-3xl p-6 md:p-8">
+      <div class="card-theme rounded-3xl p-6 md:p-8 shadow-theme-sm">
         <slot />
       </div>
     </div>
@@ -91,4 +95,6 @@ const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
     font-size: 0.875rem; /* 14px */
     line-height: 1.125rem; /* 18px */
   }
+
+
 </style>

@@ -50,7 +50,7 @@ export default function ThemeToggle() {
     <div className="relative" data-theme-dropdown>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-md transition-all duration-200 text-theme-secondary hover:text-theme-primary bg-theme-elevated hover:bg-theme-secondary text-xs sm:text-sm font-medium shadow-sm border-0"
+        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-md transition-all duration-200 text-theme-secondary hover:text-theme-primary bg-theme-elevated hover:bg-theme-secondary text-xs sm:text-sm font-medium shadow-theme-sm border-0"
         aria-label="Toggle theme"
       >
         <span className="text-sm sm:text-base">{currentThemeConfig.icon}</span>
@@ -76,7 +76,7 @@ export default function ThemeToggle() {
           />
           
           {/* Dropdown */}
-          <div className="absolute right-0 mt-1 py-1 w-36 sm:w-40 bg-theme-elevated border border-theme-primary rounded-md shadow-lg z-20">
+          <div className="absolute right-0 mt-1 py-1 w-36 sm:w-40 bg-theme-elevated border border-theme-primary rounded-md shadow-theme-lg z-20">
             {themes.map((theme) => (
               <button
                 key={theme.name}

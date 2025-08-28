@@ -29,16 +29,6 @@ const projects = projectFiles
           <p>{paragraph}</p>
         ))}
       </div>
-      <div class="mt-4 flex flex-wrap gap-2">
-          {site.skills.map((skill, i) => (
-            <span class={`inline-flex items-center rounded-full px-2 sm:px-3 py-1 text-xs ${[
-              'bg-indigo-50 text-indigo-700',
-              'bg-violet-50 text-violet-700',
-              'bg-rose-50 text-rose-700',
-              'bg-cyan-50 text-cyan-700'
-            ][i % 4]}`}>{skill}</span>
-          ))}
-      </div>
     </div>
   </section>
 
@@ -47,11 +37,7 @@ const projects = projectFiles
       <h3 class="text-responsive-md font-semibold tracking-tight text-theme-primary">Interests</h3>
       <div class="mt-3 flex flex-wrap gap-2">
         {site.interests.map((interest, i) => (
-          <span class={`inline-flex items-center rounded-full px-3 py-1 text-xs ${[
-            'bg-emerald-50 text-emerald-700',
-            'bg-orange-50 text-orange-700',
-            'bg-purple-50 text-purple-700'
-          ][i % 3]}`}>{interest}</span>
+          <span class={`interest-badge-${(i % 3) + 1}`}>{interest}</span>
         ))}
       </div>
     </div>
@@ -73,9 +59,9 @@ const projects = projectFiles
     <h2 class="text-responsive-lg font-semibold text-theme-primary">Contact</h2>
     <p class="mt-2 text-responsive-base text-theme-tertiary">
       I'm always interested in new opportunities and interesting projects. 
-      Check out my <a class="underline text-theme-accent hover:text-theme-accent transition-colors duration-200" href="/contact">contact page</a>,
-      drop me a line at <a class="underline text-theme-accent hover:text-theme-accent transition-colors duration-200" href={`mailto:${site.social.email}`}>{site.social.email}</a> 
-      or check out my work on <a class="underline text-theme-accent hover:text-theme-accent transition-colors duration-200" href={site.social.GitHub}>GitHub</a>.
+      Check out my <a class="link-enhanced" href="/contact">contact page</a>,
+      drop me a line at <a class="link-enhanced" href={`mailto:${site.social.email}`}>{site.social.email}</a> 
+      or check out my work on <a class="link-enhanced" href={site.social.GitHub}>GitHub</a>.
     </p>
   </section>
 </BaseLayout>
