@@ -2,17 +2,21 @@ const site = {
   name: 'Ezra Hulsman',
   role: 'DevOps Engineer / Pega Developer',
   company: 'Anamata',
-  email: 'info@hulsman.dev',
   location: 'Utrecht, NL 🇳🇱',
   description: 'DevOps Engineer working with automation, infrastructure, and web development. I enjoy working with Rust, Python, and making systems run smoothly.',
   skills: [
     'Linux', 'Python', 'Rust', 'Bash', 'TS/JS', 'React', 'Docker', 'Pega'
   ],
-  interests: ['Formula 1 🏁', 'Open Source', 'System Tinkering', 'All things Raspberry Pi'],
+  interests: [
+    'Formula 1 🏁', 'Open Source', 'System Tinkering', 'All things Raspberry Pi'
+  ],
   social: {
-    github: 'https://github.com/arc891',
-    linkedin: 'https://www.linkedin.com/in/ezra-hulsman',
+    email: 'info@hulsman.dev',
     website: 'https://hulsman.dev',
+    GitHub: 'https://github.com/arc891', // Capitalized brands to keep correct casing
+    LinkedIn: 'https://www.linkedin.com/in/ezra-hulsman',
+    // Twitter: 'https://twitter.com/yourname',
+    // Mastodon: 'https://mastodon.social/@yourname',
   },
   about: `
     I'm a DevOps Engineer at Anamata where I work on infrastructure automation and Pega development. 
