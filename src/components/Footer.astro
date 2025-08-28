@@ -1,14 +1,33 @@
 ---
 import site from '../config/site';
+const isContactPage = Astro.url.pathname === '/contact';
 ---
 <footer class="mt-16 border-t border-theme-primary">
-  <div class="mx-auto max-w-5xl px-4 sm:px-6 py-8 text-sm text-theme-muted flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-    <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
-    <div class="flex items-center gap-4">
-      <a href="/contact" class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200">Contact</a>
-      <a href={`mailto:${site.email}`} class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200">Email</a>
-      <a href={site.social.github} class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200" target="_blank" rel="noreferrer">GitHub</a>
-      <a href={site.social.linkedin} class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200" target="_blank" rel="noreferrer">LinkedIn</a>
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 py-8 text-sm text-theme-muted">
+    <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
+      <div class="order-2 sm:order-1">
+        <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
+        {isContactPage && (
+          <p class="text-xs text-theme-muted mt-1">Powered by Cloudflare Workers and Resend. Your message will be sent securely.</p>
+        )}
+      </div>
+      <div class="order-1 sm:order-2 flex flex-wrap items-center gap-3 sm:gap-4">
+        <a href="/contact" class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200">Contact</a>
+        <a href={`mailto:${site.social.email}`} class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200">Email</a>
+        {Object.entries(site.social)
+          .filter(([platform]) => platform.toLowerCase() !== 'website')
+          .map(([platform, url]) => (
+            <a 
+              href={url} 
+              class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200" 
+              target="_blank" 
+              rel="noreferrer"
+            >
+              {platform.charAt(0).toUpperCase() + platform.slice(1)}
+            </a>
+          ))
+        }
+      </div>
     </div>
   </div>
 </footer>

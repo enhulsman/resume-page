@@ -354,9 +354,14 @@ body {
     @apply px-3 py-1.5 text-sm sm:px-4 sm:py-2 sm:text-base;
   }
 
+  .btn-align-right {
+    @apply w-full sm:w-auto sm:ml-auto;
+  }
+
   /* Card responsive styling */
   .card-responsive {
-    @apply card-theme p-4 sm:p-6 rounded-lg sm:rounded-xl;
+    @apply card-theme p-4 sm:p-6 rounded-3xl sm:rounded-3xl;
+    /* border-radius: 1.5rem; */
     min-width: auto;
   }
 
@@ -415,5 +420,17 @@ body {
     .space-y-4 > * + * {
       margin-top: 0.75rem;
     }
+  }
+}
+
+@layer base {
+  /* Make all images non-selectable by default */
+  img {
+    @apply select-none;
+  }
+  
+  /* Make badge/tag elements non-selectable */
+  .inline-flex.items-center.rounded-full {
+    @apply select-none;
   }
 }

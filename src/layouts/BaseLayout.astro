@@ -1,9 +1,9 @@
 ---
 import site from '../config/site';
-const { title = `${site.name} — ${site.role}`, description = site.description } = Astro.props;
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import '../styles/global.css';
+const { title = `${site.name} — ${site.role}`, description = site.description } = Astro.props;
 ---
 <!doctype html>
 <html lang="en" class="min-h-full">

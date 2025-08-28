@@ -15,7 +15,7 @@ interface ContactFormData {
 // Helper function to send email via Resend
 async function sendEmail(data: ContactFormData, env: Env): Promise<boolean> {
   const toEmail = env.TO_EMAIL || 'your-email@example.com';
-  const fromEmail = env.FROM_EMAIL || 'contact@resume.hulsman.dev';
+  const fromEmail = env.FROM_EMAIL || 'contact@yourdomain.com';
   const fromName = env.FROM_NAME || 'Contact Form';
 
   if (!env.RESEND_API_KEY) {
