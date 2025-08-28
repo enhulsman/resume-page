@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import react from '@astrojs/react';
+import site from './src/config/site';
 
 export default defineConfig({
   integrations: [
@@ -13,7 +14,7 @@ export default defineConfig({
     }), 
     react()
   ],
-  site: 'https://hulsman.dev',
+  site: site.url,
   markdown: {
     // Configure layout for MDX files
     layouts: {
