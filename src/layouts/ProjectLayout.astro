@@ -16,7 +16,7 @@ const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
   <article class="mx-auto max-w-4xl">
     <!-- Project header -->
     <header class="mb-8">
-      <div class="card-theme rounded-3xl p-6">
+      <div class="card-theme rounded-3xl p-6 shadow-theme-md">
         <h1 class="text-3xl font-bold tracking-tight text-theme-primary">{title}</h1>
         
         {formattedDate && (
@@ -37,7 +37,7 @@ const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
 
     <!-- Main content with prose styling -->
     <div class="prose prose-slate max-w-none custom-prose">
-      <div class="card-theme rounded-3xl p-6 md:p-8">
+      <div class="card-theme rounded-3xl p-6 md:p-8 shadow-theme-sm">
         <slot />
       </div>
     </div>
@@ -89,4 +89,6 @@ const formattedDate = date ? new Date(date).toLocaleDateString('en-US', {
     font-size: 0.875rem; /* 14px */
     line-height: 1.125rem; /* 18px */
   }
+
+
 </style>

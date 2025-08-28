@@ -12,14 +12,14 @@ const isContactPage = Astro.url.pathname === '/contact';
         )}
       </div>
       <div class="order-1 sm:order-2 flex flex-wrap items-center gap-3 sm:gap-4">
-        <a href="/contact" class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200">Contact</a>
-        <a href={`mailto:${site.social.email}`} class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200">Email</a>
+        <a href="/contact" class="link-social">Contact</a>
+        <a href={`mailto:${site.social.email}`} class="link-social">Email</a>
         {Object.entries(site.social)
           .filter(([platform]) => platform.toLowerCase() !== 'website')
           .map(([platform, url]) => (
             <a 
               href={url} 
-              class="text-theme-tertiary hover:text-theme-accent transition-colors duration-200" 
+              class="link-social" 
               target="_blank" 
               rel="noreferrer"
             >
