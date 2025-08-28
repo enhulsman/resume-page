@@ -417,3 +417,15 @@ body {
     }
   }
 }
+
+@layer base {
+  /* Make all images non-selectable by default */
+  img {
+    @apply select-none;
+  }
+  
+  /* Make badge/tag elements non-selectable */
+  .inline-flex.items-center.rounded-full {
+    @apply select-none;
+  }
+}
