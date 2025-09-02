@@ -1,19 +1,33 @@
+// Employment status types
+type EmploymentStatus = 'available' | 'employed-open';
+
 const site = {
   name: 'Ezra Hulsman',
   role: 'DevOps / Pega Engineer',
   company: 'Anamata',
   location: 'Utrecht, NL 🇳🇱',
+  quote: '"Proverbs 3:5-7 NIV"',
   summary: 'Linux-first Junior DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce friction — driven to continuously improve systems and skills.',
-  // summary: 'DevOps Engineer who builds reliable infrastructure and automation tools. I write Python and Rust, manage CI/CD pipelines, and ensure systems stay running.',
+  contactMessage: `Send a message and I'll get back to you soon. Whether it's about work opportunities, open source projects, or just to chat about Formula 1!`,
+  
   skills: {
     languages: ['Python', 'Rust', 'Bash', 'Java', 'TS/JS'],
     tools: ['Linux', 'Docker', 'K8s', 'Git', 'CI/CD'],
-    frameworks: ['React', 'Pega', 'Astro']
+    frameworks: ['React', 'Pega', 'Astro'],
   },
+  
   interests: [
     'Formula 1 🏁', 'Open Source', 'System Tinkering', 'All things Raspberry Pi'
   ],
-  quote: '"Proverbs 3:5-7 NIV"',
+
+  employment: {
+    status: 'employed-open' as EmploymentStatus,
+    message: {
+      'available': 'Available for new opportunities',
+      'employed-open': 'Currently employed • Open to connect'
+    } as Record<EmploymentStatus, string>
+  },
+  
   social: {
     email: 'info@hulsman.dev',
     website: 'https://hulsman.dev',
@@ -23,6 +37,7 @@ const site = {
     // Twitter: 'https://twitter.com/yourname',
     // Mastodon: 'https://mastodon.social/@yourname',
   },
+  
   about: `
     I'm a DevOps Engineer at Anamata where I work on infrastructure automation and Pega development. 
     At 2 meters tall, I have a good overview of both server racks and code architecture.
@@ -35,7 +50,6 @@ const site = {
     to open source when I can. I'm also a big Formula 1 fan - there's something satisfying about both 
     well-tuned race cars and well-optimized code.
   `,
-  contactMessage: `Send a message and I'll get back to you soon. Whether it's about work opportunities, open source projects, or just to chat about Formula 1!`,
 };
 
 export default site;

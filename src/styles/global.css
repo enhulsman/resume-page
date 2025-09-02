@@ -42,6 +42,22 @@
   --color-error: rgb(239 68 68);
   --color-info: rgb(59 130 246);
   
+  /* Employment/Availability Status Colors */
+  /* Available (green - ready for new opportunities) */
+  --color-employment-available: rgb(34 197 94);
+  --color-employment-available-alpha: rgba(34 197 94 / 0.1);
+  --color-employment-available-border: rgba(34 197 94 / 0.2);
+  
+  /* Employed but Open (blue - currently working but open to connect) */
+  --color-employment-open: rgb(59 130 246);
+  --color-employment-open-alpha: rgba(59 130 246 / 0.1);
+  --color-employment-open-border: rgba(59 130 246 / 0.2);
+  
+  /* Current status (defaults to employed-open, can be switched) */
+  --color-employment-primary: var(--color-employment-open);
+  --color-employment-alpha: var(--color-employment-open-alpha);
+  --color-employment-border: var(--color-employment-open-border);
+  
   /* Badge Alpha Colors */
   --color-success-alpha: rgba(34 197 94 / 0.1);
   --color-success-border: rgba(34 197 94 / 0.2);
@@ -107,6 +123,22 @@
   --color-error: rgb(239 68 68);
   --color-info: rgb(59 130 246);
   
+  /* Employment/Availability Status Colors */
+  /* Available (green - ready for new opportunities) */
+  --color-employment-available: rgb(34 197 94);
+  --color-employment-available-alpha: rgba(34 197 94 / 0.15);
+  --color-employment-available-border: rgba(34 197 94 / 0.3);
+  
+  /* Employed but Open (blue - currently working but open to connect) */
+  --color-employment-open: rgb(59 130 246);
+  --color-employment-open-alpha: rgba(59 130 246 / 0.15);
+  --color-employment-open-border: rgba(59 130 246 / 0.3);
+  
+  /* Current status (defaults to employed-open, can be switched) */
+  --color-employment-primary: var(--color-employment-open);
+  --color-employment-alpha: var(--color-employment-open-alpha);
+  --color-employment-border: var(--color-employment-open-border);
+  
   /* Badge Alpha Colors */
   --color-success-alpha: rgba(34 197 94 / 0.15);
   --color-success-border: rgba(34 197 94 / 0.3);
@@ -141,10 +173,10 @@
   --color-bg-elevated: rgba(60 56 54 / 0.9);
   
   /* Text Colors */
-  --color-text-primary: rgb(235 219 178);
-  --color-text-secondary: rgb(213 196 161);
-  --color-text-tertiary: rgb(189 174 147);
-  --color-text-muted: rgb(146 131 116);
+  --color-text-primary: rgb(251 241 199);  /* light0 - #fbf1c7 */
+  --color-text-secondary: rgb(235 219 178); /* light1 - #ebdbb2 */
+  --color-text-tertiary: rgb(213 196 161);  /* light2 - #d5c4a1 */
+  --color-text-muted: rgb(189 174 147);     /* light3 - #bdae93 */
   
   /* Border Colors */
   --color-border-primary: rgb(102 92 84);
@@ -163,10 +195,26 @@
   --color-border: var(--color-border-primary);
   
   /* Status Colors - Gruvbox variants */
-  --color-success: rgb(184 187 38);  /* Gruvbox green */
-  --color-warning: rgb(254 128 25);  /* Gruvbox orange */
-  --color-error: rgb(204 36 29);     /* Gruvbox red */
-  --color-info: rgb(131 165 152);    /* Gruvbox aqua */
+  --color-success: rgb(184 187 38);   /* bright_green - #b8bb26 */
+  --color-warning: rgb(254 128 25);   /* bright_orange - #fe8019 */
+  --color-error: rgb(251 73 52);      /* bright_red - #fb4934 */
+  --color-info: rgb(131 165 152);     /* bright_blue - #83a598 */
+  
+  /* Employment/Availability Status Colors - Gruvbox theme */
+  /* Available (gruvbox bright green) */
+  --color-employment-available: rgb(184 187 38);   /* bright_green - #b8bb26 */
+  --color-employment-available-alpha: rgba(184 187 38 / 0.15);
+  --color-employment-available-border: rgba(184 187 38 / 0.3);
+  
+  /* Employed but Open (gruvbox bright yellow) */
+  --color-employment-open: rgb(250 189 47);        /* bright_yellow - #fabd2f */
+  --color-employment-open-alpha: rgba(250 189 47 / 0.15);
+  --color-employment-open-border: rgba(250 189 47 / 0.3);
+  
+  /* Current status (defaults to employed-open, can be switched) */
+  --color-employment-primary: var(--color-employment-open);
+  --color-employment-alpha: var(--color-employment-open-alpha);
+  --color-employment-border: var(--color-employment-open-border);
   
   /* Badge Alpha Colors */
   --color-success-alpha: rgba(184 187 38 / 0.15);
@@ -405,6 +453,10 @@ body {
   .text-theme-accent { color: var(--color-accent-primary); }
   .bg-theme-accent { background-color: var(--color-accent-primary); }
   
+  /* Employment Status themed utilities */
+  .text-theme-employment { color: var(--color-employment-primary); }
+  .bg-theme-employment { background-color: var(--color-employment-primary); }
+  
   /* Interactive elements */
   .btn-theme-accent {
     background-color: var(--color-accent-primary);
@@ -493,31 +545,71 @@ body {
     transform: scale(1.02);
   }
   
-  /* Availability status with theme-aware glow */
+  /* Availability status with enhanced theme-aware pulsing animation */
   .availability-indicator {
-    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    background-color: var(--color-employment-primary);
+    animation: pulse-glow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    transition: var(--transition-fast);
+    position: relative;
   }
   
   @keyframes pulse-glow {
-    0%, 100% {
+    0% {
       opacity: 1;
-      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      transform: scale(1);
+      box-shadow: 0 0 0 0 var(--color-employment-border);
+    }
+    25% {
+      opacity: 0.9;
+      transform: scale(1.02);
+      box-shadow: 0 0 0 2px var(--color-employment-alpha);
     }
     50% {
-      opacity: 0.8;
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0);
+      opacity: 0.75;
+      transform: scale(1.05);
+      box-shadow: 0 0 0 6px transparent, 0 0 8px 0 var(--color-employment-alpha);
+    }
+    75% {
+      opacity: 0.9;
+      transform: scale(1.02);
+      box-shadow: 0 0 0 2px var(--color-employment-alpha);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 0 0 var(--color-employment-border);
     }
   }
   
-  /* Enhanced status indicator for dark themes */
-  [data-theme="dark"] .availability-indicator,
-  [data-theme="gruvbox"] .availability-indicator {
-    box-shadow: 0 0 8px 0 rgba(34, 197, 94, 0.4);
+  /* Enhanced base glow effect - works for all themes via CSS variables */
+  .availability-indicator {
+    box-shadow: 0 0 8px 0 var(--color-employment-alpha), 0 0 3px 0 var(--color-employment-border);
   }
   
-  [data-theme="dark"] .availability-indicator:hover,
-  [data-theme="gruvbox"] .availability-indicator:hover {
-    box-shadow: 0 0 12px 0 rgba(34, 197, 94, 0.6);
+  .availability-indicator:hover {
+    box-shadow: 0 0 12px 0 var(--color-employment-border), 0 0 6px 0 var(--color-employment-alpha);
+    animation-duration: 2s; /* Faster pulse on hover */
+  }
+  
+  /* Respect user's motion preferences - disable animation if reduced motion is preferred */
+  @media (prefers-reduced-motion: reduce) {
+    .availability-indicator {
+      animation: none;
+      box-shadow: 0 0 6px 0 var(--color-employment-alpha), 0 0 2px 0 var(--color-employment-border);
+    }
+  }
+  
+  /* Status-specific classes for easy switching */
+  .employment-available {
+    --color-employment-primary: var(--color-employment-available);
+    --color-employment-alpha: var(--color-employment-available-alpha);
+    --color-employment-border: var(--color-employment-available-border);
+  }
+  
+  .employment-open {
+    --color-employment-primary: var(--color-employment-open);
+    --color-employment-alpha: var(--color-employment-open-alpha);
+    --color-employment-border: var(--color-employment-open-border);
   }
   
   /* Enhanced card responsiveness with subtle gradients */

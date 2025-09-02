@@ -80,6 +80,21 @@ Edit `src/config/site.ts` to update your personal information, skills, and socia
 - Skills badges on the homepage  
 - Social links in footer
 - Email address for contact form
+- Employment status indicator with theme-aware colors
+
+### Employment Status
+
+The site includes a dynamic employment status indicator that changes text and color based on your employment status, and also adapts to each theme:
+
+```typescript
+employment: {
+  status: 'employed-open', // 'available' | 'employed-open'
+  // ...
+}
+```
+
+- **`'available'`**: Green across all themes - "Available for new opportunities"
+- **`'employed-open'`**: Blue (light/dark) or Yellow (gruvbox) - "Currently employed • Open to connect"
 
 ## Deploy
 
