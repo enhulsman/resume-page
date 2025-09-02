@@ -1,0 +1,85 @@
+---
+import site from "../config/site";
+
+export interface MetadataProps {
+  title?: string;
+  description?: string;
+  keywords?: string;
+  author?: string;
+  robots?: string;
+  canonical?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  ogUrl?: string;
+  ogType?: string;
+  twitterCard?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
+  twitterCreator?: string;
+  twitterSite?: string;
+  noindex?: boolean;
+}
+
+const {
+  title = `${site.name} — ${site.role}`,
+  description = site.summary,
+  keywords = site.seo.keywords,
+  author = site.seo.author,
+  robots = site.seo.robots,
+  canonical,
+
+  ogTitle = title,
+  ogDescription = description,
+  ogImage = site.seo.ogImage,
+  ogUrl,
+  ogType = site.seo.ogType,
+
+  twitterCard = site.seo.twitterCard,
+  twitterTitle = title,
+  twitterDescription = description,
+  twitterImage = ogImage,
+  twitterCreator = site.seo.twitterCreator,
+  twitterSite = site.seo.twitterSite,
+
+  noindex = false,
+} = Astro.props as MetadataProps;
+
+const canonicalUrl = canonical || site.seo.baseUrl + Astro.url.pathname;
+const fullOgImage = ogImage?.startsWith("http")
+  ? ogImage
+  : `${site.seo.baseUrl}${ogImage}`;
+const fullTwitterImage = twitterImage?.startsWith("http")
+  ? twitterImage
+  : `${site.seo.baseUrl}${twitterImage}`;
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta name="keywords" content={keywords} />
+<meta name="author" content={author} />
+<meta name="robots" content={noindex ? "noindex, nofollow" : robots} />
+
+<link rel="canonical" href={canonicalUrl} />
+<link rel="icon" href="/favicon-h.svg" type="image/svg+xml" />
+
+<meta property="og:title" content={ogTitle} />
+<meta property="og:description" content={ogDescription} />
+<meta property="og:image" content={fullOgImage} />
+<meta property="og:url" content={ogUrl || canonicalUrl} />
+<meta property="og:type" content={ogType} />
+<meta property="og:site_name" content={site.name} />
+
+<meta name="twitter:card" content={twitterCard} />
+<meta name="twitter:title" content={twitterTitle} />
+<meta name="twitter:description" content={twitterDescription} />
+<meta name="twitter:image" content={fullTwitterImage} />
+{twitterCreator && <meta name="twitter:creator" content={twitterCreator} />}
+{twitterSite && <meta name="twitter:site" content={twitterSite} />}
+
+<meta name="theme-color" content="#6366f1" />
+<meta name="color-scheme" content="light dark" />
+<link rel="sitemap" href="/sitemap-index.xml" />

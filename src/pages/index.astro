@@ -1,24 +1,36 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Header from '../components/Header.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import site from '../config/site';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import site from "../config/site";
 
 // Dynamically import all project MDX files
-const projectFiles = await Astro.glob('./projects/*.mdx');
+const projectFiles = await Astro.glob("./projects/*.mdx");
 
 // Filter and transform projects for showcase
 const projects = projectFiles
-  .filter(project => project.frontmatter.showcase === true)
-  .map(project => ({
-    title: project.frontmatter.title || '',
-    description: project.frontmatter.description || '',
-    href: project.url || '',
-    date: project.frontmatter.date
+  .filter((project) => project.frontmatter.showcase === true)
+  .map((project) => ({
+    title: project.frontmatter.title || "",
+    description: project.frontmatter.description || "",
+    href: project.url || "",
+    date: project.frontmatter.date,
   }))
-  .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+  .sort(
+    (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime(),
+  );
+
+const homeDescription = `${site.summary} Based in ${site.location}, specializing in ${site.skills.languages.join(", ")} and ${site.skills.tools.join(", ")}.`;
+const homeKeywords = `${site.seo.keywords}, resume, portfolio, ${site.location}, ${site.company}`;
 ---
-<BaseLayout title={`${site.name} — Developer`} description={`Resume and portfolio of ${site.name}, software engineer.`} >
+
+<BaseLayout
+  title={`${site.name} — ${site.role}`}
+  description={homeDescription}
+  keywords={homeKeywords}
+  ogTitle={`${site.name} — ${site.role} Portfolio & Resume`}
+  ogDescription={homeDescription}
+>
   <Header />
 
   <section class="mt-4 sm:mt-6">

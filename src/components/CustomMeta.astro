@@ -1,0 +1,41 @@
+---
+// This component can be used in MDX files to add custom meta tags
+// Import this in the frontmatter of your MDX file and use it in the content
+
+export interface CustomMetaProps {
+  keywords?: string;
+  ogImage?: string;
+  twitterImage?: string;
+  noindex?: boolean;
+  canonical?: string;
+}
+
+const { keywords, ogImage, twitterImage, noindex, canonical } =
+  Astro.props as CustomMetaProps;
+---
+
+{keywords && <meta name="keywords" content={keywords} />}
+{ogImage && <meta property="og:image" content={ogImage} />}
+{twitterImage && <meta name="twitter:image" content={twitterImage} />}
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+{canonical && <link rel="canonical" href={canonical} />}
+
+<script>
+  // This script will append these meta tags to the head
+  // since they're being added after the initial head is rendered
+  if (typeof document !== "undefined") {
+    const currentScript = document.currentScript;
+    const metaTags =
+      currentScript?.previousElementSibling?.querySelectorAll("meta, link");
+
+    metaTags?.forEach((tag) => {
+      const existingTag = document.head.querySelector(
+        `[name="${tag.getAttribute("name")}"], [property="${tag.getAttribute("property")}"], [rel="${tag.getAttribute("rel")}"]`,
+      );
+      if (existingTag) {
+        existingTag.remove();
+      }
+      document.head.appendChild(tag.cloneNode(true));
+    });
+  }
+</script>

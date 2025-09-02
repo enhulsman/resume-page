@@ -1,22 +1,32 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import ProjectCard from '../../components/ProjectCard.astro';
-import site from '../../config/site';
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+import site from "../../config/site";
 
 // Auto-discover MDX case studies in this folder
-const entries = await Astro.glob('./*.mdx');
+const entries = await Astro.glob("./*.mdx");
 
 const projects = entries
   .map((m) => ({
-    title: m.frontmatter?.title ?? 'Untitled',
-    description: m.frontmatter?.description ?? '',
-    href: m.url ?? '',
+    title: m.frontmatter?.title ?? "Untitled",
+    description: m.frontmatter?.description ?? "",
+    href: m.url ?? "",
     tags: m.frontmatter?.tech ?? [],
-    date: m.frontmatter?.date
+    date: m.frontmatter?.date,
   }))
   .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+
+const projectsDescription = `Explore ${site.name}'s portfolio of projects including ${projects.map((p) => p.title).join(", ")}. Case studies and technical write-ups for selected work.`;
+const projectsKeywords = `${site.seo.keywords}, projects, portfolio, case studies, ${projects.flatMap((p) => p.tags).join(", ")}`;
 ---
-<BaseLayout title={`Projects — ${site.name}`} description={`Case studies and selected projects by ${site.name}.`}>
+
+<BaseLayout
+  title={`Projects — ${site.name}`}
+  description={projectsDescription}
+  keywords={projectsKeywords}
+  ogTitle={`Projects & Portfolio — ${site.name}`}
+  ogDescription={projectsDescription}
+>
   <header class="mt-2">
     <h1 class="text-responsive-lg font-semibold tracking-tight text-theme-primary">Projects <span class="text-theme-accent">gallery</span></h1>
     <p class="text-theme-tertiary mt-1 text-responsive-base">Small, focused write-ups for selected work.</p>

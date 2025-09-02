@@ -1,56 +1,62 @@
 ---
-import site from '../config/site';
-import Nav from '../components/Nav.astro';
-import Footer from '../components/Footer.astro';
-import '../styles/global.css';
-const { title = `${site.name} — ${site.role}`, description = site.summary } = Astro.props;
+import site from "../config/site";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import Metadata, { type MetadataProps } from "../components/Metadata.astro";
+import "../styles/global.css";
+
+export interface Props extends MetadataProps {
+  title?: string;
+  description?: string;
+}
+
+const { title, description, ...metadataProps } = Astro.props;
 ---
+
 <!doctype html>
 <html lang="en" class="min-h-full">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
-
-    <!-- Favicon (SVG) -->
-    <link rel="icon" href="/favicon-h.svg" type="image/svg+xml" />
+    <Metadata title={title} description={description} {...metadataProps} />
 
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     
     <!-- Theme initialization script - runs before page render to prevent flash -->
     <script is:inline>
-      (function() {
+      (function () {
         function getStoredTheme() {
           try {
-            return localStorage.getItem('theme') || 'light';
+            return localStorage.getItem("theme") || "light";
           } catch {
-            return 'light';
+            return "light";
           }
         }
-        
+
         function getSystemTheme() {
-          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          return window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
         }
-        
+
         function applyTheme(theme) {
           // Remove all theme attributes
-          document.documentElement.removeAttribute('data-theme');
-          
+          document.documentElement.removeAttribute("data-theme");
+
           // Apply new theme (light is default, no attribute needed)
-          if (theme !== 'light') {
-            document.documentElement.setAttribute('data-theme', theme);
+          if (theme !== "light") {
+            document.documentElement.setAttribute("data-theme", theme);
           }
         }
-        
+
         const stored = getStoredTheme();
-        const theme = stored === 'light' ? getSystemTheme() : stored;
+        const theme = stored === "light" ? getSystemTheme() : stored;
         applyTheme(theme);
       })();
     </script>
   </head>
-  <body class="font-sans min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)]">
+  <body
+    class="font-sans min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)]"
+  >
     <Nav />
     <main class="min-h-[70vh] mx-auto max-w-6xl px-3 sm:px-6 py-6 sm:py-8">
       <slot />

@@ -11,6 +11,7 @@ Opinionated starter for a multi-page resume built with Astro + TypeScript + Tail
 - Dark/light/Gruvbox themes to pick from
 - Gravatar integration with fallback avatar
 - Responsive design with mobile-first approach
+- Complete SEO & social media optimization (meta tags, Open Graph, Twitter Cards)
 - Cloudflare Workers deployment (`wrangler.toml` included)
 
 ## Quick start
@@ -60,6 +61,7 @@ src/
 ├── components/          # Reusable Astro and React components
 │   ├── CodeDemo.tsx    # Interactive React demo component
 │   ├── ThemeToggle.tsx # Theme switcher (React island)
+│   ├── Metadata.astro  # SEO metadata component
 │   └── ...
 ├── layouts/            # Page layouts
 │   ├── BaseLayout.astro     # Main layout with nav/footer
@@ -69,9 +71,41 @@ src/
 │   ├── projects/       # Auto-discovered MDX case studies
 │   └── ...
 ├── config/             # Site configuration
-│   └── site.ts        # Personal info, skills, social links
+│   └── site.ts        # Personal info, skills, social links, SEO config
 └── worker.ts          # Cloudflare Worker for contact form
 ```
+
+## MDX Projects
+
+Project case studies are auto-discovered from `src/pages/projects/*.mdx`. Each MDX file becomes a route and supports:
+
+### Frontmatter Configuration
+```yaml
+---
+title: "Project Name"
+description: "Project description for SEO"
+date: 2025-01-01
+tech: ["React", "TypeScript", "Tailwind"]
+layout: "../../layouts/ProjectLayout.astro"
+showcase: true  # Shows on homepage
+preview: "https://demo-url.com"  # Optional demo link
+---
+```
+
+### React Islands in MDX
+Import and use React components directly:
+```mdx
+import CodeDemo from '../../components/CodeDemo.tsx'
+import site from '../../config/site.ts'
+
+<CodeDemo client:load />
+```
+
+### Auto-Generated Features
+- Projects with `showcase: true` appear on the homepage
+- `tech` array adds project-specific keywords for SEO
+- Projects are sorted by date (newest first)
+- ProjectLayout automatically handles metadata and styling
 
 ## Configuration
 
@@ -81,6 +115,55 @@ Edit `src/config/site.ts` to update your personal information, skills, and socia
 - Social links in footer
 - Email address for contact form
 - Employment status indicator with theme-aware colors
+- SEO metadata (keywords, Open Graph, Twitter Cards)
+
+### SEO & Social Media
+
+The site includes comprehensive SEO optimization:
+- Automatic meta tags (title, description, keywords)
+- Open Graph tags for social media sharing
+- Twitter Card support
+- Canonical URLs
+- Structured data ready
+
+Update the `seo` section in `site.ts` for optimal results:
+```typescript
+seo: {
+  baseUrl: 'https://yourdomain.com', // Your actual domain
+  ogImage: '/og-image.svg',         // Social media sharing image
+  twitterCreator: '@yourhandle',     // Optional Twitter handle
+}
+```
+
+#### Using Metadata in Pages
+
+For custom pages, pass metadata props to BaseLayout:
+```astro
+<BaseLayout 
+  title="Custom Page Title"
+  description="Custom description"
+  keywords="custom, keywords"
+  ogImage="/custom-image.png"
+>
+  <!-- Your content -->
+</BaseLayout>
+```
+
+#### Enhanced MDX Projects
+
+Project MDX files support enhanced frontmatter for better SEO:
+```yaml
+---
+title: "Project Name"
+description: "Detailed project description for SEO"
+date: 2025-01-01
+tech: ["React", "TypeScript"]  # Auto-added to keywords
+showcase: true                 # Shows on homepage
+ogImage: "/project-image.png"  # Custom social image
+---
+```
+
+The `tech` array automatically enhances SEO keywords, and `description` is used for Open Graph tags.
 
 ### Employment Status
 
