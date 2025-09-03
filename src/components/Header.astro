@@ -47,11 +47,23 @@ const employmentClass = `employment-${employmentStatus}`;
             </p>
             <!-- Quote - now shown on all screen sizes -->
             <p class="text-xs sm:text-sm text-theme-tertiary/80 mt-2 italic break-words md:hidden">
-              {site.quote}
+              {site.quoteUrl ? (
+                <a href={site.quoteUrl} target="_blank" rel="noopener noreferrer" class="text-theme-accent hover:text-theme-accent-hover underline decoration-dotted underline-offset-2 hover:decoration-solid transition-all duration-200">
+                  {site.quote}
+                </a>
+              ) : (
+                site.quote
+              )}
             </p>
             <!-- Quote on larger screens -->
             <p class="hidden md:block text-sm text-theme-tertiary/80 mt-2 italic break-words">
-              {site.quote}
+              {site.quoteUrl ? (
+                <a href={site.quoteUrl} target="_blank" rel="noopener noreferrer" class="text-theme-accent hover:text-theme-accent-hover underline decoration-dotted underline-offset-2 hover:decoration-solid transition-all duration-200">
+                  {site.quote}
+                </a>
+              ) : (
+                site.quote
+              )}
             </p>
           </div>
         </div>

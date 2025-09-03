@@ -3,7 +3,8 @@ import BaseLayout from "./BaseLayout.astro";
 import site from "../config/site";
 
 const { frontmatter } = Astro.props;
-const { title, date, tech = [], preview = "", description = "" } = frontmatter;
+const { title, date, tech = [], preview = "", github = "", description = "" } = frontmatter;
+const githubUrl = github.startsWith("http") ? github : `${site.social.GitHub}/${github}`;
 
 const formattedDate = date
   ? new Date(date).toLocaleDateString("en-US", {
@@ -38,32 +39,31 @@ const projectKeywords =
           {title}
         </h1>
 
-        {
-          formattedDate && (
-            <p class="mt-2 text-sm text-theme-muted">{formattedDate}</p>
-          )
-        }
+        {formattedDate && (
+          <p class="mt-2 text-sm text-theme-muted">{formattedDate}</p>
+        )}
 
-        {
-          preview && (
-            <a
-              href={preview}
-              class="mt-4 inline-block text-sm font-medium text-theme-accent hover:underline"
-            >
-              Preview of this project
-            </a>
-          )
-        }
+        {preview && (
+          <a href={preview} class="mt-4 inline-block text-sm font-medium text-theme-accent hover:underline">
+            Preview of this project
+          </a>
+        )}
 
-        {
-          tech.length > 0 && (
-            <div class="mt-4 flex flex-wrap gap-2">
-              {tech.map((t: String, i: number) => (
-                <span class={`tech-badge-${(i % 4) + 1}`}>{t}</span>
-              ))}
-            </div>
-          )
-        }
+        {github && preview && (<br />)}
+
+        {github && (
+          <a href={githubUrl} class="mt-4 inline-block text-sm font-medium text-theme-accent hover:underline" >
+            View on GitHub
+          </a>
+        )}
+
+        {tech.length > 0 && (
+          <div class="mt-4 flex flex-wrap gap-2">
+            {tech.map((t: String, i: number) => (
+              <span class={`tech-badge-${(i % 4) + 1}`}>{t}</span>
+            ))}
+          </div>
+        )}
       </div>
     </header>
 

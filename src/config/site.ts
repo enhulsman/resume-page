@@ -7,6 +7,7 @@ const site = {
   company: 'Anamata',
   location: 'Utrecht, NL 🇳🇱',
   quote: '"Proverbs 3:5-7 NIV"',
+  quoteUrl: "https://www.bible.com/bible/111/PRO.3.NIV#:~:text=Trust%20in%20the,and%20shun%20evil.", 
   summary: 'Linux-first Junior DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce friction — driven to continuously improve systems and skills.',
   contactMessage: `Send a message and I'll get back to you soon. Whether it's about work opportunities, open source projects, or just to chat about Formula 1!`,
 

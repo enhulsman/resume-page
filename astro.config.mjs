@@ -20,5 +20,16 @@ export default defineConfig({
     layouts: {
       '*/projects/*.mdx': './src/layouts/ProjectLayout.astro'
     }
+  },
+  vite: {
+    server: {
+      host: true, // Allow external connections
+      port: 4321, // Explicitly set the port
+      allowedHosts: [
+        'npm-dev.arc8.dev',
+        'localhost',
+        '127.0.0.1'
+      ]
+    }
   }
 });
