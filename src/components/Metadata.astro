@@ -3,6 +3,7 @@ import site from "../config/site";
 
 export interface MetadataProps {
   title?: string;
+  name?: string,
   description?: string;
   keywords?: string;
   author?: string;
@@ -24,6 +25,7 @@ export interface MetadataProps {
 
 const {
   title = `${site.name} — ${site.role}`,
+  name = `${site.name} Portfolio & Resume`,
   description = site.summary,
   keywords = site.seo.keywords,
   author = site.seo.author,
@@ -71,7 +73,7 @@ const fullTwitterImage = twitterImage?.startsWith("http")
 <meta property="og:image" content={fullOgImage} />
 <meta property="og:url" content={ogUrl || canonicalUrl} />
 <meta property="og:type" content={ogType} />
-<meta property="og:site_name" content={site.name} />
+<meta property="og:site_name" content={name} />
 
 <meta name="twitter:card" content={twitterCard} />
 <meta name="twitter:title" content={twitterTitle} />
