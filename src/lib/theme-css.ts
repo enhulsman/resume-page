@@ -1,9 +1,10 @@
 import { type ThemeName } from './theme.ts';
 
+export { getCurrentTheme } from './theme.ts';
+
 /**
  * Get the CSS variables for a specific theme.
- * This keeps the theme definitions centralized in global.css while allowing
- * programmatic access for components like iframes that need to inherit themes.
+ * Used for components like iframes that need to inherit themes.
  */
 export function getThemeVariables(theme: ThemeName): string {
   const baseVariables = `
@@ -66,16 +67,4 @@ export function getThemeVariables(theme: ThemeName): string {
     default:
       return baseVariables;
   }
-}
-
-/**
- * Get current theme from document element
- */
-export function getCurrentTheme(): ThemeName {
-  if (typeof document === 'undefined') return 'light';
-  
-  const themeAttr = document.documentElement.getAttribute('data-theme');
-  if (themeAttr === 'dark') return 'dark';
-  if (themeAttr === 'gruvbox') return 'gruvbox';
-  return 'light';
 }

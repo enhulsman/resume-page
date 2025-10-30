@@ -21,36 +21,11 @@ const { title, description, ...metadataProps } = Astro.props;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     
-    <!-- Theme initialization script - runs before page render to prevent flash -->
     <script is:inline>
       (function () {
-        function getStoredTheme() {
-          try {
-            return localStorage.getItem("theme") || "light";
-          } catch {
-            return "light";
-          }
-        }
-
-        function getSystemTheme() {
-          return window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light";
-        }
-
-        function applyTheme(theme) {
-          // Remove all theme attributes
-          document.documentElement.removeAttribute("data-theme");
-
-          // Apply new theme (light is default, no attribute needed)
-          if (theme !== "light") {
-            document.documentElement.setAttribute("data-theme", theme);
-          }
-        }
-
-        const stored = getStoredTheme();
-        const theme = stored === "light" ? getSystemTheme() : stored;
-        applyTheme(theme);
+        const stored = localStorage.getItem("theme");
+        const theme = stored || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        if (theme !== "light") document.documentElement.setAttribute("data-theme", theme);
       })();
     </script>
   </head>

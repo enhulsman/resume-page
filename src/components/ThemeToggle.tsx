@@ -1,31 +1,25 @@
 import { useState, useEffect } from 'react';
-import { type ThemeName, themes, getStoredTheme, setStoredTheme, applyTheme, initializeTheme } from '../lib/theme';
+import { type ThemeName, themes, getCurrentTheme, setTheme } from '../lib/theme';
 
 export default function ThemeToggle() {
   const [currentTheme, setCurrentTheme] = useState<ThemeName>('light');
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const theme = initializeTheme();
-    setCurrentTheme(theme);
+    setCurrentTheme(getCurrentTheme());
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      // Check if click is outside the dropdown container
-      if (!target.closest('[data-theme-dropdown]')) {
+      if (!(event.target as Element).closest('[data-theme-dropdown]')) {
         setIsOpen(false);
       }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-      }
+      if (event.key === 'Escape') setIsOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -39,8 +33,7 @@ export default function ThemeToggle() {
 
   const handleThemeChange = (theme: ThemeName) => {
     setCurrentTheme(theme);
-    setStoredTheme(theme);
-    applyTheme(theme);
+    setTheme(theme);
     setIsOpen(false);
   };
 
@@ -54,9 +47,7 @@ export default function ThemeToggle() {
         aria-label="Toggle theme"
       >
         <span className="text-sm sm:text-base">{currentThemeConfig.icon}</span>
-        <span className="hidden sm:inline">
-          {currentThemeConfig.displayName}
-        </span>
+        <span className="hidden sm:inline">{currentThemeConfig.displayName}</span>
         <svg
           className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -69,13 +60,8 @@ export default function ThemeToggle() {
 
       {isOpen && (
         <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
           
-          {/* Dropdown */}
           <div className="absolute right-0 mt-1 py-1 w-36 sm:w-40 bg-theme-elevated border border-theme-primary rounded-md shadow-theme-lg z-20">
             {themes.map((theme) => (
               <button

@@ -12,44 +12,22 @@ export const themes: ThemeConfig[] = [
   { name: 'gruvbox', displayName: 'Gruvbox', icon: '🟫' },
 ];
 
-export const defaultTheme: ThemeName = 'light';
-
-// Theme management utilities
-export function getStoredTheme(): ThemeName {
-  if (typeof window === 'undefined') return defaultTheme;
-  
-  const stored = localStorage.getItem('theme') as ThemeName;
-  return stored && themes.some(t => t.name === stored) ? stored : defaultTheme;
+export function getCurrentTheme(): ThemeName {
+  if (typeof document === 'undefined') return 'light';
+  const attr = document.documentElement.getAttribute('data-theme');
+  return (attr === 'dark' || attr === 'gruvbox') ? attr : 'light';
 }
 
-export function setStoredTheme(theme: ThemeName): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('theme', theme);
-}
-
-export function applyTheme(theme: ThemeName): void {
-  if (typeof document === 'undefined') return;
+export function setTheme(theme: ThemeName): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
   
-  // Remove all theme data attributes
-  themes.forEach(t => {
-    document.documentElement.removeAttribute(`data-theme`);
-  });
-  
-  // Apply new theme (light is default, no data attribute needed)
-  if (theme !== 'light') {
+  // Apply to DOM (light is default, no attribute needed)
+  if (theme === 'light') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
     document.documentElement.setAttribute('data-theme', theme);
   }
-}
-
-export function getSystemTheme(): ThemeName {
-  if (typeof window === 'undefined') return defaultTheme;
   
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
-export function initializeTheme(): ThemeName {
-  const stored = getStoredTheme();
-  const theme = stored === defaultTheme ? getSystemTheme() : stored;
-  applyTheme(theme);
-  return theme;
+  // Persist to storage
+  localStorage.setItem('theme', theme);
 }
