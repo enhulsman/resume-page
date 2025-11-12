@@ -26,7 +26,7 @@ export default defineConfig({
       host: true, // Allow external connections
       port: 4321, // Explicitly set the port
       allowedHosts: [
-        'npm-dev.arc8.dev',
+        'npm-dev.hulsman.dev',
         'localhost',
         '127.0.0.1'
       ]

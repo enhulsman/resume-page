@@ -32,7 +32,7 @@ const site = {
   social: {
     email: 'info@hulsman.dev',
     website: 'https://hulsman.dev',
-    GitHub: 'https://github.com/arc891',
+    GitHub: 'https://github.com/enhulsman',
     LinkedIn: 'https://www.linkedin.com/in/ezra-hulsman',
     employer: 'https://anamata.nl',
     // Twitter: 'https://twitter.com/yourname',
