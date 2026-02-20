@@ -47,7 +47,7 @@ const site = {
     don't break at 3 AM. I genuinely enjoy the challenge of building reliable infrastructure and creating 
     tools that make mine and other developers' lives easier.
 
-    In my free time, I work on personal projects like HackrsChat (a Rust-based chat app) and contribute 
+    In my free time, I work on personal projects like an encrypted chat TUI in Rust and contribute
     to open source when I can. I'm also a big Formula 1 fan - there's something satisfying about both 
     well-tuned race cars and well-optimized code.
   `,

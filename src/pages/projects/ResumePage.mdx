@@ -1,0 +1,35 @@
+---
+title: "Portfolio Site"
+description: "Config-driven portfolio with MDX auto-discovery, multi-theme support, dynamic OG images, and server-side form handling on Cloudflare Workers"
+date: 2025-08-25
+github: "resume-page"
+preview: "https://hulsman.dev"
+tech: ["Astro", "TypeScript", "Tailwind CSS", "Cloudflare Workers", "MDX"]
+layout: "../../layouts/ProjectLayout.astro"
+showcase: false
+---
+
+# Portfolio Site
+
+A config-driven portfolio site where adding a new project means creating a single MDX file — no routing config, no component wiring, no rebuild of navigation. The file's frontmatter controls display options (showcase, tech badges, links), and Astro's content layer handles discovery and routing automatically.
+
+## Motivation
+
+I wanted full control over theming, layout, and deployment rather than fitting content into a template's constraints. Building from scratch with Astro let me use MDX for interactive components, leverage partial hydration to ship zero JavaScript on static pages, and deploy to Cloudflare Workers for server-side form handling without a separate backend.
+
+## Technical Highlights
+
+- **Config-Driven Content**: A single `site.ts` file defines all personal info, skills, and social links. MDX project files are auto-discovered and routed without manual registration — frontmatter controls showcase visibility, tech tags, and external links
+- **Multi-Theme System**: Three themes (dark, light, gruvbox) implemented with CSS custom properties. Theme preference is persisted to `localStorage` and applied before first paint to prevent flash of unstyled content
+- **Edge Deployment**: Runs on Cloudflare Workers with server-side contact form handling via the Resend API — no third-party form service or client-side submission required
+- **Dynamic OG Images**: Open Graph images generated from SVG templates at build time, with meta tags driven from site configuration for consistent social previews
+
+## Key Decisions
+
+**Why Astro?** Partial hydration means pages with no interactive elements ship zero client-side JavaScript. React islands handle the few interactive components (theme toggle, code demos) without hydrating the entire page.
+
+**Why Cloudflare Workers over static hosting?** The contact form needs server-side processing to call the Resend API with credentials that cannot be exposed client-side. Workers provide this without maintaining a separate API server, and edge deployment keeps response times low globally.
+
+## Outcome
+
+Serves as my primary professional presence at hulsman.dev. Static content ships as HTML with only the theme toggle hydrated — no full-page JavaScript bundles — and pushes to main deploy automatically to Cloudflare Workers.

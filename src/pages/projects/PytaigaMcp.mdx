@@ -1,0 +1,40 @@
+---
+title: "pytaiga-mcp"
+description: "Merged PR adding security hardening, centralized error handling (14% code reduction), and the project's first test suite to a Taiga MCP server"
+date: 2026-01-12
+github: "https://github.com/talhaorak/pytaiga-mcp"
+tech: ["Python", "MCP", "Pydantic", "pytest", "CI/CD", "Ruff"]
+layout: "../../layouts/ProjectLayout.astro"
+showcase: true
+---
+
+# pytaiga-mcp — Open Source Contribution
+
+A [merged pull request](https://github.com/talhaorak/pytaiga-mcp/pull/5) to [pytaiga-mcp](https://github.com/talhaorak/pytaiga-mcp), an MCP (Model Context Protocol) server that integrates Taiga project management with AI assistants. The contribution addressed three areas — security, AI context efficiency, and code quality — reducing server code by 14% and adding the project's first test suite.
+
+## Security Hardening
+
+- **Credential Protection**: Introduced a config module using Pydantic's `SecretStr` so that passwords and tokens are masked in all logs, tracebacks, and `repr()` output — credentials cannot leak even in unhandled exceptions
+- **Auto-Authentication**: Server authenticates on startup using environment variables, eliminating the manual auth step users previously had to perform before every session
+- **Input Validation**: Added parameter allowlists per resource type to reject unexpected input
+- **Session Masking**: Session IDs display only the first 8 characters in logs
+
+## AI Context Efficiency
+
+Added a response filtering system with three verbosity levels:
+
+- **minimal**: Core fields only (id, ref, subject, status, project)
+- **standard** (default): Useful fields including version for updates
+- **full**: Complete API response for backward compatibility
+
+This reduces token usage — a user story list response goes from ~50 fields to 5 in minimal mode.
+
+## Code Quality
+
+- **Centralized Error Handling**: Refactored with a `_execute_taiga_operation()` helper that eliminated duplicated try/catch blocks across every endpoint, reducing `server.py` by ~207 lines (14%)
+- **Dependency Cleanup**: Removed 3 unused dependencies (fastapi, uvicorn, httpx) and consolidated 3 linting tools (black, isort, flake8) down to 1 (ruff)
+- **Testing & CI**: Added the project's first test suite — 11 unit tests with pytest — plus a CI pipeline with matrix testing across Python 3.10–3.12
+
+## Outcome
+
+The PR was reviewed and merged by the maintainer. All changes are included in the released package.

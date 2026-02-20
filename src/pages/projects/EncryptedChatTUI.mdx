@@ -1,0 +1,50 @@
+---
+title: "Encrypted Chat TUI"
+description: "Self-hosted encrypted chat system built as a Cargo workspace with Tokio async networking, a custom typed JSON protocol, and single-command Docker Compose deployment"
+date: 2025-08-26
+tech: ["Rust", "Tokio", "Cursive", "PostgreSQL", "Docker", "JSON Protocol"]
+layout: "../../layouts/ProjectLayout.astro"
+showcase: true
+---
+
+# Encrypted Chat TUI
+
+A self-hosted terminal chat application built in Rust. No third-party servers, no data collection — encrypted conversations running on your own infrastructure.
+
+## Motivation
+
+This project started as a Computer Security course assignment and continued independently afterward. I wanted to apply cryptographic concepts to a real networked system rather than leave them as academic exercises. Building the full stack — protocol, server, client, deployment — from scratch gave me direct experience with the tradeoffs involved in encrypted communications and async systems programming.
+
+## What I Built
+
+Designed a Cargo workspace with three crates: a Tokio-based async server, a Cursive terminal UI client, and a shared protocol library.
+
+- **Server**: Tokio async runtime handling concurrent connections with per-connection request routing, backed by PostgreSQL for persistent storage of users, rooms, and message history
+- **Client**: Terminal UI built with Cursive, using a threaded reader/writer architecture for non-blocking I/O and request-response pairing via channels
+- **Protocol Migration**: Replaced the original fragile text-based protocol with typed newline-delimited JSON (ndjson) and a dedicated codec module — this added structured serialization, version negotiation, and made new message types trivial to add without breaking backward compatibility
+- **Deployment**: Dockerized the full stack so a single `docker compose up` launches server and database together
+
+## Technical Highlights
+
+- **Encrypted Credentials at Rest**: Login credentials and session tokens are encrypted in the database, preventing credential exposure even if the backing store is compromised
+- **Persistent Multiplexed Connections**: The client maintains a single long-lived connection with multiplexed request/response handling — connect once, interact continuously
+- **Typed Protocol with Version Negotiation**: The ndjson protocol carries type discriminators and version fields, allowing server and client to negotiate capabilities at connection time
+- **Single-Command Deployment**: Docker Compose orchestrates server and PostgreSQL with configured networking, volumes, and health checks
+
+## Key Decisions
+
+**Why Rust?** Memory safety guarantees and zero-cost abstractions suit a networked application handling concurrent users. Tokio's async runtime provides efficient I/O multiplexing without spawning a thread per connection.
+
+**Why ndjson over raw text?** The original text protocol was fragile and hard to extend. Typed ndjson provides structured serialization, version negotiation, and makes adding new message types trivial without breaking backward compatibility.
+
+**Why a TUI?** Terminal interfaces are lightweight, work over SSH, and appeal to the same users who value self-hosting and privacy.
+
+**Why Docker Compose?** Bundles server, database, and networking into a single reproducible deployment. New users run one command instead of manually configuring PostgreSQL, setting up schemas, and managing ports.
+
+## Collaboration
+
+Built as the primary developer, responsible for server architecture, database layer, authentication, and the v2 JSON protocol. A collaborator contributed initial project scaffolding. The project originated from a Computer Security course.
+
+## Outcome
+
+The project is a working end-to-end encrypted chat system. Building it deepened my understanding of async Rust, protocol design, and the practical challenges of encrypted communication systems — from key management to connection multiplexing to deployment orchestration.

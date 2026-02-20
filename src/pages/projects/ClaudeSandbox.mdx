@@ -1,0 +1,53 @@
+---
+title: "Claude Sandbox"
+description: "Defense-in-depth sandbox isolating Claude Code with network namespaces, filesystem bind mounts, a domain-filtering egress proxy, and cross-platform Nix packaging for Linux and macOS"
+date: 2026-02-02
+github: "claude-sandbox"
+tech: ["Nix", "Python", "Bash", "Linux", "bubblewrap", "macOS Seatbelt"]
+layout: "../../layouts/ProjectLayout.astro"
+showcase: true
+---
+
+# Claude Sandbox
+
+A cross-platform defense-in-depth sandbox for safely running [Claude Code](https://docs.anthropic.com/en/docs/claude-code) on NixOS, Raspberry Pi, Ubuntu, and macOS. It wraps Anthropic's Claude Code CLI with OS-native sandboxing to defend against prompt injection attacks and accidental credential exposure.
+
+## The Problem
+
+AI coding assistants run with broad system access. A single prompt injection or misconfigured tool call could leak credentials, exfiltrate code, or modify system files. Claude Code ships with a built-in sandbox, but a bug in that sandbox disables it — there is no independent safety net.
+
+## What I Built
+
+Claude Sandbox implements **external isolation layers** independent of Claude Code's built-in protections. Even if internal safeguards fail, the outer boundary remains secure.
+
+### Filesystem Isolation
+
+Precise bind mounts on Linux and Seatbelt kernel-level denial rules on macOS control exactly what the agent can read and write. Sensitive paths are blocked by default: `~/.ssh`, `~/.aws`, `~/.config/gcloud`, browser session data, keyrings, and credential stores. System directories are mounted read-only, and the agent's writes are confined to an explicit workspace directory.
+
+### Network Isolation
+
+Linux uses empty network namespaces via bubblewrap so the sandboxed process has no network interfaces at all — only a `socat` bridge connects it to the egress proxy. macOS uses Seatbelt kernel profiles denying all non-localhost traffic. This prevents data exfiltration to attacker-controlled servers and blocks C2 (command-and-control) communication channels entirely.
+
+### Egress Proxy
+
+A Python-based HTTP CONNECT proxy acts as the single point of network egress. Every outbound request is checked against a domain allowlist defined in the profile configuration. The proxy logs all connection attempts (allowed and denied), detects DNS exfiltration patterns in hostnames, and assigns risk scores to suspicious requests. Only explicitly permitted domains — package registries, documentation sites, APIs — can be reached.
+
+### Security Profiles
+
+Built-in profiles provide different isolation levels for different trust contexts — a development session needs package registry access that a strict review session does not:
+
+- **dev**: Full project access, writable workspace, package registry access
+- **strict**: Minimal system access, workspace-only writes, API-only networking
+- **nixos-admin / macos-admin**: System configuration readability for admin tasks
+
+### Defense in Depth
+
+The architecture stacks 15+ independent security mechanisms across multiple layers: OS-level isolation (network namespaces, filesystem bind mounts, read-only system trees), credential protection (blocking sensitive paths, git credential stores, environment variable isolation), network control (egress proxy, domain allowlisting, DNS isolation, HTTP CONNECT tunneling, suspicious pattern detection), and operational security (audit logging, session isolation, workspace containment, profile-based access control). An attacker would need to simultaneously compromise multiple independent systems.
+
+## Cross-Platform Architecture
+
+A single `config.toml` defines all profile rules — allowed paths, writable directories, permitted domains — and the sandbox translates them into platform-native isolation. On Linux, this drives bubblewrap bind mounts and network namespace configuration. On macOS, it generates Seatbelt sandbox profiles with equivalent restrictions. Nix handles cross-platform packaging and dependency management, producing reproducible builds with no manual dependency installation.
+
+## Outcome
+
+The sandbox is in daily use across NixOS (x86_64), Raspberry Pi (aarch64), and macOS environments. It provides a security boundary that is independent of the tool it wraps — the same architecture isolates any CLI agent, not just Claude Code.

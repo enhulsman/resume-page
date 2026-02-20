@@ -23,13 +23,13 @@ export default defineConfig({
   },
   vite: {
     server: {
-      host: true, // Allow external connections
-      port: 4321, // Explicitly set the port
-      allowedHosts: [
-        'npm-dev.hulsman.dev',
-        'localhost',
-        '127.0.0.1'
-      ]
+      host: true,
+      port: 4321,
+      allowedHosts: true
+    },
+    preview: {
+      host: true,
+      allowedHosts: true
     }
   }
 });
