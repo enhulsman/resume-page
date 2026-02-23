@@ -57,7 +57,7 @@ const site = {
     author: 'Ezra Hulsman',
     keywords: 'DevOps Engineer, Pega Developer, Python, Rust, Infrastructure Automation, CI/CD, Kubernetes, Docker, Linux',
     robots: 'index, follow',
-    ogImage: '/og-image.svg',
+    ogImage: '/og-image.png',
     ogType: 'website',
     twitterCard: 'summary_large_image',
     twitterCreator: '',
