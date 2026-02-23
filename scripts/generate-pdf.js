@@ -13,8 +13,8 @@ const path = require('path');
 
   const pagesToPrint = [
     { url: `${baseUrl}/`, out: path.join(outDir, 'resume-home.pdf') },
+    { url: `${baseUrl}/resume`, out: path.join(outDir, 'resume.pdf') },
     { url: `${baseUrl}/projects/project-foo`, out: path.join(outDir, 'project-foo.pdf') },
-    // add more routes here if you want e.g. /resume or /projects/whatever
   ];
 
   const browser = await chromium.launch();

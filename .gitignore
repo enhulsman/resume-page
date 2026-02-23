@@ -5,6 +5,7 @@ dist/
 .venv/
 .DS_Store
 .vscode/
+.astro/
 .wrangler/
 .dev.vars
 /.mf/
@@ -14,3 +15,5 @@ dist/
 *.log
 public/react-demo-app.iife*
 TODO
+# Personal CV/resume reference files
+*CV*.*

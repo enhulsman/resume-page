@@ -187,7 +187,7 @@ npx wrangler deploy
 
 ## Notes
 
-- Put a `resume.pdf` file in `public/` to make it available at `/resume.pdf`.
+- Recruiters can request the full CV via the contact form; the `/resume` page shows sanitized content.
 - There's an example `CodeDemo` React island under `src/components` used in `src/pages/projects/project-foo.mdx`.
-- There's a `generate-pdf.js` script in `scripts/`, that uses Playwright to scrape your live server and generate PDFs from the relevant pages.
-- The `.github/workflows/build.yml` will build the site, run the `generate-pdf.js` script, and upload both those generated resumes + the one you put in `/public/resume.pdf` and the `dist` folder as a workflow artifact.
+- There's a `generate-pdf.js` script in `scripts/`, that uses Playwright to scrape your live server and generate PDFs from the relevant pages (including `/resume`).
+- The `.github/workflows/build.yml` will build the site, run the `generate-pdf.js` script, and upload the generated PDFs and the `dist` folder as workflow artifacts.
