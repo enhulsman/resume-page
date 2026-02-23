@@ -1,0 +1,45 @@
+---
+import { experience } from '../../config/resume';
+
+const consulting = experience.filter((e) => e.group === 'consulting');
+const prior = experience.filter((e) => e.group === 'prior');
+
+function formatDate(entry: typeof experience[0]) {
+  if (!entry.endDate) return `${entry.startDate} – present`;
+  return `${entry.startDate} – ${entry.endDate}`;
+}
+---
+
+<div class="space-y-6">
+  <div>
+    <p class="text-sm font-medium text-theme-secondary mb-4">Consultant via <a href="https://anamata.nl" target="_blank" rel="noopener noreferrer" class="text-theme-accent hover:text-theme-accent-hover underline decoration-dotted underline-offset-2 hover:decoration-solid transition-all duration-200">Anamata</a> (2023 – present)</p>
+    <div class="space-y-4">
+      {consulting.map((entry) => (
+        <div class="timeline-entry">
+          <div class="timeline-dot"></div>
+          <div>
+            <span class="text-xs text-theme-tertiary">{formatDate(entry)}</span>
+            <p class="text-sm font-medium text-theme-primary">{entry.role} — <span class="text-theme-secondary font-normal">{entry.client}</span></p>
+            <p class="text-sm text-theme-tertiary mt-0.5">{entry.summary}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div>
+    <p class="text-sm font-medium text-theme-secondary mb-4">Prior Experience</p>
+    <div class="space-y-4">
+      {prior.map((entry) => (
+        <div class="timeline-entry">
+          <div class="timeline-dot"></div>
+          <div>
+            <span class="text-xs text-theme-tertiary">{formatDate(entry)}</span>
+            <p class="text-sm font-medium text-theme-primary">{entry.role} — <span class="text-theme-secondary font-normal">{entry.client}</span></p>
+            <p class="text-sm text-theme-tertiary mt-0.5">{entry.summary}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>

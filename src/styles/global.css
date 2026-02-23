@@ -824,6 +824,25 @@ body {
   }
 }
 
+/* Timeline styles */
+.timeline-entry {
+  position: relative;
+  border-left: 2px solid var(--color-border-primary);
+  padding-left: 1.25rem;
+  margin-left: 0.5rem;
+  transition: var(--transition-theme);
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -5px;
+  top: 0.5rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-accent-primary);
+}
+
 /* Skill badge styles - theme aware */
 .skill-badge-primary {
   @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;

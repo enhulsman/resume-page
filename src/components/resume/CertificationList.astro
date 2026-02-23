@@ -1,0 +1,19 @@
+---
+import { certifications } from '../../config/resume';
+---
+
+<div class="space-y-3">
+  {certifications.map((cert) => (
+    <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-3">
+      <span class="text-xs text-theme-tertiary sm:w-24 shrink-0">{cert.year}</span>
+      <div>
+        <p class="text-sm font-medium text-theme-primary">
+          {cert.name} — <span class="text-theme-secondary font-normal">{cert.institution}</span>
+        </p>
+        {cert.credential && (
+          <span class="skill-badge-primary text-[10px] mt-0.5 inline-block">{cert.credential}</span>
+        )}
+      </div>
+    </div>
+  ))}
+</div>

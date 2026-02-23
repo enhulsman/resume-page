@@ -1,0 +1,25 @@
+---
+import { skillCategories, spokenLanguages } from '../../config/resume';
+---
+
+<div class="space-y-4">
+  <div>
+    <span class="text-xs font-medium text-theme-tertiary uppercase tracking-wide block mb-2">Languages</span>
+    <p class="text-sm text-theme-secondary">
+      {spokenLanguages.map((lang, i) => (
+        <>{i > 0 && ' · '}{lang.name} ({lang.level})</>
+      ))}
+    </p>
+  </div>
+
+  {skillCategories.map((category) => (
+    <div>
+      <span class="text-xs font-medium text-theme-tertiary uppercase tracking-wide block mb-2">{category.label}</span>
+      <div class="flex flex-wrap gap-1.5">
+        {category.items.map((item) => (
+          <span class={`skill-badge-${category.badgeClass}`}>{item}</span>
+        ))}
+      </div>
+    </div>
+  ))}
+</div>

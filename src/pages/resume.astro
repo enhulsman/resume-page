@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SkillsGrid from '../components/resume/SkillsGrid.astro';
+import ExperienceTimeline from '../components/resume/ExperienceTimeline.astro';
+import EducationList from '../components/resume/EducationList.astro';
+import CertificationList from '../components/resume/CertificationList.astro';
+import site from '../config/site';
+---
+
+<BaseLayout
+  title={`Resume — ${site.name}`}
+  description={`Professional resume of ${site.name}. ${site.role} at ${site.company}, based in ${site.location}.`}
+  keywords={`${site.seo.keywords}, resume, CV, work experience, certifications`}
+  ogTitle={`Resume — ${site.name}`}
+  ogDescription={`${site.role} at ${site.company}. Work experience, skills, education, and certifications.`}
+>
+  <section>
+    <div class="mb-6">
+      <h1 class="text-responsive-lg font-semibold tracking-tight text-theme-primary">Resume</h1>
+    </div>
+  </section>
+
+  <section>
+    <div class="card-responsive">
+      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Skills</h2>
+      <SkillsGrid />
+    </div>
+  </section>
+
+  <section class="mt-6 sm:mt-8">
+    <div class="card-responsive">
+      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Experience</h2>
+      <ExperienceTimeline />
+    </div>
+  </section>
+
+  <section class="mt-6 sm:mt-8">
+    <div class="card-responsive">
+      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Education</h2>
+      <EducationList />
+    </div>
+  </section>
+
+  <section class="mt-6 sm:mt-8">
+    <div class="card-responsive">
+      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Certifications</h2>
+      <CertificationList />
+    </div>
+  </section>
+</BaseLayout>
