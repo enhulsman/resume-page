@@ -1,0 +1,24 @@
+---
+import { education } from '../../config/resume';
+---
+
+<div class="space-y-3">
+  {education.map((entry) => (
+    <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-3">
+      <span class="text-xs text-theme-tertiary sm:w-24 shrink-0">{entry.startYear} – {entry.endYear}</span>
+      <div>
+        <p class="text-sm font-medium text-theme-primary">
+          {entry.degree} — <span class="text-theme-secondary font-normal">{entry.institution}</span>
+        </p>
+        {(entry.result || entry.gpa) && (
+          <p class="text-xs text-theme-tertiary mt-0.5">
+            {entry.result}
+            {entry.gpa && (
+              <span class="skill-badge-primary ml-2">{entry.gpa} GPA</span>
+            )}
+          </p>
+        )}
+      </div>
+    </div>
+  ))}
+</div>

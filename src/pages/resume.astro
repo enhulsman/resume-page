@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SkillsGrid from '../components/resume/SkillsGrid.astro';
+import ExperienceTimeline from '../components/resume/ExperienceTimeline.astro';
+import EducationList from '../components/resume/EducationList.astro';
+import CertificationList from '../components/resume/CertificationList.astro';
+import site from '../config/site';
+---
+
+<BaseLayout
+  title={`Resume — ${site.name}`}
+  description={`Professional resume of ${site.name}. ${site.role} at ${site.company}, based in ${site.location}.`}
+  keywords={`${site.seo.keywords}, resume, CV, work experience, certifications`}
+  ogTitle={`Resume — ${site.name}`}
+  ogDescription={`${site.role} at ${site.company}. Work experience, skills, education, and certifications.`}
+>
+  <section>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-6">
+      <h1 class="text-responsive-lg font-semibold tracking-tight text-theme-primary">Resume</h1>
+      <a href="/resume.pdf" class="btn-theme-accent-enhanced inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 self-start sm:self-auto" download>
+        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Download PDF
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <div class="card-responsive">
+      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Skills</h2>
+      <SkillsGrid />
+    </div>
+  </section>
+
+  <section class="mt-6 sm:mt-8">
+    <div class="card-responsive">
+      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Experience</h2>
+      <ExperienceTimeline />
+    </div>
+  </section>
+
+  <section class="mt-6 sm:mt-8">
+    <div class="card-responsive">
+      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Education</h2>
+      <EducationList />
+    </div>
+  </section>
+
+  <section class="mt-6 sm:mt-8">
+    <div class="card-responsive">
+      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Certifications</h2>
+      <CertificationList />
+    </div>
+  </section>
+</BaseLayout>
