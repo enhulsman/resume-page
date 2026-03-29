@@ -1183,6 +1183,7 @@ export class InteractiveTerminal {
     const inputLine = this.getInputLineEl();
     if (inputLine) inputLine.style.display = 'none';
     this.body.appendChild(container);
+    this.scrollToBottom();
 
     const interval = setInterval(() => {
       pos += 2;
@@ -1197,6 +1198,7 @@ export class InteractiveTerminal {
         return esc(shifted.slice(0, containerWidth));
       }).join('\n');
       container.innerHTML = frame;
+      this.scrollToBottom();
     }, 50);
 
     const finish = () => {
