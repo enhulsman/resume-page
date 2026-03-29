@@ -50,9 +50,9 @@ const isHomePage = currentPath === '/';
         class="md:hidden relative w-8 h-8 flex flex-col items-center justify-center gap-[5px] cursor-pointer"
         aria-label="Toggle menu"
       >
-        <span class="block h-[2px] w-5 bg-[var(--color-text-primary)] rounded-full transition-all duration-250 origin-center" id="hamburger-1"></span>
-        <span class="block h-[2px] w-5 bg-[var(--color-text-primary)] rounded-full transition-all duration-200" id="hamburger-2"></span>
-        <span class="block h-[2px] w-5 bg-[var(--color-text-primary)] rounded-full transition-all duration-250 origin-center" id="hamburger-3"></span>
+        <span class="block h-[2px] w-5 bg-[var(--color-text-primary)] rounded-full transition-all duration-300 origin-center" id="hamburger-1"></span>
+        <span class="block h-[2px] w-5 bg-[var(--color-text-primary)] rounded-full transition-all duration-300" id="hamburger-2"></span>
+        <span class="block h-[2px] w-5 bg-[var(--color-text-primary)] rounded-full transition-all duration-300 origin-center" id="hamburger-3"></span>
       </button>
     </div>
   </div>
@@ -109,14 +109,20 @@ const isHomePage = currentPath === '/';
         open = !open;
         if (open) {
           menu.style.maxHeight = menu.scrollHeight + 'px';
-          h1.style.transform = 'translateY(7px) rotate(45deg)';
-          h2.style.opacity = '0';
-          h3.style.transform = 'translateY(-7px) rotate(-45deg)';
+          h1.style.width = '12px';
+          h1.style.transform = 'translateX(7px)';
+          h1.style.transformOrigin = 'right center';
+          h2.style.width = '18px';
+          h2.style.transform = 'translateX(-4px)';
+          h2.style.transformOrigin = 'left center';
+          h3.style.width = '12px';
+          h3.style.transform = 'translateX(7px)';
+          h3.style.transformOrigin = 'right center';
         } else {
           menu.style.maxHeight = '0';
-          h1.style.transform = '';
-          h2.style.opacity = '1';
-          h3.style.transform = '';
+          h1.style.width = ''; h1.style.transform = ''; h1.style.transformOrigin = '';
+          h2.style.width = ''; h2.style.transform = ''; h2.style.transformOrigin = '';
+          h3.style.width = ''; h3.style.transform = ''; h3.style.transformOrigin = '';
         }
       });
     }
