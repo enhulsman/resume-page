@@ -43,10 +43,6 @@ Adding a project means creating one MDX file with frontmatter. Astro auto-discov
 
 The contact form runs on Cloudflare Workers with the Resend API — server-side processing without a separate backend.
 
-## Lessons Learned
+## Outcome
 
-**Don't hide content behind JS-dependent animations.** Early on I used Motion's `whileInView` which relies on IntersectionObserver. It silently failed in certain environments, leaving entire sections invisible. GSAP ScrollTrigger was far more reliable, and content is always visible by default now.
-
-**Mobile input has sharp edges.** iOS won't open the keyboard for programmatic `.focus()` unless it's in a synchronous user gesture handler. Android doesn't reliably fire `input` events on elements with `opacity: 0`. A transparent overlay that captures focus also blocks scrolling. Each of these took a few rounds to get right.
-
-**Monospace fonts lie about their width.** Hardcoding character width as `fontSize * 0.6` broke the terminal's `sl` train animation and `neofetch` layout. Measuring the actual rendered width of a character at runtime fixed it.
+Serves as my primary professional presence at [hulsman.dev](https://hulsman.dev). The site is fully static where it can be, server-rendered where it needs to be (contact form), and deploys automatically to Cloudflare's edge network on push to main. Building it from scratch gave me hands-on experience with scroll-driven animation, accessible interactive components, cross-browser input handling, and edge deployment — skills that translate directly to the frontend and platform work I do professionally.
