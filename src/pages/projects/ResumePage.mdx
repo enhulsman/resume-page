@@ -1,35 +1,81 @@
 ---
 title: "Portfolio Site"
-description: "Config-driven portfolio with MDX auto-discovery, multi-theme support, dynamic OG images, and server-side form handling on Cloudflare Workers"
-date: 2025-08-25
+description: "Dark-first editorial portfolio with GSAP scroll animations, an interactive terminal easter egg, and config-driven MDX content on Cloudflare Workers"
+date: 2026-03-29
 github: "resume-page"
 preview: "https://hulsman.dev"
-tech: ["Astro", "TypeScript", "Tailwind CSS", "Cloudflare Workers", "MDX"]
+tech: ["Astro", "TypeScript", "Tailwind CSS", "GSAP", "Cloudflare Workers", "MDX"]
 layout: "../../layouts/ProjectLayout.astro"
 showcase: false
 ---
 
 # Portfolio Site
 
-A config-driven portfolio site where adding a new project means creating a single MDX file — no routing config, no component wiring, no rebuild of navigation. The file's frontmatter controls display options (showcase, tech badges, links), and Astro's content layer handles discovery and routing automatically.
+A portfolio that treats design as seriously as infrastructure. Dark-first with a warm amber palette, editorial typography using Syne and Outfit, scroll-triggered animations via GSAP, and a fully interactive terminal hidden in the About section — complete with tab completion, command history, and easter eggs.
 
-## Motivation
+## Design Philosophy
 
-I wanted full control over theming, layout, and deployment rather than fitting content into a template's constraints. Building from scratch with Astro let me use MDX for interactive components, leverage partial hydration to ship zero JavaScript on static pages, and deploy to Cloudflare Workers for server-side form handling without a separate backend.
+The goal was a site that feels like it was made by an engineer who cares about craft. Not a template, not a generic "developer portfolio" — something with personality and intentional design choices.
+
+**"Terminal Luxe"** — the intersection of a hacker's terminal and a luxury editorial. The dark background with warm amber/gold accents avoids the cold blue-on-black cliché. Syne as the display font brings a bold, chunky personality that immediately distinguishes it from the Inter/Roboto crowd. The terminal card in the About section takes this further — it's not just decorative, it's actually functional.
+
+**Dark-first, but not dark-only.** The site defaults to the visitor's system preference, with a toggle for manual override. The light theme uses warm creams instead of stark whites, maintaining the same amber accent throughout.
+
+## The Interactive Terminal
+
+The standout feature: after the typing animation completes in the About section, the blinking cursor is actually interactive. Visitors who recognize it as a terminal prompt can type real commands.
+
+**What you can do:**
+- `help` — full command reference
+- `cat resume`, `cat skills`, `cat education` — browse content without leaving the page
+- `ls projects/` and `cat projects/<name>` — explore project details
+- `cd resume` or `open contact` — actually navigate to other pages
+- `neofetch` — ASCII art info card
+- `sudo hire-me` — a fun easter egg with contact info
+- `cowsay`, `fortune`, `sl`, `matrix` — developer humor
+
+**Technical implementation:** The terminal is built entirely in vanilla TypeScript — no framework dependencies. It supports tab completion with longest-common-prefix matching, command history via arrow keys, and mobile keyboard input through a transparent overlay input element. The entire command registry, filesystem model, and rendering logic lives in a single file.
+
+## Animation Approach
+
+Animations serve the content, not the other way around. Every moving element has a purpose:
+
+- **Text scramble on the hero name** — each character decodes from random symbols, reinforcing the technical identity
+- **Shimmer gradient** — the name text continuously shifts through amber tones, adding life without distraction
+- **Scroll reveals via GSAP ScrollTrigger** — sections fade in as you scroll, creating a sense of progression
+- **Skills marquee** — an infinitely scrolling ticker that showcases the full tech stack at a glance
+- **Orbiting dots** — subtle floating elements that make the page feel alive rather than static
+
+All animations respect `prefers-reduced-motion` and degrade gracefully without JavaScript.
 
 ## Technical Highlights
 
-- **Config-Driven Content**: A single `site.ts` file defines all personal info, skills, and social links. MDX project files are auto-discovered and routed without manual registration — frontmatter controls showcase visibility, tech tags, and external links
-- **Multi-Theme System**: Three themes (dark, light, gruvbox) implemented with CSS custom properties. Theme preference is persisted to `localStorage` and applied before first paint to prevent flash of unstyled content
-- **Edge Deployment**: Runs on Cloudflare Workers with server-side contact form handling via the Resend API — no third-party form service or client-side submission required
-- **Dynamic OG Images**: Open Graph images generated from SVG templates at build time, with meta tags driven from site configuration for consistent social previews
+- **Config-driven content:** `site.ts` defines personal info, skills, projects, and social links. MDX files are auto-discovered and routed — adding a project means creating one file
+- **Edge deployment:** Cloudflare Workers handle the contact form server-side via the Resend API. No third-party form services, no exposed credentials
+- **CSS custom properties:** The entire theme system runs on CSS variables, making theme switching instant with zero layout shift
+- **Zero-JS static pages:** Astro's partial hydration means pages without interactive elements ship no client-side JavaScript at all
 
-## Key Decisions
+## Challenges & Lessons
 
-**Why Astro?** Partial hydration means pages with no interactive elements ship zero client-side JavaScript. React islands handle the few interactive components (theme toggle, code demos) without hydrating the entire page.
+**CSS animation reliability over JS animation.** Early iterations used framer-motion's `whileInView` for scroll animations, which silently failed when IntersectionObserver didn't trigger reliably. The lesson: for content that must be visible, never hide it behind a JS-dependent animation. The final implementation uses GSAP ScrollTrigger (battle-tested, framework-agnostic) and ensures all content is visible by default.
 
-**Why Cloudflare Workers over static hosting?** The contact form needs server-side processing to call the Resend API with credentials that cannot be exposed client-side. Workers provide this without maintaining a separate API server, and edge deployment keeps response times low globally.
+**Mobile input is harder than it looks.** Building the interactive terminal for mobile required solving several non-obvious problems: iOS refuses programmatic `.focus()` unless it happens in a user gesture's call stack, `opacity: 0` inputs don't reliably fire events on Android, and a transparent overlay that captures focus also blocks scrolling. The solution: `pointer-events: none` on the input with explicit `touchend` handlers that distinguish taps from scroll gestures.
+
+**Typography needs breathing room.** Syne at extra-bold weights with tight tracking and `background-clip: text` clips the last glyph of each line. The fix was adding fractional em padding to the gradient text spans — a detail invisible to the eye but essential for rendering.
+
+## Stack
+
+| Layer | Tool |
+|-------|------|
+| Framework | Astro 5 (static-first, islands architecture) |
+| Styling | Tailwind CSS 3 with CSS custom properties |
+| Animation | GSAP ScrollTrigger, CSS keyframes |
+| Terminal | Vanilla TypeScript (~1200 lines) |
+| Content | MDX with auto-discovery |
+| Deployment | Cloudflare Workers |
+| Email | Resend API (transactional) |
+| Fonts | Syne (display), Outfit (body), JetBrains Mono (code) |
 
 ## Outcome
 
-Serves as my primary professional presence at hulsman.dev. Static content ships as HTML with only the theme toggle hydrated — no full-page JavaScript bundles — and pushes to main deploy automatically to Cloudflare Workers.
+Lives at [hulsman.dev](https://hulsman.dev) as my primary professional presence. The interactive terminal has become a conversation starter — people discover `sudo hire-me` and reach out through it.
