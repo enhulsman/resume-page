@@ -86,30 +86,30 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
             <span class="flex-1 text-center text-[11px] text-theme-muted font-mono -ml-10">{prompt} — zsh — 80×24</span>
           </div>
 
-          <!-- Terminal body -->
-          <div class="p-4 font-mono text-[13px] leading-[1.6] bg-[var(--color-bg-primary)]">
-            {terminalLines.map(line => (
-              line.type === 'blank' ? (
-                <div class="h-1"></div>
-              ) : line.type === 'cmd' ? (
-                <div>
-                  <span class="text-[rgb(120,165,145)]">{prompt}</span>
-                  <span class="text-theme-muted">:</span>
-                  <span class="text-[rgb(140,145,80)]">~</span>
-                  <span class="text-theme-primary"> $ </span>
-                  <span class="text-theme-primary">{line.text}</span>
-                </div>
-              ) : (
-                <div class="text-theme-secondary">{line.text}</div>
-              )
-            ))}
-            <div>
-              <span class="text-[rgb(120,165,145)]">{prompt}</span>
-              <span class="text-theme-muted">:</span>
-              <span class="text-[rgb(140,145,80)]">~</span>
-              <span class="text-theme-primary"> $ </span>
-              <span class="terminal-cursor">&#8203;</span>
-            </div>
+          <!-- Terminal body — JS animates typing, SSR shows final state as fallback -->
+          <div
+            id="terminal-body"
+            class="p-4 font-mono text-[13px] leading-[1.6] bg-[var(--color-bg-primary)] min-h-[280px]"
+            data-prompt={prompt}
+            data-lines={JSON.stringify(terminalLines)}
+          >
+            <!-- SSR fallback: full terminal shown if JS doesn't run -->
+            <noscript>
+              {terminalLines.map(line => (
+                line.type === 'blank' ? (
+                  <div class="h-1"></div>
+                ) : line.type === 'cmd' ? (
+                  <div>
+                    <span class="text-[rgb(120,165,145)]">{prompt}</span>
+                    <span class="text-theme-muted">:</span>
+                    <span class="text-[rgb(140,145,80)]">~</span>
+                    <span class="text-theme-primary"> $ {line.text}</span>
+                  </div>
+                ) : (
+                  <div class="text-theme-secondary">{line.text}</div>
+                )
+              ))}
+            </noscript>
           </div>
         </div>
       </div>
@@ -124,17 +124,158 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
     height: 1.1em;
     background-color: var(--color-accent-primary);
     vertical-align: text-bottom;
-    animation: blink 1s step-end infinite;
+    animation: terminal-blink 1s step-end infinite;
+  }
+  .terminal-cursor.typing {
+    animation: none;
+    opacity: 1;
   }
 
-  @keyframes blink {
+  @keyframes terminal-blink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .terminal-cursor {
-      animation: none;
-    }
+    .terminal-cursor { animation: none; }
   }
 </style>
+
+<script>
+  // Terminal typing animation
+  (function() {
+    const body = document.getElementById('terminal-body');
+    if (!body) return;
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const promptStr = body.getAttribute('data-prompt') || 'user@host';
+    const lines = JSON.parse(body.getAttribute('data-lines') || '[]');
+
+    // Build prompt HTML
+    function makePrompt() {
+      return `<span style="color:rgb(120,165,145)">${promptStr}</span>` +
+             `<span class="text-theme-muted">:</span>` +
+             `<span style="color:rgb(140,145,80)">~</span>` +
+             `<span class="text-theme-primary"> $ </span>`;
+    }
+
+    function makeCursor(typing) {
+      return `<span class="terminal-cursor${typing ? ' typing' : ''}">&#8203;</span>`;
+    }
+
+    // Group lines into commands: { cmd: string, output: string[] }
+    const commands = [];
+    let current = null;
+    for (const line of lines) {
+      if (line.type === 'cmd') {
+        if (current) commands.push(current);
+        current = { cmd: line.text, output: [] };
+      } else if (line.type === 'out' && current) {
+        current.output.push(line.text);
+      }
+    }
+    if (current) commands.push(current);
+
+    // If reduced motion, show everything instantly
+    if (prefersReduced) {
+      let html = '';
+      for (const cmd of commands) {
+        html += `<div>${makePrompt()}<span class="text-theme-primary">${cmd.cmd}</span></div>`;
+        for (const out of cmd.output) {
+          html += `<div class="text-theme-secondary">${out}</div>`;
+        }
+        html += '<div class="h-1"></div>';
+      }
+      html += `<div>${makePrompt()}${makeCursor(false)}</div>`;
+      body.innerHTML = html;
+      return;
+    }
+
+    // Animate: type each command char by char, then instantly show output
+    body.innerHTML = '';
+    let cmdIndex = 0;
+
+    // Use IntersectionObserver to start animation when visible
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        observer.disconnect();
+        startTyping();
+      }
+    }, { threshold: 0.3 });
+    observer.observe(body);
+
+    function startTyping() {
+      typeNextCommand();
+    }
+
+    function typeNextCommand() {
+      if (cmdIndex >= commands.length) {
+        // All done — show final prompt with blinking cursor
+        appendHTML(`<div>${makePrompt()}${makeCursor(false)}</div>`);
+        return;
+      }
+
+      const cmd = commands[cmdIndex];
+
+      // Create the prompt line with cursor
+      const lineEl = document.createElement('div');
+      lineEl.innerHTML = makePrompt() + makeCursor(true);
+      body.appendChild(lineEl);
+      scrollToBottom();
+
+      // Type command characters one by one
+      let charIdx = 0;
+      const typingSpeed = 40 + Math.random() * 30; // 40-70ms per char
+
+      function typeChar() {
+        if (charIdx < cmd.cmd.length) {
+          // Replace cursor with typed text + cursor
+          const typed = escapeHtml(cmd.cmd.substring(0, charIdx + 1));
+          lineEl.innerHTML = makePrompt() +
+            `<span class="text-theme-primary">${typed}</span>` +
+            makeCursor(true);
+          charIdx++;
+          scrollToBottom();
+
+          // Vary speed slightly for realism
+          const delay = typingSpeed + (Math.random() - 0.5) * 30;
+          setTimeout(typeChar, delay);
+        } else {
+          // Command fully typed — remove cursor from this line
+          lineEl.innerHTML = makePrompt() +
+            `<span class="text-theme-primary">${escapeHtml(cmd.cmd)}</span>`;
+
+          // Brief pause then show output instantly
+          setTimeout(() => {
+            for (const out of cmd.output) {
+              appendHTML(`<div class="text-theme-secondary">${escapeHtml(out)}</div>`);
+            }
+            appendHTML('<div class="h-1"></div>');
+            scrollToBottom();
+
+            cmdIndex++;
+            // Pause before next command
+            setTimeout(typeNextCommand, 300 + Math.random() * 200);
+          }, 80);
+        }
+      }
+
+      // Small delay before starting to type (like thinking)
+      setTimeout(typeChar, 200 + Math.random() * 300);
+    }
+
+    function appendHTML(html) {
+      const el = document.createElement('div');
+      el.innerHTML = html;
+      while (el.firstChild) body.appendChild(el.firstChild);
+    }
+
+    function scrollToBottom() {
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+  })();
+</script>
