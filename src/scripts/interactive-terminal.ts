@@ -158,9 +158,14 @@ export class InteractiveTerminal {
       left: '0',
       width: '100%',
       height: '3em',
-      opacity: '0',
       fontSize: '16px',
       zIndex: '2',
+      // Don't use opacity:0 — mobile browsers may debounce events on invisible inputs.
+      // Instead make it visually transparent but technically "visible".
+      color: 'transparent',
+      background: 'transparent',
+      border: 'none',
+      outline: 'none',
       caretColor: 'transparent',
     });
     // On focus, prevent browser from scrolling the page to the input
@@ -229,7 +234,10 @@ export class InteractiveTerminal {
     if (!this.active || this.animating) return;
     this.currentInput = this.hiddenInput.value;
     this.cursorPos = this.hiddenInput.selectionStart ?? this.currentInput.length;
-    this.renderCurrentLine();
+    // Use rAF to ensure the DOM update actually triggers a visual repaint on mobile
+    requestAnimationFrame(() => {
+      this.renderCurrentLine();
+    });
   }
 
   private handleKeydown(e: KeyboardEvent): void {
