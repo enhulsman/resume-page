@@ -18,7 +18,7 @@ const isHomePage = currentPath === '/';
   id="main-nav"
   class:list={[
     "fixed top-4 left-4 right-4 z-50 rounded-2xl transition-all duration-500",
-    "glass glow-border border border-[rgba(255,255,255,0.06)]",
+    "glass glow-border border border-[var(--color-border-primary)]",
     isHomePage ? "opacity-0 -translate-y-8 pointer-events-none" : ""
   ]}
 >
@@ -33,7 +33,7 @@ const isHomePage = currentPath === '/';
       {links.map((l) => (
         <a
           href={l.href}
-          class="px-4 py-2 text-sm font-medium rounded-lg text-theme-muted hover:text-theme-primary hover:bg-[rgba(255,255,255,0.05)] transition-all duration-200"
+          class="px-4 py-2 text-sm font-medium rounded-lg text-theme-muted hover:text-theme-primary hover:bg-[var(--color-bg-tertiary)] transition-all duration-200"
         >
           {l.label}
         </a>
@@ -58,12 +58,12 @@ const isHomePage = currentPath === '/';
   </div>
 
   <!-- Mobile menu -->
-  <div id="mobile-menu" class="md:hidden overflow-hidden border-t border-[rgba(255,255,255,0.06)] max-h-0 transition-all duration-300">
+  <div id="mobile-menu" class="md:hidden overflow-hidden border-t border-[var(--color-border-primary)] max-h-0 transition-all duration-300">
     <div class="flex flex-col px-6 py-4 gap-1">
       {links.map((l) => (
         <a
           href={l.href}
-          class="px-4 py-3 text-sm font-medium rounded-lg text-theme-muted hover:text-theme-primary hover:bg-[rgba(255,255,255,0.05)] transition-all duration-200"
+          class="px-4 py-3 text-sm font-medium rounded-lg text-theme-muted hover:text-theme-primary hover:bg-[var(--color-bg-tertiary)] transition-all duration-200"
         >
           {l.label}
         </a>
