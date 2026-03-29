@@ -7,8 +7,8 @@ export interface ThemeConfig {
 }
 
 export const themes: ThemeConfig[] = [
-  { name: 'dark', displayName: 'Dark', icon: '🌙' },
   { name: 'light', displayName: 'Light', icon: '☀️' },
+  { name: 'dark', displayName: 'Dark', icon: '🌙' },
 ];
 
 export function getCurrentTheme(): ThemeName {

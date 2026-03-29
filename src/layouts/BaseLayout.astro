@@ -26,7 +26,7 @@ const { title, description, fullWidth = false, ...metadataProps } = Astro.props;
     <script is:inline>
       (function () {
         const stored = localStorage.getItem("theme");
-        const theme = stored || "dark";
+        const theme = stored || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
         if (theme !== "dark") document.documentElement.setAttribute("data-theme", theme);
       })();
     </script>
