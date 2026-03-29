@@ -761,59 +761,85 @@ body {
   background-color: var(--color-accent-primary);
 }
 
-/* Skill badge styles - theme aware */
+/* Skill badge styles - warm-toned palette */
 .skill-badge-primary {
   @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
-  background-color: var(--color-accent-alpha);
-  color: var(--color-accent-primary);
-  border: 1px solid var(--color-accent-border);
+  background-color: rgba(201, 148, 43, 0.12);
+  color: rgb(201 148 43);
+  border: 1px solid rgba(201, 148, 43, 0.25);
 }
 
 .skill-badge-secondary {
   @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
-  background-color: var(--color-success-alpha);
-  color: var(--color-success);
-  border: 1px solid var(--color-success-border);
+  background-color: rgba(190, 100, 60, 0.12);
+  color: rgb(200 120 75);
+  border: 1px solid rgba(190, 100, 60, 0.25);
 }
 
 .skill-badge-tertiary {
   @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
-  background-color: var(--color-info-alpha);
-  color: var(--color-info);
-  border: 1px solid var(--color-info-border);
+  background-color: rgba(140, 145, 80, 0.12);
+  color: rgb(160 165 95);
+  border: 1px solid rgba(140, 145, 80, 0.25);
 }
 
-/* Interest and Tech badge styles */
+/* Interest badge styles - warm-toned variants */
 .interest-badge-1 {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
-  background-color: var(--color-success-alpha);
-  color: var(--color-success);
-  border: 1px solid var(--color-success-border);
+  background-color: rgba(201, 148, 43, 0.12);
+  color: rgb(201 148 43);
+  border: 1px solid rgba(201, 148, 43, 0.25);
 }
-
 .interest-badge-2 {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
-  background-color: var(--color-warning-alpha);
-  color: var(--color-warning);
-  border: 1px solid var(--color-warning-border);
+  background-color: rgba(190, 100, 60, 0.12);
+  color: rgb(200 120 75);
+  border: 1px solid rgba(190, 100, 60, 0.25);
 }
-
 .interest-badge-3 {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
-  background-color: var(--color-accent-alpha);
-  color: var(--color-accent-primary);
-  border: 1px solid var(--color-accent-border);
+  background-color: rgba(140, 145, 80, 0.12);
+  color: rgb(160 165 95);
+  border: 1px solid rgba(140, 145, 80, 0.25);
 }
 
-.tech-badge-1 { @apply interest-badge-1; }
-.tech-badge-2 { @apply interest-badge-2; }
-.tech-badge-3 { @apply interest-badge-3; }
+/* Tech badge styles - warm-toned variants + warm teal */
+.tech-badge-1 {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  background-color: rgba(201, 148, 43, 0.12);
+  color: rgb(201 148 43);
+  border: 1px solid rgba(201, 148, 43, 0.25);
+}
+.tech-badge-2 {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  background-color: rgba(190, 100, 60, 0.12);
+  color: rgb(200 120 75);
+  border: 1px solid rgba(190, 100, 60, 0.25);
+}
+.tech-badge-3 {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  background-color: rgba(140, 145, 80, 0.12);
+  color: rgb(160 165 95);
+  border: 1px solid rgba(140, 145, 80, 0.25);
+}
 .tech-badge-4 {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
-  background-color: var(--color-info-alpha);
-  color: var(--color-info);
-  border: 1px solid var(--color-info-border);
+  background-color: rgba(100, 145, 130, 0.12);
+  color: rgb(120 165 145);
+  border: 1px solid rgba(100, 145, 130, 0.25);
 }
+
+/* Light theme badge overrides - darker text for contrast */
+[data-theme="light"] .skill-badge-primary { color: rgb(160 110 20); }
+[data-theme="light"] .skill-badge-secondary { color: rgb(155 75 40); }
+[data-theme="light"] .skill-badge-tertiary { color: rgb(100 110 50); }
+[data-theme="light"] .interest-badge-1 { color: rgb(160 110 20); }
+[data-theme="light"] .interest-badge-2 { color: rgb(155 75 40); }
+[data-theme="light"] .interest-badge-3 { color: rgb(100 110 50); }
+[data-theme="light"] .tech-badge-1 { color: rgb(160 110 20); }
+[data-theme="light"] .tech-badge-2 { color: rgb(155 75 40); }
+[data-theme="light"] .tech-badge-3 { color: rgb(100 110 50); }
+[data-theme="light"] .tech-badge-4 { color: rgb(70 115 100); }
 
 /* Additional theme utilities */
 .text-theme-accent { color: var(--color-accent-primary); }

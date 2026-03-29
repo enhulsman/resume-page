@@ -14,36 +14,49 @@ import site from '../config/site';
   ogTitle={`Resume — ${site.name}`}
   ogDescription={`${site.role} at ${site.company}. Work experience, skills, education, and certifications.`}
 >
-  <section>
-    <div class="mb-6">
-      <h1 class="text-responsive-lg font-semibold tracking-tight text-theme-primary">Resume</h1>
-    </div>
-  </section>
+  <div class="mb-10">
+    <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// Resume</span>
+    <h1 class="mt-2 font-display text-3xl md:text-4xl font-bold tracking-tight text-theme-primary">
+      Professional Background
+    </h1>
+  </div>
 
-  <section>
-    <div class="card-responsive">
-      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Skills</h2>
+  <section class="mb-10">
+    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
+      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
+      Skills
+    </h2>
+    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
       <SkillsGrid />
     </div>
   </section>
 
-  <section class="mt-6 sm:mt-8">
-    <div class="card-responsive">
-      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Experience</h2>
+  <section class="mb-10">
+    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
+      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
+      Experience
+    </h2>
+    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
       <ExperienceTimeline />
     </div>
   </section>
 
-  <section class="mt-6 sm:mt-8">
-    <div class="card-responsive">
-      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Education</h2>
+  <section class="mb-10">
+    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
+      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
+      Education
+    </h2>
+    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
       <EducationList />
     </div>
   </section>
 
-  <section class="mt-6 sm:mt-8">
-    <div class="card-responsive">
-      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Certifications</h2>
+  <section class="mb-10">
+    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
+      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
+      Certifications
+    </h2>
+    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
       <CertificationList />
     </div>
   </section>
