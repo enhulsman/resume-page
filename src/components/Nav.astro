@@ -58,7 +58,8 @@ const isHomePage = currentPath === '/';
   </div>
 
   <!-- Mobile menu -->
-  <div id="mobile-menu" class="md:hidden overflow-hidden border-t border-[var(--color-border-primary)] max-h-0 transition-all duration-300">
+  <div id="mobile-menu" class="md:hidden overflow-hidden max-h-0 transition-all duration-300">
+    <div class="border-t border-[var(--color-border-primary)] mx-4"></div>
     <div class="flex flex-col px-6 py-4 gap-1">
       {links.map((l) => (
         <a
