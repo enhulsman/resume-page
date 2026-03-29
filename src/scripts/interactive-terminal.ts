@@ -125,7 +125,11 @@ export class InteractiveTerminal {
     }
 
     // Re-create hidden input if destroyed by animation skip (innerHTML wipe)
-    if (!this.body.contains(this.hiddenInput)) {
+    const cardWrapper = this.body.parentElement;
+    const inputStillInDOM = cardWrapper
+      ? cardWrapper.contains(this.hiddenInput)
+      : this.body.contains(this.hiddenInput);
+    if (!inputStillInDOM) {
       this.createHiddenInput();
       this.bindInputEvents();
     }
@@ -145,21 +149,34 @@ export class InteractiveTerminal {
     input.setAttribute('autocapitalize', 'off');
     input.spellcheck = false;
     input.setAttribute('aria-label', 'Terminal input');
-    // Positioned over the terminal, transparent but tappable
-    // font-size: 16px prevents iOS auto-zoom on focus
+    // Position OUTSIDE the scrollable body but inside the terminal card wrapper.
+    // This prevents the browser's native scroll-into-view on focused input
+    // from fighting with the terminal's internal scroll.
     Object.assign(input.style, {
       position: 'absolute',
       bottom: '0',
       left: '0',
       width: '100%',
-      height: '100%',
+      height: '3em',
       opacity: '0',
       fontSize: '16px',
       zIndex: '2',
       caretColor: 'transparent',
     });
-    this.body.style.position = 'relative';
-    this.body.appendChild(input);
+    // On focus, prevent browser from scrolling the page to the input
+    input.addEventListener('focus', () => {
+      requestAnimationFrame(() => this.scrollToBottom());
+    });
+    // Append to the card wrapper (parent of body), not body itself
+    // This keeps it outside the scrollable area
+    const cardWrapper = this.body.parentElement;
+    if (cardWrapper) {
+      cardWrapper.style.position = 'relative';
+      cardWrapper.appendChild(input);
+    } else {
+      this.body.style.position = 'relative';
+      this.body.appendChild(input);
+    }
     this.hiddenInput = input;
   }
 
@@ -178,7 +195,7 @@ export class InteractiveTerminal {
 
   /** Bind events on the hidden input — called on init and after re-creation */
   private bindInputEvents(): void {
-    // Prevent focus before activation
+    // Prevent focus before activation (blur immediately)
     this.hiddenInput.addEventListener('focus', () => {
       if (!this.active) {
         this.hiddenInput.blur();
@@ -186,7 +203,6 @@ export class InteractiveTerminal {
     });
 
     // All character input comes through the hidden input's native behavior.
-    // We sync from it on every input event.
     this.hiddenInput.addEventListener('input', () => {
       if (this.composing) return;
       this.syncFromHiddenInput();
@@ -200,8 +216,13 @@ export class InteractiveTerminal {
     });
 
     // Keydown ONLY for special keys (Enter, Tab, arrows, Ctrl combos).
-    // Character input is handled by the input event above.
     this.hiddenInput.addEventListener('keydown', (e) => this.handleKeydown(e));
+
+    // Click on terminal body → focus hidden input (for desktop where body is visible above the input overlay)
+    this.body.addEventListener('click', () => {
+      if (!this.active) return;
+      this.hiddenInput.focus({ preventScroll: true });
+    });
   }
 
   private syncFromHiddenInput(): void {
