@@ -1,6 +1,6 @@
 ---
 title: "Portfolio Site"
-description: "Dark-first editorial portfolio with GSAP scroll animations, an interactive terminal easter egg, and config-driven MDX content on Cloudflare Workers"
+description: "Dark-first portfolio with editorial typography, GSAP scroll animations, an interactive terminal easter egg, and config-driven MDX content on Cloudflare Workers"
 date: 2026-03-29
 github: "resume-page"
 preview: "https://hulsman.dev"
@@ -11,71 +11,42 @@ showcase: false
 
 # Portfolio Site
 
-A portfolio that treats design as seriously as infrastructure. Dark-first with a warm amber palette, editorial typography using Syne and Outfit, scroll-triggered animations via GSAP, and a fully interactive terminal hidden in the About section — complete with tab completion, command history, and easter eggs.
+My personal site at [hulsman.dev](https://hulsman.dev). Dark-first design with warm amber accents, Syne + Outfit typography, scroll-triggered animations, and a hidden interactive terminal in the About section.
 
-## Design Philosophy
+## What I Wanted
 
-The goal was a site that feels like it was made by an engineer who cares about craft. Not a template, not a generic "developer portfolio" — something with personality and intentional design choices.
+Full control over theming, layout, and deployment — not a template with someone else's opinions baked in. The site should feel like it was made by someone who works with terminals and infrastructure all day but also cares about how things look.
 
-**"Terminal Luxe"** — the intersection of a hacker's terminal and a luxury editorial. The dark background with warm amber/gold accents avoids the cold blue-on-black cliché. Syne as the display font brings a bold, chunky personality that immediately distinguishes it from the Inter/Roboto crowd. The terminal card in the About section takes this further — it's not just decorative, it's actually functional.
+## Design
 
-**Dark-first, but not dark-only.** The site defaults to the visitor's system preference, with a toggle for manual override. The light theme uses warm creams instead of stark whites, maintaining the same amber accent throughout.
+The palette is dark by default with warm amber/gold as the accent color. I specifically avoided the cold cyan-on-black and purple gradient aesthetics that scream "AI-generated." Syne as the display font gives headings a bold, geometric personality. Outfit handles body text — clean and readable without being boring.
 
-## The Interactive Terminal
+The theme system runs on CSS custom properties. Switching between dark and light is instant — no layout shift, no flash. The light theme uses warm creams rather than stark whites.
 
-The standout feature: after the typing animation completes in the About section, the blinking cursor is actually interactive. Visitors who recognize it as a terminal prompt can type real commands.
+## The Terminal
 
-**What you can do:**
-- `help` — full command reference
-- `cat resume`, `cat skills`, `cat education` — browse content without leaving the page
-- `ls projects/` and `cat projects/<name>` — explore project details
-- `cd resume` or `open contact` — actually navigate to other pages
-- `neofetch` — ASCII art info card
-- `sudo hire-me` — a fun easter egg with contact info
-- `cowsay`, `fortune`, `sl`, `matrix` — developer humor
+The About section has a terminal card that plays a typing animation on scroll. What most visitors won't notice: after the animation finishes, the blinking cursor is real. You can type into it.
 
-**Technical implementation:** The terminal is built entirely in vanilla TypeScript — no framework dependencies. It supports tab completion with longest-common-prefix matching, command history via arrow keys, and mobile keyboard input through a transparent overlay input element. The entire command registry, filesystem model, and rendering logic lives in a single file.
+It supports ~25 commands — `cat resume`, `ls projects/`, `neofetch`, `cowsay`, tab completion, command history with arrow keys, and a few easter eggs (`sudo hire-me`, `sl`, `matrix`). Navigation commands like `cd resume` actually route you to the page.
 
-## Animation Approach
+Built in vanilla TypeScript (~1200 lines), no framework. Mobile works through a transparent input overlay with touch gesture detection to distinguish taps from scrolls. Getting the keyboard to reliably open on Android and iOS took more iteration than I'd like to admit.
 
-Animations serve the content, not the other way around. Every moving element has a purpose:
+## Animations
 
-- **Text scramble on the hero name** — each character decodes from random symbols, reinforcing the technical identity
-- **Shimmer gradient** — the name text continuously shifts through amber tones, adding life without distraction
-- **Scroll reveals via GSAP ScrollTrigger** — sections fade in as you scroll, creating a sense of progression
-- **Skills marquee** — an infinitely scrolling ticker that showcases the full tech stack at a glance
-- **Orbiting dots** — subtle floating elements that make the page feel alive rather than static
+Everything uses CSS keyframes or GSAP ScrollTrigger — no framer-motion or React animation libraries. The hero name has a character-by-character decode effect (scramble → settle) and a continuously shifting gradient. Sections fade in via GSAP as you scroll. The skills section has an infinite marquee ticker.
 
-All animations respect `prefers-reduced-motion` and degrade gracefully without JavaScript.
+All animations respect `prefers-reduced-motion` and the site renders fully without JavaScript via Astro's static-first approach.
 
-## Technical Highlights
+## Content System
 
-- **Config-driven content:** `site.ts` defines personal info, skills, projects, and social links. MDX files are auto-discovered and routed — adding a project means creating one file
-- **Edge deployment:** Cloudflare Workers handle the contact form server-side via the Resend API. No third-party form services, no exposed credentials
-- **CSS custom properties:** The entire theme system runs on CSS variables, making theme switching instant with zero layout shift
-- **Zero-JS static pages:** Astro's partial hydration means pages without interactive elements ship no client-side JavaScript at all
+Adding a project means creating one MDX file with frontmatter. Astro auto-discovers it, generates the route, and includes it in the gallery if `showcase: true`. Site-wide config (name, role, skills, social links) lives in a single `site.ts` file.
 
-## Challenges & Lessons
+The contact form runs on Cloudflare Workers with the Resend API — server-side processing without a separate backend.
 
-**CSS animation reliability over JS animation.** Early iterations used framer-motion's `whileInView` for scroll animations, which silently failed when IntersectionObserver didn't trigger reliably. The lesson: for content that must be visible, never hide it behind a JS-dependent animation. The final implementation uses GSAP ScrollTrigger (battle-tested, framework-agnostic) and ensures all content is visible by default.
+## Lessons Learned
 
-**Mobile input is harder than it looks.** Building the interactive terminal for mobile required solving several non-obvious problems: iOS refuses programmatic `.focus()` unless it happens in a user gesture's call stack, `opacity: 0` inputs don't reliably fire events on Android, and a transparent overlay that captures focus also blocks scrolling. The solution: `pointer-events: none` on the input with explicit `touchend` handlers that distinguish taps from scroll gestures.
+**Don't hide content behind JS-dependent animations.** Early on I used Motion's `whileInView` which relies on IntersectionObserver. It silently failed in certain environments, leaving entire sections invisible. GSAP ScrollTrigger was far more reliable, and content is always visible by default now.
 
-**Typography needs breathing room.** Syne at extra-bold weights with tight tracking and `background-clip: text` clips the last glyph of each line. The fix was adding fractional em padding to the gradient text spans — a detail invisible to the eye but essential for rendering.
+**Mobile input has sharp edges.** iOS won't open the keyboard for programmatic `.focus()` unless it's in a synchronous user gesture handler. Android doesn't reliably fire `input` events on elements with `opacity: 0`. A transparent overlay that captures focus also blocks scrolling. Each of these took a few rounds to get right.
 
-## Stack
-
-| Layer | Tool |
-|-------|------|
-| Framework | Astro 5 (static-first, islands architecture) |
-| Styling | Tailwind CSS 3 with CSS custom properties |
-| Animation | GSAP ScrollTrigger, CSS keyframes |
-| Terminal | Vanilla TypeScript (~1200 lines) |
-| Content | MDX with auto-discovery |
-| Deployment | Cloudflare Workers |
-| Email | Resend API (transactional) |
-| Fonts | Syne (display), Outfit (body), JetBrains Mono (code) |
-
-## Outcome
-
-Lives at [hulsman.dev](https://hulsman.dev) as my primary professional presence. The interactive terminal has become a conversation starter — people discover `sudo hire-me` and reach out through it.
+**Monospace fonts lie about their width.** Hardcoding character width as `fontSize * 0.6` broke the terminal's `sl` train animation and `neofetch` layout. Measuring the actual rendered width of a character at runtime fixed it.
