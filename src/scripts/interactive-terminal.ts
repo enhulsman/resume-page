@@ -134,8 +134,8 @@ export class InteractiveTerminal {
       this.bindInputEvents();
     }
 
-    // Enable pointer events on hidden input so user can tap to focus
-    this.hiddenInput.style.pointerEvents = 'auto';
+    // Keep pointer-events: none so scrolling works.
+    // Focus happens via click/touchend handlers below.
 
     this.appendPromptLine();
     this.updateTitleBar();
@@ -236,6 +236,36 @@ export class InteractiveTerminal {
         setTimeout(() => this.syncFromHiddenInput(), 0);
       }
     });
+
+    // Focus the hidden input on click/tap. pointer-events: none stays on the input
+    // so scrolling works, but these handlers focus it programmatically.
+    const focusInput = () => {
+      if (!this.active || this.animating) return;
+      this.hiddenInput.focus({ preventScroll: true });
+    };
+
+    // Desktop: click on the terminal body
+    this.body.addEventListener('click', focusInput);
+
+    // Mobile: touchend distinguishes tap from scroll by checking movement
+    let touchStartY = 0;
+    this.body.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    this.body.addEventListener('touchend', (e) => {
+      const touchEndY = e.changedTouches[0].clientY;
+      const moved = Math.abs(touchEndY - touchStartY);
+      // Only focus if it was a tap (moved < 10px), not a scroll
+      if (moved < 10) {
+        focusInput();
+      }
+    }, { passive: true });
+
+    // Also allow the card wrapper (title bar click)
+    const cardWrapper = this.body.parentElement;
+    if (cardWrapper) {
+      cardWrapper.addEventListener('click', focusInput);
+    }
   }
 
   private syncFromHiddenInput(): void {
@@ -550,8 +580,24 @@ export class InteractiveTerminal {
       this.syncToHiddenInput();
       this.renderCurrentLine();
     } else {
-      // Show candidates
-      // Freeze current line first
+      // Find longest common prefix of all matches
+      let lcp = matches[0];
+      for (const m of matches.slice(1)) {
+        let i = 0;
+        while (i < lcp.length && i < m.length && lcp[i].toLowerCase() === m[i].toLowerCase()) i++;
+        lcp = lcp.slice(0, i);
+      }
+
+      // If common prefix is longer than what user typed, complete to it
+      if (lcp.length > partial.length) {
+        this.currentInput = prefix + lcp;
+        this.cursorPos = this.currentInput.length;
+        this.syncToHiddenInput();
+        this.renderCurrentLine();
+        return;
+      }
+
+      // Otherwise show candidates
       const inputLine = this.getInputLineEl();
       if (inputLine) {
         inputLine.innerHTML =
@@ -562,8 +608,7 @@ export class InteractiveTerminal {
       }
       this.appendToOutput(esc(matches.join('  ')));
       this.appendPromptLine();
-      // Restore the input the user had
-      this.currentInput = prefix + partial;
+      this.currentInput = prefix + lcp;
       this.cursorPos = this.currentInput.length;
       this.syncToHiddenInput();
       this.renderCurrentLine();
@@ -1015,7 +1060,9 @@ export class InteractiveTerminal {
 
   private sudoHireMe(): string {
     const s = this.data.site;
-    const status = s.employment.message;
+    const status = typeof s.employment.message === 'string'
+      ? s.employment.message
+      : (s.employment.message as Record<string, string>)[s.employment.status] || 'Open to connect';
     const email = s.social.email;
     const github = s.social.GitHub.replace('https://', '');
     return [
@@ -1117,14 +1164,21 @@ export class InteractiveTerminal {
       ' ~~~~~~~~~~~~~~~~~~~~~~~~',
     ];
     const trainWidth = Math.max(...train.map((l) => l.length));
-    const containerWidth = Math.floor(this.body.clientWidth / 8.4); // approx char width
+    // Measure actual character width
+    const measure = document.createElement('span');
+    measure.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:inherit';
+    measure.textContent = 'XXXXXXXXXXXXXXXXXXXX';
+    this.body.appendChild(measure);
+    const charWidth = measure.offsetWidth / 20 || 8;
+    measure.remove();
+    const containerWidth = Math.floor(this.body.clientWidth / charWidth);
     let pos = -trainWidth;
 
     const container = document.createElement('div');
     container.className = 'terminal-animation';
     container.style.whiteSpace = 'pre';
     container.style.lineHeight = '1.2';
-    container.style.overflow = 'hidden';
+    container.style.overflow = 'visible';
     container.style.fontFamily = 'inherit';
     const inputLine = this.getInputLineEl();
     if (inputLine) inputLine.style.display = 'none';
@@ -1165,8 +1219,14 @@ export class InteractiveTerminal {
     this.body.setAttribute('aria-busy', 'true');
 
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*';
-    const cols = Math.floor(this.body.clientWidth / 8.4);
-    const rows = Math.floor(this.body.clientHeight / 18);
+    const measureM = document.createElement('span');
+    measureM.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:inherit';
+    measureM.textContent = 'XXXXXXXXXXXXXXXXXXXX';
+    this.body.appendChild(measureM);
+    const cw = measureM.offsetWidth / 20 || 8;
+    measureM.remove();
+    const cols = Math.floor(this.body.clientWidth / cw);
+    const rows = Math.floor(this.body.clientHeight / (cw * 1.6));
 
     const container = document.createElement('div');
     container.className = 'terminal-animation terminal-matrix';
