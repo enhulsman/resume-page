@@ -72,9 +72,9 @@ const terminalData = {
       </h2>
     </div>
 
-    <div class="grid gap-12 lg:grid-cols-5 lg:gap-16">
+    <div class="grid gap-12 lg:grid-cols-2 lg:gap-12">
       <!-- Left column: photo + bio -->
-      <div class="lg:col-span-3 space-y-8">
+      <div class="space-y-8">
         <div class="flex flex-col sm:flex-row items-start gap-6" data-reveal>
           <img
             src={gravatarUrl}
@@ -103,7 +103,7 @@ const terminalData = {
       </div>
 
       <!-- Right column: terminal card -->
-      <div class="lg:col-span-2" data-reveal>
+      <div data-reveal>
         <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] overflow-hidden shadow-lg relative">
           <!-- macOS title bar -->
           <div class="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--color-border-primary)] bg-[var(--color-bg-primary)]">
@@ -116,7 +116,7 @@ const terminalData = {
           <!-- Terminal body -->
           <div
             id="terminal-body"
-            class="p-4 font-mono text-[13px] leading-[1.6] bg-[var(--color-bg-primary)] min-h-[280px] max-h-[400px] overflow-y-auto relative cursor-text"
+            class="p-4 font-mono text-[13px] leading-[1.6] bg-[var(--color-bg-primary)] min-h-[280px] max-h-[500px] overflow-y-auto relative cursor-text"
             role="application"
             aria-label="Interactive terminal"
             tabindex="0"

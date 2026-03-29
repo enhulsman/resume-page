@@ -560,8 +560,8 @@ export class InteractiveTerminal {
     }
 
     if (cmd === 'ls') {
-      const dirs = ['projects/', 'resume/', 'contact/'];
-      return dirs.filter((x) => x.toLowerCase().startsWith(p));
+      const entries = ['projects/', 'resume', 'skills', 'education', 'certs', 'contact'];
+      return entries.filter((x) => x.toLowerCase().startsWith(p));
     }
 
     if (cmd === 'man' || cmd === 'help') {
@@ -703,10 +703,14 @@ export class InteractiveTerminal {
       handler: (args) => {
         const path = (args[0] || '').replace(/\/+$/, '').toLowerCase();
         if (!path || path === '~' || path === '.') {
-          return { html: '<span class="terminal-dir">projects/</span>  <span class="terminal-dir">resume/</span>  <span class="terminal-dir">contact/</span>' };
+          return { html: '<span class="terminal-accent">projects/</span>  resume  skills  education  certs  contact' };
         }
         if (path === 'projects') {
           return this.projectSlugs.map((s) => `  ${s}`);
+        }
+        // These are files, not directories
+        if (['resume', 'skills', 'education', 'certs', 'contact'].includes(path)) {
+          return `${path}`;
         }
         return `ls: cannot access '${esc(args[0])}': No such file or directory`;
       },
@@ -893,12 +897,22 @@ export class InteractiveTerminal {
       return this.formatCerts();
     }
 
+    // projects (directory — hint to use ls or cat a specific project)
+    if (p === 'projects' || p === 'projects/') {
+      return `cat: projects/: Is a directory. Try 'ls projects/' or 'cat projects/<name>'`;
+    }
+
     // projects/<slug>
     if (p.startsWith('projects/')) {
       const slug = p.slice('projects/'.length);
       const idx = this.projectSlugs.indexOf(slug);
       if (idx !== -1) return this.formatProject(this.data.projects[idx]);
       return `cat: projects/${slug}: No such file or directory`;
+    }
+
+    // contact (hint to use the form)
+    if (p === 'contact') {
+      return `Use 'open contact' to visit the contact form, or email ${esc(this.data.site.social.email)}`;
     }
 
     return `cat: ${path}: No such file or directory`;
@@ -924,8 +938,8 @@ export class InteractiveTerminal {
       } else {
         return `cd: ${path}: No such directory`;
       }
-    } else if (path === 'projects') {
-      target = '/#projects';
+    } else if (path === 'projects' || path === 'projects/') {
+      target = '/projects';
     }
 
     if (!target.startsWith('/') && !target.startsWith('#') && !target.startsWith('http')) {
@@ -993,7 +1007,7 @@ export class InteractiveTerminal {
     const sections: [string, string[]][] = [
       ['Navigation', ['help', 'clear', 'ls', 'cd', 'open', 'pwd']],
       ['Info', ['whoami', 'hostname', 'cat', 'uptime', 'echo', 'neofetch']],
-      ['Content', ['cat resume', 'cat skills', 'cat education', 'cat certs', 'cat projects/<slug>']],
+      ['Browse', ['cat resume', 'cat skills', 'cat education', 'cat certs', 'cat projects/<name>', 'open <page>']],
       ['Meta', ['date', 'uname', 'history', 'man', 'exit']],
       ['Fun', ['sudo hire-me', 'cowsay', 'fortune', 'sl', 'matrix']],
     ];
