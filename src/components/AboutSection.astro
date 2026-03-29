@@ -160,7 +160,7 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
     }
 
     function makeCursor(typing) {
-      return `<span class="terminal-cursor${typing ? ' typing' : ''}">&#8203;</span>`;
+      return `<span class="terminal-cursor${typing ? ' typing' : ''}" style="display:inline-block;width:8px;height:1.1em;vertical-align:text-bottom;background:var(--color-accent-primary)"></span>`;
     }
 
     // Group lines into commands: { cmd: string, output: string[] }
@@ -252,9 +252,10 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
           setTimeout(typeChar, delay);
         } else {
           // Command fully typed — "press enter"
-          // Finalize this line (no cursor, it moves to the new prompt)
+          // Finalize this line (no cursor) and detach reference
           cursorLine.innerHTML = makePrompt() +
             `<span class="text-theme-primary">${escapeHtml(cmd.cmd)}</span>`;
+          cursorLine = null; // Don't let ensureCursor remove the finished command line
 
           // Brief delay after "enter" before output appears
           setTimeout(() => {
@@ -302,9 +303,10 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
           const delay = typingSpeed + (Math.random() - 0.5) * 30;
           setTimeout(typeChar, delay);
         } else {
-          // Finalize line
+          // Finalize line and detach so ensureCursor won't remove it
           cursorLine.innerHTML = makePrompt() +
             `<span class="text-theme-primary">${escapeHtml(cmd.cmd)}</span>`;
+          cursorLine = null;
 
           setTimeout(() => {
             for (const out of cmd.output) {
