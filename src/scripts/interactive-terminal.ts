@@ -105,6 +105,8 @@ export class InteractiveTerminal {
     this.registerCommands();
     this.createHiddenInput();
     this.bindEvents();
+    // Set title bar dimensions immediately (not just on activation)
+    this.updateTitleBar();
   }
 
   // ─── Activation ──────────────────────────────────────────────────────────
@@ -138,16 +140,18 @@ export class InteractiveTerminal {
     input.setAttribute('autocapitalize', 'off');
     input.spellcheck = false;
     input.setAttribute('aria-label', 'Terminal input');
+    // Positioned over the terminal, transparent but tappable
+    // font-size: 16px prevents iOS auto-zoom on focus
     Object.assign(input.style, {
       position: 'absolute',
       bottom: '0',
       left: '0',
       width: '100%',
+      height: '100%',
       opacity: '0',
       fontSize: '16px',
-      height: '2em',
-      zIndex: '1',
-      pointerEvents: 'none',
+      zIndex: '2',
+      caretColor: 'transparent',
     });
     this.body.style.position = 'relative';
     this.body.appendChild(input);
@@ -157,11 +161,13 @@ export class InteractiveTerminal {
   // ─── Events ──────────────────────────────────────────────────────────────
 
   private bindEvents(): void {
-    // Click/tap to focus
-    this.body.addEventListener('click', () => {
-      if (!this.active) return;
-      this.hiddenInput.style.pointerEvents = 'auto';
-      this.hiddenInput.focus();
+    // The hidden input covers the terminal body and is directly tappable.
+    // On focus (user gesture), the virtual keyboard opens natively.
+    // We just need to prevent interaction before activation.
+    this.hiddenInput.addEventListener('focus', () => {
+      if (!this.active) {
+        this.hiddenInput.blur();
+      }
     });
 
     // Desktop: keydown on body
@@ -309,7 +315,7 @@ export class InteractiveTerminal {
 
     line.innerHTML =
       `<span class="terminal-prompt">${this.promptHtml()}</span>` +
-      `${before}<span class="terminal-cursor">${cursorChar}</span>${after}`;
+      `<span class="terminal-cmd">${before}</span><span class="terminal-cursor">${cursorChar}</span><span class="terminal-cmd">${after}</span>`;
 
     this.scrollToBottom();
   }
