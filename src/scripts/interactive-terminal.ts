@@ -112,9 +112,19 @@ export class InteractiveTerminal {
   activate(): void {
     if (this.active) return;
     this.active = true;
+
+    // Remove the animation's cursor line (the last div with a .terminal-cursor inside)
+    const animCursor = this.body.querySelector('.terminal-cursor');
+    if (animCursor) {
+      const parentLine = animCursor.closest('div');
+      if (parentLine && parentLine.parentNode === this.body) {
+        parentLine.remove();
+      }
+    }
+
     this.appendPromptLine();
     this.updateTitleBar();
-    this.showHint();
+    // No hint — the blinking cursor is the only signal (easter egg)
   }
 
   // ─── Hidden input (mobile support) ──────────────────────────────────────
