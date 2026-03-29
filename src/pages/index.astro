@@ -6,6 +6,7 @@ import ProjectsShowcase from "../components/ProjectsShowcase.astro";
 import ExperienceSection from "../components/ExperienceSection.astro";
 import SkillsSection from "../components/SkillsSection.astro";
 import ContactCTA from "../components/ContactCTA.astro";
+import InfoStrip from "../components/InfoStrip.astro";
 import site from "../config/site";
 
 const homeDescription = `${site.summary} Based in ${site.location}, specializing in ${site.skills.languages.join(", ")} and ${site.skills.tools.join(", ")}.`;
@@ -21,6 +22,7 @@ const homeKeywords = `${site.seo.keywords}, resume, portfolio, ${site.location},
   fullWidth
 >
   <HeroSection />
+  <InfoStrip />
   <AboutSection />
   <ProjectsShowcase />
   <ExperienceSection />
