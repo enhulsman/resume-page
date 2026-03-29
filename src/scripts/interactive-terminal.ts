@@ -127,7 +127,7 @@ export class InteractiveTerminal {
     // Re-create hidden input if destroyed by animation skip (innerHTML wipe)
     if (!this.body.contains(this.hiddenInput)) {
       this.createHiddenInput();
-      this.bindMobileEvents();
+      this.bindInputEvents();
     }
 
     this.appendPromptLine();
@@ -166,12 +166,8 @@ export class InteractiveTerminal {
   // ─── Events ──────────────────────────────────────────────────────────────
 
   private bindEvents(): void {
-    // Desktop: keydown on body
-    this.body.setAttribute('tabindex', '0');
-    this.body.addEventListener('keydown', (e) => this.handleKeydown(e));
-
-    // Bind mobile events on the initial hidden input
-    this.bindMobileEvents();
+    // Bind input events on the hidden input
+    this.bindInputEvents();
 
     // Resize → update title bar
     window.addEventListener('resize', () => {
@@ -181,7 +177,7 @@ export class InteractiveTerminal {
   }
 
   /** Bind events on the hidden input — called on init and after re-creation */
-  private bindMobileEvents(): void {
+  private bindInputEvents(): void {
     // Prevent focus before activation
     this.hiddenInput.addEventListener('focus', () => {
       if (!this.active) {
@@ -189,6 +185,8 @@ export class InteractiveTerminal {
       }
     });
 
+    // All character input comes through the hidden input's native behavior.
+    // We sync from it on every input event.
     this.hiddenInput.addEventListener('input', () => {
       if (this.composing) return;
       this.syncFromHiddenInput();
@@ -200,6 +198,9 @@ export class InteractiveTerminal {
       this.composing = false;
       this.syncFromHiddenInput();
     });
+
+    // Keydown ONLY for special keys (Enter, Tab, arrows, Ctrl combos).
+    // Character input is handled by the input event above.
     this.hiddenInput.addEventListener('keydown', (e) => this.handleKeydown(e));
   }
 
@@ -272,32 +273,13 @@ export class InteractiveTerminal {
         this.renderCurrentLine();
         break;
       case 'Backspace':
-        e.preventDefault();
-        if (this.cursorPos > 0) {
-          this.currentInput = this.currentInput.slice(0, this.cursorPos - 1) + this.currentInput.slice(this.cursorPos);
-          this.cursorPos--;
-        }
-        this.syncToHiddenInput();
-        this.renderCurrentLine();
-        break;
       case 'Delete':
-        e.preventDefault();
-        if (this.cursorPos < this.currentInput.length) {
-          this.currentInput = this.currentInput.slice(0, this.cursorPos) + this.currentInput.slice(this.cursorPos + 1);
-        }
-        this.syncToHiddenInput();
-        this.renderCurrentLine();
+        // Let the hidden input handle these natively.
+        // The 'input' event will fire and syncFromHiddenInput() picks it up.
         break;
       default:
-        // Single printable character
-        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-          e.preventDefault();
-          this.currentInput =
-            this.currentInput.slice(0, this.cursorPos) + e.key + this.currentInput.slice(this.cursorPos);
-          this.cursorPos++;
-          this.syncToHiddenInput();
-          this.renderCurrentLine();
-        }
+        // Let the hidden input handle all character input natively.
+        // The 'input' event will fire and syncFromHiddenInput() picks it up.
         break;
     }
   }
@@ -422,7 +404,21 @@ export class InteractiveTerminal {
     } else if (Array.isArray(result)) {
       this.appendOutputLines(result);
     } else if (typeof result === 'object' && 'html' in result) {
-      this.appendToOutput(result.html);
+      this.appendRawHTML(result.html);
+    }
+  }
+
+  /** Insert raw HTML (potentially multiple divs) before the input line */
+  private appendRawHTML(html: string): void {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    const inputLine = this.getInputLineEl();
+    while (wrapper.firstChild) {
+      if (inputLine) {
+        this.body.insertBefore(wrapper.firstChild, inputLine);
+      } else {
+        this.body.appendChild(wrapper.firstChild);
+      }
     }
   }
 
@@ -608,7 +604,7 @@ export class InteractiveTerminal {
         if (args.length > 0) {
           return this.manPage(args[0]);
         }
-        return { html: this.helpOutput() };
+        return this.helpOutput();
       },
     });
 
@@ -800,26 +796,26 @@ export class InteractiveTerminal {
     }
 
     if (p === 'resume') {
-      return { html: this.formatExperience() };
+      return this.formatExperience();
     }
 
     if (p === 'skills') {
-      return { html: this.formatSkills() };
+      return this.formatSkills();
     }
 
     if (p === 'education') {
-      return { html: this.formatEducation() };
+      return this.formatEducation();
     }
 
     if (p === 'certs' || p === 'certifications') {
-      return { html: this.formatCerts() };
+      return this.formatCerts();
     }
 
     // projects/<slug>
     if (p.startsWith('projects/')) {
       const slug = p.slice('projects/'.length);
       const idx = this.projectSlugs.indexOf(slug);
-      if (idx !== -1) return { html: this.formatProject(this.data.projects[idx]) };
+      if (idx !== -1) return this.formatProject(this.data.projects[idx]);
       return `cat: projects/${slug}: No such file or directory`;
     }
 
@@ -863,49 +859,55 @@ export class InteractiveTerminal {
 
   // ─── Content formatters ──────────────────────────────────────────────────
 
-  private formatExperience(): string {
-    return this.data.experience.map((exp) => {
+  private formatExperience(): { html: string } {
+    const divs = this.data.experience.map((exp) => {
       const period = exp.endDate ? `${exp.startDate}\u2013${exp.endDate}` : `${exp.startDate}\u2013present`;
-      return `<span class="terminal-accent">${esc(exp.role)}</span> @ ${esc(exp.client)} <span class="terminal-dim">(${period})</span>\n  ${esc(exp.summary)}`;
-    }).join('\n\n');
+      return `<div><span class="terminal-accent">${esc(exp.role)}</span> @ ${esc(exp.client)} <span class="terminal-dim">(${period})</span></div><div>  ${esc(exp.summary)}</div><div>&nbsp;</div>`;
+    });
+    return { html: divs.join('') };
   }
 
-  private formatSkills(): string {
-    return this.data.skills.map((cat) =>
-      `<span class="terminal-accent">${esc(cat.label)}</span>: ${esc(cat.items.join(', '))}`
-    ).join('\n');
+  private formatSkills(): { html: string } {
+    const divs = this.data.skills.map((cat) =>
+      `<div><span class="terminal-accent">${esc(cat.label)}</span>: ${esc(cat.items.join(', '))}</div>`
+    );
+    return { html: divs.join('') };
   }
 
-  private formatEducation(): string {
-    return this.data.education.map((edu) => {
+  private formatEducation(): { html: string } {
+    const divs = this.data.education.map((edu) => {
       const period = `${edu.startYear}\u2013${edu.endYear}`;
       const extra = [edu.result, edu.gpa ? `GPA: ${edu.gpa}` : ''].filter(Boolean).join(', ');
-      return `<span class="terminal-accent">${esc(edu.degree)}</span> @ ${esc(edu.institution)} <span class="terminal-dim">(${period})</span>` +
-        (extra ? `\n  ${esc(extra)}` : '');
-    }).join('\n\n');
+      let html = `<div><span class="terminal-accent">${esc(edu.degree)}</span> @ ${esc(edu.institution)} <span class="terminal-dim">(${period})</span></div>`;
+      if (extra) html += `<div>  ${esc(extra)}</div>`;
+      html += `<div>&nbsp;</div>`;
+      return html;
+    });
+    return { html: divs.join('') };
   }
 
-  private formatCerts(): string {
-    return this.data.certifications.map((c) =>
-      `<span class="terminal-accent">${esc(c.name)}</span> \u2014 ${esc(c.institution)} (${c.year})` +
-      (c.credential ? ` <span class="terminal-dim">[${esc(c.credential)}]</span>` : '')
-    ).join('\n');
+  private formatCerts(): { html: string } {
+    const divs = this.data.certifications.map((c) =>
+      `<div><span class="terminal-accent">${esc(c.name)}</span> \u2014 ${esc(c.institution)} (${c.year})` +
+      (c.credential ? ` <span class="terminal-dim">[${esc(c.credential)}]</span>` : '') + `</div>`
+    );
+    return { html: divs.join('') };
   }
 
-  private formatProject(p: TerminalProject): string {
-    const lines = [
-      `<span class="terminal-accent">${esc(p.title)}</span>`,
-      esc(p.description),
-      `Tech: ${esc(p.tech.join(', '))}`,
+  private formatProject(p: TerminalProject): { html: string } {
+    const divs = [
+      `<div><span class="terminal-accent">${esc(p.title)}</span></div>`,
+      `<div>${esc(p.description)}</div>`,
+      `<div>Tech: ${esc(p.tech.join(', '))}</div>`,
     ];
-    if (p.github) lines.push(`GitHub: ${esc(p.github)}`);
-    if (p.link) lines.push(`Link: ${esc(p.link)}`);
-    return lines.join('\n');
+    if (p.github) divs.push(`<div>GitHub: ${esc(p.github)}</div>`);
+    if (p.link) divs.push(`<div>Link: ${esc(p.link)}</div>`);
+    return { html: divs.join('') };
   }
 
   // ─── Help ────────────────────────────────────────────────────────────────
 
-  private helpOutput(): string {
+  private helpOutput(): { html: string } {
     const sections: [string, string[]][] = [
       ['Navigation', ['help', 'clear', 'ls', 'cd', 'open', 'pwd']],
       ['Info', ['whoami', 'hostname', 'cat', 'uptime', 'echo', 'neofetch']],
@@ -914,18 +916,20 @@ export class InteractiveTerminal {
       ['Fun', ['sudo hire-me', 'cowsay', 'fortune', 'sl', 'matrix']],
     ];
 
-    const lines: string[] = [];
+    const divs: string[] = [];
     for (const [section, cmds] of sections) {
-      lines.push(`\n<span class="terminal-accent">${esc(section)}</span>`);
+      divs.push(`<div>&nbsp;</div>`);
+      divs.push(`<div><span class="terminal-accent">${esc(section)}</span></div>`);
       for (const cmd of cmds) {
         const baseName = cmd.split(' ')[0];
         const command = this.commands.get(baseName);
         const desc = command ? command.description : '';
-        lines.push(`  <span class="terminal-cmd">${esc(cmd.padEnd(24))}</span><span class="terminal-dim">${esc(desc)}</span>`);
+        divs.push(`<div>  <span class="terminal-cmd">${esc(cmd.padEnd(24))}</span><span class="terminal-dim">${esc(desc)}</span></div>`);
       }
     }
-    lines.push('\n<span class="terminal-dim">Tab to auto-complete \u2022 \u2191/\u2193 for history \u2022 Ctrl+C to cancel \u2022 Esc to unfocus</span>');
-    return lines.join('\n');
+    divs.push(`<div>&nbsp;</div>`);
+    divs.push(`<div><span class="terminal-dim">Tab to auto-complete \u2022 \u2191/\u2193 for history \u2022 Ctrl+C to cancel \u2022 Esc to unfocus</span></div>`);
+    return { html: divs.join('') };
   }
 
   private manPage(cmd: string): CommandResult {
@@ -978,15 +982,15 @@ export class InteractiveTerminal {
     const email = s.social.email;
     const github = s.social.GitHub.replace('https://', '');
     return [
-      '<span class="terminal-dim">[sudo] password for visitor: ********</span>',
-      '<span class="terminal-accent">Access granted.</span>',
-      '',
-      `<span class="terminal-accent">STATUS:</span> ${esc(status)}`,
-      `<span class="terminal-accent">EMAIL:</span>  ${esc(email)}`,
-      `<span class="terminal-accent">GITHUB:</span> ${esc(github)}`,
-      '',
-      "Seriously though, let's talk! \ud83e\udd1d",
-    ].join('\n');
+      '<div><span class="terminal-dim">[sudo] password for visitor: ********</span></div>',
+      '<div><span class="terminal-accent">Access granted.</span></div>',
+      '<div>&nbsp;</div>',
+      `<div><span class="terminal-accent">STATUS:</span> ${esc(status)}</div>`,
+      `<div><span class="terminal-accent">EMAIL:</span>  ${esc(email)}</div>`,
+      `<div><span class="terminal-accent">GITHUB:</span> ${esc(github)}</div>`,
+      '<div>&nbsp;</div>',
+      "<div>Seriously though, let's talk! \ud83e\udd1d</div>",
+    ].join('');
   }
 
   // ─── cowsay ──────────────────────────────────────────────────────────────
