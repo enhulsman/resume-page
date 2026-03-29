@@ -1,0 +1,133 @@
+---
+import { experience, education, certifications } from "../config/resume";
+import type { Experience, Education, Certification } from "../config/resume";
+
+const consulting = experience.filter(e => e.group === 'consulting');
+const prior = experience.filter(e => e.group === 'prior');
+
+function formatDate(entry: Experience): string {
+  return entry.endDate ? `${entry.startDate} — ${entry.endDate}` : `${entry.startDate} — Present`;
+}
+---
+
+<section id="experience" class="relative py-24 md:py-32">
+  <div class="mx-auto w-full max-w-7xl px-6 md:px-12">
+    <!-- Section label -->
+    <div class="mb-16" data-reveal>
+      <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// Experience</span>
+      <h2 class="mt-2 font-display text-3xl md:text-5xl font-bold text-theme-primary tracking-tight">
+        Where I've worked
+      </h2>
+    </div>
+
+    <!-- Timeline -->
+    <div class="relative">
+      <!-- Vertical line -->
+      <div class="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-[var(--color-border-primary)] md:-translate-x-px" aria-hidden="true"></div>
+
+      <!-- Consulting header -->
+      <div class="relative mb-8 pl-12 md:pl-0 md:text-center" data-reveal>
+        <div class="md:inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-border)] bg-[var(--color-accent-alpha)] px-4 py-1.5">
+          <span class="text-xs font-mono text-theme-accent tracking-wider uppercase">Consulting via Anamata</span>
+        </div>
+      </div>
+
+      <!-- Consulting entries -->
+      {consulting.map((entry, i) => (
+        <div class={`relative mb-8 md:mb-12 ${i % 2 === 0 ? 'md:pr-[calc(50%+2rem)]' : 'md:pl-[calc(50%+2rem)]'}`} data-reveal>
+          <!-- Timeline dot -->
+          <div class="absolute left-4 md:left-1/2 top-2 w-2.5 h-2.5 rounded-full border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-primary)] -translate-x-1/2 z-10" aria-hidden="true"></div>
+
+          <!-- Card -->
+          <div class="ml-12 md:ml-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2">
+              <h3 class="font-display text-base md:text-lg font-bold text-theme-primary">{entry.role}</h3>
+              <span class="font-mono text-xs text-theme-muted shrink-0">{formatDate(entry)}</span>
+            </div>
+            <p class="text-sm text-theme-accent mb-2">{entry.client}</p>
+            <p class="text-sm text-theme-secondary leading-relaxed">{entry.summary}</p>
+          </div>
+        </div>
+      ))}
+
+      <!-- Prior experience header -->
+      <div class="relative mb-8 mt-16 pl-12 md:pl-0 md:text-center" data-reveal>
+        <div class="md:inline-flex items-center gap-2 rounded-full border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] px-4 py-1.5">
+          <span class="text-xs font-mono text-theme-muted tracking-wider uppercase">Prior Experience</span>
+        </div>
+      </div>
+
+      <!-- Prior entries -->
+      {prior.map((entry, i) => (
+        <div class={`relative mb-8 md:mb-12 ${i % 2 === 0 ? 'md:pr-[calc(50%+2rem)]' : 'md:pl-[calc(50%+2rem)]'}`} data-reveal>
+          <div class="absolute left-4 md:left-1/2 top-2 w-2 h-2 rounded-full bg-[var(--color-border-secondary)] -translate-x-1/2 z-10" aria-hidden="true"></div>
+
+          <div class="ml-12 md:ml-0 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2">
+              <h3 class="font-display text-base font-bold text-theme-primary">{entry.role}</h3>
+              <span class="font-mono text-xs text-theme-muted shrink-0">{formatDate(entry)}</span>
+            </div>
+            <p class="text-sm text-theme-accent mb-2">{entry.client}</p>
+            <p class="text-sm text-theme-secondary leading-relaxed">{entry.summary}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- Education & Certifications -->
+    <div class="mt-24 grid gap-12 md:grid-cols-2">
+      <!-- Education -->
+      <div data-reveal>
+        <h3 class="font-display text-xl md:text-2xl font-bold text-theme-primary mb-6 flex items-center gap-3">
+          <span class="w-8 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
+          Education
+        </h3>
+        <div class="space-y-4">
+          {education.map(edu => (
+            <div class="rounded-lg border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-4">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <p class="text-sm font-bold text-theme-primary">{edu.degree}</p>
+                  <p class="text-sm text-theme-secondary">{edu.institution}</p>
+                </div>
+                <span class="font-mono text-xs text-theme-muted shrink-0">{edu.startYear}–{edu.endYear}</span>
+              </div>
+              {(edu.result || edu.gpa) && (
+                <div class="mt-2 flex gap-3">
+                  {edu.result && <span class="text-xs text-theme-accent">{edu.result}</span>}
+                  {edu.gpa && <span class="text-xs text-theme-muted">GPA: {edu.gpa}</span>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Certifications -->
+      <div data-reveal>
+        <h3 class="font-display text-xl md:text-2xl font-bold text-theme-primary mb-6 flex items-center gap-3">
+          <span class="w-8 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
+          Certifications
+        </h3>
+        <div class="space-y-4">
+          {certifications.map(cert => (
+            <div class="rounded-lg border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-4">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <p class="text-sm font-bold text-theme-primary">{cert.name}</p>
+                  <p class="text-sm text-theme-secondary">{cert.institution}</p>
+                </div>
+                <span class="font-mono text-xs text-theme-muted shrink-0">{cert.year}</span>
+              </div>
+              {cert.credential && (
+                <span class="mt-2 inline-block font-mono text-xs px-2 py-0.5 rounded border border-[var(--color-accent-border)] text-theme-accent bg-[var(--color-accent-alpha)]">
+                  {cert.credential}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

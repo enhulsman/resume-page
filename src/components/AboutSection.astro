@@ -1,0 +1,114 @@
+---
+import site from "../config/site";
+import { gravatarUrl } from "../lib/gravatar";
+
+const aboutParagraphs = site.about.trim().split('\n\n').map(p => p.trim()).filter(Boolean);
+
+const terminalLines = [
+  { prompt: true, text: 'whoami' },
+  { prompt: false, text: `${site.name.toLowerCase().replace(' ', '.')} @ ${site.location}` },
+  { prompt: true, text: 'cat /etc/role' },
+  { prompt: false, text: site.role },
+  { prompt: true, text: 'uptime --pretty' },
+  { prompt: false, text: 'up since 2023, no unplanned restarts' },
+  { prompt: true, text: 'echo $STACK' },
+  { prompt: false, text: [...site.skills.languages, ...site.skills.tools].join(' · ') },
+];
+---
+
+<section id="about" class="relative py-24 md:py-32">
+  <div class="mx-auto w-full max-w-7xl px-6 md:px-12">
+    <!-- Section label -->
+    <div class="mb-16" data-reveal>
+      <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// About</span>
+      <h2 class="mt-2 font-display text-3xl md:text-5xl font-bold text-theme-primary tracking-tight">
+        Who I am
+      </h2>
+    </div>
+
+    <div class="grid gap-12 lg:grid-cols-5 lg:gap-16">
+      <!-- Left column: photo + bio -->
+      <div class="lg:col-span-3 space-y-8">
+        <div class="flex flex-col sm:flex-row items-start gap-6" data-reveal>
+          <!-- Photo -->
+          <img
+            src={gravatarUrl}
+            alt={`${site.name} profile photo`}
+            width="200"
+            height="200"
+            loading="lazy"
+            class="rounded-full border-2 border-[var(--color-accent-border)] w-[150px] h-[150px] md:w-[200px] md:h-[200px] shrink-0"
+            style="filter: grayscale(100%) sepia(30%) saturate(150%) hue-rotate(-10deg) brightness(0.9);"
+          />
+          <div class="space-y-4">
+            {aboutParagraphs.map(p => (
+              <p class="text-base text-theme-secondary leading-relaxed">{p}</p>
+            ))}
+          </div>
+        </div>
+
+        <!-- Interest tags -->
+        <div class="flex flex-wrap gap-2" data-reveal>
+          {site.interests.map(interest => (
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border border-[var(--color-accent-border)] bg-[var(--color-accent-alpha)] text-theme-accent">
+              {interest}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <!-- Right column: terminal card -->
+      <div class="lg:col-span-2" data-reveal>
+        <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] overflow-hidden shadow-lg">
+          <!-- macOS title bar -->
+          <div class="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-border-primary)]">
+            <span class="w-3 h-3 rounded-full bg-[#ff5f57]"></span>
+            <span class="w-3 h-3 rounded-full bg-[#febc2e]"></span>
+            <span class="w-3 h-3 rounded-full bg-[#28c840]"></span>
+            <span class="ml-3 text-xs text-theme-muted font-mono">~/.profile</span>
+          </div>
+
+          <!-- Terminal body -->
+          <div class="p-4 font-mono text-sm space-y-1.5 leading-relaxed">
+            {terminalLines.map(line => (
+              line.prompt ? (
+                <div>
+                  <span class="text-theme-accent">$</span>
+                  <span class="text-theme-primary ml-2">{line.text}</span>
+                </div>
+              ) : (
+                <div class="text-theme-muted pl-4">{line.text}</div>
+              )
+            ))}
+            <div>
+              <span class="text-theme-accent">$</span>
+              <span class="terminal-cursor ml-2">&#8203;</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .terminal-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 1.1em;
+    background-color: var(--color-accent-primary);
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal-cursor {
+      animation: none;
+    }
+  }
+</style>
