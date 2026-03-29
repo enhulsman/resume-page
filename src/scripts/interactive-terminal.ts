@@ -134,6 +134,9 @@ export class InteractiveTerminal {
       this.bindInputEvents();
     }
 
+    // Enable pointer events on hidden input so user can tap to focus
+    this.hiddenInput.style.pointerEvents = 'auto';
+
     this.appendPromptLine();
     this.updateTitleBar();
   }
@@ -152,28 +155,31 @@ export class InteractiveTerminal {
     // Position OUTSIDE the scrollable body but inside the terminal card wrapper.
     // This prevents the browser's native scroll-into-view on focused input
     // from fighting with the terminal's internal scroll.
+    // The input covers the FULL terminal card so any tap directly focuses it.
+    // No programmatic focus() needed — native tap-to-focus works on all platforms.
     Object.assign(input.style, {
       position: 'absolute',
-      bottom: '0',
+      top: '0',
       left: '0',
       width: '100%',
-      height: '3em',
+      height: '100%',
       fontSize: '16px',
       zIndex: '2',
-      // Don't use opacity:0 — mobile browsers may debounce events on invisible inputs.
-      // Instead make it visually transparent but technically "visible".
       color: 'transparent',
       background: 'transparent',
       border: 'none',
       outline: 'none',
       caretColor: 'transparent',
+      padding: '0',
+      margin: '0',
+      pointerEvents: 'none', // Don't intercept clicks during animation — enable on activate
     });
-    // On focus, prevent browser from scrolling the page to the input
+    // On focus, scroll terminal to bottom
     input.addEventListener('focus', () => {
       requestAnimationFrame(() => this.scrollToBottom());
     });
-    // Append to the card wrapper (parent of body), not body itself
-    // This keeps it outside the scrollable area
+    // Append to the card wrapper (parent of body) so it's outside the scrollable area
+    // but visually covers it entirely
     const cardWrapper = this.body.parentElement;
     if (cardWrapper) {
       cardWrapper.style.position = 'relative';
@@ -220,13 +226,15 @@ export class InteractiveTerminal {
       this.syncFromHiddenInput();
     });
 
-    // Keydown ONLY for special keys (Enter, Tab, arrows, Ctrl combos).
-    this.hiddenInput.addEventListener('keydown', (e) => this.handleKeydown(e));
-
-    // Click on terminal body → focus hidden input (for desktop where body is visible above the input overlay)
-    this.body.addEventListener('click', () => {
-      if (!this.active) return;
-      this.hiddenInput.focus({ preventScroll: true });
+    // Keydown handles special keys AND acts as a sync trigger.
+    // On some mobile browsers, 'input' events may not fire reliably
+    // for transparent inputs. Keydown always fires though.
+    this.hiddenInput.addEventListener('keydown', (e) => {
+      this.handleKeydown(e);
+      // Schedule a sync after the keydown completes (input value updated by then)
+      if (!['Enter', 'Tab', 'Escape'].includes(e.key)) {
+        setTimeout(() => this.syncFromHiddenInput(), 0);
+      }
     });
   }
 
