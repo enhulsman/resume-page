@@ -21,8 +21,9 @@ function formatDate(entry: typeof experience[0]): string {
           Career highlights
         </h2>
       </div>
-      <a href="/resume" class="text-sm text-theme-muted hover:text-theme-accent transition-colors font-mono">
-        Full resume &rarr;
+      <a href="/resume" class="inline-flex items-center gap-1.5 text-sm font-mono px-4 py-1.5 rounded-full border border-[var(--color-accent-border)] text-theme-accent bg-[var(--color-accent-alpha)] hover:bg-[var(--color-accent-primary)] hover:text-[var(--color-bg-primary)] transition-all duration-200">
+        Full resume
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
       </a>
     </div>
 
@@ -53,7 +54,7 @@ function formatDate(entry: typeof experience[0]): string {
     <div class="mt-8 pl-12 md:pl-20" data-reveal>
       <a
         href="/resume"
-        class="inline-flex items-center gap-2 text-sm font-medium text-theme-accent hover:text-theme-primary transition-colors font-display"
+        class="inline-flex items-center gap-2 text-sm font-medium font-display px-5 py-2.5 rounded-lg border border-[var(--color-accent-border)] text-theme-accent bg-[var(--color-accent-alpha)] hover:bg-[var(--color-accent-primary)] hover:text-[var(--color-bg-primary)] transition-all duration-200"
       >
         View full experience, education & certifications
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
