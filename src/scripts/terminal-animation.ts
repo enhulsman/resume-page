@@ -128,6 +128,16 @@ export function initTerminalAnimation(body: HTMLElement): void {
     while (el.firstChild) body.appendChild(el.firstChild);
   }
 
+  function updateTitleDimensions(): void {
+    const titleEl = document.getElementById('terminal-title');
+    if (!titleEl) return;
+    const charWidth = 13 * 0.6; // font-size * approximate monospace ratio
+    const lineHeight = 13 * 1.6;
+    const cols = Math.floor(body.clientWidth / charWidth);
+    const rows = Math.floor(body.clientHeight / lineHeight);
+    titleEl.textContent = `${promptStr} \u2014 zsh \u2014 ${cols}\u00d7${rows}`;
+  }
+
   function ensureCursor(typing: boolean): void {
     if (cursorLine && cursorLine.parentNode) {
       cursorLine.remove();
@@ -210,6 +220,7 @@ export function initTerminalAnimation(body: HTMLElement): void {
             );
           }
           appendHTML('<div class="h-1"></div>');
+          updateTitleDimensions();
 
           cmdIndex = index + 1;
 
@@ -283,6 +294,7 @@ export function initTerminalAnimation(body: HTMLElement): void {
             );
           }
           appendHTML('<div class="h-1"></div>');
+          updateTitleDimensions();
 
           cmdIndex = index + 1;
           ensureCursor(false);

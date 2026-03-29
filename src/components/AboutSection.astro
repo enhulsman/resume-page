@@ -151,7 +151,7 @@ const terminalData = {
 <!-- Terminal data for interactive mode -->
 <script type="application/json" id="terminal-data" set:html={JSON.stringify(terminalData)}></script>
 
-<style>
+<style is:global>
   .terminal-cursor {
     display: inline-block;
     min-width: 8px;

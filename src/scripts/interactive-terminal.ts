@@ -124,9 +124,14 @@ export class InteractiveTerminal {
       }
     }
 
+    // Re-create hidden input if destroyed by animation skip (innerHTML wipe)
+    if (!this.body.contains(this.hiddenInput)) {
+      this.createHiddenInput();
+      this.bindMobileEvents();
+    }
+
     this.appendPromptLine();
     this.updateTitleBar();
-    // No hint — the blinking cursor is the only signal (easter egg)
   }
 
   // ─── Hidden input (mobile support) ──────────────────────────────────────
@@ -161,20 +166,29 @@ export class InteractiveTerminal {
   // ─── Events ──────────────────────────────────────────────────────────────
 
   private bindEvents(): void {
-    // The hidden input covers the terminal body and is directly tappable.
-    // On focus (user gesture), the virtual keyboard opens natively.
-    // We just need to prevent interaction before activation.
+    // Desktop: keydown on body
+    this.body.setAttribute('tabindex', '0');
+    this.body.addEventListener('keydown', (e) => this.handleKeydown(e));
+
+    // Bind mobile events on the initial hidden input
+    this.bindMobileEvents();
+
+    // Resize → update title bar
+    window.addEventListener('resize', () => {
+      if (this.resizeTimer) clearTimeout(this.resizeTimer);
+      this.resizeTimer = setTimeout(() => this.updateTitleBar(), 200);
+    });
+  }
+
+  /** Bind events on the hidden input — called on init and after re-creation */
+  private bindMobileEvents(): void {
+    // Prevent focus before activation
     this.hiddenInput.addEventListener('focus', () => {
       if (!this.active) {
         this.hiddenInput.blur();
       }
     });
 
-    // Desktop: keydown on body
-    this.body.setAttribute('tabindex', '0');
-    this.body.addEventListener('keydown', (e) => this.handleKeydown(e));
-
-    // Mobile: hidden input events
     this.hiddenInput.addEventListener('input', () => {
       if (this.composing) return;
       this.syncFromHiddenInput();
@@ -187,12 +201,6 @@ export class InteractiveTerminal {
       this.syncFromHiddenInput();
     });
     this.hiddenInput.addEventListener('keydown', (e) => this.handleKeydown(e));
-
-    // Resize → update title bar
-    window.addEventListener('resize', () => {
-      if (this.resizeTimer) clearTimeout(this.resizeTimer);
-      this.resizeTimer = setTimeout(() => this.updateTitleBar(), 200);
-    });
   }
 
   private syncFromHiddenInput(): void {
