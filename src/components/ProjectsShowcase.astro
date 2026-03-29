@@ -1,108 +1,74 @@
 ---
-import site from "../config/site";
+// Dynamically import MDX projects and filter by showcase tag
+const projectFiles = await Astro.glob("../pages/projects/*.mdx");
 
-interface Project {
-  title: string;
-  description: string;
-  tech: string[];
-  github?: string;
-  link?: string;
-  featured?: boolean;
-}
-
-// Projects data — extend site.ts with a projects array, or define inline for now
-const projects: Project[] = [
-  {
-    title: 'Encrypted Chat TUI',
-    description: 'End-to-end encrypted terminal chat application built in Rust with async networking and a polished TUI interface.',
-    tech: ['Rust', 'Tokio', 'TUI', 'Cryptography'],
-    github: 'https://github.com/enhulsman',
-    featured: true,
-  },
-  {
-    title: 'hulsman.dev',
-    description: 'This portfolio site — built with Astro, Tailwind, and carefully crafted CSS animations. No JS frameworks needed.',
-    tech: ['Astro', 'TypeScript', 'Tailwind CSS'],
-    github: 'https://github.com/enhulsman',
-    link: 'https://hulsman.dev',
-    featured: true,
-  },
-  {
-    title: 'Homelab Infrastructure',
-    description: 'Self-hosted infrastructure across Raspberry Pi and Hetzner VPS — Docker, monitoring, DNS, tunnels, automated backups.',
-    tech: ['Docker', 'Linux', 'Cloudflare', 'Prometheus'],
-    featured: true,
-  },
-  {
-    title: 'CI/CD Pipeline Automation',
-    description: 'Custom deployment pipelines for Pega applications with automated testing, environment promotion, and rollback.',
-    tech: ['Python', 'Bash', 'Docker', 'Git'],
-  },
-];
+const projects = projectFiles
+  .filter((p) => p.frontmatter.showcase === true)
+  .map((p) => ({
+    title: p.frontmatter.title || "",
+    description: p.frontmatter.description || "",
+    tech: (p.frontmatter.tech || []) as string[],
+    github: p.frontmatter.github as string | undefined,
+    href: p.url || "",
+    date: p.frontmatter.date,
+  }))
+  .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
 ---
 
 <section id="projects" class="relative py-24 md:py-32">
   <div class="mx-auto w-full max-w-7xl px-6 md:px-12">
     <!-- Section label -->
-    <div class="mb-16" data-reveal>
-      <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// Projects</span>
-      <h2 class="mt-2 font-display text-3xl md:text-5xl font-bold text-theme-primary tracking-tight">
-        Things I've built
-      </h2>
+    <div class="mb-12 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4" data-reveal>
+      <div>
+        <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// Projects</span>
+        <h2 class="mt-2 font-display text-3xl md:text-5xl font-bold text-theme-primary tracking-tight">
+          Things I've built
+        </h2>
+      </div>
+      <a href="/projects" class="text-sm text-theme-muted hover:text-theme-accent transition-colors font-mono">
+        View all projects &rarr;
+      </a>
     </div>
 
     <!-- Project grid -->
-    <div class="grid gap-6 md:grid-cols-2">
-      {projects.map(project => (
-        <div
-          class="spotlight-card group relative rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-6 md:p-8 overflow-hidden transition-colors duration-300"
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {projects.map((project) => (
+        <a
+          href={project.href}
+          class="spotlight-card group relative rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-6 md:p-8 overflow-hidden transition-colors duration-300 hover:border-[var(--color-accent-border)] block"
           data-reveal
         >
           <!-- Spotlight glow overlay -->
           <div class="spotlight-glow absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none" aria-hidden="true"></div>
 
-          <div class="relative z-10">
+          <div class="relative z-10 flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-start justify-between mb-4">
-              <div class="flex items-center gap-3">
-                {project.featured && (
-                  <span class="inline-block w-2 h-2 rounded-full bg-[var(--color-accent-primary)]" aria-label="Featured project"></span>
-                )}
-                <h3 class="font-display text-lg md:text-xl font-bold text-theme-primary group-hover:text-theme-accent transition-colors duration-200">
-                  {project.title}
-                </h3>
-              </div>
-              <div class="flex items-center gap-2 shrink-0 ml-4">
-                {project.github && (
-                  <a href={project.github} target="_blank" rel="noopener noreferrer" class="text-theme-muted hover:text-theme-primary transition-colors" aria-label={`${project.title} GitHub`}>
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
-                    </svg>
-                  </a>
-                )}
-                {project.link && (
-                  <a href={project.link} target="_blank" rel="noopener noreferrer" class="text-theme-muted hover:text-theme-primary transition-colors" aria-label={`${project.title} live site`}>
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                    </svg>
-                  </a>
-                )}
-              </div>
+              <h3 class="font-display text-lg md:text-xl font-bold text-theme-primary group-hover:text-theme-accent transition-colors duration-200">
+                {project.title}
+              </h3>
+              {project.github && (
+                <span class="text-theme-muted group-hover:text-theme-primary transition-colors shrink-0 ml-3" aria-hidden="true">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+                  </svg>
+                </span>
+              )}
             </div>
 
             <!-- Description -->
-            <p class="text-sm text-theme-secondary leading-relaxed mb-6">{project.description}</p>
+            <p class="text-sm text-theme-secondary leading-relaxed mb-6 flex-1">{project.description}</p>
 
             <!-- Tech stack -->
             <div class="flex flex-wrap gap-2">
-              {project.tech.map(t => (
-                <span class="font-mono text-xs px-2.5 py-1 rounded-md border border-[var(--color-border-primary)] text-theme-muted bg-[var(--color-bg-primary)]">
+              {project.tech.map((t) => (
+                <span class="font-mono text-xs px-2.5 py-1 rounded-md border border-[var(--color-accent-border)] text-theme-accent bg-[var(--color-accent-alpha)]">
                   {t}
                 </span>
               ))}
             </div>
           </div>
-        </div>
+        </a>
       ))}
     </div>
   </div>
@@ -112,7 +78,6 @@ const projects: Project[] = [
   .spotlight-glow {
     background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(201, 148, 43, 0.06), transparent 40%);
   }
-
   .spotlight-card:hover .spotlight-glow {
     opacity: 1;
   }
@@ -123,10 +88,8 @@ const projects: Project[] = [
     card.addEventListener('mousemove', (e) => {
       const event = e as MouseEvent;
       const rect = (card as HTMLElement).getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      (card as HTMLElement).style.setProperty('--mouse-x', `${x}px`);
-      (card as HTMLElement).style.setProperty('--mouse-y', `${y}px`);
+      (card as HTMLElement).style.setProperty('--mouse-x', `${event.clientX - rect.left}px`);
+      (card as HTMLElement).style.setProperty('--mouse-y', `${event.clientY - rect.top}px`);
     });
   });
 </script>
