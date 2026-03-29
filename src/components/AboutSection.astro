@@ -208,60 +208,123 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
       typeNextCommand();
     }
 
+    // Reference to the current cursor line so we can move it
+    let cursorLine = null;
+
+    function ensureCursor(typing) {
+      // Remove old cursor line if it exists
+      if (cursorLine && cursorLine.parentNode) {
+        cursorLine.remove();
+      }
+      // Create new prompt line with cursor
+      cursorLine = document.createElement('div');
+      cursorLine.innerHTML = makePrompt() + makeCursor(typing);
+      body.appendChild(cursorLine);
+      scrollToBottom();
+    }
+
     function typeNextCommand() {
       if (cmdIndex >= commands.length) {
         // All done — show final prompt with blinking cursor
-        appendHTML(`<div>${makePrompt()}${makeCursor(false)}</div>`);
+        ensureCursor(false);
         return;
       }
 
       const cmd = commands[cmdIndex];
 
-      // Create the prompt line with cursor
-      const lineEl = document.createElement('div');
-      lineEl.innerHTML = makePrompt() + makeCursor(true);
-      body.appendChild(lineEl);
-      scrollToBottom();
+      // Show prompt with blinking cursor (idle, "thinking" before typing)
+      ensureCursor(false);
 
       // Type command characters one by one
       let charIdx = 0;
-      const typingSpeed = 40 + Math.random() * 30; // 40-70ms per char
+      const typingSpeed = 40 + Math.random() * 30;
 
       function typeChar() {
         if (charIdx < cmd.cmd.length) {
-          // Replace cursor with typed text + cursor
           const typed = escapeHtml(cmd.cmd.substring(0, charIdx + 1));
-          lineEl.innerHTML = makePrompt() +
+          cursorLine.innerHTML = makePrompt() +
             `<span class="text-theme-primary">${typed}</span>` +
             makeCursor(true);
           charIdx++;
           scrollToBottom();
 
-          // Vary speed slightly for realism
           const delay = typingSpeed + (Math.random() - 0.5) * 30;
           setTimeout(typeChar, delay);
         } else {
-          // Command fully typed — remove cursor from this line
-          lineEl.innerHTML = makePrompt() +
+          // Command fully typed — "press enter"
+          // Finalize this line (no cursor, it moves to the new prompt)
+          cursorLine.innerHTML = makePrompt() +
             `<span class="text-theme-primary">${escapeHtml(cmd.cmd)}</span>`;
 
-          // Brief pause then show output instantly
+          // Brief delay after "enter" before output appears
+          setTimeout(() => {
+            // Output + spacing + new prompt with cursor all appear together
+            for (const out of cmd.output) {
+              appendHTML(`<div class="text-theme-secondary">${escapeHtml(out)}</div>`);
+            }
+            appendHTML('<div class="h-1"></div>');
+
+            cmdIndex++;
+
+            // Show next prompt with blinking cursor immediately
+            ensureCursor(false);
+
+            // Longer pause before starting to type the next command
+            if (cmdIndex < commands.length) {
+              setTimeout(() => {
+                typeNextCommand_startTyping();
+              }, 500 + Math.random() * 400);
+            }
+          }, 150);
+        }
+      }
+
+      // Start typing after a brief idle pause
+      setTimeout(typeChar, 400 + Math.random() * 300);
+    }
+
+    // Separate function to start typing on the already-visible prompt
+    function typeNextCommand_startTyping() {
+      if (cmdIndex >= commands.length) return;
+
+      const cmd = commands[cmdIndex];
+      let charIdx = 0;
+      const typingSpeed = 40 + Math.random() * 30;
+
+      function typeChar() {
+        if (charIdx < cmd.cmd.length) {
+          const typed = escapeHtml(cmd.cmd.substring(0, charIdx + 1));
+          cursorLine.innerHTML = makePrompt() +
+            `<span class="text-theme-primary">${typed}</span>` +
+            makeCursor(true);
+          charIdx++;
+          scrollToBottom();
+          const delay = typingSpeed + (Math.random() - 0.5) * 30;
+          setTimeout(typeChar, delay);
+        } else {
+          // Finalize line
+          cursorLine.innerHTML = makePrompt() +
+            `<span class="text-theme-primary">${escapeHtml(cmd.cmd)}</span>`;
+
           setTimeout(() => {
             for (const out of cmd.output) {
               appendHTML(`<div class="text-theme-secondary">${escapeHtml(out)}</div>`);
             }
             appendHTML('<div class="h-1"></div>');
-            scrollToBottom();
 
             cmdIndex++;
-            // Pause before next command
-            setTimeout(typeNextCommand, 300 + Math.random() * 200);
-          }, 80);
+            ensureCursor(false);
+
+            if (cmdIndex < commands.length) {
+              setTimeout(typeNextCommand_startTyping, 500 + Math.random() * 400);
+            }
+          }, 150);
         }
       }
 
-      // Small delay before starting to type (like thinking)
-      setTimeout(typeChar, 200 + Math.random() * 300);
+      // Switch cursor to solid (typing mode) and start
+      cursorLine.innerHTML = makePrompt() + makeCursor(true);
+      setTimeout(typeChar, 100);
     }
 
     function appendHTML(html) {
