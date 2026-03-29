@@ -7,7 +7,7 @@ const links = [
   { href: '/#about', label: 'About' },
   { href: '/resume', label: 'Resume' },
   { href: '/projects', label: 'Projects' },
-  { href: '/#contact', label: 'Contact' },
+  { href: '/contact', label: 'Contact' },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -109,9 +109,9 @@ const isHomePage = currentPath === '/';
         open = !open;
         if (open) {
           menu.style.maxHeight = menu.scrollHeight + 'px';
-          h1.style.transform = 'rotate(45deg) translateY(7px)';
+          h1.style.transform = 'translateY(7px) rotate(45deg)';
           h2.style.opacity = '0';
-          h3.style.transform = 'rotate(-45deg) translateY(-7px)';
+          h3.style.transform = 'translateY(-7px) rotate(-45deg)';
         } else {
           menu.style.maxHeight = '0';
           h1.style.transform = '';
