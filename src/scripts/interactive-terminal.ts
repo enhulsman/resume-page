@@ -153,12 +153,14 @@ export class InteractiveTerminal {
   private appendHint(): void {
     const div = document.createElement('div');
     div.className = 'terminal-hint';
-    div.innerHTML =
-      '<span class="terminal-dim">This is a real shell — try piping: ' +
-      '<span class="terminal-accent">cat resume | grep DevOps</span>' +
-      ' or <span class="terminal-accent">echo $STACK | tr ":" "\\n"</span>' +
-      ' — type <span class="terminal-accent">help</span> for more</span>';
+    div.style.opacity = '0.4';
+    div.style.fontSize = '11px';
+    div.style.transition = 'opacity 0.6s ease';
+    div.style.marginTop = '4px';
+    div.innerHTML = '<span class="terminal-dim">This is a real shell — type help for more</span>';
     this.body.appendChild(div);
+    setTimeout(() => { div.style.opacity = '0'; }, 4000);
+    setTimeout(() => { if (div.parentNode) div.remove(); }, 4800);
   }
 
   // ─── Hidden input (mobile support) ──────────────────────────────────────

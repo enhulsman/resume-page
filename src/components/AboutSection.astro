@@ -27,8 +27,8 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
   { type: 'cmd', text: 'ls projects/' },
   ...site.projects.slice(0, 4).map(p => ({ type: 'out' as const, text: p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })),
   { type: 'blank', text: '' },
-  { type: 'cmd', text: 'echo $STACK | tr ":" "\\n" | head -n 8' },
-  ...[...site.skills.languages, ...site.skills.tools].slice(0, 8).map(s => ({ type: 'out' as const, text: s })),
+  { type: 'cmd', text: 'echo $STACK | tr ":" " - "' },
+  { type: 'out', text: [...site.skills.languages, ...site.skills.tools].join(' - ') },
 ];
 
 // Data for interactive terminal (serialized to JSON for client-side)
