@@ -5,7 +5,7 @@ import { esc, makePromptHtml, makeCursorHtml, scrollToBottom, measureCharWidth, 
 import { VirtualFS, SENTINEL_EXPERIENCE, SENTINEL_SKILLS, SENTINEL_EDUCATION, SENTINEL_CERTS, SENTINEL_PROJECT_PREFIX } from './virtual-fs';
 import { ShellEnv } from './shell-env';
 import { parseLine } from './shell-parser';
-import type { ParsedLine, ParsedGroup, ParsedCommand } from './shell-parser';
+import type { ParsedCommand } from './shell-parser';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -560,27 +560,23 @@ export class InteractiveTerminal {
 
   private getArgCandidates(cmd: string, partial: string): string[] {
     const p = partial.toLowerCase();
+    const fileCmds = ['cat', 'head', 'tail', 'wc', 'sort', 'grep', 'ls'];
+    const dirCmds = ['cd', 'mkdir'];
 
-    if (cmd === 'cat') {
-      const paths = [
-        'resume', 'skills', 'education', 'certs',
+    if (fileCmds.includes(cmd)) {
+      return this.fs.completePath(partial, this.env.get('PWD'), this.env.get('HOME'), false);
+    }
+
+    if (dirCmds.includes(cmd)) {
+      return this.fs.completePath(partial, this.env.get('PWD'), this.env.get('HOME'), true);
+    }
+
+    if (cmd === 'open') {
+      const routes = [
+        'resume', 'contact', 'projects/',
         ...this.projectSlugs.map((s) => `projects/${s}`),
       ];
-      if (p.startsWith('projects/')) {
-        return this.projectSlugs.map((s) => `projects/${s}`).filter((x) => x.toLowerCase().startsWith(p));
-      }
-      return paths.filter((x) => x.toLowerCase().startsWith(p));
-    }
-
-    if (cmd === 'cd' || cmd === 'open') {
-      const routes = ['projects/', 'resume', 'contact', '~',
-        ...this.projectSlugs.map((s) => `projects/${s}`)];
       return routes.filter((x) => x.toLowerCase().startsWith(p));
-    }
-
-    if (cmd === 'ls') {
-      const entries = ['projects/', 'resume', 'skills', 'education', 'certs', 'contact'];
-      return entries.filter((x) => x.toLowerCase().startsWith(p));
     }
 
     if (cmd === 'man' || cmd === 'help') {
@@ -1168,10 +1164,11 @@ export class InteractiveTerminal {
 
   private helpOutput(): { html: string } {
     const sections: [string, string[]][] = [
-      ['Navigation', ['help', 'clear', 'ls', 'cd', 'open', 'pwd']],
-      ['Info', ['whoami', 'hostname', 'cat', 'uptime', 'echo', 'neofetch']],
-      ['Browse', ['cat resume', 'cat skills', 'cat education', 'cat certs', 'cat projects/<name>', 'open <page>']],
-      ['Meta', ['date', 'uname', 'history', 'man', 'exit']],
+      ['Navigation', ['help', 'clear', 'ls', 'cd', 'pwd', 'open']],
+      ['Environment', ['env', 'export', 'echo']],
+      ['Files', ['cat', 'touch', 'mkdir', 'head', 'tail', 'wc', 'sort', 'grep', 'tr']],
+      ['Info', ['whoami', 'hostname', 'uptime', 'neofetch', 'date', 'uname']],
+      ['Meta', ['history', 'man', 'exit']],
       ['Fun', ['sudo hire-me', 'cowsay', 'fortune', 'sl', 'matrix']],
     ];
 
