@@ -697,38 +697,90 @@ export class InteractiveTerminal {
     });
 
     this.commands.set('cd', {
-      description: 'Navigate to page',
-      handler: (args) => this.navigateTo(args[0]),
+      description: 'Change directory',
+      handler: (args, ctx) => {
+        const target = args[0] || '~';
+        const absPath = ctx.fs.resolvePath(target, ctx.env.get('PWD'), ctx.env.get('HOME'));
+        if (!ctx.fs.isDir(absPath)) {
+          return { error: `cd: ${target}: No such directory` };
+        }
+        ctx.env.set('PWD', absPath);
+        // Hint for navigable routes
+        const home = ctx.env.get('HOME');
+        const rel = absPath.startsWith(home + '/') ? absPath.slice(home.length + 1) : null;
+        const navigable = ['resume', 'projects'];
+        if (rel && navigable.some((r) => rel === r || rel.startsWith(r + '/'))) {
+          return `Changed directory to ${absPath.startsWith(home) ? '~' + absPath.slice(home.length) : absPath}. Use 'open ${rel}' to navigate in browser.`;
+        }
+        return null;
+      },
     });
 
     this.commands.set('open', {
       description: 'Open page in browser',
-      handler: (args) => this.navigateTo(args[0]),
+      handler: (args) => {
+        const path = args[0];
+        if (!path || path === '~' || path === '/') {
+          setTimeout(() => { window.location.href = '/'; }, 300);
+          return 'Navigating to /...';
+        }
+        // URLs
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+          window.open(path, '_blank');
+          return `Opening ${path}...`;
+        }
+        // Named routes
+        const routes: Record<string, string> = { resume: '/resume', contact: '/contact', projects: '/projects' };
+        if (routes[path]) {
+          setTimeout(() => { window.location.href = routes[path]; }, 300);
+          return `Navigating to ${routes[path]}...`;
+        }
+        if (path.startsWith('projects/')) {
+          const slug = path.slice('projects/'.length);
+          const idx = this.projectSlugs.indexOf(slug.toLowerCase());
+          if (idx !== -1) {
+            const proj = this.data.projects[idx];
+            const target = proj.link || `/projects/${slug}`;
+            setTimeout(() => { window.location.href = target; }, 300);
+            return `Navigating to ${target}...`;
+          }
+          return { error: `open: ${path}: No such page` };
+        }
+        return { error: `open: ${path}: cannot open — not a web page` };
+      },
     });
 
     this.commands.set('pwd', {
       description: 'Print working directory',
-      handler: () => '~',
+      handler: (_args, ctx) => ctx.env.get('PWD'),
     });
 
     this.commands.set('whoami', {
       description: 'Print current user',
-      handler: () => 'ezra',
+      handler: (_args, ctx) => ctx.env.get('USER'),
     });
 
     this.commands.set('hostname', {
       description: 'Print hostname',
-      handler: (args) => {
-        if (args.includes('-f')) return 'hulsman.dev';
-        return 'hulsman';
+      handler: (args, ctx) => {
+        if (args.includes('-f')) return ctx.env.get('HOSTNAME') + '.dev';
+        return ctx.env.get('HOSTNAME');
       },
     });
 
     this.commands.set('cat', {
       description: 'Display file contents',
-      handler: (args) => {
-        if (args.length === 0) return 'usage: cat <file>';
-        return this.catFile(args[0]);
+      handler: (args, ctx) => {
+        // stdin passthrough: cat with no args but stdin
+        if (args.length === 0) {
+          if (ctx.stdin !== undefined) return ctx.stdin;
+          return 'usage: cat <file>';
+        }
+        const absPath = ctx.fs.resolvePath(args[0], ctx.env.get('PWD'), ctx.env.get('HOME'));
+        const content = ctx.fs.readFile(absPath);
+        if (typeof content === 'object' && 'error' in content) return content;
+        // Handle sentinels
+        return this.resolveSentinel(content, ctx.piped);
       },
     });
 
@@ -828,91 +880,205 @@ export class InteractiveTerminal {
         return null;
       },
     });
+
+    // ─── New commands ───────────────────────────────────────────────────
+
+    this.commands.set('grep', {
+      description: 'Pattern match lines',
+      handler: (args, ctx) => {
+        const pattern = args[0];
+        if (!pattern) return { error: 'usage: grep <pattern> [file]' };
+        let text: string;
+        if (args.length > 1) {
+          const absPath = ctx.fs.resolvePath(args[1], ctx.env.get('PWD'), ctx.env.get('HOME'));
+          const content = ctx.fs.readFile(absPath);
+          if (typeof content === 'object' && 'error' in content) return content;
+          const resolved = this.resolveSentinel(content, true);
+          text = typeof resolved === 'string' ? resolved : '';
+        } else if (ctx.stdin !== undefined) {
+          text = ctx.stdin;
+        } else {
+          return { error: 'usage: grep <pattern> [file]' };
+        }
+        const caseInsensitive = args.includes('-i');
+        const re = new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), caseInsensitive ? 'i' : '');
+        const matches = text.split('\n').filter((line) => re.test(line));
+        return matches.length > 0 ? matches.join('\n') : null;
+      },
+    });
+
+    this.commands.set('tr', {
+      description: 'Translate characters',
+      handler: (args, ctx) => {
+        if (args.length < 2 || ctx.stdin === undefined) return { error: 'usage: tr <from> <to> (reads stdin)' };
+        const from = args[0];
+        const to = args[1];
+        let result = ctx.stdin;
+        for (let i = 0; i < from.length; i++) {
+          const replacement = i < to.length ? to[i] : to[to.length - 1];
+          result = result.split(from[i]).join(replacement);
+        }
+        return result;
+      },
+    });
+
+    this.commands.set('head', {
+      description: 'Show first N lines',
+      handler: (args, ctx) => {
+        let n = 10;
+        let text: string | undefined;
+        const nIdx = args.indexOf('-n');
+        if (nIdx !== -1 && args[nIdx + 1]) {
+          n = parseInt(args[nIdx + 1], 10) || 10;
+          args = args.filter((_, i) => i !== nIdx && i !== nIdx + 1);
+        }
+        if (args.length > 0) {
+          const absPath = ctx.fs.resolvePath(args[0], ctx.env.get('PWD'), ctx.env.get('HOME'));
+          const content = ctx.fs.readFile(absPath);
+          if (typeof content === 'object' && 'error' in content) return content;
+          const resolved = this.resolveSentinel(content, true);
+          text = typeof resolved === 'string' ? resolved : '';
+        } else if (ctx.stdin !== undefined) {
+          text = ctx.stdin;
+        } else {
+          return { error: 'usage: head [-n N] [file]' };
+        }
+        return text.split('\n').slice(0, n).join('\n');
+      },
+    });
+
+    this.commands.set('tail', {
+      description: 'Show last N lines',
+      handler: (args, ctx) => {
+        let n = 10;
+        let text: string | undefined;
+        const nIdx = args.indexOf('-n');
+        if (nIdx !== -1 && args[nIdx + 1]) {
+          n = parseInt(args[nIdx + 1], 10) || 10;
+          args = args.filter((_, i) => i !== nIdx && i !== nIdx + 1);
+        }
+        if (args.length > 0) {
+          const absPath = ctx.fs.resolvePath(args[0], ctx.env.get('PWD'), ctx.env.get('HOME'));
+          const content = ctx.fs.readFile(absPath);
+          if (typeof content === 'object' && 'error' in content) return content;
+          const resolved = this.resolveSentinel(content, true);
+          text = typeof resolved === 'string' ? resolved : '';
+        } else if (ctx.stdin !== undefined) {
+          text = ctx.stdin;
+        } else {
+          return { error: 'usage: tail [-n N] [file]' };
+        }
+        const lines = text.split('\n');
+        return lines.slice(-n).join('\n');
+      },
+    });
+
+    this.commands.set('wc', {
+      description: 'Count lines, words, chars',
+      handler: (args, ctx) => {
+        let text: string;
+        if (args.length > 0 && !args[0].startsWith('-')) {
+          const absPath = ctx.fs.resolvePath(args[0], ctx.env.get('PWD'), ctx.env.get('HOME'));
+          const content = ctx.fs.readFile(absPath);
+          if (typeof content === 'object' && 'error' in content) return content;
+          const resolved = this.resolveSentinel(content, true);
+          text = typeof resolved === 'string' ? resolved : '';
+        } else if (ctx.stdin !== undefined) {
+          text = ctx.stdin;
+        } else {
+          return { error: 'usage: wc [file]' };
+        }
+        const lines = text.split('\n').length;
+        const words = text.split(/\s+/).filter(Boolean).length;
+        const chars = text.length;
+        if (args.includes('-l')) return `${lines}`;
+        if (args.includes('-w')) return `${words}`;
+        if (args.includes('-c')) return `${chars}`;
+        return `  ${lines}  ${words}  ${chars}`;
+      },
+    });
+
+    this.commands.set('sort', {
+      description: 'Sort lines',
+      handler: (args, ctx) => {
+        let text: string;
+        if (args.length > 0 && !args[0].startsWith('-')) {
+          const absPath = ctx.fs.resolvePath(args[0], ctx.env.get('PWD'), ctx.env.get('HOME'));
+          const content = ctx.fs.readFile(absPath);
+          if (typeof content === 'object' && 'error' in content) return content;
+          const resolved = this.resolveSentinel(content, true);
+          text = typeof resolved === 'string' ? resolved : '';
+        } else if (ctx.stdin !== undefined) {
+          text = ctx.stdin;
+        } else {
+          return { error: 'usage: sort [file]' };
+        }
+        const lines = text.split('\n');
+        lines.sort();
+        if (args.includes('-r')) lines.reverse();
+        return lines.join('\n');
+      },
+    });
+
+    this.commands.set('env', {
+      description: 'Print environment variables',
+      handler: (_args, ctx) => {
+        return ctx.env.entries().map(([k, v]) => `${k}=${v}`);
+      },
+    });
+
+    this.commands.set('export', {
+      description: 'Set environment variable',
+      handler: (args, ctx) => {
+        if (args.length === 0) return ctx.env.entries().map(([k, v]) => `${k}=${v}`);
+        const match = args[0].match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+        if (!match) return { error: `export: invalid identifier: ${args[0]}` };
+        const err = ctx.env.set(match[1], match[2]);
+        if (err) return { error: err };
+        return null;
+      },
+    });
+
+    this.commands.set('touch', {
+      description: 'Create file',
+      handler: (args, ctx) => {
+        if (args.length === 0) return { error: 'usage: touch <file>' };
+        const absPath = ctx.fs.resolvePath(args[0], ctx.env.get('PWD'), ctx.env.get('HOME'));
+        const err = ctx.fs.writeFile(absPath, '');
+        if (err) return { error: err };
+        return null;
+      },
+    });
+
+    this.commands.set('mkdir', {
+      description: 'Create directory',
+      handler: (args, ctx) => {
+        if (args.length === 0) return { error: 'usage: mkdir <dir>' };
+        const absPath = ctx.fs.resolvePath(args[0], ctx.env.get('PWD'), ctx.env.get('HOME'));
+        const err = ctx.fs.mkdir(absPath);
+        if (err) return { error: err };
+        return null;
+      },
+    });
   }
 
-  // ─── cat dispatcher ──────────────────────────────────────────────────────
+  // ─── Sentinel resolver ────────────────────────────────────────────────────
 
-  private catFile(path: string): CommandResult {
-    const p = path.toLowerCase().replace(/^\/+/, '');
-    const d = this.data;
-
-    if (p === 'etc/role') {
-      return `${d.site.role} @ ${d.site.company}`;
-    }
-
-    if (p === 'proc/height') {
-      return '2.00m \u2014 good overview of server racks';
-    }
-
-    if (p === 'resume') {
-      return this.formatExperience();
-    }
-
-    if (p === 'skills') {
-      return this.formatSkills();
-    }
-
-    if (p === 'education') {
-      return this.formatEducation();
-    }
-
-    if (p === 'certs' || p === 'certifications') {
-      return this.formatCerts();
-    }
-
-    if (p === 'projects' || p === 'projects/') {
-      return `cat: projects/: Is a directory. Try 'ls projects/' or 'cat projects/<name>'`;
-    }
-
-    if (p.startsWith('projects/')) {
-      const slug = p.slice('projects/'.length);
-      const idx = this.projectSlugs.indexOf(slug);
-      if (idx !== -1) return this.formatProject(this.data.projects[idx]);
-      return `cat: projects/${slug}: No such file or directory`;
-    }
-
-    if (p === 'contact') {
-      return `Use 'open contact' to visit the contact form, or email ${esc(this.data.site.social.email)}`;
-    }
-
-    return `cat: ${path}: No such file or directory`;
-  }
-
-  // ─── Navigation ──────────────────────────────────────────────────────────
-
-  private navigateTo(path: string | undefined): CommandResult {
-    if (!path || path === '~' || path === '/' || path === '..') {
-      return "You're already home.";
-    }
-
-    let target = path;
-    if (path === 'resume') target = '/resume';
-    else if (path === 'contact') target = '/contact';
-    else if (path.startsWith('projects/')) {
-      const slug = path.slice('projects/'.length);
-      const idx = this.projectSlugs.indexOf(slug.toLowerCase());
-      if (idx !== -1) {
-        const proj = this.data.projects[idx];
-        target = proj.link || `/projects/${slug}`;
-      } else {
-        return `cd: ${path}: No such directory`;
+  private resolveSentinel(content: string, piped: boolean): CommandResult {
+    if (content === SENTINEL_EXPERIENCE) return piped ? this.experienceText() : this.formatExperience();
+    if (content === SENTINEL_SKILLS) return piped ? this.skillsText() : this.formatSkills();
+    if (content === SENTINEL_EDUCATION) return piped ? this.educationText() : this.formatEducation();
+    if (content === SENTINEL_CERTS) return piped ? this.certsText() : this.formatCerts();
+    if (content.startsWith(SENTINEL_PROJECT_PREFIX)) {
+      const idx = parseInt(content.slice(SENTINEL_PROJECT_PREFIX.length).replace(/__$/, ''), 10);
+      if (!isNaN(idx) && idx < this.data.projects.length) {
+        return piped ? this.projectText(this.data.projects[idx]) : this.formatProject(this.data.projects[idx]);
       }
-    } else if (path === 'projects' || path === 'projects/') {
-      target = '/projects';
     }
-
-    if (!target.startsWith('/') && !target.startsWith('#') && !target.startsWith('http')) {
-      target = '/' + target;
-    }
-
-    setTimeout(() => {
-      window.location.href = target;
-    }, 300);
-
-    return `Navigating to ${target}...`;
+    return content;
   }
 
-  // ─── Content formatters ──────────────────────────────────────────────────
+  // ─── Content formatters (HTML) ──────────────────────────────────────────
 
   private formatExperience(): { html: string } {
     const divs = this.data.experience.map((exp) => {
@@ -958,6 +1124,44 @@ export class InteractiveTerminal {
     if (p.github) divs.push(`<div>GitHub: ${esc(p.github)}</div>`);
     if (p.link) divs.push(`<div>Link: ${esc(p.link)}</div>`);
     return { html: divs.join('') };
+  }
+
+  // ─── Content formatters (plain text for pipes) ──────────────────────────
+
+  private experienceText(): string {
+    return this.data.experience.map((exp) => {
+      const period = exp.endDate ? `${exp.startDate}\u2013${exp.endDate}` : `${exp.startDate}\u2013present`;
+      return `${exp.role} @ ${exp.client} (${period})\n  ${exp.summary}`;
+    }).join('\n\n');
+  }
+
+  private skillsText(): string {
+    return this.data.skills.map((cat) => `${cat.label}: ${cat.items.join(', ')}`).join('\n');
+  }
+
+  private educationText(): string {
+    return this.data.education.map((edu) => {
+      const period = `${edu.startYear}\u2013${edu.endYear}`;
+      const extra = [edu.result, edu.gpa ? `GPA: ${edu.gpa}` : ''].filter(Boolean).join(', ');
+      let line = `${edu.degree} @ ${edu.institution} (${period})`;
+      if (extra) line += `\n  ${extra}`;
+      return line;
+    }).join('\n\n');
+  }
+
+  private certsText(): string {
+    return this.data.certifications.map((c) => {
+      let line = `${c.name} \u2014 ${c.institution} (${c.year})`;
+      if (c.credential) line += ` [${c.credential}]`;
+      return line;
+    }).join('\n');
+  }
+
+  private projectText(p: TerminalProject): string {
+    const lines = [p.title, p.description, `Tech: ${p.tech.join(', ')}`];
+    if (p.github) lines.push(`GitHub: ${p.github}`);
+    if (p.link) lines.push(`Link: ${p.link}`);
+    return lines.join('\n');
   }
 
   // ─── Help ────────────────────────────────────────────────────────────────
