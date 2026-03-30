@@ -145,8 +145,20 @@ export class InteractiveTerminal {
       this.bindInputEvents();
     }
 
+    this.appendHint();
     this.appendPromptLine();
     updateTitleDimensions(this.data.prompt, this.body);
+  }
+
+  private appendHint(): void {
+    const div = document.createElement('div');
+    div.className = 'terminal-hint';
+    div.innerHTML =
+      '<span class="terminal-dim">This is a real shell — try piping: ' +
+      '<span class="terminal-accent">cat resume | grep DevOps</span>' +
+      ' or <span class="terminal-accent">echo $STACK | tr ":" "\\n"</span>' +
+      ' — type <span class="terminal-accent">help</span> for more</span>';
+    this.body.appendChild(div);
   }
 
   // ─── Hidden input (mobile support) ──────────────────────────────────────

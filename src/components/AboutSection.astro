@@ -24,15 +24,11 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
   { type: 'cmd', text: 'uptime -p' },
   { type: 'out', text: 'up 3 years, 0 unplanned restarts' },
   { type: 'blank', text: '' },
-  { type: 'cmd', text: 'cat /proc/height' },
-  { type: 'out', text: '2.00m — good overview of server racks' },
+  { type: 'cmd', text: 'ls projects/' },
+  ...site.projects.slice(0, 4).map(p => ({ type: 'out' as const, text: p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })),
   { type: 'blank', text: '' },
-  { type: 'cmd', text: 'neofetch --location' },
-  { type: 'out', text: site.location },
-  { type: 'blank', text: '' },
-  { type: 'cmd', text: 'echo $STACK | tr ":" "\\n"' },
-  { type: 'out', text: site.skills.languages.join(' · ') },
-  { type: 'out', text: site.skills.tools.join(' · ') },
+  { type: 'cmd', text: 'echo $STACK | tr ":" "\\n" | head -n 8' },
+  ...[...site.skills.languages, ...site.skills.tools].slice(0, 8).map(s => ({ type: 'out' as const, text: s })),
 ];
 
 // Data for interactive terminal (serialized to JSON for client-side)
