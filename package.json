@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/build-iframe-demo.mjs && astro dev",
-    "build": "NODE_ENV=production node scripts/build-iframe-demo.mjs && astro build",
+    "dev": "astro dev",
+    "build": "NODE_ENV=production astro build",
     "preview": "astro preview",
     "start": "astro dev",
     "generate-pdf": "node scripts/generate-pdf.js"
@@ -15,7 +15,6 @@
     "@types/node": "^24.3.0",
     "astro": "^5.16.3",
     "autoprefixer": "^10.0.0",
-    "esbuild": "^0.25.0",
     "http-server": "^14.1.1",
     "playwright": "^1.55.1",
     "postcss": "^8.0.0",
