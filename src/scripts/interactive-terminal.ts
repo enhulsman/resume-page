@@ -1202,9 +1202,7 @@ export class InteractiveTerminal {
     ];
 
     const divs: string[] = [];
-    divs.push(`<div>Welcome to the interactive terminal. This is a real shell with pipes,</div>`);
-    divs.push(`<div>variables, and a virtual filesystem. Not all commands are listed here</div>`);
-    divs.push(`<div>\u2014 some are for you to find. Have fun!</div>`);
+    divs.push(`<div>Welcome to the interactive terminal. This is a real shell with pipes, variables, and a virtual filesystem. Not all commands are listed here \u2014 some are for you to find. Have fun!</div>`);
     for (const [section, cmds] of sections) {
       divs.push(`<div>&nbsp;</div>`);
       divs.push(`<div><span class="terminal-accent">${esc(section)}</span></div>`);
