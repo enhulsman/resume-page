@@ -86,15 +86,27 @@ const terminalData = {
       <!-- Left column: photo + bio -->
       <div class="space-y-8">
         <div class="flex flex-col sm:flex-row items-start gap-6" data-reveal>
-          <img
-            src={gravatarUrl}
-            alt={`${site.name} profile photo`}
-            width="200"
-            height="200"
-            loading="lazy"
-            class="rounded-full border-2 border-[var(--color-accent-border)] w-[150px] h-[150px] md:w-[200px] md:h-[200px] shrink-0"
-            style="filter: brightness(0.95) contrast(1.05) saturate(1.1);"
-          />
+          <div class="flex flex-col items-center shrink-0 gap-2">
+            <img
+              src={gravatarUrl}
+              alt={`${site.name} profile photo`}
+              width="200"
+              height="200"
+              loading="lazy"
+              class="rounded-full border-2 border-[var(--color-accent-border)] w-[150px] h-[150px] md:w-[200px] md:h-[200px]"
+              style="filter: brightness(0.95) contrast(1.05) saturate(1.1);"
+            />
+            {site.quote && (
+              <a
+                href={site.quoteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-sm italic text-theme-muted opacity-50 hover:opacity-80 hover:text-theme-accent transition-all duration-200 mt-1"
+              >
+                {site.quote}
+              </a>
+            )}
+          </div>
           <div class="space-y-4">
             {aboutParagraphs.map(p => (
               <p class="text-base text-theme-secondary leading-relaxed">{p}</p>
