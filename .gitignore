@@ -14,6 +14,8 @@ dist/
 /.vite/
 /.next/
 *.log
+next-env.d.ts
+tsconfig.tsbuildinfo
 public/react-demo-app.iife*
 TODO
 # Personal CV/resume reference files
