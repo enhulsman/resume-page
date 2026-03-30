@@ -49,6 +49,7 @@ export class VirtualFS {
         '# 1-letter shorthands',
         "alias v='nvim'",
         "alias q='exit'",
+        "alias g='git'",
         "alias p='python3'",
         "alias d='sudo docker'",
         '',

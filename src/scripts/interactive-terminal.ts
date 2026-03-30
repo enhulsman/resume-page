@@ -454,24 +454,21 @@ export class InteractiveTerminal {
     this.appendPromptLine();
   }
 
+  private expandAliases(raw: string): string {
+    // Split by operators, expand first word of each segment, rejoin
+    // Handles: cmd1 && cmd2 ; cmd3 | cmd4
+    return raw.replace(/(^|[;&|]\s*|&&\s*)(\S+)/g, (match, prefix, cmd) => {
+      const alias = this.aliases.get(cmd);
+      return alias ? prefix + alias : match;
+    });
+  }
+
   private executeParsed(raw: string): void {
-    const parsed = parseLine(raw, this.env.getAll());
+    const expanded = this.expandAliases(raw);
+    const parsed = parseLine(expanded, this.env.getAll());
     if ('error' in parsed) {
       this.renderResult({ error: parsed.error });
       return;
-    }
-
-    // Expand aliases on command names
-    for (const group of parsed.groups) {
-      for (const cmd of group.pipeline) {
-        const alias = this.aliases.get(cmd.name);
-        if (alias) {
-          // Re-parse the alias value + original args
-          const expanded = alias.split(/\s+/);
-          cmd.name = expanded[0];
-          cmd.args = [...expanded.slice(1), ...cmd.args];
-        }
-      }
     }
 
     let prevFailed = false;
@@ -599,7 +596,8 @@ export class InteractiveTerminal {
 
     if (spaceIdx === -1) {
       const partial = input.toLowerCase();
-      const matches = Array.from(this.commands.keys()).filter((k) => k.startsWith(partial));
+      const cmdNames = new Set([...this.commands.keys(), ...this.aliases.keys()]);
+      const matches = [...cmdNames].filter((k) => k.startsWith(partial));
       this.applyCompletion(matches, input, '');
     } else {
       const cmdName = input.slice(0, spaceIdx).toLowerCase();
@@ -617,18 +615,18 @@ export class InteractiveTerminal {
 
   private getArgCandidates(cmd: string, partial: string): string[] {
     const p = partial.toLowerCase();
-    const fileCmds = ['cat', 'head', 'tail', 'wc', 'sort', 'grep', 'ls'];
+
+    // Resolve alias to get the real command for completion context
+    const alias = this.aliases.get(cmd);
+    const resolved = alias ? alias.split(/\s+/)[0] : cmd;
+
     const dirCmds = ['cd', 'mkdir'];
 
-    if (fileCmds.includes(cmd)) {
-      return this.fs.completePath(partial, this.env.get('PWD'), this.env.get('HOME'), false);
-    }
-
-    if (dirCmds.includes(cmd)) {
+    if (dirCmds.includes(resolved)) {
       return this.fs.completePath(partial, this.env.get('PWD'), this.env.get('HOME'), true);
     }
 
-    if (cmd === 'open') {
+    if (resolved === 'open') {
       const routes = [
         'resume', 'contact', 'projects/',
         ...this.projectSlugs.map((s) => `projects/${s}`),
@@ -636,16 +634,17 @@ export class InteractiveTerminal {
       return routes.filter((x) => x.toLowerCase().startsWith(p));
     }
 
-    if (cmd === 'man' || cmd === 'help') {
+    if (resolved === 'man' || resolved === 'help') {
       return Array.from(this.commands.keys()).filter((k) => k.startsWith(p));
     }
 
-    if (cmd === 'sudo') {
+    if (resolved === 'sudo') {
       const subcmds = ['hire-me'];
       return subcmds.filter((s) => s.startsWith(p));
     }
 
-    return [];
+    // Default: filesystem completion (files + dirs)
+    return this.fs.completePath(partial, this.env.get('PWD'), this.env.get('HOME'), false);
   }
 
   private applyCompletion(matches: string[], partial: string, prefix: string): void {
