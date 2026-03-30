@@ -55,6 +55,7 @@ interface TerminalSite {
   skills: { languages: string[]; tools: string[]; frameworks: string[] };
   social: { email: string; GitHub: string; LinkedIn: string };
   employment: { status: string; message: string };
+  careerStart: string;
 }
 
 export interface TerminalData {
@@ -832,8 +833,9 @@ export class InteractiveTerminal {
     this.commands.set('uptime', {
       description: 'Show system uptime',
       handler: (args) => {
-        if (args.includes('-p')) return 'up 3 years, 0 unplanned restarts';
-        return `up 3 years, 0 unplanned restarts, load average: 0.42, 0.38, 0.35`;
+        const up = this.uptimeString();
+        if (args.includes('-p')) return `up ${up}`;
+        return `up ${up}, load average: 0.42, 0.38, 0.35`;
       },
     });
 
@@ -1243,6 +1245,21 @@ export class InteractiveTerminal {
     return `${cmd} \u2014 ${command.description}`;
   }
 
+  // ─── Uptime helper ──────────────────────────────────────────────────────
+
+  private uptimeString(): string {
+    const start = new Date(this.data.site.careerStart || '2023-09-01');
+    const days = Math.floor((Date.now() - start.getTime()) / 86400000);
+    const years = Math.floor(days / 365);
+    const months = Math.floor((days % 365) / 30);
+    const rem = days - years * 365 - months * 30;
+    const parts: string[] = [];
+    if (years > 0) parts.push(`${years} year${years !== 1 ? 's' : ''}`);
+    if (months > 0) parts.push(`${months} month${months !== 1 ? 's' : ''}`);
+    if (rem > 0) parts.push(`${rem} day${rem !== 1 ? 's' : ''}`);
+    return parts.join(', ') + ', 0 unplanned restarts';
+  }
+
   // ─── neofetch ────────────────────────────────────────────────────────────
 
   private neofetchOutput(): string {
@@ -1266,7 +1283,7 @@ export class InteractiveTerminal {
       `<span class="terminal-accent">Company:</span> ${esc(s.company)}`,
       `<span class="terminal-accent">Location:</span> ${esc(s.location)}`,
       `<span class="terminal-accent">Stack:</span> ${esc(stack)}`,
-      `<span class="terminal-accent">Uptime:</span> 3 years, 0 unplanned restarts`,
+      `<span class="terminal-accent">Uptime:</span> ${esc(this.uptimeString())}`,
       `<span class="terminal-accent">GitHub:</span> enhulsman`,
       `<span class="terminal-accent">Contact:</span> ${esc(s.social.email)}`,
     ];

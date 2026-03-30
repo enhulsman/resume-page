@@ -36,8 +36,11 @@ export class VirtualFS {
     });
 
     // Build /home/ezra/
+    const stack = [...s.skills.languages, ...s.skills.tools, ...s.skills.frameworks].join(':');
     const homeDir: Map<string, FsNode> = new Map([
       ['.profile', { type: 'file', content: `${s.name} — ${s.role} @ ${s.company}\n${s.location}` }],
+      ['.vimrc', { type: 'file', content: '" EZ Tech Support approved config\nset number\nset relativenumber\nset tabstop=4\nset shiftwidth=4\nset expandtab\nset autoindent\nset mouse=a\ncolorscheme desert\n" exit vim? just close the terminal' }],
+      ['.bashrc', { type: 'file', content: `# why are you reading my bashrc?\n# I use zsh btw\nexport EDITOR=nvim\nexport VISUAL=code\nexport STACK="${stack}"\necho "welcome back, ${s.name.split(' ')[0].toLowerCase()}"` }],
       ['resume', { type: 'file', content: SENTINEL_EXPERIENCE }],
       ['skills', { type: 'file', content: SENTINEL_SKILLS }],
       ['education', { type: 'file', content: SENTINEL_EDUCATION }],
@@ -45,14 +48,33 @@ export class VirtualFS {
       ['projects', { type: 'dir', children: projectDir }],
     ]);
 
+    // Employment status message
+    const empMsg = typeof s.employment.message === 'string'
+      ? s.employment.message
+      : (s.employment.message as Record<string, string>)[s.employment.status] || 'Open to connect';
+
     // Build /etc/
     const etcDir: Map<string, FsNode> = new Map([
       ['role', { type: 'file', content: `${s.role} @ ${s.company}` }],
+      ['hostname', { type: 'file', content: 'hulsman' }],
+      ['motd', { type: 'file', content: `${empMsg}\n\nContact: ${s.social.email}\nGitHub:  ${s.social.GitHub.replace('https://', '')}` }],
+      ['passwd', { type: 'file', content: 'ezra:x:1000:1000:EZ Tech Support:/home/ezra:/bin/zsh' }],
+      ['os-release', { type: 'file', content: 'PRETTY_NAME="hulsman.dev 6.0-portfolio"\nID=hulsman\nVERSION_ID=6.0\nHOME_URL="https://hulsman.dev"\nBUILT_WITH="Astro, TypeScript, Tailwind, GSAP"\nMAINTAINER="ezra"' }],
+      ['environment', { type: 'file', content: 'EDITOR=nvim\nVISUAL=code\nSHELL=/bin/zsh\nLANG=en_NL.UTF-8\nTZ=Europe/Amsterdam\nFUEL=water\nBACKUP_FUEL=fanta' }],
     ]);
+
+    // Dynamic uptime in seconds from career start
+    const careerStart = s.careerStart || '2023-09-01';
+    const uptimeSecs = Math.floor((Date.now() - new Date(careerStart).getTime()) / 1000);
 
     // Build /proc/
     const procDir: Map<string, FsNode> = new Map([
       ['height', { type: 'file', content: '2.00m — good overview of server racks' }],
+      ['uptime', { type: 'file', content: `${uptimeSecs} 0` }],
+      ['version', { type: 'file', content: 'hulsman.dev 6.0-portfolio (ezra@hulsman) TypeScript 5.0 Astro 5.18' }],
+      ['cpuinfo', { type: 'file', content: 'model name\t: EZ Tech Support\ncores\t\t: 1 (but multithreaded)\nclock\t\t: variable (time is a social construct)\nfuel\t\t: water (backup: fanta)\ncache\t\t: mass amounts of browser tabs\nbugs\t\t: mass amounts of side projects that never ship' }],
+      ['loadavg', { type: 'file', content: '0.42 0.38 0.35 1/∞ side-projects' }],
+      ['meminfo', { type: 'file', content: 'MemTotal:\tunlimited curiosity\nMemFree:\tnot after linux ricing\nBuffers:\ttoo many open terminals\nCached:\t\tevery stackoverflow answer ever' }],
     ]);
 
     // Build /tmp/ (writable)

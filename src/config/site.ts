@@ -21,6 +21,8 @@ const site = {
     'Formula 1 🏁', 'Open Source', 'System Tinkering', 'All things Raspberry Pi'
   ],
 
+  careerStart: '2023-09-01',
+
   employment: {
     status: 'employed-open' as EmploymentStatus,
     message: {

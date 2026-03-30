@@ -10,6 +10,19 @@ const user = 'ezra';
 const host = 'hulsman';
 const prompt = `${user}@${host}`;
 
+// Dynamic uptime from career start
+const start = new Date(site.careerStart);
+const diffMs = Date.now() - start.getTime();
+const days = Math.floor(diffMs / 86400000);
+const years = Math.floor(days / 365);
+const months = Math.floor((days % 365) / 30);
+const remDays = days - years * 365 - months * 30;
+const uptimeParts = [];
+if (years > 0) uptimeParts.push(`${years} year${years !== 1 ? 's' : ''}`);
+if (months > 0) uptimeParts.push(`${months} month${months !== 1 ? 's' : ''}`);
+if (remDays > 0) uptimeParts.push(`${remDays} day${remDays !== 1 ? 's' : ''}`);
+const uptimeStr = uptimeParts.join(', ');
+
 // Animation commands — the full set
 const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
   { type: 'cmd', text: 'whoami' },
@@ -22,7 +35,7 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
   { type: 'out', text: `${site.role} @ ${site.company}` },
   { type: 'blank', text: '' },
   { type: 'cmd', text: 'uptime -p' },
-  { type: 'out', text: 'up 3 years, 0 unplanned restarts' },
+  { type: 'out', text: `up ${uptimeStr}, 0 unplanned restarts` },
   { type: 'blank', text: '' },
   { type: 'cmd', text: 'ls projects/' },
   ...site.projects.slice(0, 4).map(p => ({ type: 'out' as const, text: p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })),
@@ -42,6 +55,7 @@ const terminalData = {
     skills: site.skills,
     social: { email: site.social.email, GitHub: site.social.GitHub, LinkedIn: site.social.LinkedIn },
     employment: site.employment,
+    careerStart: site.careerStart,
   },
   projects: site.projects.map(p => ({
     title: p.title,
