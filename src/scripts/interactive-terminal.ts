@@ -1352,18 +1352,18 @@ export class InteractiveTerminal {
   private neofetchOutput(): string {
     const s = this.data.site;
     const rawArt = [
-      "     .---.    ",
-      "    /     \\   ",
-      "   |  E H  |  ",
-      "    \\     /   ",
-      "  ___'---'___ ",
-      " /           \\",
+      "     .---.     ",
+      "    /     \\    ",
+      "   |  E H  |   ",
+      "    \\     /    ",
+      "  ___'---'___  ",
+      " /           \\ ",
       "|             |",
-      " \\___________/",
+      " \\___________/ ",
     ];
-    const artWidth = Math.max(...rawArt.map((l) => l.length));
+    const artWidth = rawArt[0].length;
     // Pad art to match info length for side-by-side alignment
-    const art = [...rawArt];
+    const art = rawArt.map((l) => l.padEnd(artWidth));
     while (art.length < 12) art.push(' '.repeat(artWidth));
     const uptime = this.uptimeString().replace(', 0 unplanned restarts', '');
     const info = [
