@@ -112,12 +112,21 @@ export class VirtualFS {
       ['uptime', { type: 'file', content: `${uptimeSecs} 0` }],
       ['version', { type: 'file', content: 'hulsman.dev 6.0-portfolio (ezra@hulsman) TypeScript 5.0 Astro 5.18' }],
       ['cpuinfo', { type: 'file', content: [
-        'model name\t: EZ Tech Support',
+        'processor\t: 0',
+        'model name\t: ENH Ryzen\u2122 9 2000X @ 2.00 GHz',
         'cores\t\t: 1 (but multithreaded)',
         `clock\t\t: ${Math.floor(uptimeSecs / 3600)} hours clocked`,
         'fuel\t\t: water (backup: fanta)',
         `cache\t\t: ${allSkills.length} skills cached`,
         `bugs\t\t: ${data.projects.length}+ side projects, most never shipped`,
+        'flags\t\t: devops linux docker k8s ci coffee_resistant',
+      ].join('\n') }],
+      ['gpuinfo', { type: 'file', content: [
+        'model\t\t: CaffeineForce RTX 4070 Ti',
+        'driver\t\t: imagination/latest',
+        'vram\t\t: enough for too many browser tabs',
+        'cuda cores\t: N/A (runs on pure willpower)',
+        'temperature\t: cool under pressure',
       ].join('\n') }],
       ['loadavg', { type: 'file', content: `0.42 0.38 0.35 ${data.projects.length}/${data.projects.length + 12} side-projects` }],
       ['meminfo', { type: 'file', content: [

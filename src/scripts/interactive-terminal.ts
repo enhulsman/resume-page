@@ -1351,7 +1351,7 @@ export class InteractiveTerminal {
 
   private neofetchOutput(): string {
     const s = this.data.site;
-    const art = [
+    const rawArt = [
       "     .---.    ",
       "    /     \\   ",
       "   |  E H  |  ",
@@ -1361,23 +1361,29 @@ export class InteractiveTerminal {
       "|             |",
       " \\___________/",
     ];
-    const stack = s.skills.languages.join(', ');
+    const artWidth = Math.max(...rawArt.map((l) => l.length));
+    // Pad art to match info length for side-by-side alignment
+    const art = [...rawArt];
+    while (art.length < 12) art.push(' '.repeat(artWidth));
+    const uptime = this.uptimeString().replace(', 0 unplanned restarts', '');
     const info = [
       `<span class="terminal-accent">${esc(this.data.prompt)}</span>`,
       '<span class="terminal-dim">\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500</span>',
+      `<span class="terminal-accent">OS:</span> hulsman.dev 6.0-portfolio`,
+      `<span class="terminal-accent">Uptime:</span> ${esc(uptime)}`,
+      `<span class="terminal-accent">Shell:</span> zsh 5.9`,
+      `<span class="terminal-accent">Terminal:</span> Alacritty / Kitty`,
+      `<span class="terminal-accent">CPU:</span> ENH Ryzen\u2122 9 2000X @ 2.00 GHz`,
+      `<span class="terminal-accent">GPU:</span> CaffeineForce RTX 4070 Ti`,
       `<span class="terminal-accent">Role:</span> ${esc(s.role)}`,
       `<span class="terminal-accent">Company:</span> ${esc(s.company)}`,
       `<span class="terminal-accent">Location:</span> ${esc(s.location)}`,
-      `<span class="terminal-accent">Stack:</span> ${esc(stack)}`,
-      `<span class="terminal-accent">Uptime:</span> ${esc(this.uptimeString().replace(', 0 unplanned restarts', ''))}`,
-      `<span class="terminal-accent">GitHub:</span> enhulsman`,
       `<span class="terminal-accent">Contact:</span> ${esc(s.social.email)}`,
     ];
 
     // Calculate if side-by-side fits: art + gap + longest info line
     const cw = measureCharWidth(this.body);
     const cols = Math.floor(this.body.clientWidth / cw);
-    const artWidth = Math.max(...art.map((l) => l.length));
     const maxInfoLen = Math.max(...info.map((l) => l.replace(/<[^>]*>/g, '').length));
 
     if (cols >= artWidth + 3 + maxInfoLen) {
