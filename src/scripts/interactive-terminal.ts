@@ -1369,17 +1369,18 @@ export class InteractiveTerminal {
       `<span class="terminal-accent">Company:</span> ${esc(s.company)}`,
       `<span class="terminal-accent">Location:</span> ${esc(s.location)}`,
       `<span class="terminal-accent">Stack:</span> ${esc(stack)}`,
-      `<span class="terminal-accent">Uptime:</span> ${esc(this.uptimeString())}`,
+      `<span class="terminal-accent">Uptime:</span> ${esc(this.uptimeString().replace(', 0 unplanned restarts', ''))}`,
       `<span class="terminal-accent">GitHub:</span> enhulsman`,
       `<span class="terminal-accent">Contact:</span> ${esc(s.social.email)}`,
     ];
 
-    // Side-by-side needs ~55 chars; fall back to stacked on narrow terminals
+    // Calculate if side-by-side fits: art + gap + longest info line
     const cw = measureCharWidth(this.body);
     const cols = Math.floor(this.body.clientWidth / cw);
     const artWidth = Math.max(...art.map((l) => l.length));
+    const maxInfoLen = Math.max(...info.map((l) => l.replace(/<[^>]*>/g, '').length));
 
-    if (cols >= artWidth + 3 + 30) {
+    if (cols >= artWidth + 3 + maxInfoLen) {
       // Wide: side-by-side
       const lines = art.map((artLine, i) => {
         const infoLine = i < info.length ? info[i] : '';
