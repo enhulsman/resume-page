@@ -110,6 +110,7 @@ export class InteractiveTerminal {
   private inputLineEl: HTMLElement | null = null;
   private fs: VirtualFS;
   private env: ShellEnv;
+  private aliases: Map<string, string> = new Map();
 
   constructor(body: HTMLElement, data: TerminalData) {
     this.body = body;
@@ -117,10 +118,22 @@ export class InteractiveTerminal {
     this.projectSlugs = data.projects.map((p) => slugify(p.title));
     this.fs = new VirtualFS(data);
     this.env = new ShellEnv(data);
+    this.loadAliases();
     this.registerCommands();
     this.createHiddenInput();
     this.bindEvents();
     updateTitleDimensions(this.data.prompt, this.body);
+  }
+
+  private loadAliases(): void {
+    const home = this.env.get('HOME');
+    const content = this.fs.readFile(home + '/.zshrc');
+    if (typeof content !== 'string') return;
+    this.aliases.clear();
+    for (const line of content.split('\n')) {
+      const m = line.match(/^\s*alias\s+([A-Za-z0-9._-]+)=['"](.+)['"]\s*$/);
+      if (m) this.aliases.set(m[1], m[2]);
+    }
   }
 
   // ─── Activation ──────────────────────────────────────────────────────────
@@ -446,6 +459,19 @@ export class InteractiveTerminal {
     if ('error' in parsed) {
       this.renderResult({ error: parsed.error });
       return;
+    }
+
+    // Expand aliases on command names
+    for (const group of parsed.groups) {
+      for (const cmd of group.pipeline) {
+        const alias = this.aliases.get(cmd.name);
+        if (alias) {
+          // Re-parse the alias value + original args
+          const expanded = alias.split(/\s+/);
+          cmd.name = expanded[0];
+          cmd.args = [...expanded.slice(1), ...cmd.args];
+        }
+      }
     }
 
     let prevFailed = false;
@@ -888,6 +914,42 @@ export class InteractiveTerminal {
       handler: () => "There is no escape. Just kidding \u2014 scroll up!",
     });
 
+    this.commands.set('nvim', {
+      description: 'Neovim editor',
+      handler: (args) => args.length === 0
+        ? 'nvim: this terminal is too cool for a text editor'
+        : `nvim: cannot open '${args[0]}' — read-only portfolio (try cat instead)`,
+    });
+
+    this.commands.set('vim', {
+      description: 'Vi IMproved',
+      handler: () => 'You meant nvim, right? (aliased)',
+    });
+
+    this.commands.set('nano', {
+      description: 'Nano editor',
+      handler: () => '...really? On this machine we use nvim.',
+    });
+
+    this.commands.set('python3', {
+      description: 'Python interpreter',
+      handler: () => "Python 3.12.0 — but there's no REPL here. Try echo instead.",
+    });
+
+    this.commands.set('git', {
+      description: 'Version control',
+      handler: (args) => {
+        if (args[0] === 'status') return 'On branch main\nnothing to commit, portfolio is clean';
+        if (args[0] === 'log') return 'Too many commits to count. Check GitHub instead.';
+        return `git: '${args[0] || ''}' is not a git command. Try 'open' to visit GitHub.`;
+      },
+    });
+
+    this.commands.set('docker', {
+      description: 'Container runtime',
+      handler: () => 'Cannot connect to the Docker daemon. This is a browser, not a server.',
+    });
+
     this.commands.set('sudo', {
       description: 'Execute with elevated privileges',
       handler: (args) => {
@@ -1086,6 +1148,32 @@ export class InteractiveTerminal {
       },
     });
 
+    this.commands.set('alias', {
+      description: 'List or set aliases',
+      handler: (args) => {
+        if (args.length === 0) {
+          if (this.aliases.size === 0) return 'No aliases defined.';
+          return [...this.aliases.entries()].map(([k, v]) => `${k}='${v}'`);
+        }
+        const m = args[0].match(/^([A-Za-z0-9._-]+)=(.+)$/);
+        if (!m) return { error: `usage: alias name='command'` };
+        this.aliases.set(m[1], m[2].replace(/^['"]|['"]$/g, ''));
+        return null;
+      },
+    });
+
+    this.commands.set('source', {
+      description: 'Reload shell config',
+      handler: (args, ctx) => {
+        const target = args[0] || '~/.zshrc';
+        const absPath = ctx.fs.resolvePath(target, ctx.env.get('PWD'), ctx.env.get('HOME'));
+        const content = ctx.fs.readFile(absPath);
+        if (typeof content === 'object' && 'error' in content) return content;
+        this.loadAliases();
+        return `Reloaded ${target}`;
+      },
+    });
+
     this.commands.set('touch', {
       description: 'Create file',
       handler: (args, ctx) => {
@@ -1216,7 +1304,7 @@ export class InteractiveTerminal {
   private helpOutput(): { html: string } {
     const sections: [string, string[]][] = [
       ['Navigation', ['help', 'clear', 'ls', 'cd', 'pwd', 'open']],
-      ['Environment', ['env', 'export', 'echo']],
+      ['Environment', ['env', 'export', 'echo', 'alias', 'source']],
       ['Files', ['cat', 'head', 'tail', 'wc', 'sort', 'grep', 'tr', 'touch', 'mkdir']],
       ['Info', ['whoami', 'hostname', 'uptime', 'neofetch', 'date', 'uname']],
       ['Meta', ['history', 'man', 'exit']],
