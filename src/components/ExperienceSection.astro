@@ -1,5 +1,6 @@
 ---
 import { experience } from "../config/resume";
+import IconArrowRight from "./icons/IconArrowRight.astro";
 
 // Only show recent consulting roles as highlights
 const highlights = experience
@@ -51,9 +52,7 @@ function formatDate(entry: typeof experience[0]): string {
         class="inline-flex items-center gap-2 text-sm font-medium font-display px-5 py-2.5 rounded-lg border border-[var(--color-accent-border)] text-theme-accent bg-[var(--color-accent-alpha)] hover:bg-[var(--color-accent-primary)] hover:text-[var(--color-bg-primary)] transition-all duration-200"
       >
         View full experience, education & certifications
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-        </svg>
+        <IconArrowRight class="w-4 h-4" />
       </a>
     </div>
   </div>
