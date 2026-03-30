@@ -26,7 +26,7 @@ const languageTags = spokenLanguages.map(l => `${l.name} (${l.level})`);
     <div class="marquee-fade-left" aria-hidden="true"></div>
     <div class="marquee-fade-right" aria-hidden="true"></div>
     <div class="marquee-track" style="animation: marquee 35s linear infinite;">
-      {[...row1, ...row1, ...row1, ...row1].map(skill => (
+      {[...row1, ...row1].map(skill => (
         <span class="marquee-item">{skill}</span>
       ))}
     </div>
@@ -37,7 +37,7 @@ const languageTags = spokenLanguages.map(l => `${l.name} (${l.level})`);
     <div class="marquee-fade-left" aria-hidden="true"></div>
     <div class="marquee-fade-right" aria-hidden="true"></div>
     <div class="marquee-track" style="animation: marquee-reverse 40s linear infinite;">
-      {[...row2, ...languageTags, ...row2, ...languageTags, ...row2, ...languageTags, ...row2, ...languageTags].map(skill => (
+      {[...row2, ...languageTags, ...row2, ...languageTags].map(skill => (
         <span class="marquee-item">{skill}</span>
       ))}
     </div>
@@ -120,16 +120,6 @@ const languageTags = spokenLanguages.map(l => `${l.name} (${l.level})`);
   .marquee-fade-right {
     right: 0;
     background: linear-gradient(to left, var(--color-bg-primary), transparent);
-  }
-
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-  }
-
-  @keyframes marquee-reverse {
-    from { transform: translateX(-50%); }
-    to { transform: translateX(0); }
   }
 
   @media (prefers-reduced-motion: reduce) {

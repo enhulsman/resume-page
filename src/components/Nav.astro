@@ -81,7 +81,6 @@ const isHomePage = currentPath === '/';
     const isHome = window.location.pathname === '/';
 
     if (isHome) {
-      let lastScroll = 0;
       window.addEventListener('scroll', function() {
         const scrollY = window.scrollY;
         const threshold = window.innerHeight * 0.85;
@@ -93,7 +92,6 @@ const isHomePage = currentPath === '/';
           nav.classList.add('opacity-0', '-translate-y-8', 'pointer-events-none');
           nav.classList.remove('opacity-100', 'translate-y-0');
         }
-        lastScroll = scrollY;
       }, { passive: true });
     }
 

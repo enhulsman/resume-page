@@ -842,7 +842,6 @@ body {
 [data-theme="light"] .tech-badge-4 { color: rgb(70 115 100); }
 
 /* Additional theme utilities */
-.text-theme-accent { color: var(--color-accent-primary); }
 .bg-theme-accent-alpha { background-color: var(--color-accent-alpha); }
 .border-theme-accent-alpha { border-color: var(--color-accent-border); }
 
@@ -939,6 +938,10 @@ body {
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
+}
+@keyframes marquee-reverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
 }
 @keyframes blink {
   0%, 100% { opacity: 1; }

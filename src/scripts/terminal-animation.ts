@@ -9,6 +9,8 @@
  * Click anywhere on the element to skip the animation instantly.
  */
 
+import { esc, makePromptHtml, makeCursorHtml, scrollToBottom, updateTitleDimensions } from './terminal-utils';
+
 interface Line {
   type: 'cmd' | 'out';
   text: string;
@@ -17,27 +19,6 @@ interface Line {
 interface Command {
   cmd: string;
   output: string[];
-}
-
-function makePrompt(promptStr: string): string {
-  return (
-    `<span style="color:rgb(120,165,145)">${promptStr}</span>` +
-    `<span class="text-theme-muted">:</span>` +
-    `<span style="color:rgb(140,145,80)">~</span>` +
-    `<span class="text-theme-primary"> $ </span>`
-  );
-}
-
-function makeCursor(typing: boolean): string {
-  return `<span class="terminal-cursor${typing ? ' typing' : ''}" style="display:inline-block;width:8px;height:1.1em;vertical-align:text-bottom;background:var(--color-accent-primary)"></span>`;
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 function parseCommands(lines: Line[]): Command[] {
@@ -64,13 +45,13 @@ function renderAllInstantly(
 ): void {
   let html = '';
   for (const cmd of commands) {
-    html += `<div>${makePrompt(promptStr)}<span class="text-theme-primary">${cmd.cmd}</span></div>`;
+    html += `<div>${makePromptHtml(promptStr)}<span class="text-theme-primary">${cmd.cmd}</span></div>`;
     for (const out of cmd.output) {
       html += `<div class="text-theme-secondary">${out}</div>`;
     }
     html += '<div class="h-1"></div>';
   }
-  html += `<div>${makePrompt(promptStr)}${makeCursor(false)}</div>`;
+  html += `<div>${makePromptHtml(promptStr)}${makeCursorHtml(false)}</div>`;
   body.innerHTML = html;
 }
 
@@ -85,21 +66,18 @@ export function initTerminalAnimation(body: HTMLElement): void {
 
   const commands = parseCommands(lines);
 
-  // ---- Reduced motion: instant render ----
   if (prefersReduced) {
     renderAllInstantly(body, commands, promptStr);
     body.dispatchEvent(new CustomEvent('terminal-animation-complete'));
     return;
   }
 
-  // ---- Animated path ----
   body.innerHTML = '';
 
   let cmdIndex = 0;
   let cursorLine: HTMLDivElement | null = null;
   let animationComplete = false;
 
-  // Track all pending timeouts so we can cancel on skip
   const pendingTimeouts: Set<ReturnType<typeof setTimeout>> = new Set();
 
   function track(fn: () => void, delay: number): ReturnType<typeof setTimeout> {
@@ -118,24 +96,10 @@ export function initTerminalAnimation(body: HTMLElement): void {
     pendingTimeouts.clear();
   }
 
-  function scrollToBottom(): void {
-    body.scrollTop = body.scrollHeight;
-  }
-
   function appendHTML(html: string): void {
     const el = document.createElement('div');
     el.innerHTML = html;
     while (el.firstChild) body.appendChild(el.firstChild);
-  }
-
-  function updateTitleDimensions(): void {
-    const titleEl = document.getElementById('terminal-title');
-    if (!titleEl) return;
-    const charWidth = 13 * 0.6; // font-size * approximate monospace ratio
-    const lineHeight = 13 * 1.6;
-    const cols = Math.floor(body.clientWidth / charWidth);
-    const rows = Math.floor(body.clientHeight / lineHeight);
-    titleEl.textContent = `${promptStr} \u2014 zsh \u2014 ${cols}\u00d7${rows}`;
   }
 
   function ensureCursor(typing: boolean): void {
@@ -143,9 +107,9 @@ export function initTerminalAnimation(body: HTMLElement): void {
       cursorLine.remove();
     }
     cursorLine = document.createElement('div');
-    cursorLine.innerHTML = makePrompt(promptStr) + makeCursor(typing);
+    cursorLine.innerHTML = makePromptHtml(promptStr) + makeCursorHtml(typing);
     body.appendChild(cursorLine);
-    scrollToBottom();
+    scrollToBottom(body);
   }
 
   function finish(): void {
@@ -154,33 +118,36 @@ export function initTerminalAnimation(body: HTMLElement): void {
     body.dispatchEvent(new CustomEvent('terminal-animation-complete'));
   }
 
-  // ---- Skip on click ----
   function handleSkip(): void {
     if (animationComplete) return;
-
     cancelAll();
-
-    // Render everything that hasn't been rendered yet
-    // First, clear the body and re-render all commands instantly
     renderAllInstantly(body, commands, promptStr);
-    scrollToBottom();
+    scrollToBottom(body);
     finish();
   }
 
   body.addEventListener('click', handleSkip, { once: true });
 
-  // ---- Typing engine ----
-  function typeCommand(index: number): void {
+  /**
+   * Type a command character-by-character. When `reuseExisting` is true,
+   * the cursor line already exists (subsequent commands); otherwise a new
+   * cursor line is created first (initial command).
+   */
+  function typeCommand(index: number, reuseExisting: boolean): void {
+    if (animationComplete) return;
     if (index >= commands.length) {
-      ensureCursor(false);
+      if (!reuseExisting) ensureCursor(false);
       finish();
       return;
     }
 
     const cmd = commands[index];
 
-    // Show idle cursor before typing starts
-    ensureCursor(false);
+    if (!reuseExisting) {
+      ensureCursor(false);
+    } else if (cursorLine) {
+      cursorLine.innerHTML = makePromptHtml(promptStr) + makeCursorHtml(true);
+    }
 
     let charIdx = 0;
     const typingSpeed = 40 + Math.random() * 30;
@@ -189,99 +156,23 @@ export function initTerminalAnimation(body: HTMLElement): void {
       if (animationComplete) return;
 
       if (charIdx < cmd.cmd.length) {
-        const typed = escapeHtml(cmd.cmd.substring(0, charIdx + 1));
+        const typed = esc(cmd.cmd.substring(0, charIdx + 1));
         if (cursorLine) {
           cursorLine.innerHTML =
-            makePrompt(promptStr) +
+            makePromptHtml(promptStr) +
             `<span class="text-theme-primary">${typed}</span>` +
-            makeCursor(true);
+            makeCursorHtml(true);
         }
         charIdx++;
-        scrollToBottom();
+        scrollToBottom(body);
 
         const delay = typingSpeed + (Math.random() - 0.5) * 30;
         track(typeChar, delay);
       } else {
-        // Command fully typed — finalize the line
         if (cursorLine) {
           cursorLine.innerHTML =
-            makePrompt(promptStr) +
-            `<span class="text-theme-primary">${escapeHtml(cmd.cmd)}</span>`;
-          cursorLine = null;
-        }
-
-        // Brief pause after "enter", then show output
-        track(() => {
-          if (animationComplete) return;
-
-          for (const out of cmd.output) {
-            appendHTML(
-              `<div class="text-theme-secondary">${escapeHtml(out)}</div>`,
-            );
-          }
-          appendHTML('<div class="h-1"></div>');
-          updateTitleDimensions();
-
-          cmdIndex = index + 1;
-
-          // Show new prompt with idle cursor
-          ensureCursor(false);
-
-          if (cmdIndex < commands.length) {
-            // Pause before typing next command
-            track(() => {
-              startTypingOnCurrentLine(cmdIndex);
-            }, 500 + Math.random() * 400);
-          } else {
-            finish();
-          }
-        }, 150);
-      }
-    }
-
-    // Start typing after an idle pause
-    track(typeChar, 400 + Math.random() * 300);
-  }
-
-  /**
-   * Start typing on the cursor line that's already visible (used for
-   * commands after the first, where the prompt is already showing).
-   */
-  function startTypingOnCurrentLine(index: number): void {
-    if (animationComplete) return;
-    if (index >= commands.length) return;
-
-    const cmd = commands[index];
-    let charIdx = 0;
-    const typingSpeed = 40 + Math.random() * 30;
-
-    // Switch cursor to typing mode
-    if (cursorLine) {
-      cursorLine.innerHTML = makePrompt(promptStr) + makeCursor(true);
-    }
-
-    function typeChar(): void {
-      if (animationComplete) return;
-
-      if (charIdx < cmd.cmd.length) {
-        const typed = escapeHtml(cmd.cmd.substring(0, charIdx + 1));
-        if (cursorLine) {
-          cursorLine.innerHTML =
-            makePrompt(promptStr) +
-            `<span class="text-theme-primary">${typed}</span>` +
-            makeCursor(true);
-        }
-        charIdx++;
-        scrollToBottom();
-
-        const delay = typingSpeed + (Math.random() - 0.5) * 30;
-        track(typeChar, delay);
-      } else {
-        // Finalize
-        if (cursorLine) {
-          cursorLine.innerHTML =
-            makePrompt(promptStr) +
-            `<span class="text-theme-primary">${escapeHtml(cmd.cmd)}</span>`;
+            makePromptHtml(promptStr) +
+            `<span class="text-theme-primary">${esc(cmd.cmd)}</span>`;
           cursorLine = null;
         }
 
@@ -290,18 +181,18 @@ export function initTerminalAnimation(body: HTMLElement): void {
 
           for (const out of cmd.output) {
             appendHTML(
-              `<div class="text-theme-secondary">${escapeHtml(out)}</div>`,
+              `<div class="text-theme-secondary">${esc(out)}</div>`,
             );
           }
           appendHTML('<div class="h-1"></div>');
-          updateTitleDimensions();
+          updateTitleDimensions(promptStr, body);
 
           cmdIndex = index + 1;
           ensureCursor(false);
 
           if (cmdIndex < commands.length) {
             track(() => {
-              startTypingOnCurrentLine(cmdIndex);
+              typeCommand(cmdIndex, true);
             }, 500 + Math.random() * 400);
           } else {
             finish();
@@ -310,15 +201,15 @@ export function initTerminalAnimation(body: HTMLElement): void {
       }
     }
 
-    track(typeChar, 100);
+    const initialDelay = reuseExisting ? 100 : 400 + Math.random() * 300;
+    track(typeChar, initialDelay);
   }
 
-  // ---- Start on scroll into view ----
   const observer = new IntersectionObserver(
     (entries) => {
       if (entries[0].isIntersecting) {
         observer.disconnect();
-        typeCommand(0);
+        typeCommand(0, false);
       }
     },
     { threshold: 0.3 },
