@@ -981,3 +981,25 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgb(60 55 50); border-radius: 3px; }
 ::selection { background: rgba(201 148 43 / 0.3); color: rgb(240 234 214); }
+
+/* ── Print styles ── */
+@media print {
+  /* Hide UI chrome */
+  nav, footer,
+  .pointer-events-none[aria-hidden="true"] { display: none !important; }
+
+  /* Clean background */
+  html, body, main, #app { background: white !important; color: black !important; }
+
+  /* Remove decorative effects */
+  .glass, .glow-border { box-shadow: none !important; backdrop-filter: none !important; background: white !important; }
+
+  /* Ensure cards have visible borders in print */
+  [class*="rounded-xl"][class*="border"] { border-color: #ddd !important; }
+
+  /* No animations */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
