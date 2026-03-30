@@ -1351,17 +1351,80 @@ export class InteractiveTerminal {
 
   private neofetchOutput(): string {
     const s = this.data.site;
-    const rawArt = [
-      "     .---.     ",
-      "    /     \\    ",
-      "   |  E H  |   ",
-      "    \\     /    ",
-      "  ___'---'___  ",
-      " /           \\ ",
-      "|             |",
-      " \\___________/ ",
+    const artOptions: string[][] = [
+      [ // Original EH circle
+        "     .---.     ",
+        "    /     \\    ",
+        "   |  E H  |   ",
+        "    \\     /    ",
+        "  ___'---'___  ",
+        " /           \\ ",
+        "|             |",
+        " \\___________/ ",
+      ],
+      [ // Tux — classic Linux penguin (neofetch standard)
+        "    .---.     ",
+        "   /     \\    ",
+        "   |O   O|    ",
+        "   |  >  |    ",
+        "  /|     |\\   ",
+        " / | ,,, | \\  ",
+        "   /     \\    ",
+        "  (___|___)   ",
+      ],
+      [ // Server rack
+        " .----------. ",
+        " | [==] o o | ",
+        " | [==] o o | ",
+        " |----------| ",
+        " | [==] o o | ",
+        " | [==] o o | ",
+        " |----------| ",
+        " '----------' ",
+      ],
+      [ // Terminal prompt
+        " .----------. ",
+        " |  $ _     | ",
+        " |          | ",
+        " |  E    H  | ",
+        " |  |____|  | ",
+        " |  |    |  | ",
+        " |          | ",
+        " '----------' ",
+      ],
+      [ // Block EH
+        " ███  █  █  ",
+        " █    █  █  ",
+        " ██   ████  ",
+        " █    █  █  ",
+        " ███  █  █  ",
+        "            ",
+        " hulsman    ",
+        "    .dev    ",
+      ],
+      [ // Docker whale
+        "     ,---.     ",
+        "    / o   \\    ",
+        " __|_|_|_|_|__ ",
+        "|  ___  ___  | ",
+        "| |   ||   | | ",
+        "|  ---  ---  | ",
+        " \\__________/  ",
+        "  ~~~~~~~~~~   ",
+      ],
+      [ // Windmill (Dutch)
+        "     \\|/     ",
+        "    --*--    ",
+        "     /|\\     ",
+        "      |      ",
+        "     /|\\     ",
+        "    / | \\    ",
+        "   /  |  \\   ",
+        "  /___+___\\  ",
+      ],
     ];
-    const artWidth = rawArt[0].length;
+    const rawArt = artOptions[Math.floor(Math.random() * artOptions.length)];
+    const artWidth = Math.max(...rawArt.map((l) => l.length));
     // Pad art to match info length for side-by-side alignment
     const art = rawArt.map((l) => l.padEnd(artWidth));
     while (art.length < 12) art.push(' '.repeat(artWidth));
