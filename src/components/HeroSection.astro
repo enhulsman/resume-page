@@ -57,7 +57,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
     </div>
 
     <!-- Name -->
-    <h1 class="leading-[0.85] tracking-[-0.02em] md:tracking-[-0.04em] font-display font-[800] w-full overflow-visible" style="font-size: clamp(3.5rem, 11vw, 10rem);">
+    <h1 class="leading-[0.85] tracking-[-0.02em] md:tracking-[-0.04em] font-display font-[800] w-full overflow-visible" style="font-size: clamp(2.5rem, 11vw, 10rem);">
       <span
         class="block hero-name-shimmer"
         data-scramble={firstName}
@@ -92,7 +92,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
   </div>
 
   <!-- Scroll indicator — page-centered, outside content container -->
-  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in" style="animation-delay: 2400ms;">
+  <div class="absolute bottom-8 inset-x-0 mx-auto w-fit flex flex-col items-center gap-2 animate-fade-in" style="animation-delay: 2400ms;">
     <span class="text-xs text-theme-muted font-mono tracking-widest uppercase">Scroll</span>
     <div class="w-[1px] h-8 bg-gradient-to-b from-[var(--color-accent-primary)] to-transparent" style="animation: scroll-bob 2s ease-in-out infinite;"></div>
   </div>
