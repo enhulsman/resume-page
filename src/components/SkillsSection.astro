@@ -3,11 +3,18 @@ import { skillCategories, spokenLanguages } from "../config/resume";
 
 // Flatten all skills for marquee rows
 const allSkills = skillCategories.flatMap(cat => cat.items);
-const row1 = allSkills.slice(0, Math.ceil(allSkills.length / 2));
-const row2 = allSkills.slice(Math.ceil(allSkills.length / 2));
+const row1 = allSkills.slice(0, Math.ceil(allSkills.length / 2 + 1));
+const row2 = allSkills.slice(Math.ceil(allSkills.length / 2 + 1));
 
 // Add spoken languages as bonus items
 const languageTags = spokenLanguages.map(l => `${l.name} (${l.level})`);
+
+// Duplicate enough times that total width > 2x any realistic viewport (up to 5K+).
+// The CSS translates by -50%, so we need at least 2 identical halves.
+// 8 copies of each set guarantees coverage up to ~9600px viewports.
+const marqueeRow1 = Array(8).fill(row1).flat();
+const marqueeRow2Set = [...row2, ...languageTags];
+const marqueeRow2 = Array(8).fill(marqueeRow2Set).flat();
 ---
 
 <section id="skills" class="relative py-24 md:py-32 overflow-hidden">
@@ -25,8 +32,8 @@ const languageTags = spokenLanguages.map(l => `${l.name} (${l.level})`);
   <div class="relative mb-4">
     <div class="marquee-fade-left" aria-hidden="true"></div>
     <div class="marquee-fade-right" aria-hidden="true"></div>
-    <div class="marquee-track" style="animation: marquee 35s linear infinite;">
-      {[...row1, ...row1, ...row1, ...row1].map(skill => (
+    <div class="marquee-track" style="animation: marquee 70s linear infinite;">
+      {marqueeRow1.map(skill => (
         <span class="marquee-item">{skill}</span>
       ))}
     </div>
@@ -36,8 +43,8 @@ const languageTags = spokenLanguages.map(l => `${l.name} (${l.level})`);
   <div class="relative mb-4">
     <div class="marquee-fade-left" aria-hidden="true"></div>
     <div class="marquee-fade-right" aria-hidden="true"></div>
-    <div class="marquee-track" style="animation: marquee-reverse 40s linear infinite;">
-      {[...row2, ...languageTags, ...row2, ...languageTags, ...row2, ...languageTags, ...row2, ...languageTags].map(skill => (
+    <div class="marquee-track" style="animation: marquee-reverse 70s linear infinite;">
+      {marqueeRow2.map(skill => (
         <span class="marquee-item">{skill}</span>
       ))}
     </div>
