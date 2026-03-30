@@ -88,9 +88,10 @@ const lastName = site.name.split(' ').slice(1).join(' ');
     <p class="max-w-xl text-base md:text-lg text-theme-secondary leading-relaxed animate-fade-in" style="animation-delay: 1800ms;">
       {site.summary}
     </p>
+
   </div>
 
-  <!-- Scroll indicator -->
+  <!-- Scroll indicator — page-centered, outside content container -->
   <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in" style="animation-delay: 2400ms;">
     <span class="text-xs text-theme-muted font-mono tracking-widest uppercase">Scroll</span>
     <div class="w-[1px] h-8 bg-gradient-to-b from-[var(--color-accent-primary)] to-transparent" style="animation: scroll-bob 2s ease-in-out infinite;"></div>
