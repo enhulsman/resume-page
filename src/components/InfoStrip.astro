@@ -21,7 +21,19 @@ const keySkills = ['Python', 'Rust', 'Docker', 'K8s', 'Pega', 'CI/CD'];
       <!-- Location -->
       <div>
         <span class="font-mono text-[11px] tracking-[0.2em] uppercase text-theme-muted block mb-1.5">Based in</span>
-        <p class="text-sm md:text-base text-theme-primary font-medium">{site.location}</p>
+        <p class="text-sm md:text-base text-theme-primary font-medium inline-flex items-center gap-1.5">
+          {site.location}
+          <img
+            src="/utrecht_province_fat_outline_black.png"
+            alt="Utrecht Province"
+            class="w-5 h-5 ml-1 province-for-light"
+          />
+          <img
+            src="/utrecht_province_fat_outline_white.png"
+            alt="Utrecht Province"
+            class="w-5 h-5 ml-1 province-for-dark"
+          />
+        </p>
       </div>
 
       <!-- Key Skills -->
@@ -59,3 +71,13 @@ const keySkills = ['Python', 'Rust', 'Docker', 'K8s', 'Pega', 'CI/CD'];
     </div>
   </div>
 </div>
+
+<style is:global>
+  /* Dark theme (default): show white outline on dark bg */
+  img.province-for-light { display: none; }
+  img.province-for-dark { display: inline-block; }
+
+  /* Light theme: show black outline on light bg */
+  [data-theme="light"] img.province-for-light { display: inline-block; }
+  [data-theme="light"] img.province-for-dark { display: none; }
+</style>
