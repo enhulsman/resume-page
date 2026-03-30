@@ -1360,7 +1360,6 @@ export class InteractiveTerminal {
       " /           \\",
       "|             |",
       " \\___________/",
-      "              ",
     ];
     const stack = s.skills.languages.join(', ');
     const info = [
@@ -1375,12 +1374,24 @@ export class InteractiveTerminal {
       `<span class="terminal-accent">Contact:</span> ${esc(s.social.email)}`,
     ];
 
-    const lines = art.map((artLine, i) => {
-      const infoLine = i < info.length ? info[i] : '';
-      return `${esc(artLine)}   ${infoLine}`;
-    });
+    // Side-by-side needs ~55 chars; fall back to stacked on narrow terminals
+    const cw = measureCharWidth(this.body);
+    const cols = Math.floor(this.body.clientWidth / cw);
+    const artWidth = Math.max(...art.map((l) => l.length));
 
-    return `<div style="line-height:1.2;white-space:pre;font-family:inherit">${lines.join('\n')}</div>`;
+    if (cols >= artWidth + 3 + 30) {
+      // Wide: side-by-side
+      const lines = art.map((artLine, i) => {
+        const infoLine = i < info.length ? info[i] : '';
+        return `${esc(artLine)}   ${infoLine}`;
+      });
+      return `<div style="line-height:1.2;white-space:pre;font-family:inherit">${lines.join('\n')}</div>`;
+    }
+
+    // Narrow: stacked layout
+    const artHtml = `<div style="line-height:1.2;white-space:pre;font-family:inherit">${art.map((l) => esc(l)).join('\n')}</div>`;
+    const infoHtml = info.map((l) => `<div>${l}</div>`).join('');
+    return artHtml + infoHtml;
   }
 
   // ─── sudo hire-me ────────────────────────────────────────────────────────
