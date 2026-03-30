@@ -36,7 +36,8 @@ export class VirtualFS {
     });
 
     // Build /home/ezra/
-    const stack = [...s.skills.languages, ...s.skills.tools, ...s.skills.frameworks].join(':');
+    const allSkills = [...s.skills.languages, ...s.skills.tools, ...s.skills.frameworks];
+    const stack = allSkills.join(':');
     const homeDir: Map<string, FsNode> = new Map([
       ['.profile', { type: 'file', content: `${s.name} — ${s.role} @ ${s.company}\n${s.location}` }],
       ['.vimrc', { type: 'file', content: '" EZ Tech Support approved config\nset number\nset relativenumber\nset tabstop=4\nset shiftwidth=4\nset expandtab\nset autoindent\nset mouse=a\ncolorscheme desert\n" exit vim? just close the terminal' }],
@@ -110,9 +111,22 @@ export class VirtualFS {
       ['height', { type: 'file', content: '2.00m — good overview of server racks' }],
       ['uptime', { type: 'file', content: `${uptimeSecs} 0` }],
       ['version', { type: 'file', content: 'hulsman.dev 6.0-portfolio (ezra@hulsman) TypeScript 5.0 Astro 5.18' }],
-      ['cpuinfo', { type: 'file', content: 'model name\t: EZ Tech Support\ncores\t\t: 1 (but multithreaded)\nclock\t\t: variable (time is a social construct)\nfuel\t\t: water (backup: fanta)\ncache\t\t: mass amounts of browser tabs\nbugs\t\t: mass amounts of side projects that never ship' }],
-      ['loadavg', { type: 'file', content: '0.42 0.38 0.35 1/∞ side-projects' }],
-      ['meminfo', { type: 'file', content: 'MemTotal:\tunlimited curiosity\nMemFree:\tnot after linux ricing\nBuffers:\ttoo many open terminals\nCached:\t\tevery stackoverflow answer ever' }],
+      ['cpuinfo', { type: 'file', content: [
+        'model name\t: EZ Tech Support',
+        'cores\t\t: 1 (but multithreaded)',
+        `clock\t\t: ${Math.floor(uptimeSecs / 3600)} hours clocked`,
+        'fuel\t\t: water (backup: fanta)',
+        `cache\t\t: ${allSkills.length} skills cached`,
+        `bugs\t\t: ${data.projects.length}+ side projects, most never shipped`,
+      ].join('\n') }],
+      ['loadavg', { type: 'file', content: `0.42 0.38 0.35 ${data.projects.length}/${data.projects.length + 12} side-projects` }],
+      ['meminfo', { type: 'file', content: [
+        `MemTotal:\t${allSkills.length * 128} MB of domain knowledge`,
+        `MemFree:\t${Math.max(0, 64 - data.projects.length * 8)} MB (linux ricing takes the rest)`,
+        `Buffers:\t${data.experience.length * 3} open terminal sessions`,
+        `Cached:\t\t${data.certifications.length} certifications`,
+        `SwapTotal:\t${Math.floor(uptimeSecs / 86400)} days of experience`,
+      ].join('\n') }],
     ]);
 
     // Build /tmp/ (writable)
