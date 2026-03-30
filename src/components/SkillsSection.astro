@@ -9,12 +9,11 @@ const row2 = allSkills.slice(Math.ceil(allSkills.length / 2 + 1));
 // Add spoken languages as bonus items
 const languageTags = spokenLanguages.map(l => `${l.name} (${l.level})`);
 
-// Duplicate enough times that total width > 2x any realistic viewport (up to 5K+).
-// The CSS translates by -50%, so we need at least 2 identical halves.
-// 8 copies of each set guarantees coverage up to ~9600px viewports.
-const marqueeRow1 = Array(8).fill(row1).flat();
+// Duplicate 4x — the container is max-w-7xl (~1280px) with overflow hidden,
+// so we never need to worry about ultrawide viewports.
+const marqueeRow1 = Array(4).fill(row1).flat();
 const marqueeRow2Set = [...row2, ...languageTags];
-const marqueeRow2 = Array(8).fill(marqueeRow2Set).flat();
+const marqueeRow2 = Array(4).fill(marqueeRow2Set).flat();
 ---
 
 <section id="skills" class="relative py-24 md:py-32 overflow-hidden">
@@ -28,25 +27,29 @@ const marqueeRow2 = Array(8).fill(marqueeRow2Set).flat();
     </div>
   </div>
 
-  <!-- Marquee row 1 (left to right) -->
-  <div class="relative mb-4">
-    <div class="marquee-fade-left" aria-hidden="true"></div>
-    <div class="marquee-fade-right" aria-hidden="true"></div>
-    <div class="marquee-track" style="animation: marquee 70s linear infinite;">
-      {marqueeRow1.map(skill => (
-        <span class="marquee-item">{skill}</span>
-      ))}
+  <!-- Marquee rows — capped at max-w-7xl with overflow hidden + fade edges -->
+  <!-- Slightly wider than max-w-7xl so the visible area (after fades) aligns with page content -->
+  <div class="mx-auto w-full max-w-[86rem] px-6 md:px-12 space-y-4">
+    <!-- Row 1 (left to right) -->
+    <div class="relative overflow-hidden">
+      <div class="marquee-fade-left" aria-hidden="true"></div>
+      <div class="marquee-fade-right" aria-hidden="true"></div>
+      <div class="marquee-track" style="animation: marquee 40s linear infinite;">
+        {marqueeRow1.map(skill => (
+          <span class="marquee-item">{skill}</span>
+        ))}
+      </div>
     </div>
-  </div>
 
-  <!-- Marquee row 2 (right to left) -->
-  <div class="relative mb-4">
-    <div class="marquee-fade-left" aria-hidden="true"></div>
-    <div class="marquee-fade-right" aria-hidden="true"></div>
-    <div class="marquee-track" style="animation: marquee-reverse 70s linear infinite;">
-      {marqueeRow2.map(skill => (
-        <span class="marquee-item">{skill}</span>
-      ))}
+    <!-- Row 2 (right to left) -->
+    <div class="relative overflow-hidden">
+      <div class="marquee-fade-left" aria-hidden="true"></div>
+      <div class="marquee-fade-right" aria-hidden="true"></div>
+      <div class="marquee-track" style="animation: marquee-reverse 40s linear infinite;">
+        {marqueeRow2.map(skill => (
+          <span class="marquee-item">{skill}</span>
+        ))}
+      </div>
     </div>
   </div>
 
@@ -114,7 +117,7 @@ const marqueeRow2 = Array(8).fill(marqueeRow2Set).flat();
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 4rem;
+    width: 6rem;
     z-index: 10;
     pointer-events: none;
   }
