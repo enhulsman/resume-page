@@ -12,9 +12,7 @@ const path = require('path');
   const baseUrl = 'http://localhost:8180'; // server started by the workflow
 
   const pagesToPrint = [
-    { url: `${baseUrl}/`, out: path.join(outDir, 'resume-home.pdf') },
     { url: `${baseUrl}/resume`, out: path.join(outDir, 'resume.pdf') },
-    { url: `${baseUrl}/projects/project-foo`, out: path.join(outDir, 'project-foo.pdf') },
   ];
 
   const browser = await chromium.launch();
