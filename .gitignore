@@ -12,6 +12,7 @@ dist/
 /.parcel-cache/
 /.rollup.cache/
 /.vite/
+/.next/
 *.log
 public/react-demo-app.iife*
 TODO
