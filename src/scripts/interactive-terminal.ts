@@ -2,6 +2,10 @@
 // Vanilla TypeScript, no framework dependencies. Imported by Astro <script>.
 
 import { esc, makePromptHtml, makeCursorHtml, scrollToBottom, measureCharWidth, updateTitleDimensions } from './terminal-utils';
+import { VirtualFS, SENTINEL_EXPERIENCE, SENTINEL_SKILLS, SENTINEL_EDUCATION, SENTINEL_CERTS, SENTINEL_PROJECT_PREFIX } from './virtual-fs';
+import { ShellEnv } from './shell-env';
+import { parseLine } from './shell-parser';
+import type { ParsedLine, ParsedGroup, ParsedCommand } from './shell-parser';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -63,10 +67,17 @@ export interface TerminalData {
   skills: TerminalSkillCategory[];
 }
 
-type CommandResult = string | string[] | { html: string } | null;
+type CommandResult = string | string[] | { html: string } | { error: string } | null;
+
+interface CommandContext {
+  stdin?: string;
+  piped: boolean;
+  fs: VirtualFS;
+  env: ShellEnv;
+}
 
 interface Command {
-  handler: (args: string[], rawInput: string) => CommandResult;
+  handler: (args: string[], ctx: CommandContext) => CommandResult;
   description: string;
 }
 
@@ -96,11 +107,15 @@ export class InteractiveTerminal {
   private resizeTimer: ReturnType<typeof setTimeout> | null = null;
   private projectSlugs: string[];
   private inputLineEl: HTMLElement | null = null;
+  private fs: VirtualFS;
+  private env: ShellEnv;
 
   constructor(body: HTMLElement, data: TerminalData) {
     this.body = body;
     this.data = data;
     this.projectSlugs = data.projects.map((p) => slugify(p.title));
+    this.fs = new VirtualFS(data);
+    this.env = new ShellEnv(data);
     this.registerCommands();
     this.createHiddenInput();
     this.bindEvents();
@@ -261,7 +276,7 @@ export class InteractiveTerminal {
         this.animationCleanup();
         return;
       }
-      this.appendToOutput(`<span class="terminal-prompt">${makePromptHtml(this.data.prompt)}</span>${esc(this.currentInput)}^C`);
+      this.appendToOutput(`<span class="terminal-prompt">${makePromptHtml(this.data.prompt, this.env.get('PWD'), this.env.get('HOME'))}</span>${esc(this.currentInput)}^C`);
       this.currentInput = '';
       this.cursorPos = 0;
       this.hiddenInput.value = '';
@@ -323,7 +338,7 @@ export class InteractiveTerminal {
     const after = esc(this.currentInput.slice(this.cursorPos + 1));
 
     line.innerHTML =
-      `<span class="terminal-prompt">${makePromptHtml(this.data.prompt)}</span>` +
+      `<span class="terminal-prompt">${makePromptHtml(this.data.prompt, this.env.get('PWD'), this.env.get('HOME'))}</span>` +
       `<span class="terminal-cmd">${before}</span><span class="terminal-cursor">${cursorChar}</span><span class="terminal-cmd">${after}</span>`;
 
     scrollToBottom(this.body);
@@ -380,7 +395,7 @@ export class InteractiveTerminal {
     const inputLine = this.getInputLineEl();
     if (inputLine) {
       inputLine.innerHTML =
-        `<span class="terminal-prompt">${makePromptHtml(this.data.prompt)}</span>${esc(this.currentInput)}`;
+        `<span class="terminal-prompt">${makePromptHtml(this.data.prompt, this.env.get('PWD'), this.env.get('HOME'))}</span>${esc(this.currentInput)}`;
       inputLine.classList.remove('terminal-input-line');
       inputLine.classList.add('terminal-output-line');
       inputLine.removeAttribute('aria-live');
@@ -394,20 +409,79 @@ export class InteractiveTerminal {
     }
 
     if (raw.length > 0) {
-      const parts = raw.split(/\s+/);
-      const cmdName = parts[0].toLowerCase();
-      const args = parts.slice(1);
-
-      const cmd = this.commands.get(cmdName);
-      if (cmd) {
-        const result = cmd.handler(args, raw);
-        this.renderResult(result);
-      } else {
-        this.renderResult(this.unknownCommand(cmdName));
-      }
+      this.executeParsed(raw);
     }
 
     this.appendPromptLine();
+  }
+
+  private executeParsed(raw: string): void {
+    const parsed = parseLine(raw, this.env.getAll());
+    if ('error' in parsed) {
+      this.renderResult({ error: parsed.error });
+      return;
+    }
+
+    let prevFailed = false;
+    for (const group of parsed.groups) {
+      // && skips if previous group failed
+      if (group.operator === '&&' && prevFailed) continue;
+      // ; always executes (reset prevFailed tracking)
+
+      const result = this.executePipeline(group.pipeline);
+      prevFailed = result !== null && typeof result === 'object' && 'error' in result;
+      this.renderResult(result);
+    }
+  }
+
+  private executePipeline(pipeline: ParsedCommand[]): CommandResult {
+    let stdin: string | undefined;
+    let lastResult: CommandResult = null;
+
+    for (let i = 0; i < pipeline.length; i++) {
+      const stage = pipeline[i];
+      const isLast = i === pipeline.length - 1;
+      const ctx: CommandContext = {
+        stdin,
+        piped: !isLast,
+        fs: this.fs,
+        env: this.env,
+      };
+
+      const cmd = this.commands.get(stage.name.toLowerCase());
+      if (!cmd) {
+        lastResult = { error: `${stage.name}: command not found` };
+      } else {
+        lastResult = cmd.handler(stage.args, ctx);
+      }
+
+      if (!isLast) {
+        // Convert result to plain text for piping
+        stdin = this.resultToText(lastResult);
+        // If error in mid-pipe, render it and pass empty string
+        if (lastResult !== null && typeof lastResult === 'object' && 'error' in lastResult) {
+          this.renderResult(lastResult);
+          stdin = '';
+        }
+        lastResult = null; // Don't render intermediate results
+      }
+    }
+
+    return lastResult;
+  }
+
+  private resultToText(result: CommandResult): string {
+    if (result === null || result === undefined) return '';
+    if (typeof result === 'string') return result;
+    if (Array.isArray(result)) return result.join('\n');
+    if ('error' in result) return '';
+    if ('html' in result) {
+      // Strip HTML tags for plain text piping
+      const tmp = document.createElement('div');
+      tmp.innerHTML = result.html;
+      return tmp.textContent ?? '';
+    }
+    return '';
   }
 
   private renderResult(result: CommandResult): void {
@@ -416,7 +490,9 @@ export class InteractiveTerminal {
       this.appendToOutput(esc(result));
     } else if (Array.isArray(result)) {
       this.appendOutputLines(result);
-    } else if (typeof result === 'object' && 'html' in result) {
+    } else if ('error' in result) {
+      this.appendToOutput(`<span class="terminal-error">${esc(result.error)}</span>`);
+    } else if ('html' in result) {
       this.appendRawHTML(result.html);
     }
   }
@@ -541,7 +617,7 @@ export class InteractiveTerminal {
       const inputLine = this.getInputLineEl();
       if (inputLine) {
         inputLine.innerHTML =
-          `<span class="terminal-prompt">${makePromptHtml(this.data.prompt)}</span>${esc(this.currentInput)}`;
+          `<span class="terminal-prompt">${makePromptHtml(this.data.prompt, this.env.get('PWD'), this.env.get('HOME'))}</span>${esc(this.currentInput)}`;
         inputLine.classList.remove('terminal-input-line');
         inputLine.classList.add('terminal-output-line');
         inputLine.removeAttribute('aria-live');
@@ -569,7 +645,7 @@ export class InteractiveTerminal {
 
   // ─── Unknown command ─────────────────────────────────────────────────────
 
-  private unknownCommand(cmd: string): string {
+  private unknownCommand(cmd: string): { error: string } {
     const responses = [
       `${cmd}: command not found. Nice try.`,
       `${cmd}: command not found. Have you tried 'help'?`,
@@ -578,7 +654,7 @@ export class InteractiveTerminal {
       `${cmd}: command not found. 404 in terminal form.`,
       `${cmd}: permission denied (just kidding — it doesn't exist)`,
     ];
-    return responses[Math.floor(Math.random() * responses.length)];
+    return { error: responses[Math.floor(Math.random() * responses.length)] };
   }
 
   // ─── Commands ────────────────────────────────────────────────────────────
@@ -607,18 +683,16 @@ export class InteractiveTerminal {
 
     this.commands.set('ls', {
       description: 'List directory contents',
-      handler: (args) => {
-        const path = (args[0] || '').replace(/\/+$/, '').toLowerCase();
-        if (!path || path === '~' || path === '.') {
-          return { html: '<span class="terminal-accent">projects/</span>  resume  skills  education  certs  contact' };
-        }
-        if (path === 'projects') {
-          return this.projectSlugs.map((s) => `  ${s}`);
-        }
-        if (['resume', 'skills', 'education', 'certs', 'contact'].includes(path)) {
-          return `${path}`;
-        }
-        return `ls: cannot access '${esc(args[0])}': No such file or directory`;
+      handler: (args, ctx) => {
+        const target = args[0] || '.';
+        const absPath = ctx.fs.resolvePath(target, ctx.env.get('PWD'), ctx.env.get('HOME'));
+        const entries = ctx.fs.listDir(absPath);
+        if ('error' in entries) return entries;
+        if (entries.length === 0) return null;
+        const formatted = entries.map((e) =>
+          e.isDir ? `<span class="terminal-accent">${esc(e.name)}/</span>` : esc(e.name)
+        );
+        return { html: formatted.join('  ') };
       },
     });
 
@@ -668,14 +742,7 @@ export class InteractiveTerminal {
 
     this.commands.set('echo', {
       description: 'Print text to terminal',
-      handler: (_args, raw) => {
-        const text = raw.slice(raw.indexOf(' ') + 1);
-        if (raw.indexOf(' ') === -1) return '';
-        if (text === '$STACK' || text === '"$STACK"') {
-          return s.skills.languages.concat(s.skills.tools, s.skills.frameworks).join(', ');
-        }
-        return text.replace(/^["']|["']$/g, '');
-      },
+      handler: (args) => args.join(' '),
     });
 
     this.commands.set('neofetch', {
@@ -724,8 +791,8 @@ export class InteractiveTerminal {
 
     this.commands.set('sudo', {
       description: 'Execute with elevated privileges',
-      handler: (_args, raw) => {
-        const subCmd = raw.slice(5).trim();
+      handler: (args) => {
+        const subCmd = args.join(' ');
         if (subCmd === 'hire-me') {
           return { html: this.sudoHireMe() };
         }
@@ -735,8 +802,8 @@ export class InteractiveTerminal {
 
     this.commands.set('cowsay', {
       description: 'Have a cow say something',
-      handler: (_args, raw) => {
-        const text = raw.slice(7).trim() || 'moo';
+      handler: (args) => {
+        const text = args.join(' ') || 'moo';
         return { html: `<pre style="line-height:1.2">${esc(this.cowsayText(text))}</pre>` };
       },
     });

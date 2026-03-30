@@ -2,10 +2,14 @@ export function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-export function makePromptHtml(promptStr: string): string {
+export function makePromptHtml(promptStr: string, cwd?: string, home?: string): string {
+  let displayPath = '~';
+  if (cwd && home) {
+    displayPath = cwd.startsWith(home) ? '~' + cwd.slice(home.length) : cwd;
+  }
   return `<span class="terminal-user">${esc(promptStr)}</span>` +
     `<span class="terminal-separator">:</span>` +
-    `<span class="terminal-path">~</span>` +
+    `<span class="terminal-path">${esc(displayPath)}</span>` +
     `<span class="terminal-dollar">$ </span>`;
 }
 
