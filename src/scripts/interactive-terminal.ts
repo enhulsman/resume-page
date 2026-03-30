@@ -523,15 +523,14 @@ export class InteractiveTerminal {
   }
 
   private appendRawHTML(html: string): void {
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = html;
+    const div = document.createElement('div');
+    div.className = 'terminal-output-line';
+    div.innerHTML = html;
     const inputLine = this.getInputLineEl();
-    while (wrapper.firstChild) {
-      if (inputLine) {
-        this.body.insertBefore(wrapper.firstChild, inputLine);
-      } else {
-        this.body.appendChild(wrapper.firstChild);
-      }
+    if (inputLine) {
+      this.body.insertBefore(div, inputLine);
+    } else {
+      this.body.appendChild(div);
     }
   }
 
@@ -577,9 +576,15 @@ export class InteractiveTerminal {
       this.applyCompletion(matches, input, '');
     } else {
       const cmdName = input.slice(0, spaceIdx).toLowerCase();
-      const argPart = input.slice(spaceIdx + 1);
-      const candidates = this.getArgCandidates(cmdName, argPart);
-      this.applyCompletion(candidates, argPart, input.slice(0, spaceIdx + 1));
+      // Find the last non-flag token to complete
+      const afterCmd = input.slice(spaceIdx + 1);
+      const lastSpaceIdx = afterCmd.lastIndexOf(' ');
+      const lastToken = lastSpaceIdx === -1 ? afterCmd : afterCmd.slice(lastSpaceIdx + 1);
+      // Skip if the user is mid-flag (typing a dash)
+      if (lastToken.startsWith('-')) return;
+      const prefix = input.slice(0, input.length - lastToken.length);
+      const candidates = this.getArgCandidates(cmdName, lastToken);
+      this.applyCompletion(candidates, lastToken, prefix);
     }
   }
 
@@ -710,12 +715,26 @@ export class InteractiveTerminal {
     this.commands.set('ls', {
       description: 'List directory contents',
       handler: (args, ctx) => {
-        const target = args[0] || '.';
+        const flags = args.filter((a) => a.startsWith('-')).join('');
+        const showAll = flags.includes('a');
+        const showLong = flags.includes('l');
+        const target = args.find((a) => !a.startsWith('-')) || '.';
         const absPath = ctx.fs.resolvePath(target, ctx.env.get('PWD'), ctx.env.get('HOME'));
         const entries = ctx.fs.listDir(absPath);
         if ('error' in entries) return entries;
-        if (entries.length === 0) return null;
-        const formatted = entries.map((e) =>
+        let filtered = showAll ? entries : entries.filter((e) => !e.name.startsWith('.'));
+        if (filtered.length === 0) return null;
+        if (showLong) {
+          const lines = filtered.map((e) => {
+            const perm = e.isDir ? 'drwxr-xr-x' : '-rw-r--r--';
+            const name = e.isDir
+              ? `<span class="terminal-accent">${esc(e.name)}/</span>`
+              : esc(e.name);
+            return `<div>${esc(perm)}  ezra ezra  ${name}</div>`;
+          });
+          return { html: lines.join('') };
+        }
+        const formatted = filtered.map((e) =>
           e.isDir ? `<span class="terminal-accent">${esc(e.name)}/</span>` : esc(e.name)
         );
         return { html: formatted.join('  ') };
