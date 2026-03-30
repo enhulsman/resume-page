@@ -21,7 +21,7 @@ Personal portfolio and resume site. Static-first with Astro, animated with GSAP,
 ## Stack
 
 | Layer | Tool |
-|-------|------|
+| --- | --- |
 | Framework | [Astro](https://astro.build) 5 — static-first, islands architecture |
 | Styling | Tailwind CSS 3 with CSS custom properties for theming |
 | Animation | GSAP ScrollTrigger, CSS keyframes |
@@ -46,18 +46,18 @@ npx wrangler dev   # Runs the Cloudflare Worker locally
 
 ## Features
 
-- **Dark / Light themes** with system preference detection and manual toggle
-- **Scroll-triggered animations** via GSAP ScrollTrigger
-- **Interactive terminal** hidden in the About section — 25+ commands, tab completion, command history, easter eggs
-- **MDX project pages** with auto-discovery and frontmatter-driven routing
-- **Contact form** powered by Cloudflare Workers + Resend email API
-- **Resume PDF generation** via Playwright (CI-ready)
-- **Print-optimized styles** — `/resume` page generates a clean PDF without UI chrome
-- **SEO** — Open Graph, Twitter Cards, structured metadata per page
+* **Dark / Light themes** with system preference detection and manual toggle
+* **Scroll-triggered animations** via GSAP ScrollTrigger
+* **Interactive terminal** hidden in the About section — 25+ commands, tab completion, command history, easter eggs
+* **MDX project pages** with auto-discovery and frontmatter-driven routing
+* **Contact form** powered by Cloudflare Workers + Resend email API
+* **Resume PDF generation** via Playwright (CI-ready)
+* **Print-optimized styles** — `/resume` page generates a clean PDF without UI chrome
+* **SEO** — Open Graph, Twitter Cards, structured metadata per page
 
 ## Project Structure
 
-```
+```tree
 src/
 ├── components/          # Astro section components, icons/, ThemeToggle (React island)
 ├── scripts/             # Interactive terminal engine (vanilla TS, ~1100 lines)
@@ -75,8 +75,8 @@ scripts/
 
 All personal content lives in two config files:
 
-- **`src/config/site.ts`** — name, role, company, location, skills, social links, projects, employment status, SEO metadata
-- **`src/config/resume.ts`** — experience timeline, education, certifications, skill categories, spoken languages
+* **`src/config/site.ts`** — name, role, company, location, skills, social links, projects, employment status, SEO metadata
+* **`src/config/resume.ts`** — experience timeline, education, certifications, skill categories, spoken languages
 
 To update content, edit these files. The rest of the site reads from them.
 
@@ -103,19 +103,19 @@ Projects with `showcase: true` appear on the homepage. All projects appear in th
 
 The About section contains an interactive terminal disguised as a decorative element. After the typing animation plays (or is skipped by clicking), visitors can type real commands:
 
-- `help` — full command list
-- `cat resume`, `cat skills`, `cat education` — browse content
-- `ls projects/`, `cat projects/<name>` — explore projects
-- `cd resume`, `open contact` — navigate to pages
-- `neofetch` — ASCII art info card
-- `sudo hire-me`, `cowsay`, `fortune`, `sl`, `matrix` — easter eggs
-- Tab completion and command history (arrow keys)
+* `help` — full command list
+* `cat resume`, `cat skills`, `cat education` — browse content
+* `ls projects/`, `cat projects/<name>` — explore projects
+* `cd resume`, `open contact` — navigate to pages
+* `neofetch` — ASCII art info card
+* `sudo hire-me`, `cowsay`, `fortune`, `sl`, `matrix` — easter eggs
+* Tab completion and command history (arrow keys)
 
 ## Contact Form
 
 The contact form runs on Cloudflare Workers with the Resend API. Environment variables needed:
 
-```
+```env
 TO_EMAIL=your-email@example.com
 FROM_EMAIL=contact@your-domain.com
 FROM_NAME=Your Contact Form
