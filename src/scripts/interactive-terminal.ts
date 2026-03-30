@@ -153,15 +153,15 @@ export class InteractiveTerminal {
   private appendHint(): void {
     const hint = document.createElement('span');
     hint.className = 'terminal-hint';
-    hint.style.opacity = '0.35';
+    hint.style.opacity = '0.15';
     hint.style.fontSize = '11px';
     hint.style.transition = 'opacity 0.6s ease';
     hint.style.marginLeft = '4px';
     hint.textContent = 'this is a real shell \u2014 type help for more';
     const inputLine = this.getInputLineEl();
     if (inputLine) inputLine.appendChild(hint);
-    setTimeout(() => { hint.style.opacity = '0'; }, 4000);
-    setTimeout(() => { if (hint.parentNode) hint.remove(); }, 4800);
+    setTimeout(() => { hint.style.opacity = '0'; }, 1000);
+    setTimeout(() => { if (hint.parentNode) hint.remove(); }, 1500);
   }
 
   // ─── Hidden input (mobile support) ──────────────────────────────────────
@@ -1202,6 +1202,9 @@ export class InteractiveTerminal {
     ];
 
     const divs: string[] = [];
+    divs.push(`<div>Welcome to the interactive terminal. This is a real shell with pipes,</div>`);
+    divs.push(`<div>variables, and a virtual filesystem. Not all commands are listed here</div>`);
+    divs.push(`<div>\u2014 some are for you to find. Have fun!</div>`);
     for (const [section, cmds] of sections) {
       divs.push(`<div>&nbsp;</div>`);
       divs.push(`<div><span class="terminal-accent">${esc(section)}</span></div>`);
@@ -1214,7 +1217,6 @@ export class InteractiveTerminal {
     }
     divs.push(`<div>&nbsp;</div>`);
     divs.push(`<div><span class="terminal-dim">Tab to auto-complete \u2022 \u2191/\u2193 for history \u2022 Ctrl+C to cancel \u2022 Esc to unfocus</span></div>`);
-    divs.push(`<div><span class="terminal-dim">...and a few hidden commands for the curious</span></div>`);
     return { html: divs.join('') };
   }
 
