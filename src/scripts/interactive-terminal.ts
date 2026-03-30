@@ -145,22 +145,23 @@ export class InteractiveTerminal {
       this.bindInputEvents();
     }
 
-    this.appendHint();
     this.appendPromptLine();
+    this.appendHint();
     updateTitleDimensions(this.data.prompt, this.body);
   }
 
   private appendHint(): void {
-    const div = document.createElement('div');
-    div.className = 'terminal-hint';
-    div.style.opacity = '0.4';
-    div.style.fontSize = '11px';
-    div.style.transition = 'opacity 0.6s ease';
-    div.style.marginTop = '4px';
-    div.innerHTML = '<span class="terminal-dim">This is a real shell — type help for more</span>';
-    this.body.appendChild(div);
-    setTimeout(() => { div.style.opacity = '0'; }, 4000);
-    setTimeout(() => { if (div.parentNode) div.remove(); }, 4800);
+    const hint = document.createElement('span');
+    hint.className = 'terminal-hint';
+    hint.style.opacity = '0.35';
+    hint.style.fontSize = '11px';
+    hint.style.transition = 'opacity 0.6s ease';
+    hint.style.marginLeft = '4px';
+    hint.textContent = 'this is a real shell \u2014 type help for more';
+    const inputLine = this.getInputLineEl();
+    if (inputLine) inputLine.appendChild(hint);
+    setTimeout(() => { hint.style.opacity = '0'; }, 4000);
+    setTimeout(() => { if (hint.parentNode) hint.remove(); }, 4800);
   }
 
   // ─── Hidden input (mobile support) ──────────────────────────────────────
@@ -290,7 +291,16 @@ export class InteractiveTerminal {
         this.animationCleanup();
         return;
       }
-      this.appendToOutput(`<span class="terminal-prompt">${makePromptHtml(this.data.prompt, this.env.get('PWD'), this.env.get('HOME'))}</span>${esc(this.currentInput)}^C`);
+      // Freeze current input line as output
+      const inputLine = this.getInputLineEl();
+      if (inputLine) {
+        inputLine.innerHTML =
+          `<span class="terminal-prompt">${makePromptHtml(this.data.prompt, this.env.get('PWD'), this.env.get('HOME'))}</span>${esc(this.currentInput)}^C`;
+        inputLine.classList.remove('terminal-input-line');
+        inputLine.classList.add('terminal-output-line');
+        inputLine.removeAttribute('aria-live');
+      }
+      this.inputLineEl = null;
       this.currentInput = '';
       this.cursorPos = 0;
       this.hiddenInput.value = '';
@@ -303,6 +313,7 @@ export class InteractiveTerminal {
     if (e.ctrlKey && e.key === 'l') {
       e.preventDefault();
       this.clearTerminal();
+      this.appendPromptLine();
       return;
     }
 
@@ -597,6 +608,11 @@ export class InteractiveTerminal {
       return Array.from(this.commands.keys()).filter((k) => k.startsWith(p));
     }
 
+    if (cmd === 'sudo') {
+      const subcmds = ['hire-me'];
+      return subcmds.filter((s) => s.startsWith(p));
+    }
+
     return [];
   }
 
@@ -650,7 +666,7 @@ export class InteractiveTerminal {
       if (child !== this.hiddenInput) child.remove();
     }
     this.inputLineEl = null;
-    this.appendPromptLine();
+    updateTitleDimensions(this.data.prompt, this.body);
   }
 
   // ─── Unknown command ─────────────────────────────────────────────────────
@@ -1180,10 +1196,9 @@ export class InteractiveTerminal {
     const sections: [string, string[]][] = [
       ['Navigation', ['help', 'clear', 'ls', 'cd', 'pwd', 'open']],
       ['Environment', ['env', 'export', 'echo']],
-      ['Files', ['cat', 'touch', 'mkdir', 'head', 'tail', 'wc', 'sort', 'grep', 'tr']],
+      ['Files', ['cat', 'head', 'tail', 'wc', 'sort', 'grep', 'tr', 'touch', 'mkdir']],
       ['Info', ['whoami', 'hostname', 'uptime', 'neofetch', 'date', 'uname']],
       ['Meta', ['history', 'man', 'exit']],
-      ['Fun', ['sudo hire-me', 'cowsay', 'fortune', 'sl', 'matrix']],
     ];
 
     const divs: string[] = [];
@@ -1199,6 +1214,7 @@ export class InteractiveTerminal {
     }
     divs.push(`<div>&nbsp;</div>`);
     divs.push(`<div><span class="terminal-dim">Tab to auto-complete \u2022 \u2191/\u2193 for history \u2022 Ctrl+C to cancel \u2022 Esc to unfocus</span></div>`);
+    divs.push(`<div><span class="terminal-dim">...and a few hidden commands for the curious</span></div>`);
     return { html: divs.join('') };
   }
 
@@ -1438,6 +1454,7 @@ export class InteractiveTerminal {
       container.remove();
       for (const el of existing) (el as HTMLElement).style.display = '';
       this.clearTerminal();
+      this.appendPromptLine();
       this.animating = false;
       this.animationCleanup = null;
       this.body.removeAttribute('aria-busy');
