@@ -1,15 +1,40 @@
 ---
 // Dot grid + warmth background
 // Absolute positioned first child of body — paints behind content by DOM order
-// No z-index, no mask. Dots everywhere. Warmth below hero (or from top on non-hero pages).
+// No z-index, no mask. Dots everywhere. Warmth hotspots below hero (or from top on non-hero pages).
 
 interface Props { hasHero?: boolean; }
 const { hasHero = false } = Astro.props;
+
+// Warmth hotspot positions — each is an individual div with a single radial gradient
+const hotspots = [
+  { top: '12%', right: '-3%', size: 750, opacity: 0.10, delay: 0 },
+  { top: '38%', left: '-5%', size: 650, opacity: 0.08, delay: 2 },
+  { top: '72%', left: '15%', size: 700, opacity: 0.09, delay: 4 },
+  { top: '90%', right: '-2%', size: 600, opacity: 0.07, delay: 6 },
+];
 ---
 
 <div id="dot-grid-wrapper" class="pointer-events-none absolute inset-x-0 top-0 overflow-hidden" aria-hidden="true">
   <div class="absolute inset-0 dot-grid-pattern"></div>
-  <div class={`absolute left-0 right-0 bottom-0 dot-grid-warmth ${hasHero ? 'warmth-below-hero' : 'warmth-full'}`}></div>
+
+  <!-- Warmth hotspots — individual positioned divs, no tiling -->
+  <div class={`absolute left-0 right-0 bottom-0 ${hasHero ? 'warmth-below-hero' : 'warmth-full'}`}>
+    {hotspots.map((spot) => (
+      <div
+        class="dot-grid-hotspot absolute rounded-full"
+        style={`
+          ${spot.top ? `top: ${spot.top};` : ''}
+          ${spot.right ? `right: ${spot.right};` : ''}
+          ${spot.left ? `left: ${spot.left};` : ''}
+          width: ${spot.size}px;
+          height: ${spot.size}px;
+          opacity: ${spot.opacity};
+          animation-delay: ${spot.delay}s;
+        `}
+      />
+    ))}
+  </div>
 </div>
 
 <style is:global>
@@ -34,27 +59,35 @@ const { hasHero = false } = Astro.props;
     top: 0;
   }
 
-  /* Animated gradient mesh — same technique as hero, quieter */
-  .dot-grid-warmth {
-    background:
-      radial-gradient(ellipse at 80% 20%, rgba(201, 148, 43, 0.08), transparent 50%),
-      radial-gradient(ellipse at 15% 55%, rgba(190, 100, 60, 0.06), transparent 50%),
-      radial-gradient(ellipse at 55% 80%, rgba(201, 148, 43, 0.07), transparent 50%);
-    background-size: 200% 200%;
-    animation: gradient-shift 20s ease-in-out infinite;
+  /* Individual hotspot — single smooth radial gradient, gentle drift */
+  .dot-grid-hotspot {
+    background: radial-gradient(
+      circle,
+      rgba(201, 148, 43, 0.6) 0%,
+      rgba(201, 148, 43, 0.3) 25%,
+      rgba(201, 148, 43, 0.1) 50%,
+      transparent 70%
+    );
+    animation: hotspot-drift 30s ease-in-out infinite alternate;
   }
 
-  [data-theme="light"] .dot-grid-warmth {
-    background:
-      radial-gradient(ellipse at 80% 20%, rgba(175, 125, 30, 0.06), transparent 50%),
-      radial-gradient(ellipse at 15% 55%, rgba(160, 90, 50, 0.05), transparent 50%),
-      radial-gradient(ellipse at 55% 80%, rgba(175, 125, 30, 0.06), transparent 50%);
-    background-size: 200% 200%;
-    animation: gradient-shift 20s ease-in-out infinite;
+  [data-theme="light"] .dot-grid-hotspot {
+    background: radial-gradient(
+      circle,
+      rgba(175, 125, 30, 0.5) 0%,
+      rgba(175, 125, 30, 0.25) 25%,
+      rgba(175, 125, 30, 0.08) 50%,
+      transparent 70%
+    );
+  }
+
+  @keyframes hotspot-drift {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(40px, 25px); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .dot-grid-warmth { animation: none; }
+    .dot-grid-hotspot { animation: none; }
   }
 </style>
 

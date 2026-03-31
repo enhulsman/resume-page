@@ -9,7 +9,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 <section id="hero" class="relative flex min-h-dvh items-end overflow-hidden pb-24 md:items-center md:pb-0">
   <!-- Animated gradient mesh background -->
   <div
-    class="absolute inset-0 opacity-40"
+    class="absolute inset-0 opacity-50"
     style="background: radial-gradient(ellipse at 20% 50%, rgba(201,148,43,0.3), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.2), transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(201,148,43,0.15), transparent 50%); background-size: 200% 200%; animation: gradient-shift 8s ease-in-out infinite;"
     aria-hidden="true"
   ></div>
@@ -90,6 +90,15 @@ const lastName = site.name.split(' ').slice(1).join(' ');
     <div class="w-[1px] h-8 bg-gradient-to-b from-[var(--color-accent-primary)] to-transparent" style="animation: scroll-bob 2s ease-in-out infinite;"></div>
   </div>
 
+  <!-- Bottom fade (smooth color transition) -->
+  <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--color-bg-primary)] to-transparent pointer-events-none" aria-hidden="true"></div>
+
+  <!-- Dot grid overlay — only visible at the bottom where the fade covers the main grid -->
+  <div
+    class="absolute inset-0 pointer-events-none"
+    style="background-image: radial-gradient(var(--color-accent-primary) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.15; -webkit-mask-image: linear-gradient(to bottom, transparent 85%, black 100%); mask-image: linear-gradient(to bottom, transparent 85%, black 100%);"
+    aria-hidden="true"
+  ></div>
 </section>
 
 <style>
