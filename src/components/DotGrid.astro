@@ -1,0 +1,75 @@
+---
+// Dot grid + warmth background
+// Absolute positioned first child of body — paints behind content by DOM order
+// No z-index, no mask. Dots everywhere. Warmth below hero (or from top on non-hero pages).
+
+interface Props { hasHero?: boolean; }
+const { hasHero = false } = Astro.props;
+---
+
+<div id="dot-grid-wrapper" class="pointer-events-none absolute inset-x-0 top-0 overflow-hidden" aria-hidden="true">
+  <div class="absolute inset-0 dot-grid-pattern"></div>
+  <div class={`absolute left-0 right-0 bottom-0 dot-grid-warmth ${hasHero ? 'warmth-below-hero' : 'warmth-full'}`}></div>
+</div>
+
+<style is:global>
+  .dot-grid-pattern {
+    background-image: radial-gradient(var(--color-accent-primary) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.15;
+    transition: opacity 0.3s ease;
+  }
+
+  [data-theme="light"] .dot-grid-pattern {
+    opacity: 0.22;
+  }
+
+  /* Warmth positioning */
+  .warmth-below-hero {
+    top: 100vh;
+    top: 100dvh;
+  }
+
+  .warmth-full {
+    top: 0;
+  }
+
+  /* Animated gradient mesh — same technique as hero, quieter */
+  .dot-grid-warmth {
+    background:
+      radial-gradient(ellipse at 80% 20%, rgba(201, 148, 43, 0.08), transparent 50%),
+      radial-gradient(ellipse at 15% 55%, rgba(190, 100, 60, 0.06), transparent 50%),
+      radial-gradient(ellipse at 55% 80%, rgba(201, 148, 43, 0.07), transparent 50%);
+    background-size: 200% 200%;
+    animation: gradient-shift 20s ease-in-out infinite;
+  }
+
+  [data-theme="light"] .dot-grid-warmth {
+    background:
+      radial-gradient(ellipse at 80% 20%, rgba(175, 125, 30, 0.06), transparent 50%),
+      radial-gradient(ellipse at 15% 55%, rgba(160, 90, 50, 0.05), transparent 50%),
+      radial-gradient(ellipse at 55% 80%, rgba(175, 125, 30, 0.06), transparent 50%);
+    background-size: 200% 200%;
+    animation: gradient-shift 20s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dot-grid-warmth { animation: none; }
+  }
+</style>
+
+<script>
+  const wrapper = document.getElementById('dot-grid-wrapper');
+  if (wrapper) {
+    function setGridHeight() {
+      wrapper.style.height = document.documentElement.scrollHeight + 'px';
+    }
+
+    setGridHeight();
+
+    const ro = new ResizeObserver(setGridHeight);
+    ro.observe(document.documentElement);
+
+    setTimeout(setGridHeight, 3000);
+  }
+</script>

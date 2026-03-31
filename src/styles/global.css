@@ -186,10 +186,15 @@ body {
 }
 
 /* Ensure the root container also has proper background */
-#app, main {
+#app {
   min-height: 100vh;
   background: var(--color-bg-primary);
   transition: var(--transition-theme);
+}
+
+main {
+  min-height: 100vh;
+  background: transparent;
 }
 
 /* ========================================

@@ -2,6 +2,7 @@
 import site from "../config/site";
 import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
+import DotGrid from "../components/DotGrid.astro";
 import Metadata, { type MetadataProps } from "../components/Metadata.astro";
 import "../styles/global.css";
 
@@ -32,24 +33,11 @@ const { title, description, fullWidth = false, ...metadataProps } = Astro.props;
     </script>
   </head>
   <body
-    class="font-sans min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)]"
+    class="relative font-sans min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)]"
   >
-    <!-- Dot grid -->
-    <div class="pointer-events-none fixed inset-0 z-0" aria-hidden="true"
-      style="background-image: radial-gradient(rgba(240, 234, 214, 0.05) 1px, transparent 1px); background-size: 40px 40px;">
-    </div>
-
-    <!-- Floating elements -->
-    <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
-      <div class="rounded-full absolute" style="width:20px;height:20px;left:8%;top:15%;background:rgb(201 148 43);opacity:0.08;animation:float 5s ease-in-out infinite;"></div>
-      <div class="rounded-sm absolute" style="width:16px;height:16px;left:88%;top:30%;background:rgb(201 148 43);opacity:0.1;animation:float 6s ease-in-out 1s infinite;"></div>
-      <div class="rounded-full absolute" style="width:24px;height:24px;left:72%;top:52%;background:rgb(201 148 43);opacity:0.06;animation:float 7s ease-in-out 2s infinite;"></div>
-      <div class="rounded-full absolute" style="width:14px;height:14px;left:15%;top:62%;background:rgb(201 148 43);opacity:0.09;animation:float 5.5s ease-in-out 0.5s infinite;"></div>
-      <div class="rounded-full absolute" style="width:18px;height:18px;left:55%;top:12%;background:rgb(201 148 43);opacity:0.07;animation:float 6.5s ease-in-out 3s infinite;"></div>
-    </div>
-
+    <DotGrid hasHero={fullWidth} />
     <Nav />
-    <main class={fullWidth ? "min-h-[70vh] relative z-10" : "min-h-[70vh] mx-auto max-w-6xl px-3 sm:px-6 pb-6 sm:pb-8 pt-20 sm:pt-24 md:pt-28 relative z-10"}>
+    <main class={fullWidth ? "min-h-[70vh] relative" : "min-h-[70vh] mx-auto max-w-6xl px-3 sm:px-6 pb-6 sm:pb-8 pt-20 sm:pt-24 md:pt-28 relative"}>
       <slot />
     </main>
     <Footer />
