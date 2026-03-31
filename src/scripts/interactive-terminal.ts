@@ -1353,6 +1353,7 @@ export class InteractiveTerminal {
     const s = this.data.site;
     const artOptions: string[][] = [
       [ // Original EH circle
+        "",
         "     .---.      ",
         "    /     \\     ",
         "   |  E H  |    ",
@@ -1364,15 +1365,17 @@ export class InteractiveTerminal {
       ],
       [ // Bible - credits to Joan G. Stark for the art
         "",
-        "     _______   ",
-        "    /       /_ ",
-        "   /  -/-  / / ",
-        "  /   /   / /  ",
-        " /_______/ /   ",
-        "((______| /    ",
-        " `\"\"\"\"\"\"\"`      ",
+        "",
+        "      _______  ",
+        "     /       /_",
+        "    /  -/-  / /",
+        "   /   /   / / ",
+        "  /_______/ /  ",
+        " ((______| /   ",
+        "  `\"\"\"\"\"\"\"`     ",
       ],
       [ // Server rack
+        "",
         "  .------------.",
         ".------------./|",
         "| [==] o o o | |",
@@ -1384,6 +1387,7 @@ export class InteractiveTerminal {
         "'------------'/ ",
       ],
       [ // Arch logo for the fun of it
+        "",
         "       .        ",
         "      / \\      ",
         "     /   \\     ",
@@ -1394,6 +1398,7 @@ export class InteractiveTerminal {
         "/.^         ^.\\",
       ],
       [ // Windmill (Dutch) - credits to Philipp Schwartz for the art
+        "",
         "     /\\     /\\       ",
         "    '. \\   / ,'      ",
         "      `.\\-/,'        ",
@@ -1404,14 +1409,15 @@ export class InteractiveTerminal {
         "______ |_H___|PhS____",
       ],
       [ // Docker whale
-        "              ##        .       ",
-        "        ## ## ##       ==       ",
-        "     ## ## ## ##      ===       ",
+        "",
+        "              ##        .     ",
+        "        ## ## ##       ==     ",
+        "     ## ## ## ##      ===     ",
         " /\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\\___/ ===   ",
         "{~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===-",
-        " \\______ o          __/         ",
-        "   \\    \\        __/            ",
-        "    \\____\\______/               ",
+        " \\______ o          __/      ",
+        "   \\    \\        __/         ",
+        "    \\____\\______/            ",
       ],
     ];
     const rawArt = artOptions[Math.floor(Math.random() * artOptions.length)];
