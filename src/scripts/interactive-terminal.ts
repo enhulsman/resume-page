@@ -597,9 +597,19 @@ export class InteractiveTerminal {
 
     if (spaceIdx === -1) {
       const partial = input.toLowerCase();
-      const cmdNames = new Set([...this.commands.keys(), ...this.aliases.keys()]);
-      const matches = [...cmdNames].filter((k) => k.startsWith(partial));
-      this.applyCompletion(matches, input, '');
+      if (partial === '') {
+        // Empty input: show directory listing like a real shell
+        const entries = this.fs.listDir(this.env.get('PWD'));
+        if ('error' in entries) return;
+        const visible = entries.filter((e) => !e.name.startsWith('.'));
+        if (visible.length === 0) return;
+        const names = visible.map((e) => e.isDir ? e.name + '/' : e.name);
+        this.applyCompletion(names, '', '');
+      } else {
+        const cmdNames = new Set([...this.commands.keys(), ...this.aliases.keys()]);
+        const matches = [...cmdNames].filter((k) => k.startsWith(partial));
+        this.applyCompletion(matches, input, '');
+      }
     } else {
       const cmdName = input.slice(0, spaceIdx).toLowerCase();
       // Find the last non-flag token to complete
@@ -640,8 +650,12 @@ export class InteractiveTerminal {
     }
 
     if (resolved === 'sudo') {
-      const subcmds = ['hire-me'];
-      return subcmds.filter((s) => s.startsWith(p));
+      const subcmds = new Set([
+        'hire-me',
+        ...this.commands.keys(),
+      ]);
+      subcmds.delete('sudo');
+      return [...subcmds].filter((s) => s.startsWith(p));
     }
 
     if (resolved === 'theme') {
@@ -650,7 +664,16 @@ export class InteractiveTerminal {
     }
 
     // Default: filesystem completion (files + dirs)
-    return this.fs.completePath(partial, this.env.get('PWD'), this.env.get('HOME'), false);
+    // Hide dotfiles unless the user is explicitly typing a dot prefix
+    const results = this.fs.completePath(partial, this.env.get('PWD'), this.env.get('HOME'), false);
+    const basename = partial.includes('/') ? partial.slice(partial.lastIndexOf('/') + 1) : partial;
+    if (!basename.startsWith('.')) {
+      return results.filter((r) => {
+        const name = r.includes('/') ? r.slice(r.lastIndexOf('/') + 1).replace(/\/$/, '') : r.replace(/\/$/, '');
+        return !name.startsWith('.');
+      });
+    }
+    return results;
   }
 
   private applyCompletion(matches: string[], partial: string, prefix: string): void {
@@ -957,12 +980,37 @@ export class InteractiveTerminal {
 
     this.commands.set('sudo', {
       description: 'Execute with elevated privileges',
-      handler: (args) => {
-        const subCmd = args.join(' ');
-        if (subCmd === 'hire-me') {
-          return { html: this.sudoHireMe() };
+      handler: (args, ctx) => {
+        if (args.length === 0) return 'usage: sudo <command>';
+
+        const subCmdFull = args.join(' ');
+
+        // Easter eggs
+        if (subCmdFull === 'hire-me') return { html: this.sudoHireMe() };
+        if (subCmdFull.startsWith('rm -rf /')) return 'Filesystem nuked. Just kidding — this is a browser.';
+        if (['su', 'bash', 'zsh', 'sh'].includes(args[0])) return 'You were already root all along. With great power comes great responsibility.';
+        if (args[0] === 'sudo') return 'Inception detected. You do not need more sudo.';
+        if (['apt', 'apt-get', 'pacman', 'dnf', 'yum'].includes(args[0])) return 'E: Unable to locate package manager. This is a browser, not a Linux box.';
+
+        // Delegate: resolve aliases (alias expansion only expands first word
+        // of input, so `sudo ll` leaves `ll` unexpanded — resolve it here)
+        const subName = args[0].toLowerCase();
+        const subArgs = args.slice(1);
+        const aliasExpanded = this.aliases.get(subName);
+        let resolvedName: string;
+        let resolvedArgs: string[];
+        if (aliasExpanded) {
+          const parts = aliasExpanded.split(/\s+/);
+          resolvedName = parts[0].toLowerCase();
+          resolvedArgs = [...parts.slice(1), ...subArgs];
+        } else {
+          resolvedName = subName;
+          resolvedArgs = subArgs;
         }
-        return `sudo: ${subCmd || '???'}: command not found`;
+
+        const cmd = this.commands.get(resolvedName);
+        if (!cmd) return `sudo: ${subName}: command not found`;
+        return cmd.handler(resolvedArgs, ctx);
       },
     });
 
@@ -1456,16 +1504,35 @@ export class InteractiveTerminal {
     // Pad art to match info length for side-by-side alignment
     const art = rawArt.map((l) => l.padEnd(artWidth));
     while (art.length < 12) art.push(' '.repeat(artWidth));
+    // Read system info from virtual filesystem to avoid duplication
+    const readVfs = (path: string): string => {
+      const content = this.fs.readFile(path);
+      return typeof content === 'string' ? content : '';
+    };
+    const parseLine = (content: string, key: string): string => {
+      const line = content.split('\n').find((l) => l.startsWith(key));
+      return line ? line.split(/:\s*/, 2)[1]?.trim() || '' : '';
+    };
+
+    const osRelease = readVfs('/etc/os-release');
+    const osName = parseLine(osRelease, 'PRETTY_NAME')?.replace(/"/g, '') || 'hulsman.dev';
+    const envFile = readVfs('/etc/environment');
+    const shell = parseLine(envFile, 'SHELL')?.replace('/bin/', '') || 'zsh';
+    const cpuInfo = readVfs('/proc/cpuinfo');
+    const cpuModel = parseLine(cpuInfo, 'model name') || 'unknown';
+    const gpuInfo = readVfs('/proc/gpuinfo');
+    const gpuModel = parseLine(gpuInfo, 'model') || 'unknown';
     const uptime = this.uptimeString().replace(', 0 unplanned restarts', '');
+
     const info = [
       `<span class="terminal-accent">${esc(this.data.prompt)}</span>`,
       '<span class="terminal-dim">\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500</span>',
-      `<span class="terminal-accent">OS:</span> hulsman.dev 6.0-portfolio`,
+      `<span class="terminal-accent">OS:</span> ${esc(osName)}`,
       `<span class="terminal-accent">Uptime:</span> ${esc(uptime)}`,
-      `<span class="terminal-accent">Shell:</span> zsh 5.9`,
+      `<span class="terminal-accent">Shell:</span> ${esc(shell)} 5.9`,
       `<span class="terminal-accent">Terminal:</span> Alacritty / Kitty`,
-      `<span class="terminal-accent">CPU:</span> ENH Ryzen\u2122 9 2000X @ 2.00 GHz`,
-      `<span class="terminal-accent">GPU:</span> CaffeineForce RTX 4070 Ti`,
+      `<span class="terminal-accent">CPU:</span> ${esc(cpuModel)}`,
+      `<span class="terminal-accent">GPU:</span> ${esc(gpuModel)}`,
       `<span class="terminal-accent">Role:</span> ${esc(s.role)}`,
       `<span class="terminal-accent">Company:</span> ${esc(s.company)}`,
       `<span class="terminal-accent">Location:</span> ${esc(s.location)}`,
