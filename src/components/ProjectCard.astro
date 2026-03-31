@@ -7,8 +7,11 @@ interface Props {
 }
 const { title, description, href, tags = [] as string[] } = Astro.props as Props;
 ---
-<article class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6 hover:border-[var(--color-accent-border)] transition-colors group">
-  <a href={href} class="block h-full no-underline" style="transform: none; transition: none;">
+<article class="spotlight-card rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6 hover:border-[var(--color-accent-border)] transition-colors group relative overflow-hidden">
+  <!-- Spotlight glow overlay -->
+  <div class="spotlight-glow absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none" aria-hidden="true"></div>
+
+  <a href={href} class="block h-full no-underline relative z-10" style="transform: none; transition: none;">
     <h3 class="font-display text-base md:text-lg font-bold tracking-tight text-theme-primary group-hover:text-theme-accent transition-colors duration-200">{title}</h3>
     <p class="text-responsive-sm text-theme-tertiary mt-2 leading-relaxed" style="transform: none; transition: none;">{description}</p>
     {tags && tags.length > 0 && (
@@ -29,3 +32,23 @@ const { title, description, href, tags = [] as string[] } = Astro.props as Props
     </div>
   </a>
 </article>
+
+<style>
+  .spotlight-glow {
+    background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(201, 148, 43, 0.06), transparent 40%);
+  }
+  .spotlight-card:hover .spotlight-glow {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.spotlight-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const event = e as MouseEvent;
+      const rect = (card as HTMLElement).getBoundingClientRect();
+      (card as HTMLElement).style.setProperty('--mouse-x', `${event.clientX - rect.left}px`);
+      (card as HTMLElement).style.setProperty('--mouse-y', `${event.clientY - rect.top}px`);
+    });
+  });
+</script>

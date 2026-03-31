@@ -4,7 +4,9 @@ import ProjectCard from "../../components/ProjectCard.astro";
 import site from "../../config/site";
 
 // Auto-discover MDX case studies in this folder
-const entries = await Astro.glob("./*.mdx");
+const entries = Object.values(
+  import.meta.glob("./*.mdx", { eager: true })
+) as any[];
 
 const projects = entries
   .map((m) => ({

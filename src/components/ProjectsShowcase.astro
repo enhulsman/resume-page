@@ -3,7 +3,9 @@ import IconGitHub from "./icons/IconGitHub.astro";
 import IconArrowRight from "./icons/IconArrowRight.astro";
 
 // Dynamically import MDX projects and filter by showcase tag
-const projectFiles = await Astro.glob("../pages/projects/*.mdx");
+const projectFiles = Object.values(
+  import.meta.glob("../pages/projects/*.mdx", { eager: true })
+) as any[];
 
 const projects = projectFiles
   .filter((p) => p.frontmatter.showcase === true)
