@@ -1,0 +1,249 @@
+---
+import site from "../config/site";
+import { gravatarUrl } from "../lib/gravatar";
+import { experience, education, certifications, skillCategories } from "../config/resume";
+
+const aboutParagraphs = site.about.trim().split('\n\n').map(p => p.trim()).filter(Boolean);
+
+// Terminal config
+const user = 'ezra';
+const host = 'hulsman';
+const prompt = `${user}@${host}`;
+
+// Dynamic uptime from career start
+const start = new Date(site.careerStart);
+const diffMs = Date.now() - start.getTime();
+const days = Math.floor(diffMs / 86400000);
+const years = Math.floor(days / 365);
+const months = Math.floor((days % 365) / 30);
+const remDays = days - years * 365 - months * 30;
+const uptimeParts = [];
+if (years > 0) uptimeParts.push(`${years} year${years !== 1 ? 's' : ''}`);
+if (months > 0) uptimeParts.push(`${months} month${months !== 1 ? 's' : ''}`);
+if (remDays > 0) uptimeParts.push(`${remDays} day${remDays !== 1 ? 's' : ''}`);
+const uptimeStr = uptimeParts.join(', ');
+
+// Animation commands — the full set
+const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
+  { type: 'cmd', text: 'whoami' },
+  { type: 'out', text: user },
+  { type: 'blank', text: '' },
+  { type: 'cmd', text: 'hostname -f' },
+  { type: 'out', text: 'hulsman.dev' },
+  { type: 'blank', text: '' },
+  { type: 'cmd', text: 'cat /etc/role' },
+  { type: 'out', text: `${site.role} @ ${site.company}` },
+  { type: 'blank', text: '' },
+  { type: 'cmd', text: 'uptime -p' },
+  { type: 'out', text: `up ${uptimeStr}, 0 unplanned restarts` },
+  { type: 'blank', text: '' },
+  { type: 'cmd', text: 'ls projects/' },
+  ...site.projects.slice(0, 4).map(p => ({ type: 'out' as const, text: p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })),
+  { type: 'blank', text: '' },
+  { type: 'cmd', text: 'echo $STACK | tr ":" " - "' },
+  { type: 'out', text: [...site.skills.languages, ...site.skills.tools].join(' - ') },
+];
+
+// Data for interactive terminal (serialized to JSON for client-side)
+const terminalData = {
+  prompt,
+  site: {
+    name: site.name,
+    role: site.role,
+    company: site.company,
+    location: site.location,
+    skills: site.skills,
+    social: { email: site.social.email, GitHub: site.social.GitHub, LinkedIn: site.social.LinkedIn },
+    employment: site.employment,
+    careerStart: site.careerStart,
+  },
+  projects: site.projects.map(p => ({
+    title: p.title,
+    description: p.description,
+    tech: p.tech,
+    github: p.github || '',
+    link: p.link || '',
+    slug: (p.link || '').replace('/projects/', ''),
+  })),
+  experience: experience.map(e => ({ role: e.role, client: e.client, startDate: e.startDate, endDate: e.endDate || '', summary: e.summary, group: e.group })),
+  education: education.map(e => ({ degree: e.degree, institution: e.institution, startYear: e.startYear, endYear: e.endYear, gpa: e.gpa || '', result: e.result || '' })),
+  certifications: certifications.map(c => ({ name: c.name, institution: c.institution, year: c.year, credential: c.credential || '' })),
+  skills: skillCategories.map(s => ({ label: s.label, items: s.items })),
+};
+---
+
+<section id="about" class="relative py-24 md:py-32">
+  <div class="mx-auto w-full max-w-7xl px-6 md:px-12">
+    <!-- Section label -->
+    <div class="mb-16" data-reveal>
+      <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// About</span>
+      <h2 class="mt-2 font-display text-3xl md:text-5xl font-bold text-theme-primary tracking-tight">
+        Who I am
+      </h2>
+    </div>
+
+    <div class="grid gap-12 lg:grid-cols-2 lg:gap-12">
+      <!-- Left column: photo + bio -->
+      <div class="space-y-8">
+        <div class="flex flex-col sm:flex-row items-start gap-6" data-reveal>
+          <div class="flex flex-col items-center shrink-0 gap-2">
+            <img
+              src={gravatarUrl}
+              alt={`${site.name} profile photo`}
+              width="200"
+              height="200"
+              loading="lazy"
+              class="rounded-full border-2 border-[var(--color-accent-border)] w-[150px] h-[150px] md:w-[200px] md:h-[200px]"
+              style="filter: brightness(0.95) contrast(1.05) saturate(1.1);"
+            />
+            {site.quote && (
+              <a
+                href={site.quoteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-sm italic text-theme-muted opacity-50 hover:opacity-80 hover:text-theme-accent transition-all duration-200 mt-1"
+              >
+                {site.quote}
+              </a>
+            )}
+          </div>
+          <div class="space-y-4">
+            {aboutParagraphs.map(p => (
+              <p class="text-base text-theme-secondary leading-relaxed">{p}</p>
+            ))}
+          </div>
+        </div>
+
+        <!-- Interest tags -->
+        <div class="flex flex-wrap gap-2" data-reveal>
+          {site.interests.map(interest => (
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border border-[var(--color-accent-border)] bg-[var(--color-accent-alpha)] text-theme-accent">
+              {interest}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <!-- Right column: terminal card -->
+      <div data-reveal>
+        <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] overflow-hidden shadow-lg relative">
+          <!-- macOS title bar -->
+          <div class="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--color-border-primary)] bg-[var(--color-bg-primary)]">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></span>
+            <span id="terminal-title" class="flex-1 text-center text-[11px] text-theme-muted font-mono -ml-10">{prompt} — zsh — 80×24</span>
+          </div>
+
+          <!-- Terminal body -->
+          <div
+            id="terminal-body"
+            class="p-4 font-mono text-[13px] leading-[1.6] bg-[var(--color-bg-primary)] min-h-[280px] max-h-[500px] overflow-y-auto overflow-x-hidden relative cursor-text"
+            role="application"
+            aria-label="Interactive terminal"
+            data-lenis-prevent
+            tabindex="0"
+            data-prompt={prompt}
+            data-lines={JSON.stringify(terminalLines)}
+          >
+            <noscript>
+              {terminalLines.map(line => (
+                line.type === 'blank' ? (
+                  <div class="h-1"></div>
+                ) : line.type === 'cmd' ? (
+                  <div>
+                    <span class="text-[rgb(120,165,145)]">{prompt}</span>
+                    <span class="text-theme-muted">:</span>
+                    <span class="text-[rgb(140,145,80)]">~</span>
+                    <span class="text-theme-primary"> $ {line.text}</span>
+                  </div>
+                ) : (
+                  <div class="text-theme-secondary">{line.text}</div>
+                )
+              ))}
+            </noscript>
+          </div>
+
+          <!-- Hidden input + hint are created by interactive-terminal.ts -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Terminal data for interactive mode -->
+<script type="application/json" id="terminal-data" set:html={JSON.stringify(terminalData)}></script>
+
+<style is:global>
+  .terminal-cursor {
+    display: inline-block;
+    min-width: 8px;
+    height: 1.1em;
+    background-color: var(--color-accent-primary);
+    color: var(--color-bg-primary);
+    vertical-align: text-bottom;
+    animation: terminal-blink 1s step-end infinite;
+  }
+  .terminal-cursor.typing {
+    animation: none;
+    opacity: 1;
+  }
+  /* Interactive terminal input/output lines */
+  .terminal-input-line,
+  .terminal-output-line {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .terminal-prompt {
+    white-space: nowrap;
+  }
+
+  @keyframes terminal-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* Interactive terminal prompt colors */
+  .terminal-user { color: rgb(120, 165, 145); }
+  .terminal-separator { color: var(--color-text-muted); }
+  .terminal-path { color: rgb(140, 145, 80); }
+  .terminal-dollar { color: var(--color-text-primary); }
+
+  /* Interactive terminal text colors */
+  .terminal-accent { color: var(--color-accent-primary); font-weight: bold; }
+  .terminal-cmd { color: var(--color-text-primary); }
+  .terminal-dim { color: var(--color-text-muted); }
+  /* Terminal scrollbar */
+  #terminal-body::-webkit-scrollbar { width: 6px; }
+  #terminal-body::-webkit-scrollbar-track { background: transparent; }
+  #terminal-body::-webkit-scrollbar-thumb { background: var(--color-border-primary); border-radius: 3px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal-cursor { animation: none; }
+  }
+</style>
+
+<script>
+  import { initTerminalAnimation } from '../scripts/terminal-animation';
+  import { InteractiveTerminal } from '../scripts/interactive-terminal';
+
+  const body = document.getElementById('terminal-body');
+  if (body) {
+    // Parse terminal data
+    const dataEl = document.getElementById('terminal-data');
+    const terminalData = dataEl ? JSON.parse(dataEl.textContent || '{}') : {};
+
+    // Create interactive terminal (waits for activation)
+    const terminal = new InteractiveTerminal(body, terminalData);
+
+    // Listen for animation completion
+    body.addEventListener('terminal-animation-complete', () => {
+      terminal.activate();
+    }, { once: true });
+
+    // Start the typing animation
+    initTerminalAnimation(body);
+  }
+</script>

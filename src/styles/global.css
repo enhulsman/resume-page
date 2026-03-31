@@ -3,142 +3,122 @@
 @tailwind utilities;
 
 /* ========================================
+   SELF-HOSTED FONTS
+   ======================================== */
+
+/* Syne (display font) — latin-ext */
+@font-face {
+  font-family: 'Syne';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/syne-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* Syne — latin */
+@font-face {
+  font-family: 'Syne';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/syne-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Outfit (body font) — latin-ext */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/outfit-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* Outfit — latin */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/outfit-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* JetBrains Mono (code font) — latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* JetBrains Mono — latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ========================================
    CENTRALIZED THEME SYSTEM
    ======================================== */
 
-/* Default Theme (Light) */
+/* Default Theme (Dark) */
 :root {
   /* Core Colors */
-  --color-bg-primary: rgb(255 255 255);
-  --color-bg-secondary: rgb(248 250 252);
-  --color-bg-tertiary: rgb(241 245 249);
-  --color-bg-elevated: rgba(255 255 255 / 0.7);
-  
+  --color-bg-primary: rgb(28 26 35);
+  --color-bg-secondary: rgb(36 34 43);
+  --color-bg-tertiary: rgb(48 45 56);
+  --color-bg-elevated: rgba(36 34 43 / 0.8);
+
   /* Text Colors */
-  --color-text-primary: rgb(15 23 42);
-  --color-text-secondary: rgb(51 65 85);
-  --color-text-tertiary: rgb(71 85 105);
-  --color-text-muted: rgb(100 116 139);
-  
+  --color-text-primary: rgb(240 234 214);
+  --color-text-secondary: rgb(210 204 186);
+  --color-text-tertiary: rgb(170 164 150);
+  --color-text-muted: rgb(120 116 108);
+
   /* Border Colors */
-  --color-border-primary: rgb(226 232 240);
-  --color-border-secondary: rgb(203 213 225);
-  
+  --color-border-primary: rgba(255 255 255 / 0.12);
+  --color-border-secondary: rgba(255 255 255 / 0.08);
+
   /* Accent Colors */
-  --color-accent-primary: rgb(99 102 241);
-  --color-accent-hover: rgb(79 70 229);
-  --color-accent-light: rgb(165 180 252);
-  
+  --color-accent-primary: rgb(201 148 43);
+  --color-accent-hover: rgb(220 170 60);
+  --color-accent-light: rgb(230 190 100);
+
   /* Skill Badge Colors */
-  --color-accent-alpha: rgba(99 102 241 / 0.1);
-  --color-accent-border: rgba(99 102 241 / 0.2);
-  --color-secondary-alpha: rgba(51 65 85 / 0.5);
-  --color-tertiary-alpha: rgba(71 85 105 / 0.3);
+  --color-accent-alpha: rgba(201 148 43 / 0.15);
+  --color-accent-border: rgba(201 148 43 / 0.3);
+  --color-secondary-alpha: rgba(210 204 186 / 0.15);
+  --color-tertiary-alpha: rgba(170 164 150 / 0.1);
   --color-border: var(--color-border-primary);
-  
+
   /* Status Colors */
   --color-success: rgb(34 197 94);
   --color-warning: rgb(245 158 11);
   --color-error: rgb(239 68 68);
   --color-info: rgb(59 130 246);
-  
-  /* Employment/Availability Status Colors */
-  /* Available (green - ready for new opportunities) */
-  --color-employment-available: rgb(34 197 94);
-  --color-employment-available-alpha: rgba(34 197 94 / 0.1);
-  --color-employment-available-border: rgba(34 197 94 / 0.2);
-  
-  /* Employed but Open (blue - currently working but open to connect) */
-  --color-employment-open: rgb(59 130 246);
-  --color-employment-open-alpha: rgba(59 130 246 / 0.1);
-  --color-employment-open-border: rgba(59 130 246 / 0.2);
-  
-  /* Current status (defaults to employed-open, can be switched) */
-  --color-employment-primary: var(--color-employment-open);
-  --color-employment-alpha: var(--color-employment-open-alpha);
-  --color-employment-border: var(--color-employment-open-border);
-  
-  /* Badge Alpha Colors */
-  --color-success-alpha: rgba(34 197 94 / 0.1);
-  --color-success-border: rgba(34 197 94 / 0.2);
-  --color-warning-alpha: rgba(245 158 11 / 0.1);
-  --color-warning-border: rgba(245 158 11 / 0.2);
-  --color-info-alpha: rgba(59 130 246 / 0.1);
-  --color-info-border: rgba(59 130 246 / 0.2);
-  
-  /* Gradients */
-  --gradient-bg: linear-gradient(135deg, rgb(241 245 249) 0%, rgb(226 232 240) 100%);
-  
-  /* Shadow/Glow Effects - Light Theme (traditional shadows) */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  --shadow-accent: 0 4px 14px 0 rgba(99, 102, 241, 0.15);
-  --shadow-accent-lg: 0 8px 25px 0 rgba(99, 102, 241, 0.2);
-  
-  /* Text Glow Effects - Light Theme (subtle) */
-  --text-glow-sm: 0 0 4px rgba(99, 102, 241, 0.2);
-  --text-glow-md: 0 0 8px rgba(99, 102, 241, 0.3);
-  --text-glow-lg: 0 0 12px rgba(99, 102, 241, 0.4);
-  
-  /* Transitions */
-  --transition-theme: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
-/* Dark Theme */
-[data-theme="dark"] {
-  /* Core Colors */
-  --color-bg-primary: rgb(15 23 42);
-  --color-bg-secondary: rgb(30 41 59);
-  --color-bg-tertiary: rgb(51 65 85);
-  --color-bg-elevated: rgba(30 41 59 / 0.8);
-  
-  /* Text Colors */
-  --color-text-primary: rgb(248 250 252);
-  --color-text-secondary: rgb(226 232 240);
-  --color-text-tertiary: rgb(203 213 225);
-  --color-text-muted: rgb(148 163 184);
-  
-  /* Border Colors */
-  --color-border-primary: rgb(71 85 105);
-  --color-border-secondary: rgb(51 65 85);
-  
-  /* Accent Colors remain same for consistency */
-  --color-accent-primary: rgb(99 102 241);
-  --color-accent-hover: rgb(129 140 248);
-  --color-accent-light: rgb(165 180 252);
-  
-  /* Skill Badge Colors */
-  --color-accent-alpha: rgba(99 102 241 / 0.15);
-  --color-accent-border: rgba(99 102 241 / 0.3);
-  --color-secondary-alpha: rgba(226 232 240 / 0.15);
-  --color-tertiary-alpha: rgba(203 213 225 / 0.1);
-  --color-border: var(--color-border-primary);
-  
-  /* Status Colors - Same base colors but with dark theme alphas */
-  --color-success: rgb(34 197 94);
-  --color-warning: rgb(245 158 11);
-  --color-error: rgb(239 68 68);
-  --color-info: rgb(59 130 246);
-  
   /* Employment/Availability Status Colors */
   /* Available (green - ready for new opportunities) */
   --color-employment-available: rgb(34 197 94);
   --color-employment-available-alpha: rgba(34 197 94 / 0.15);
   --color-employment-available-border: rgba(34 197 94 / 0.3);
-  
-  /* Employed but Open (blue - currently working but open to connect) */
-  --color-employment-open: rgb(59 130 246);
-  --color-employment-open-alpha: rgba(59 130 246 / 0.15);
-  --color-employment-open-border: rgba(59 130 246 / 0.3);
-  
+
+  /* Employed but Open (amber - currently working but open to connect) */
+  --color-employment-open: rgb(201 148 43);
+  --color-employment-open-alpha: rgba(201 148 43 / 0.15);
+  --color-employment-open-border: rgba(201 148 43 / 0.3);
+
   /* Current status (defaults to employed-open, can be switched) */
   --color-employment-primary: var(--color-employment-open);
   --color-employment-alpha: var(--color-employment-open-alpha);
   --color-employment-border: var(--color-employment-open-border);
-  
+
   /* Badge Alpha Colors */
   --color-success-alpha: rgba(34 197 94 / 0.15);
   --color-success-border: rgba(34 197 94 / 0.3);
@@ -146,99 +126,102 @@
   --color-warning-border: rgba(245 158 11 / 0.3);
   --color-info-alpha: rgba(59 130 246 / 0.15);
   --color-info-border: rgba(59 130 246 / 0.3);
-  
+
   /* Gradients */
-  --gradient-bg: linear-gradient(135deg, rgb(30 41 59) 0%, rgb(15 23 42) 100%);
-  
-  /* Shadow/Glow Effects - Dark Theme (glowing effects) */
-  --shadow-sm: 0 2px 4px 0 rgba(99, 102, 241, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 12px 0 rgba(99, 102, 241, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 20px 0 rgba(99, 102, 241, 0.25), 0 4px 8px 0 rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 16px 32px 0 rgba(99, 102, 241, 0.3), 0 8px 16px 0 rgba(0, 0, 0, 0.5);
-  --shadow-accent: 0 6px 20px 0 rgba(99, 102, 241, 0.4), 0 2px 6px 0 rgba(99, 102, 241, 0.2);
-  --shadow-accent-lg: 0 12px 30px 0 rgba(99, 102, 241, 0.5), 0 4px 12px 0 rgba(99, 102, 241, 0.3);
-  
-  /* Text Glow Effects - Dark Theme (blue glow) */
-  --text-glow-sm: 0 0 6px rgba(99, 102, 241, 0.4);
-  --text-glow-md: 0 0 10px rgba(99, 102, 241, 0.5);
-  --text-glow-lg: 0 0 16px rgba(99, 102, 241, 0.6);
+  --gradient-bg: linear-gradient(135deg, rgb(36 34 43) 0%, rgb(28 26 35) 100%);
+
+  /* Shadow/Glow Effects - Dark Theme (amber glow) */
+  --shadow-sm: 0 2px 4px 0 rgba(201, 148, 43, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px 0 rgba(201, 148, 43, 0.15), 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 20px 0 rgba(201, 148, 43, 0.2), 0 4px 8px 0 rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 16px 32px 0 rgba(201, 148, 43, 0.25), 0 8px 16px 0 rgba(0, 0, 0, 0.5);
+  --shadow-accent: 0 6px 20px 0 rgba(201, 148, 43, 0.35), 0 2px 6px 0 rgba(201, 148, 43, 0.15);
+  --shadow-accent-lg: 0 12px 30px 0 rgba(201, 148, 43, 0.4), 0 4px 12px 0 rgba(201, 148, 43, 0.2);
+
+  /* Text Glow Effects - Dark Theme (amber glow) */
+  --text-glow-sm: 0 0 6px rgba(201, 148, 43, 0.4);
+  --text-glow-md: 0 0 10px rgba(201, 148, 43, 0.5);
+  --text-glow-lg: 0 0 16px rgba(201, 148, 43, 0.6);
+
+  /* Transitions */
+  --transition-theme: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Future theme example - Gruvbox */
-[data-theme="gruvbox"] {
+/* Light Theme */
+[data-theme="light"] {
   /* Core Colors */
-  --color-bg-primary: rgb(40 40 40);
-  --color-bg-secondary: rgb(60 56 54);
-  --color-bg-tertiary: rgb(80 73 69);
-  --color-bg-elevated: rgba(60 56 54 / 0.9);
-  
+  --color-bg-primary: rgb(252 250 245);
+  --color-bg-secondary: rgb(245 242 235);
+  --color-bg-tertiary: rgb(235 232 225);
+  --color-bg-elevated: rgba(252 250 245 / 0.8);
+
   /* Text Colors */
-  --color-text-primary: rgb(251 241 199);  /* light0 - #fbf1c7 */
-  --color-text-secondary: rgb(235 219 178); /* light1 - #ebdbb2 */
-  --color-text-tertiary: rgb(213 196 161);  /* light2 - #d5c4a1 */
-  --color-text-muted: rgb(189 174 147);     /* light3 - #bdae93 */
-  
+  --color-text-primary: rgb(35 30 25);
+  --color-text-secondary: rgb(60 55 45);
+  --color-text-tertiary: rgb(90 85 75);
+  --color-text-muted: rgb(130 125 115);
+
   /* Border Colors */
-  --color-border-primary: rgb(102 92 84);
-  --color-border-secondary: rgb(80 73 69);
-  
-  /* Accent Colors - Gruvbox orange */
-  --color-accent-primary: rgb(254 128 25);
-  --color-accent-hover: rgb(254 128 25);
-  --color-accent-light: rgb(254 128 25);
-  
+  --color-border-primary: rgb(215 210 200);
+  --color-border-secondary: rgb(195 190 180);
+
+  /* Accent Colors - darker amber for light bg contrast */
+  --color-accent-primary: rgb(175 125 30);
+  --color-accent-hover: rgb(155 108 20);
+  --color-accent-light: rgb(210 165 70);
+
   /* Skill Badge Colors */
-  --color-accent-alpha: rgba(254 128 25 / 0.15);
-  --color-accent-border: rgba(254 128 25 / 0.3);
-  --color-secondary-alpha: rgba(213 196 161 / 0.15);
-  --color-tertiary-alpha: rgba(189 174 147 / 0.1);
+  --color-accent-alpha: rgba(175 125 30 / 0.1);
+  --color-accent-border: rgba(175 125 30 / 0.2);
+  --color-secondary-alpha: rgba(60 55 45 / 0.5);
+  --color-tertiary-alpha: rgba(90 85 75 / 0.3);
   --color-border: var(--color-border-primary);
-  
-  /* Status Colors - Gruvbox variants */
-  --color-success: rgb(184 187 38);   /* bright_green - #b8bb26 */
-  --color-warning: rgb(254 128 25);   /* bright_orange - #fe8019 */
-  --color-error: rgb(251 73 52);      /* bright_red - #fb4934 */
-  --color-info: rgb(131 165 152);     /* bright_blue - #83a598 */
-  
-  /* Employment/Availability Status Colors - Gruvbox theme */
-  /* Available (gruvbox bright green) */
-  --color-employment-available: rgb(184 187 38);   /* bright_green - #b8bb26 */
-  --color-employment-available-alpha: rgba(184 187 38 / 0.15);
-  --color-employment-available-border: rgba(184 187 38 / 0.3);
-  
-  /* Employed but Open (gruvbox bright yellow) */
-  --color-employment-open: rgb(250 189 47);        /* bright_yellow - #fabd2f */
-  --color-employment-open-alpha: rgba(250 189 47 / 0.15);
-  --color-employment-open-border: rgba(250 189 47 / 0.3);
-  
+
+  /* Status Colors */
+  --color-success: rgb(34 197 94);
+  --color-warning: rgb(245 158 11);
+  --color-error: rgb(239 68 68);
+  --color-info: rgb(59 130 246);
+
+  /* Employment/Availability Status Colors */
+  --color-employment-available: rgb(34 197 94);
+  --color-employment-available-alpha: rgba(34 197 94 / 0.1);
+  --color-employment-available-border: rgba(34 197 94 / 0.2);
+
+  /* Employed but Open (amber) */
+  --color-employment-open: rgb(175 125 30);
+  --color-employment-open-alpha: rgba(175 125 30 / 0.1);
+  --color-employment-open-border: rgba(175 125 30 / 0.2);
+
   /* Current status (defaults to employed-open, can be switched) */
   --color-employment-primary: var(--color-employment-open);
   --color-employment-alpha: var(--color-employment-open-alpha);
   --color-employment-border: var(--color-employment-open-border);
-  
+
   /* Badge Alpha Colors */
-  --color-success-alpha: rgba(184 187 38 / 0.15);
-  --color-success-border: rgba(184 187 38 / 0.3);
-  --color-warning-alpha: rgba(254 128 25 / 0.15);
-  --color-warning-border: rgba(254 128 25 / 0.3);
-  --color-info-alpha: rgba(131 165 152 / 0.15);
-  --color-info-border: rgba(131 165 152 / 0.3);
-  
+  --color-success-alpha: rgba(34 197 94 / 0.1);
+  --color-success-border: rgba(34 197 94 / 0.2);
+  --color-warning-alpha: rgba(245 158 11 / 0.1);
+  --color-warning-border: rgba(245 158 11 / 0.2);
+  --color-info-alpha: rgba(59 130 246 / 0.1);
+  --color-info-border: rgba(59 130 246 / 0.2);
+
   /* Gradients */
-  --gradient-bg: linear-gradient(135deg, rgb(60 56 54) 0%, rgb(40 40 40) 100%);
-  
-  /* Shadow/Glow Effects - Gruvbox Theme (warm amber glow) */
-  --shadow-sm: 0 2px 4px 0 rgba(254, 128, 25, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px 0 rgba(254, 128, 25, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 20px 0 rgba(254, 128, 25, 0.25), 0 4px 8px 0 rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 16px 32px 0 rgba(254, 128, 25, 0.3), 0 8px 16px 0 rgba(0, 0, 0, 0.6);
-  --shadow-accent: 0 6px 20px 0 rgba(254, 128, 25, 0.4), 0 2px 6px 0 rgba(254, 128, 25, 0.2);
-  --shadow-accent-lg: 0 12px 30px 0 rgba(254, 128, 25, 0.5), 0 4px 12px 0 rgba(254, 128, 25, 0.3);
-  
-  /* Text Glow Effects - Gruvbox Theme (warm amber glow) */
-  --text-glow-sm: 0 0 6px rgba(254, 128, 25, 0.4);
-  --text-glow-md: 0 0 10px rgba(254, 128, 25, 0.5);
-  --text-glow-lg: 0 0 16px rgba(254, 128, 25, 0.6);
+  --gradient-bg: linear-gradient(135deg, rgb(245 242 235) 0%, rgb(235 232 225) 100%);
+
+  /* Shadow/Glow Effects - Light Theme (standard shadows) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-accent: 0 4px 14px 0 rgba(175, 125, 30, 0.15);
+  --shadow-accent-lg: 0 8px 25px 0 rgba(175, 125, 30, 0.2);
+
+  /* Text Glow Effects - Light Theme (subtle) */
+  --text-glow-sm: 0 0 4px rgba(175, 125, 30, 0.2);
+  --text-glow-md: 0 0 8px rgba(175, 125, 30, 0.3);
+  --text-glow-lg: 0 0 12px rgba(175, 125, 30, 0.4);
 }
 
 /* ========================================
@@ -250,24 +233,37 @@ html {
   background: var(--color-bg-primary);
   transition: var(--transition-theme);
   /* Prevent layout shift from scrollbar appearance */
-  overflow-y: scroll;
+  overflow-y: scroll; /* overridden by lenis.css classes when active */
+}
+
+html.lenis {
+  overflow-y: scroll; /* Keep scrollbar visible to prevent layout shift */
+}
+
+html.lenis, html.lenis body {
+  height: auto;
 }
 
 body {
   min-height: 100vh;
   background: var(--color-bg-primary);
   color: var(--color-text-secondary);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   transition: var(--transition-theme);
   margin: 0;
   padding: 0;
 }
 
 /* Ensure the root container also has proper background */
-#app, main {
+#app {
   min-height: 100vh;
   background: var(--color-bg-primary);
   transition: var(--transition-theme);
+}
+
+main {
+  min-height: 100vh;
+  background: transparent;
 }
 
 /* ========================================
@@ -280,48 +276,48 @@ body {
     color: var(--color-text-primary);
     transition: var(--transition-fast);
   }
-  
-  .prose h1 { 
-    @apply text-3xl font-bold; 
+
+  .prose h1 {
+    @apply text-3xl font-bold;
     margin-bottom: 1.5rem;
   }
-  .prose h2 { 
-    @apply text-2xl font-semibold; 
+  .prose h2 {
+    @apply text-2xl font-semibold;
     margin-top: 2.5rem;
     margin-bottom: 1.25rem;
   }
-  .prose h3 { 
-    @apply text-xl font-semibold; 
+  .prose h3 {
+    @apply text-xl font-semibold;
     margin-top: 2rem;
     margin-bottom: 1rem;
   }
-  .prose h4 { 
-    @apply text-lg font-semibold; 
+  .prose h4 {
+    @apply text-lg font-semibold;
     margin-top: 1.75rem;
     margin-bottom: 0.75rem;
   }
-  .prose h5 { 
-    @apply text-base font-semibold; 
+  .prose h5 {
+    @apply text-base font-semibold;
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
   }
-  .prose h6 { 
-    @apply text-sm font-semibold; 
+  .prose h6 {
+    @apply text-sm font-semibold;
     margin-top: 1.25rem;
     margin-bottom: 0.5rem;
   }
-  
+
   .prose p {
     color: var(--color-text-secondary);
     line-height: 1.625;
     margin-bottom: 1rem;
   }
-  
+
   .prose strong {
     color: var(--color-text-primary);
     font-weight: 600;
   }
-  
+
   .prose a {
     color: var(--color-accent-primary);
     text-decoration: underline;
@@ -329,7 +325,7 @@ body {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-weight: 500;
   }
-  
+
   .prose a:hover {
     color: var(--color-accent-hover);
     text-decoration-color: var(--color-accent-primary);
@@ -341,12 +337,12 @@ body {
   a:not(.btn-theme-accent):not(.card-theme):not(.btn-theme-accent-enhanced):not(.btn-theme-secondary) {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   a:not(.btn-theme-accent):not(.card-theme):not(.btn-theme-accent-enhanced):not(.btn-theme-secondary):hover {
     transform: scale(1.02);
     text-shadow: var(--text-glow-sm);
   }
-  
+
   /* Enhanced link class for special links */
   .link-enhanced {
     color: var(--color-accent-primary);
@@ -355,21 +351,21 @@ body {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-weight: 500;
   }
-  
+
   .link-enhanced:hover {
     color: var(--color-accent-hover);
     text-decoration-color: var(--color-accent-primary);
     transform: scale(1.02);
     text-shadow: var(--text-glow-md);
   }
-  
+
   /* Social/contact link styling */
   .link-social {
     color: var(--color-text-tertiary);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-weight: 500;
   }
-  
+
   .link-social:hover {
     color: var(--color-accent-primary);
     text-shadow: var(--text-glow-sm);
@@ -382,20 +378,20 @@ body {
     padding-left: 1.5rem;
     list-style-position: outside;
   }
-  
+
   .prose ul {
     list-style-type: disc;
   }
-  
+
   .prose ol {
     list-style-type: decimal;
   }
-  
+
   .prose li {
     margin-bottom: 0.5rem;
     padding-left: 0.25rem;
   }
-  
+
   .prose code {
     background-color: var(--color-bg-tertiary);
     color: var(--color-text-primary);
@@ -404,7 +400,7 @@ body {
     font-size: 0.875em;
     border: 1px solid var(--color-border-primary);
   }
-  
+
   /* Override inline code styling when inside pre blocks */
   .prose pre code {
     background-color: transparent;
@@ -414,7 +410,7 @@ body {
     font-size: inherit;
     border: none;
   }
-  
+
   .prose pre {
     background-color: var(--color-bg-tertiary);
     color: var(--color-text-primary);
@@ -424,7 +420,7 @@ body {
     margin: 1rem 0;
     border: 1px solid var(--color-border-primary);
   }
-  
+
   .prose blockquote {
     border-left: 4px solid var(--color-accent-primary);
     padding-left: 1rem;
@@ -435,66 +431,66 @@ body {
     padding: 1rem;
     border-radius: 0.5rem;
   }
-  
+
   /* Themed component classes */
   .bg-theme-primary { background-color: var(--color-bg-primary); }
   .bg-theme-secondary { background-color: var(--color-bg-secondary); }
   .bg-theme-tertiary { background-color: var(--color-bg-tertiary); }
   .bg-theme-elevated { background-color: var(--color-bg-elevated); }
-  
+
   .text-theme-primary { color: var(--color-text-primary); }
   .text-theme-secondary { color: var(--color-text-secondary); }
   .text-theme-tertiary { color: var(--color-text-tertiary); }
   .text-theme-muted { color: var(--color-text-muted); }
-  
+
   .border-theme-primary { border-color: var(--color-border-primary); }
   .border-theme-secondary { border-color: var(--color-border-secondary); }
-  
+
   .text-theme-accent { color: var(--color-accent-primary); }
   .bg-theme-accent { background-color: var(--color-accent-primary); }
-  
+
   /* Employment Status themed utilities */
   .text-theme-employment { color: var(--color-employment-primary); }
   .bg-theme-employment { background-color: var(--color-employment-primary); }
-  
+
   /* Interactive elements */
   .btn-theme-accent {
     background-color: var(--color-accent-primary);
     color: var(--color-bg-primary);
     transition: var(--transition-fast);
   }
-  
+
   .btn-theme-accent:hover {
     background-color: var(--color-accent-hover);
     box-shadow: var(--shadow-accent);
   }
-  
+
   /* Theme-aware shadow utilities */
-  .shadow-theme-sm { 
-    box-shadow: var(--shadow-sm); 
+  .shadow-theme-sm {
+    box-shadow: var(--shadow-sm);
     transition: var(--transition-fast);
   }
-  .shadow-theme-md { 
-    box-shadow: var(--shadow-md); 
+  .shadow-theme-md {
+    box-shadow: var(--shadow-md);
     transition: var(--transition-fast);
   }
-  .shadow-theme-lg { 
-    box-shadow: var(--shadow-lg); 
+  .shadow-theme-lg {
+    box-shadow: var(--shadow-lg);
     transition: var(--transition-fast);
   }
-  .shadow-theme-xl { 
-    box-shadow: var(--shadow-xl); 
+  .shadow-theme-xl {
+    box-shadow: var(--shadow-xl);
     transition: var(--transition-fast);
   }
-  .shadow-theme-accent { 
-    box-shadow: var(--shadow-accent); 
+  .shadow-theme-accent {
+    box-shadow: var(--shadow-accent);
     transition: var(--transition-fast);
   }
-  .shadow-theme-accent-lg { 
-    box-shadow: var(--shadow-accent-lg); 
+  .shadow-theme-accent-lg {
+    box-shadow: var(--shadow-accent-lg);
     transition: var(--transition-fast);
   }
-  
+
   /* Hover utilities for shadow transitions */
   .hover\:shadow-theme-sm:hover { box-shadow: var(--shadow-sm); }
   .hover\:shadow-theme-md:hover { box-shadow: var(--shadow-md); }
@@ -502,7 +498,7 @@ body {
   .hover\:shadow-theme-xl:hover { box-shadow: var(--shadow-xl); }
   .hover\:shadow-theme-accent:hover { box-shadow: var(--shadow-accent); }
   .hover\:shadow-theme-accent-lg:hover { box-shadow: var(--shadow-accent-lg); }
-  
+
   /* Enhanced button styles with theme-aware shadows */
   .btn-theme-accent-enhanced {
     background-color: var(--color-accent-primary);
@@ -510,13 +506,13 @@ body {
     transition: var(--transition-fast);
     box-shadow: var(--shadow-sm);
   }
-  
+
   .btn-theme-accent-enhanced:hover {
     background-color: var(--color-accent-hover);
     box-shadow: var(--shadow-accent-lg);
     transform: translateY(-1px);
   }
-  
+
   /* Secondary button with theme-aware effects */
   .btn-theme-secondary {
     border: 2px solid var(--color-border-primary);
@@ -525,7 +521,7 @@ body {
     transition: var(--transition-fast);
     box-shadow: var(--shadow-sm);
   }
-  
+
   .btn-theme-secondary:hover {
     background-color: var(--color-accent-primary);
     color: var(--color-bg-primary);
@@ -533,18 +529,18 @@ body {
     box-shadow: var(--shadow-accent);
     transform: translateY(-1px);
   }
-  
+
   /* Avatar hover effects */
   .avatar-theme {
     transition: var(--transition-fast);
     box-shadow: var(--shadow-xl);
   }
-  
+
   .avatar-theme:hover {
     box-shadow: var(--shadow-accent-lg);
     transform: scale(1.02);
   }
-  
+
   /* Availability status with enhanced theme-aware pulsing animation */
   .availability-indicator {
     background-color: var(--color-employment-primary);
@@ -552,7 +548,7 @@ body {
     transition: var(--transition-fast);
     position: relative;
   }
-  
+
   @keyframes pulse-glow {
     0% {
       opacity: 1;
@@ -580,17 +576,17 @@ body {
       box-shadow: 0 0 0 0 var(--color-employment-border);
     }
   }
-  
+
   /* Enhanced base glow effect - works for all themes via CSS variables */
   .availability-indicator {
     box-shadow: 0 0 8px 0 var(--color-employment-alpha), 0 0 3px 0 var(--color-employment-border);
   }
-  
+
   .availability-indicator:hover {
     box-shadow: 0 0 12px 0 var(--color-employment-border), 0 0 6px 0 var(--color-employment-alpha);
     animation-duration: 2s; /* Faster pulse on hover */
   }
-  
+
   /* Respect user's motion preferences - disable animation if reduced motion is preferred */
   @media (prefers-reduced-motion: reduce) {
     .availability-indicator {
@@ -598,20 +594,20 @@ body {
       box-shadow: 0 0 6px 0 var(--color-employment-alpha), 0 0 2px 0 var(--color-employment-border);
     }
   }
-  
+
   /* Status-specific classes for easy switching */
   .employment-available {
     --color-employment-primary: var(--color-employment-available);
     --color-employment-alpha: var(--color-employment-available-alpha);
     --color-employment-border: var(--color-employment-available-border);
   }
-  
+
   .employment-open {
     --color-employment-primary: var(--color-employment-open);
     --color-employment-alpha: var(--color-employment-open-alpha);
     --color-employment-border: var(--color-employment-open-border);
   }
-  
+
   /* Enhanced card responsiveness with subtle gradients */
   .card-responsive {
     @apply card-theme p-4 sm:p-6 rounded-3xl sm:rounded-3xl;
@@ -619,50 +615,46 @@ body {
     position: relative;
     overflow: hidden;
   }
-  
+
   /* Subtle gradient overlay for dark themes */
-  [data-theme="dark"] .card-responsive::before,
-  [data-theme="gruvbox"] .card-responsive::before {
+  .card-responsive::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, transparent 50%, rgba(99, 102, 241, 0.01) 100%);
+    background: linear-gradient(135deg, rgba(201, 148, 43, 0.02) 0%, transparent 50%, rgba(201, 148, 43, 0.01) 100%);
     pointer-events: none;
     opacity: 0;
     transition: var(--transition-theme);
   }
-  
-  [data-theme="gruvbox"] .card-responsive::before {
-    background: linear-gradient(135deg, rgba(254, 128, 25, 0.02) 0%, transparent 50%, rgba(254, 128, 25, 0.01) 100%);
+
+  [data-theme="light"] .card-responsive::before {
+    background: linear-gradient(135deg, rgba(175, 125, 30, 0.02) 0%, transparent 50%, rgba(175, 125, 30, 0.01) 100%);
   }
-  
-  [data-theme="dark"] .card-responsive:hover::before,
-  [data-theme="gruvbox"] .card-responsive:hover::before {
+
+  .card-responsive:hover::before {
     opacity: 1;
   }
-  
+
   /* Theme-aware image switching */
   .theme-light-only {
-    display: block;
+    display: none;
   }
-  
+
   .theme-dark-only {
-    display: none;
-  }
-  
-  [data-theme="dark"] .theme-light-only,
-  [data-theme="gruvbox"] .theme-light-only {
-    display: none;
-  }
-  
-  [data-theme="dark"] .theme-dark-only,
-  [data-theme="gruvbox"] .theme-dark-only {
     display: block;
   }
-  
+
+  [data-theme="light"] .theme-light-only {
+    display: block;
+  }
+
+  [data-theme="light"] .theme-dark-only {
+    display: none;
+  }
+
   /* Cards and elevated surfaces */
   .card-theme {
     background-color: var(--color-bg-elevated);
@@ -670,7 +662,7 @@ body {
     transition: var(--transition-theme);
     box-shadow: var(--shadow-sm);
   }
-  
+
   .card-theme:hover {
     border-color: var(--color-border-secondary);
     box-shadow: var(--shadow-lg);
@@ -794,12 +786,12 @@ body {
     h1 { @apply text-xl; }
     h2 { @apply text-lg; }
     h3 { @apply text-base; }
-    
+
     /* Better spacing on mobile */
     .space-y-6 > * + * {
       margin-top: 1rem;
     }
-    
+
     .space-y-4 > * + * {
       margin-top: 0.75rem;
     }
@@ -817,7 +809,7 @@ body {
     user-drag: none;
     draggable: false;
   }
-  
+
   /* Make badge/tag elements non-selectable */
   .inline-flex.items-center.rounded-full {
     @apply select-none;
@@ -843,62 +835,87 @@ body {
   background-color: var(--color-accent-primary);
 }
 
-/* Skill badge styles - theme aware */
+/* Skill badge styles - warm-toned palette */
 .skill-badge-primary {
   @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
-  background-color: var(--color-accent-alpha);
-  color: var(--color-accent-primary);
-  border: 1px solid var(--color-accent-border);
+  background-color: rgba(201, 148, 43, 0.12);
+  color: rgb(201 148 43);
+  border: 1px solid rgba(201, 148, 43, 0.25);
 }
 
 .skill-badge-secondary {
   @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
-  background-color: var(--color-success-alpha);
-  color: var(--color-success);
-  border: 1px solid var(--color-success-border);
+  background-color: rgba(190, 100, 60, 0.12);
+  color: rgb(200 120 75);
+  border: 1px solid rgba(190, 100, 60, 0.25);
 }
 
 .skill-badge-tertiary {
   @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
-  background-color: var(--color-info-alpha);
-  color: var(--color-info);
-  border: 1px solid var(--color-info-border);
+  background-color: rgba(140, 145, 80, 0.12);
+  color: rgb(160 165 95);
+  border: 1px solid rgba(140, 145, 80, 0.25);
 }
 
-/* Interest and Tech badge styles */
+/* Interest badge styles - warm-toned variants */
 .interest-badge-1 {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
-  background-color: var(--color-success-alpha);
-  color: var(--color-success);
-  border: 1px solid var(--color-success-border);
+  background-color: rgba(201, 148, 43, 0.12);
+  color: rgb(201 148 43);
+  border: 1px solid rgba(201, 148, 43, 0.25);
 }
-
 .interest-badge-2 {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
-  background-color: var(--color-warning-alpha);
-  color: var(--color-warning);
-  border: 1px solid var(--color-warning-border);
+  background-color: rgba(190, 100, 60, 0.12);
+  color: rgb(200 120 75);
+  border: 1px solid rgba(190, 100, 60, 0.25);
 }
-
 .interest-badge-3 {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
-  background-color: var(--color-accent-alpha);
-  color: var(--color-accent-primary);
-  border: 1px solid var(--color-accent-border);
+  background-color: rgba(140, 145, 80, 0.12);
+  color: rgb(160 165 95);
+  border: 1px solid rgba(140, 145, 80, 0.25);
 }
 
-.tech-badge-1 { @apply interest-badge-1; }
-.tech-badge-2 { @apply interest-badge-2; }
-.tech-badge-3 { @apply interest-badge-3; }
+/* Tech badge styles - warm-toned variants + warm teal */
+.tech-badge-1 {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  background-color: rgba(201, 148, 43, 0.12);
+  color: rgb(201 148 43);
+  border: 1px solid rgba(201, 148, 43, 0.25);
+}
+.tech-badge-2 {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  background-color: rgba(190, 100, 60, 0.12);
+  color: rgb(200 120 75);
+  border: 1px solid rgba(190, 100, 60, 0.25);
+}
+.tech-badge-3 {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  background-color: rgba(140, 145, 80, 0.12);
+  color: rgb(160 165 95);
+  border: 1px solid rgba(140, 145, 80, 0.25);
+}
 .tech-badge-4 {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
-  background-color: var(--color-info-alpha);
-  color: var(--color-info);
-  border: 1px solid var(--color-info-border);
+  background-color: rgba(100, 145, 130, 0.12);
+  color: rgb(120 165 145);
+  border: 1px solid rgba(100, 145, 130, 0.25);
 }
 
+/* Light theme badge overrides - darker text for contrast */
+[data-theme="light"] .skill-badge-primary { color: rgb(160 110 20); }
+[data-theme="light"] .skill-badge-secondary { color: rgb(155 75 40); }
+[data-theme="light"] .skill-badge-tertiary { color: rgb(100 110 50); }
+[data-theme="light"] .interest-badge-1 { color: rgb(160 110 20); }
+[data-theme="light"] .interest-badge-2 { color: rgb(155 75 40); }
+[data-theme="light"] .interest-badge-3 { color: rgb(100 110 50); }
+[data-theme="light"] .tech-badge-1 { color: rgb(160 110 20); }
+[data-theme="light"] .tech-badge-2 { color: rgb(155 75 40); }
+[data-theme="light"] .tech-badge-3 { color: rgb(100 110 50); }
+[data-theme="light"] .tech-badge-4 { color: rgb(70 115 100); }
+
 /* Additional theme utilities */
-.text-theme-accent { color: var(--color-accent-primary); }
 .bg-theme-accent-alpha { background-color: var(--color-accent-alpha); }
 .border-theme-accent-alpha { border-color: var(--color-accent-border); }
 
@@ -947,4 +964,116 @@ body {
 
 .code-demo-container:hover {
   box-shadow: var(--shadow-xl);
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+.font-display { font-family: 'Syne', ui-sans-serif, system-ui, sans-serif; }
+
+.text-gradient {
+  background: linear-gradient(135deg, rgb(201 148 43), rgb(190 100 60));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass {
+  background: rgba(28 26 35 / 0.7);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+}
+
+[data-theme="light"] .glass {
+  background: rgba(252 250 245 / 0.75);
+}
+
+.glow-border {
+  box-shadow: 0 0 0 1px rgba(201, 148, 43, 0.15), 0 0 20px rgba(201, 148, 43, 0.08), 0 0 40px rgba(201, 148, 43, 0.04);
+}
+
+[data-theme="light"] .glow-border {
+  box-shadow: 0 0 0 1px rgba(175, 125, 30, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ========================================
+   KEYFRAME ANIMATIONS
+   ======================================== */
+
+@keyframes shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 300% center; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-30px) scale(1.1); }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes marquee-reverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes aurora-drift-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(8vw, 6vh) scale(1.15); }
+}
+@keyframes aurora-drift-2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-10vw, -8vh) scale(1.1); }
+}
+
+/* ========================================
+   ACCESSIBILITY & SCROLLBAR
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgb(60 55 50); border-radius: 3px; }
+::selection { background: rgba(201 148 43 / 0.3); color: rgb(240 234 214); }
+
+/* ── Print styles ── */
+@media print {
+  /* Hide UI chrome */
+  nav, footer,
+  .pointer-events-none[aria-hidden="true"] { display: none !important; }
+
+  /* Clean background */
+  html, body, main, #app { background: white !important; color: black !important; }
+
+  /* Remove decorative effects */
+  .glass, .glow-border { box-shadow: none !important; backdrop-filter: none !important; background: white !important; }
+
+  /* Ensure cards have visible borders in print */
+  [class*="rounded-xl"][class*="border"] { border-color: #ddd !important; }
+
+  /* No animations */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

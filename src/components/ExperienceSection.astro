@@ -1,0 +1,59 @@
+---
+import { experience } from "../config/resume";
+import IconArrowRight from "./icons/IconArrowRight.astro";
+
+// Only show recent consulting roles as highlights
+const highlights = experience
+  .filter(e => e.group === 'consulting')
+  .slice(0, 3);
+
+function formatDate(entry: typeof experience[0]): string {
+  return entry.endDate ? `${entry.startDate} — ${entry.endDate}` : `${entry.startDate} — Present`;
+}
+---
+
+<section id="experience" class="relative py-24 md:py-32">
+  <div class="mx-auto w-full max-w-7xl px-6 md:px-12">
+    <!-- Section label -->
+    <div class="mb-12" data-reveal>
+      <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// Experience</span>
+      <h2 class="mt-2 font-display text-3xl md:text-5xl font-bold text-theme-primary tracking-tight">
+        Career highlights
+      </h2>
+    </div>
+
+    <!-- Timeline -->
+    <div class="relative">
+      <!-- Vertical line -->
+      <div class="absolute left-4 md:left-8 top-0 bottom-0 w-px bg-[var(--color-border-primary)]" aria-hidden="true"></div>
+
+      {highlights.map((entry, i) => (
+        <div class="relative mb-8 md:mb-12 pl-12 md:pl-20" data-reveal>
+          <!-- Timeline dot -->
+          <div class="absolute left-4 md:left-8 top-2 w-2.5 h-2.5 rounded-full border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-primary)] -translate-x-1/2 z-10" aria-hidden="true"></div>
+
+          <!-- Card -->
+          <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6 hover:border-[var(--color-accent-border)] transition-colors">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2">
+              <h3 class="font-display text-base md:text-lg font-bold text-theme-primary">{entry.role}</h3>
+              <span class="font-mono text-xs text-theme-accent shrink-0">{formatDate(entry)}</span>
+            </div>
+            <p class="text-sm text-theme-accent mb-2">{entry.client}</p>
+            <p class="text-sm text-theme-secondary leading-relaxed">{entry.summary}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- CTA to full resume -->
+    <div class="mt-8 pl-12 md:pl-20" data-reveal>
+      <a
+        href="/resume"
+        class="inline-flex items-center gap-2 text-sm font-medium font-display px-5 py-2.5 rounded-lg border border-[var(--color-accent-border)] text-theme-accent bg-[var(--color-accent-alpha)] hover:bg-[var(--color-accent-primary)] hover:text-[var(--color-bg-primary)] transition-all duration-200"
+      >
+        View full experience, education & certifications
+        <IconArrowRight class="w-4 h-4" />
+      </a>
+    </div>
+  </div>
+</section>

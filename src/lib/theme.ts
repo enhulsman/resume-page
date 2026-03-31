@@ -1,4 +1,4 @@
-export type ThemeName = 'light' | 'dark' | 'gruvbox';
+export type ThemeName = 'dark' | 'light';
 
 export interface ThemeConfig {
   name: ThemeName;
@@ -9,25 +9,23 @@ export interface ThemeConfig {
 export const themes: ThemeConfig[] = [
   { name: 'light', displayName: 'Light', icon: '☀️' },
   { name: 'dark', displayName: 'Dark', icon: '🌙' },
-  { name: 'gruvbox', displayName: 'Gruvbox', icon: '🟫' },
 ];
 
 export function getCurrentTheme(): ThemeName {
-  if (typeof document === 'undefined') return 'light';
+  if (typeof document === 'undefined') return 'dark';
   const attr = document.documentElement.getAttribute('data-theme');
-  return (attr === 'dark' || attr === 'gruvbox') ? attr : 'light';
+  return attr === 'light' ? 'light' : 'dark';
 }
 
 export function setTheme(theme: ThemeName): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
-  
-  // Apply to DOM (light is default, no attribute needed)
-  if (theme === 'light') {
+
+  // Dark is default (no attribute). Light requires data-theme="light".
+  if (theme === 'dark') {
     document.documentElement.removeAttribute('data-theme');
   } else {
     document.documentElement.setAttribute('data-theme', theme);
   }
-  
-  // Persist to storage
+
   localStorage.setItem('theme', theme);
 }

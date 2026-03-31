@@ -5,6 +5,9 @@ import ExperienceTimeline from '../components/resume/ExperienceTimeline.astro';
 import EducationList from '../components/resume/EducationList.astro';
 import CertificationList from '../components/resume/CertificationList.astro';
 import site from '../config/site';
+import IconEmail from '../components/icons/IconEmail.astro';
+import IconGitHub from '../components/icons/IconGitHub.astro';
+import IconLinkedIn from '../components/icons/IconLinkedIn.astro';
 ---
 
 <BaseLayout
@@ -14,36 +17,70 @@ import site from '../config/site';
   ogTitle={`Resume — ${site.name}`}
   ogDescription={`${site.role} at ${site.company}. Work experience, skills, education, and certifications.`}
 >
-  <section>
-    <div class="mb-6">
-      <h1 class="text-responsive-lg font-semibold tracking-tight text-theme-primary">Resume</h1>
+  <!-- Compact profile header — makes this page standalone for recruiters -->
+  <div class="mb-10 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="font-display text-2xl md:text-3xl font-bold tracking-tight text-theme-primary">
+          {site.name}
+        </h1>
+        <p class="mt-1 text-sm text-theme-secondary">
+          {site.role} at <a href={site.social.employer} target="_blank" rel="noopener noreferrer" class="text-theme-accent hover:underline">{site.company}</a> · {site.location}
+        </p>
+        <p class="mt-2 text-sm text-theme-muted max-w-xl">
+          {site.summary}
+        </p>
+      </div>
+      <div class="flex items-center gap-3 shrink-0">
+        <a href={`mailto:${site.social.email}`} class="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border-primary)] text-theme-muted hover:text-theme-accent hover:border-[var(--color-accent-border)] transition-colors" aria-label="Email" title="Email">
+          <IconEmail />
+        </a>
+        <a href={site.social.GitHub} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border-primary)] text-theme-muted hover:text-theme-accent hover:border-[var(--color-accent-border)] transition-colors" aria-label="GitHub" title="GitHub">
+          <IconGitHub />
+        </a>
+        <a href={site.social.LinkedIn} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border-primary)] text-theme-muted hover:text-theme-accent hover:border-[var(--color-accent-border)] transition-colors" aria-label="LinkedIn" title="LinkedIn">
+          <IconLinkedIn />
+        </a>
+      </div>
     </div>
-  </section>
+  </div>
 
-  <section>
-    <div class="card-responsive">
-      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Skills</h2>
+  <section class="mb-10">
+    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
+      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
+      Skills
+    </h2>
+    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
       <SkillsGrid />
     </div>
   </section>
 
-  <section class="mt-6 sm:mt-8">
-    <div class="card-responsive">
-      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Experience</h2>
+  <section class="mb-10">
+    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
+      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
+      Experience
+    </h2>
+    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
       <ExperienceTimeline />
     </div>
   </section>
 
-  <section class="mt-6 sm:mt-8">
-    <div class="card-responsive">
-      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Education</h2>
+  <section class="mb-10">
+    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
+      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
+      Education
+    </h2>
+    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
       <EducationList />
     </div>
   </section>
 
-  <section class="mt-6 sm:mt-8">
-    <div class="card-responsive">
-      <h2 class="text-responsive-md font-semibold tracking-tight text-theme-primary mb-4">Certifications</h2>
+  <section class="mb-10">
+    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
+      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
+      Certifications
+    </h2>
+    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
       <CertificationList />
     </div>
   </section>

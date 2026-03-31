@@ -1,0 +1,219 @@
+---
+import site from "../config/site";
+
+const roles = [site.role, 'Infrastructure Engineer', 'Linux Enthusiast', 'Automation Builder'];
+const firstName = site.name.split(' ')[0];
+const lastName = site.name.split(' ').slice(1).join(' ');
+---
+
+<section id="hero" class="relative flex min-h-dvh items-end overflow-hidden pb-24 md:items-center md:pb-0">
+  <!-- Animated gradient mesh background -->
+  <div
+    class="absolute inset-0 opacity-50"
+    style="background: radial-gradient(ellipse at 20% 50%, rgba(201,148,43,0.3), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.2), transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(201,148,43,0.15), transparent 50%); background-size: 200% 200%; animation: gradient-shift 8s ease-in-out infinite;"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Grain texture -->
+  <div
+    class="absolute inset-0 opacity-[0.035] pointer-events-none"
+    style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27noise%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23noise)%27/%3E%3C/svg%3E'); background-repeat: repeat; background-size: 128px 128px;"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Vignette -->
+  <div
+    class="absolute inset-0 pointer-events-none"
+    style="background: radial-gradient(ellipse at center, transparent 40%, var(--color-bg-primary) 100%);"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Orbiting dots -->
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+    <div class="relative w-[600px] h-[600px] md:w-[800px] md:h-[800px]" style="animation: orbit-spin 30s linear infinite;">
+      <div class="absolute top-0 left-1/2 w-1.5 h-1.5 -translate-x-1/2 rounded-full bg-[var(--color-accent-primary)] opacity-30"></div>
+      <div class="absolute bottom-0 left-1/2 w-1 h-1 -translate-x-1/2 rounded-full bg-[var(--color-accent-primary)] opacity-20"></div>
+      <div class="absolute left-0 top-1/2 w-1 h-1 -translate-y-1/2 rounded-full bg-[var(--color-text-primary)] opacity-15"></div>
+    </div>
+  </div>
+
+  <div class="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-12">
+    <!-- Status badge -->
+    <div class="mb-8 flex items-center gap-3 animate-fade-in" style="animation-delay: 200ms;">
+      <span class="relative flex h-2.5 w-2.5">
+        <span class="absolute inline-flex h-full w-full rounded-full bg-[var(--color-employment-primary)] opacity-75 animate-ping"></span>
+        <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--color-employment-primary)]"></span>
+      </span>
+      <span class="text-sm text-theme-muted font-mono tracking-wide">
+        {site.employment.message[site.employment.status]}
+      </span>
+    </div>
+
+    <!-- Name -->
+    <h1 class="leading-[0.85] tracking-[-0.02em] md:tracking-[-0.04em] font-display font-[800] w-full overflow-visible" style="font-size: clamp(2.5rem, 11vw, 10rem);">
+      <span
+        class="block hero-name-shimmer"
+        data-scramble={firstName}
+        aria-label={firstName}
+      >{firstName}</span>
+      <span
+        class="block hero-name-shimmer"
+        data-scramble={lastName}
+        aria-label={lastName}
+      >{lastName}</span>
+    </h1>
+
+    <!-- Pulsing amber line -->
+    <div class="my-6 md:my-8 h-[2px] w-24 md:w-32 bg-[var(--color-accent-primary)] rounded-full" style="animation: pulse-line 3s ease-in-out infinite;" aria-hidden="true"></div>
+
+    <!-- Role rotator -->
+    <div class="h-8 overflow-hidden mb-6">
+      <span
+        class="inline-block font-mono text-sm md:text-base text-theme-accent tracking-wider uppercase transition-all duration-300 ease-out"
+        data-role-rotator
+        data-roles={JSON.stringify(roles)}
+      >
+        {roles[0]}
+      </span>
+    </div>
+
+    <!-- Summary -->
+    <p class="max-w-xl text-base md:text-lg text-theme-secondary leading-relaxed animate-fade-in" style="animation-delay: 1800ms;">
+      {site.summary}
+    </p>
+
+  </div>
+
+  <!-- Scroll indicator — page-centered, outside content container -->
+  <div class="absolute bottom-8 inset-x-0 mx-auto w-fit flex flex-col items-center gap-2 animate-fade-in" style="animation-delay: 2400ms;">
+    <span class="text-xs text-theme-muted font-mono tracking-widest uppercase">Scroll</span>
+    <div class="w-[1px] h-8 bg-gradient-to-b from-[var(--color-accent-primary)] to-transparent" style="animation: scroll-bob 2s ease-in-out infinite;"></div>
+  </div>
+
+  <!-- Bottom fade (smooth color transition) -->
+  <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--color-bg-primary)] to-transparent pointer-events-none" aria-hidden="true"></div>
+
+  <!-- Dot grid overlay — only visible at the bottom where the fade covers the main grid -->
+  <div
+    class="absolute inset-0 pointer-events-none"
+    style="background-image: radial-gradient(var(--color-accent-primary) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.15; -webkit-mask-image: linear-gradient(to bottom, transparent 85%, black 100%); mask-image: linear-gradient(to bottom, transparent 85%, black 100%);"
+    aria-hidden="true"
+  ></div>
+</section>
+
+<style>
+  .hero-name-shimmer {
+    background: linear-gradient(90deg, rgb(201 148 43), rgb(240 234 214), rgb(190 100 60), rgb(201 148 43));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding-right: 0.05em; /* Prevent last glyph clipping from background-clip */
+    animation: shimmer 6s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  @keyframes orbit-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes pulse-line {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @keyframes scroll-bob {
+    0%, 100% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(6px); opacity: 0.4; }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in {
+    opacity: 0;
+    animation: fade-in 0.8s ease-out forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-name-shimmer {
+      animation: none;
+    }
+    .animate-fade-in {
+      opacity: 1;
+      animation: none;
+    }
+    [style*="animation: gradient-shift"],
+    [style*="animation: orbit-spin"],
+    [style*="animation: pulse-line"],
+    [style*="animation: scroll-bob"] {
+      animation: none !important;
+    }
+  }
+</style>
+
+<script>
+  // Text scramble effect
+  document.querySelectorAll('[data-scramble]').forEach((el, i) => {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
+
+    const finalText = el.getAttribute('data-scramble');
+    if (!finalText) return;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*';
+    const delay = (i + 1) * 400;
+
+    setTimeout(() => {
+      const start = performance.now();
+      const duration = 1200;
+
+      function tick() {
+        const elapsed = performance.now() - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const resolved = Math.floor(progress * finalText.length);
+
+        let display = '';
+        for (let j = 0; j < finalText.length; j++) {
+          if (finalText[j] === ' ') { display += ' '; continue; }
+          display += j < resolved ? finalText[j] : chars[Math.floor(Math.random() * chars.length)];
+        }
+        el.textContent = display;
+        if (progress < 1) requestAnimationFrame(tick);
+        else el.textContent = finalText;
+      }
+      requestAnimationFrame(tick);
+    }, delay);
+  });
+
+  // Role rotator
+  const rotator = document.querySelector('[data-role-rotator]');
+  if (rotator && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const rolesAttr = rotator.getAttribute('data-roles');
+    if (rolesAttr) {
+      const roles = JSON.parse(rolesAttr);
+      let index = 0;
+      setInterval(() => {
+        index = (index + 1) % roles.length;
+        (rotator as HTMLElement).style.transform = 'translateY(100%)';
+        (rotator as HTMLElement).style.opacity = '0';
+        setTimeout(() => {
+          rotator.textContent = roles[index];
+          (rotator as HTMLElement).style.transform = 'translateY(0)';
+          (rotator as HTMLElement).style.opacity = '1';
+        }, 300);
+      }, 3200);
+    }
+  }
+</script>

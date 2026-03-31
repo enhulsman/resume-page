@@ -1,35 +1,48 @@
 ---
 title: "Portfolio Site"
-description: "Config-driven portfolio with MDX auto-discovery, multi-theme support, dynamic OG images, and server-side form handling on Cloudflare Workers"
-date: 2025-08-25
+description: "Dark-first portfolio with editorial typography, GSAP scroll animations, an interactive terminal easter egg, and config-driven MDX content on Cloudflare Workers"
+date: 2026-03-29
 github: "resume-page"
 preview: "https://hulsman.dev"
-tech: ["Astro", "TypeScript", "Tailwind CSS", "Cloudflare Workers", "MDX"]
+tech: ["Astro", "TypeScript", "Tailwind CSS", "GSAP", "Cloudflare Workers", "MDX"]
 layout: "../../layouts/ProjectLayout.astro"
 showcase: false
 ---
 
 # Portfolio Site
 
-A config-driven portfolio site where adding a new project means creating a single MDX file — no routing config, no component wiring, no rebuild of navigation. The file's frontmatter controls display options (showcase, tech badges, links), and Astro's content layer handles discovery and routing automatically.
+My personal site at [hulsman.dev](https://hulsman.dev). Warm amber accents, bold editorial typography, scroll-triggered animations, and a hidden interactive terminal in the About section.
 
-## Motivation
+## What I Wanted
 
-I wanted full control over theming, layout, and deployment rather than fitting content into a template's constraints. Building from scratch with Astro let me use MDX for interactive components, leverage partial hydration to ship zero JavaScript on static pages, and deploy to Cloudflare Workers for server-side form handling without a separate backend.
+Full control over theming, layout, and deployment — not a template with someone else's opinions baked in. The site should feel like it was made by someone who works with terminals and infrastructure all day but also cares about how things look.
 
-## Technical Highlights
+## Design
 
-- **Config-Driven Content**: A single `site.ts` file defines all personal info, skills, and social links. MDX project files are auto-discovered and routed without manual registration — frontmatter controls showcase visibility, tech tags, and external links
-- **Multi-Theme System**: Three themes (dark, light, gruvbox) implemented with CSS custom properties. Theme preference is persisted to `localStorage` and applied before first paint to prevent flash of unstyled content
-- **Edge Deployment**: Runs on Cloudflare Workers with server-side contact form handling via the Resend API — no third-party form service or client-side submission required
-- **Dynamic OG Images**: Open Graph images generated from SVG templates at build time, with meta tags driven from site configuration for consistent social previews
+Warm amber and gold tones run through the entire site as the accent color, paired with Syne for headings — a bold, geometric display font that gives the typography real personality — and Outfit for body text.
 
-## Key Decisions
+The site supports both light and dark themes, matching the visitor's system preference by default. The light theme uses warm creams and soft backgrounds; the dark theme pairs rich charcoal with amber accents. Switching is instant via CSS custom properties — no layout shift, no flash.
 
-**Why Astro?** Partial hydration means pages with no interactive elements ship zero client-side JavaScript. React islands handle the few interactive components (theme toggle, code demos) without hydrating the entire page.
+## The Terminal
 
-**Why Cloudflare Workers over static hosting?** The contact form needs server-side processing to call the Resend API with credentials that cannot be exposed client-side. Workers provide this without maintaining a separate API server, and edge deployment keeps response times low globally.
+The About section has a terminal card that plays a typing animation on scroll. What most visitors won't notice: after the animation finishes, the blinking cursor is real. You can type into it.
+
+It supports ~25 commands — `cat resume`, `ls projects/`, `neofetch`, `cowsay`, tab completion, command history with arrow keys, and a few easter eggs (`sudo hire-me`, `sl`, `matrix`). Navigation commands like `cd resume` actually route you to the page.
+
+Built in vanilla TypeScript (~1200 lines), no framework. Mobile works through a transparent input overlay with touch gesture detection to distinguish taps from scrolls. Getting the keyboard to reliably open on Android and iOS took more iteration than I'd like to admit.
+
+## Animations
+
+Everything uses CSS keyframes or GSAP ScrollTrigger — no framer-motion or React animation libraries. The hero name has a character-by-character decode effect (scramble → settle) and a continuously shifting gradient. Sections fade in via GSAP as you scroll. The skills section has an infinite marquee ticker.
+
+All animations respect `prefers-reduced-motion` and the site renders fully without JavaScript via Astro's static-first approach.
+
+## Content System
+
+Adding a project means creating one MDX file with frontmatter. Astro auto-discovers it, generates the route, and includes it in the gallery if `showcase: true`. Site-wide config (name, role, skills, social links) lives in a single `site.ts` file.
+
+The contact form runs on Cloudflare Workers with the Resend API — server-side processing without a separate backend.
 
 ## Outcome
 
-Serves as my primary professional presence at hulsman.dev. Static content ships as HTML with only the theme toggle hydrated — no full-page JavaScript bundles — and pushes to main deploy automatically to Cloudflare Workers.
+Serves as my primary professional presence at [hulsman.dev](https://hulsman.dev). The site is fully static where it can be, server-rendered where it needs to be (contact form), and deploys automatically to Cloudflare's edge network on push to main. Building it from scratch gave me hands-on experience with scroll-driven animation, accessible interactive components, cross-browser input handling, and edge deployment — skills that translate directly to the frontend and platform work I do professionally.

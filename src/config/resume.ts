@@ -65,25 +65,25 @@ export const skillCategories: SkillCategory[] = [
 
 export const experience: Experience[] = [
   {
-    role: 'Pega DevOps Engineer',
+    role: 'DevOps & Software Engineer',
     client: 'Major European bank',
     startDate: '2025',
-    summary: 'Lead developer of internal operations portal and cross-platform incident resolution.',
+    summary: 'Lead developer of internal operations portal, CI/CD pipelines, workflow automation, and cross-platform incident resolution on the Pega platform.',
     group: 'consulting',
   },
   {
-    role: 'Pega DevOps Engineer',
+    role: 'Platform & Software Engineer',
     client: 'Nordic financial regulator',
     startDate: '2024',
     endDate: '2025',
-    summary: 'Infrastructure modernization and custom portal development.',
+    summary: 'Set up Kubernetes infrastructure for Pega clusters and built a responsive web application for internal portal use.',
     group: 'consulting',
   },
   {
-    role: 'Pega DevOps Engineer',
+    role: 'DevOps Engineer',
     client: 'European staffing company',
     startDate: '2023',
-    summary: 'Technical operations, system automation, and monitoring tooling.',
+    summary: 'Linux system administration, Pega automation scripting, internal tooling, and monitoring infrastructure.',
     group: 'consulting',
   },
   {

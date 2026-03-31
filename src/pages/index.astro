@@ -1,24 +1,13 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Header from "../components/Header.astro";
-import ProjectCard from "../components/ProjectCard.astro";
+import HeroSection from "../components/HeroSection.astro";
+import AboutSection from "../components/AboutSection.astro";
+import ProjectsShowcase from "../components/ProjectsShowcase.astro";
+import ExperienceSection from "../components/ExperienceSection.astro";
+import SkillsSection from "../components/SkillsSection.astro";
+import ContactCTA from "../components/ContactCTA.astro";
+import InfoStrip from "../components/InfoStrip.astro";
 import site from "../config/site";
-
-// Dynamically import all project MDX files
-const projectFiles = await Astro.glob("./projects/*.mdx");
-
-// Filter and transform projects for showcase
-const projects = projectFiles
-  .filter((project) => project.frontmatter.showcase === true)
-  .map((project) => ({
-    title: project.frontmatter.title || "",
-    description: project.frontmatter.description || "",
-    href: project.url || "",
-    date: project.frontmatter.date,
-  }))
-  .sort(
-    (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime(),
-  );
 
 const homeDescription = `${site.summary} Based in ${site.location}, specializing in ${site.skills.languages.join(", ")} and ${site.skills.tools.join(", ")}.`;
 const homeKeywords = `${site.seo.keywords}, resume, portfolio, ${site.location}, ${site.company}`;
@@ -30,50 +19,39 @@ const homeKeywords = `${site.seo.keywords}, resume, portfolio, ${site.location},
   keywords={homeKeywords}
   ogTitle={`${site.name} — ${site.role} Portfolio & Resume`}
   ogDescription={homeDescription}
+  fullWidth
 >
-  <Header />
+  <HeroSection />
+  <InfoStrip />
+  <AboutSection />
+  <ProjectsShowcase />
+  <ExperienceSection />
+  <SkillsSection />
+  <ContactCTA />
 
-  <section class="mt-4 sm:mt-6">
-    <div class="card-responsive">
-      <h2 class="text-responsive-lg font-semibold tracking-tight text-theme-primary">About <span class="text-theme-accent">me</span></h2>
-      <div class="mt-3 text-theme-tertiary leading-relaxed text-responsive-base space-y-3">
-        {site.about.split('\n\n').map((paragraph: string) => (
-          <p>{paragraph}</p>
-        ))}
-      </div>
-    </div>
-  </section>
+  <!-- GSAP ScrollTrigger for scroll reveals -->
+  <script>
+    import { gsap } from 'gsap';
+    import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-  <section class="mt-6 sm:mt-8">
-    <div class="card-responsive">
-      <h3 class="text-responsive-md font-semibold tracking-tight text-theme-primary">Interests</h3>
-      <div class="mt-3 flex flex-wrap gap-2">
-        {site.interests.map((interest, i) => (
-          <span class={`interest-badge-${(i % 3) + 1}`}>{interest}</span>
-        ))}
-      </div>
-    </div>
-  </section>
+    gsap.registerPlugin(ScrollTrigger);
 
-  <section class="mt-8 sm:mt-10">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-      <h2 class="text-responsive-lg font-semibold text-theme-primary">Selected <span class="text-theme-accent">projects</span></h2>
-      <a href="/projects" class="text-responsive-sm text-theme-tertiary hover:text-theme-primary transition-colors duration-200 self-start sm:self-auto">See all →</a>
-    </div>
-    <div class="mt-4 grid-responsive-2 gap-4 sm:gap-5">
-      {projects.map(p => (
-        <ProjectCard title={p.title} description={p.description} href={p.href} />
-      ))}
-    </div>
-  </section>
-
-  <section class="mt-8 sm:mt-10">
-    <h2 class="text-responsive-lg font-semibold text-theme-primary">Contact</h2>
-    <p class="mt-2 text-responsive-base text-theme-tertiary">
-      I'm always interested in new opportunities and interesting projects. 
-      Check out my <a class="link-enhanced" href="/contact">contact page</a>,
-      drop me a line at <a class="link-enhanced" href={`mailto:${site.social.email}`}>{site.social.email}</a> 
-      or check out my work on <a class="link-enhanced" href={site.social.GitHub}>GitHub</a>.
-    </p>
-  </section>
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefersReduced) {
+      document.querySelectorAll('[data-reveal]').forEach((el) => {
+        gsap.set(el, { opacity: 0, y: 40 });
+        gsap.to(el, {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 85%',
+            once: true,
+          },
+        });
+      });
+    }
+  </script>
 </BaseLayout>

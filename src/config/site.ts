@@ -21,6 +21,8 @@ const site = {
     'Formula 1 🏁', 'Open Source', 'System Tinkering', 'All things Raspberry Pi'
   ],
 
+  careerStart: '2023-09-01',
+
   employment: {
     status: 'employed-open' as EmploymentStatus,
     message: {
@@ -51,6 +53,41 @@ const site = {
     to open source when I can. I'm also a big Formula 1 fan - there's something satisfying about both 
     well-tuned race cars and well-optimized code.
   `,
+
+  // Homepage project showcase cards
+  projects: [
+    {
+      title: 'Claude Sandbox',
+      description: 'Defense-in-depth sandbox isolating Claude Code with network namespaces, filesystem bind mounts, a domain-filtering egress proxy, and cross-platform Nix packaging.',
+      tech: ['Nix', 'Python', 'Bash', 'Linux'],
+      github: 'https://github.com/enhulsman/claude-sandbox',
+      link: '/projects/ClaudeSandbox',
+      featured: true,
+    },
+    {
+      title: 'pytaiga-mcp',
+      description: 'Merged PR adding security hardening, centralized error handling (14% code reduction), and the project\'s first test suite to a Taiga MCP server.',
+      tech: ['Python', 'MCP', 'pytest', 'CI/CD'],
+      github: 'https://github.com/talhaorak/pytaiga-mcp',
+      link: '/projects/PytaigaMcp',
+      featured: true,
+    },
+    {
+      title: 'Encrypted Chat TUI',
+      description: 'Self-hosted encrypted chat system built as a Cargo workspace with Tokio async networking, a custom typed JSON protocol, and Docker Compose deployment.',
+      tech: ['Rust', 'Tokio', 'PostgreSQL', 'Docker'],
+      github: 'https://github.com/enhulsman',
+      link: '/projects/EncryptedChatTUI',
+      featured: false,
+    },
+    {
+      title: 'Portfolio Site',
+      description: 'Config-driven portfolio with MDX auto-discovery, multi-theme support, dynamic OG images, and server-side form handling on Cloudflare Workers.',
+      tech: ['Astro', 'TypeScript', 'Tailwind', 'GSAP'],
+      link: '/projects/ResumePage',
+      featured: false,
+    },
+  ],
 
   // SEO and social media configuration
   seo: {

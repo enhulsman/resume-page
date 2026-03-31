@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { type ThemeName, themes, getCurrentTheme, setTheme } from '../lib/theme';
 
 export default function ThemeToggle() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeName>('light');
+  const [currentTheme, setCurrentTheme] = useState<ThemeName>('dark');
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {

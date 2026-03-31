@@ -1,0 +1,121 @@
+---
+import site from "../config/site";
+import IconEmail from "./icons/IconEmail.astro";
+import IconGitHub from "./icons/IconGitHub.astro";
+import IconLinkedIn from "./icons/IconLinkedIn.astro";
+
+const statusMessage = site.employment.message[site.employment.status];
+---
+
+<section id="contact" class="relative py-24 md:py-32">
+  <div class="mx-auto w-full max-w-7xl px-6 md:px-12">
+    <div class="max-w-2xl mx-auto text-center">
+      <!-- Section label -->
+      <div class="mb-8" data-reveal>
+        <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// Contact</span>
+        <h2 class="mt-2 font-display text-3xl md:text-5xl font-bold text-theme-primary tracking-tight">
+          Let's connect
+        </h2>
+      </div>
+
+      <!-- Message -->
+      <p class="text-base md:text-lg text-theme-secondary leading-relaxed mb-10" data-reveal>
+        {site.contactMessage}
+      </p>
+
+      <!-- CTA button with spinning border -->
+      <div class="mb-10" data-reveal>
+        <a
+          href="/contact"
+          class="cta-button-wrapper group relative inline-flex items-center justify-center"
+        >
+          <span class="cta-border-spin" aria-hidden="true"></span>
+          <span class="relative z-10 inline-flex items-center gap-2 rounded-xl bg-[var(--color-bg-primary)] px-8 py-4 font-display text-base md:text-lg font-bold text-theme-primary group-hover:text-theme-accent transition-colors duration-300">
+            <IconEmail class="w-5 h-5" />
+            Get in touch
+          </span>
+        </a>
+      </div>
+
+      <!-- Employment badge -->
+      <div class="mb-10 flex items-center justify-center gap-2" data-reveal>
+        <span class="relative flex h-2 w-2">
+          <span class="absolute inline-flex h-full w-full rounded-full bg-[var(--color-employment-primary)] opacity-75 animate-ping"></span>
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-[var(--color-employment-primary)]"></span>
+        </span>
+        <span class="font-mono text-xs text-theme-muted tracking-wider">{statusMessage}</span>
+      </div>
+
+      <!-- Social icons -->
+      <div class="flex items-center justify-center gap-6" data-reveal>
+        <!-- Email -->
+        <a
+          href={`mailto:${site.social.email}`}
+          class="text-theme-muted hover:text-theme-accent transition-colors duration-200"
+          aria-label="Email"
+        >
+          <IconEmail class="w-6 h-6" />
+        </a>
+        <a
+          href={site.social.GitHub}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-theme-muted hover:text-theme-accent transition-colors duration-200"
+          aria-label="GitHub"
+        >
+          <IconGitHub class="w-6 h-6" />
+        </a>
+        <a
+          href={site.social.LinkedIn}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-theme-muted hover:text-theme-accent transition-colors duration-200"
+          aria-label="LinkedIn"
+        >
+          <IconLinkedIn class="w-6 h-6" />
+        </a>
+      </div>
+
+      <!-- Website link -->
+      <p class="mt-8 font-mono text-xs text-theme-muted" data-reveal>
+        {site.social.website}
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta-button-wrapper {
+    padding: 2px;
+    border-radius: 0.875rem;
+    overflow: hidden;
+  }
+
+  .cta-border-spin {
+    position: absolute;
+    inset: -50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0%,
+      var(--color-accent-primary) 25%,
+      transparent 50%,
+      var(--color-accent-primary) 75%,
+      transparent 100%
+    );
+    animation: spin-border 4s linear infinite;
+  }
+
+  @keyframes spin-border {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cta-border-spin {
+      animation: none;
+      background: var(--color-accent-primary);
+      inset: 0;
+      opacity: 0.5;
+    }
+  }
+</style>
