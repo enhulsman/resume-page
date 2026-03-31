@@ -597,14 +597,18 @@ export class InteractiveTerminal {
 
     if (spaceIdx === -1) {
       const partial = input.toLowerCase();
-      if (partial === '') {
-        // Empty input: show directory listing like a real shell
-        const entries = this.fs.listDir(this.env.get('PWD'));
-        if ('error' in entries) return;
-        const visible = entries.filter((e) => !e.name.startsWith('.'));
-        if (visible.length === 0) return;
-        const names = visible.map((e) => e.isDir ? e.name + '/' : e.name);
-        this.applyCompletion(names, '', '');
+      if (partial === '' || partial.startsWith('.')) {
+        // Empty input or dot prefix: show directory listing like a real shell
+        const results = this.fs.completePath(input, this.env.get('PWD'), this.env.get('HOME'), false);
+        const basename = input.includes('/') ? input.slice(input.lastIndexOf('/') + 1) : input;
+        const filtered = basename.startsWith('.')
+          ? results
+          : results.filter((r) => {
+              const name = r.includes('/') ? r.slice(r.lastIndexOf('/') + 1).replace(/\/$/, '') : r.replace(/\/$/, '');
+              return !name.startsWith('.');
+            });
+        if (filtered.length === 0) return;
+        this.applyCompletion(filtered, input, '');
       } else {
         const cmdNames = new Set([...this.commands.keys(), ...this.aliases.keys()]);
         const matches = [...cmdNames].filter((k) => k.startsWith(partial));
