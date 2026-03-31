@@ -31,6 +31,10 @@ const { title, description, fullWidth = false, ...metadataProps } = Astro.props;
         if (theme !== "dark") document.documentElement.setAttribute("data-theme", theme);
       })();
     </script>
+
+    <script>
+      import '../scripts/smooth-scroll';
+    </script>
   </head>
   <body
     class="relative font-sans min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)]"

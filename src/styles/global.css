@@ -172,7 +172,15 @@ html {
   background: var(--color-bg-primary);
   transition: var(--transition-theme);
   /* Prevent layout shift from scrollbar appearance */
-  overflow-y: scroll;
+  overflow-y: scroll; /* overridden by lenis.css classes when active */
+}
+
+html.lenis {
+  overflow-y: scroll; /* Keep scrollbar visible to prevent layout shift */
+}
+
+html.lenis, html.lenis body {
+  height: auto;
 }
 
 body {
