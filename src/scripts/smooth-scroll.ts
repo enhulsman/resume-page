@@ -20,5 +20,15 @@ if (!prefersReduced) {
   });
   gsap.ticker.lagSmoothing(0);
 
+  // Pause Lenis during theme transitions to prevent scrollbar jitter
+  // from CSS transition layout shifts, then resize and restart
+  window.addEventListener('theme-changed', () => {
+    lenis.stop();
+    setTimeout(() => {
+      lenis.resize();
+      lenis.start();
+    }, 200); // Resume after 300ms CSS transition completes
+  });
+
   (window as any).__lenis = lenis;
 }

@@ -10,6 +10,15 @@ export default function ThemeToggle() {
   }, []);
 
   useEffect(() => {
+    const handleExternalChange = (e: Event) => {
+      const theme = (e as CustomEvent).detail.theme;
+      setCurrentTheme(theme);
+    };
+    window.addEventListener('theme-changed', handleExternalChange);
+    return () => window.removeEventListener('theme-changed', handleExternalChange);
+  }, []);
+
+  useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {

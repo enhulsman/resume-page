@@ -28,4 +28,5 @@ export function setTheme(theme: ThemeName): void {
   }
 
   localStorage.setItem('theme', theme);
+  window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme } }));
 }

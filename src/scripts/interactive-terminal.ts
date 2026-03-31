@@ -6,6 +6,7 @@ import { VirtualFS, SENTINEL_EXPERIENCE, SENTINEL_SKILLS, SENTINEL_EDUCATION, SE
 import { ShellEnv } from './shell-env';
 import { parseLine } from './shell-parser';
 import type { ParsedCommand } from './shell-parser';
+import { getCurrentTheme, setTheme } from '../lib/theme';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -643,6 +644,11 @@ export class InteractiveTerminal {
       return subcmds.filter((s) => s.startsWith(p));
     }
 
+    if (resolved === 'theme') {
+      const options = ['dark', 'light', 'toggle'];
+      return options.filter((x) => x.startsWith(p));
+    }
+
     // Default: filesystem completion (files + dirs)
     return this.fs.completePath(partial, this.env.get('PWD'), this.env.get('HOME'), false);
   }
@@ -1194,6 +1200,31 @@ export class InteractiveTerminal {
         return null;
       },
     });
+
+    this.commands.set('theme', {
+      description: 'Switch theme (dark/light/toggle)',
+      handler: (args: string[], ctx: CommandContext) => {
+        const current = getCurrentTheme();
+
+        if (args.length === 0) {
+          return `Current theme: ${current}`;
+        }
+
+        const target = args[0].toLowerCase();
+        if (target === 'toggle') {
+          const next = current === 'dark' ? 'light' : 'dark';
+          setTheme(next);
+          return `Switched to ${next} theme`;
+        }
+        if (target === 'dark' || target === 'light') {
+          if (target === current) return `Already using ${current} theme`;
+          setTheme(target as 'dark' | 'light');
+          return `Switched to ${target} theme`;
+        }
+
+        return { error: `Unknown theme: ${target}. Usage: theme [dark|light|toggle]` };
+      },
+    });
   }
 
   // ─── Sentinel resolver ────────────────────────────────────────────────────
@@ -1302,7 +1333,7 @@ export class InteractiveTerminal {
 
   private helpOutput(): { html: string } {
     const sections: [string, string[]][] = [
-      ['Navigation', ['help', 'clear', 'ls', 'cd', 'pwd', 'open']],
+      ['Navigation', ['help', 'clear', 'ls', 'cd', 'pwd', 'open', 'theme']],
       ['Environment', ['env', 'export', 'echo', 'alias', 'source']],
       ['Files', ['cat', 'head', 'tail', 'wc', 'sort', 'grep', 'tr', 'touch', 'mkdir']],
       ['Info', ['whoami', 'hostname', 'uptime', 'neofetch', 'date', 'uname']],
