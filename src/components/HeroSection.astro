@@ -38,16 +38,16 @@ const lastName = site.name.split(' ').slice(1).join(' ');
   </div>
 
   <div class="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-12">
-    <!-- Status badge -->
-    <div class="mb-8 flex items-center gap-3 animate-fade-in" style="animation-delay: 200ms;">
+    <!-- Status badge (clickable) -->
+    <a href="/contact" class="mb-8 inline-flex items-center gap-3 animate-fade-in group" style="animation-delay: 200ms;">
       <span class="relative flex h-2.5 w-2.5">
         <span class="absolute inline-flex h-full w-full rounded-full bg-[var(--color-employment-primary)] opacity-75 animate-ping"></span>
         <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--color-employment-primary)]"></span>
       </span>
-      <span class="text-sm text-theme-muted font-mono tracking-wide">
+      <span class="text-sm text-theme-muted font-mono tracking-wide group-hover:text-theme-accent transition-colors duration-200">
         {site.employment.message[site.employment.status]}
       </span>
-    </div>
+    </a>
 
     <!-- Name -->
     <h1 class="leading-[0.85] tracking-[-0.02em] md:tracking-[-0.04em] font-display font-[800] w-full overflow-visible" style="font-size: clamp(2.5rem, 11vw, 10rem);">
@@ -82,11 +82,12 @@ const lastName = site.name.split(' ').slice(1).join(' ');
       {site.summary}
     </p>
 
+
   </div>
 
   <!-- Scroll indicator — page-centered, outside content container -->
   <div class="absolute bottom-8 inset-x-0 mx-auto w-fit flex flex-col items-center gap-2 animate-fade-in" style="animation-delay: 2400ms;">
-    <span class="text-xs text-theme-muted font-mono tracking-widest uppercase">Scroll</span>
+    <span class="text-xs text-theme-muted font-mono tracking-widest uppercase">Explore my work</span>
     <div class="w-[1px] h-8 bg-gradient-to-b from-[var(--color-accent-primary)] to-transparent" style="animation: scroll-bob 2s ease-in-out infinite;"></div>
   </div>
 
