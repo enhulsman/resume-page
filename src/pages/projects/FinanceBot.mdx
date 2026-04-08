@@ -1,0 +1,40 @@
+---
+title: "Finance Bot"
+description: "Discord bot that ingests Dutch bank CSV exports, categorizes transactions with regex rules and Claude AI, and streams them to a Google Sheets budget"
+date: 2025-07-01
+tech: ["Python", "discord.py", "Claude", "Google Sheets API", "Docker"]
+layout: "../../layouts/ProjectLayout.astro"
+showcase: true
+dateLabel: "Running since"
+hook: "A Discord bot that turns raw bank CSV exports into a categorized monthly budget in Google Sheets — regex rules handle the predictable transactions, Claude handles the rest."
+---
+
+## What I Built
+
+The pipeline has three stages: ingestion, categorization, and export.
+
+**Ingestion** starts with a `/upload` slash command. The bot accepts a CSV file from ASN Bank's fixed-column export format (20+ columns), parses it into normalized transaction dicts, and applies pre-processing — mapping savings pot UUIDs to human-readable names and correcting known truncation errors in the bank's export. Each transaction gets a standardized shape: booking date, amount, credit/debit indicator, counterparty, and remittance information.
+
+**Categorization** runs in two tiers. First, ~40 regex rules match against counterparty names and remittance text — these cover recurring patterns like grocery stores, subscriptions, utilities, and charitable donations, and resolve instantly at 100% confidence. Transactions that don't match any rule go to Claude for AI categorization. The bot sends the unmatched transactions as a batch (chunked at 40 with automatic repair for partial failures), with the regex-matched transactions included as context so the AI can detect cross-transaction relationships — like multiple savings pot withdrawals that sum to match a large expense. Claude returns a category, Dutch-language description, and confidence score. Transactions above 75% confidence are auto-approved; anything below gets queued for manual review.
+
+A provider abstraction tries the Claude Code CLI first (free, uses an existing subscription) and falls back to the Anthropic API if the CLI isn't available — keeping per-transaction costs at zero for normal use.
+
+Before any transaction data reaches the AI, an anonymization layer strips IBANs, personal names, and reference numbers. Known merchants and businesses are preserved; personal counterparties become consistent placeholders (`Person_A`, `Person_B`) so the AI can still detect patterns across transactions from the same person.
+
+**Manual review** happens in Discord. Low-confidence transactions land in a private thread with an overview embed showing each transaction's AI suggestion and confidence percentage. Four buttons: accept all AI suggestions, accept all as uncategorized placeholders, start one-by-one review, or skip all. The one-by-one flow presents each transaction as an ephemeral message with pre-filled AI suggestions that can be accepted or overridden. Sessions persist to disk as JSON, so a review interrupted by closing Discord can be resumed with `/resume`.
+
+**Export** writes to Google Sheets via a service account. Expenses go to columns B–E, income to G–J — matching the existing budget spreadsheet layout. A background upload queue runs on a separate thread so Discord interactions never block on Google's API. After all transactions are uploaded, the bot auto-sorts both sections by date.
+
+## Key Decisions
+
+**Discord as the interface.** My wife and I manage a shared household budget. Discord is already open on both our phones, supports ephemeral messages so financial data doesn't persist in chat history, and the button/embed system provides a functional enough UI for transaction review without building a web frontend.
+
+**Two-tier categorization with an anonymization boundary.** Regex rules are fast, free, and deterministic — they handle most transactions that go to the same merchants every month. AI handles the long tail. The anonymization layer between them means the AI never sees personal names or account numbers, only merchant names and sanitized descriptions. This lets me use an external API without exposing household financial data.
+
+**Append-and-sort over clear-and-rewrite.** The bot appends each transaction individually via a background queue and sorts afterward, rather than clearing the sheet and rewriting everything. This preserves any manual edits made directly in the spreadsheet between bot runs.
+
+## Outcome
+
+The bot has processed every month of household transactions since July 2025. A typical month runs through the full pipeline — CSV upload, categorization, sheet export — in under two minutes. A daily reminder pings the household to upload the month's CSV. It runs in Docker on a home server.
+
+Source code is not public — the repository contains financial categorization rules and configuration tied to personal banking data.
