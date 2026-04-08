@@ -3,14 +3,13 @@ import BaseLayout from "./BaseLayout.astro";
 import site from "../config/site";
 
 const { frontmatter } = Astro.props;
-const { title, date, tech = [], preview = "", github = "", description = "" } = frontmatter;
+const { title, date, dateLabel = "", hook = "", tech = [], preview = "", github = "", description = "" } = frontmatter;
 const githubUrl = github.startsWith("http") ? github : `${site.social.GitHub}/${github}`;
 
 const formattedDate = date
   ? new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
-      day: "numeric",
     })
   : null;
 
@@ -40,7 +39,7 @@ const projectKeywords =
         </h1>
 
         {formattedDate && (
-          <p class="mt-2 text-sm text-theme-muted">{formattedDate}</p>
+          <p class="mt-2 text-sm text-theme-muted">{dateLabel} {formattedDate}</p>
         )}
 
         {preview && (
@@ -64,6 +63,12 @@ const projectKeywords =
             ))}
           </div>
         )}
+
+        {hook && (
+          <p class="mt-5 text-base leading-relaxed text-theme-secondary border-t border-[var(--color-border-primary)] pt-5">
+            {hook}
+          </p>
+        )}
       </div>
     </header>
 
@@ -79,6 +84,10 @@ const projectKeywords =
 <style>
   /* Enhanced prose styling to match homepage aesthetic */
   /* Use very high specificity to override Tailwind's base styles */
+  article .prose.custom-prose > div > :global(:first-child) {
+    margin-top: 0;
+  }
+
   article .prose.custom-prose h1,
   article .prose.custom-prose h2,
   article .prose.custom-prose h3,
