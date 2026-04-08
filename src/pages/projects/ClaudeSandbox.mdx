@@ -6,48 +6,56 @@ github: "claude-sandbox"
 tech: ["Nix", "Python", "Bash", "Linux", "bubblewrap", "macOS Seatbelt"]
 layout: "../../layouts/ProjectLayout.astro"
 showcase: true
+dateLabel: "Released"
+hook: "An external, OS-level sandbox that isolates Claude Code from the rest of the system — independent of Claude Code's own built-in protections, so a vulnerability in one doesn't compromise the other."
 ---
 
-# Claude Sandbox
-
-A cross-platform defense-in-depth sandbox for safely running [Claude Code](https://docs.anthropic.com/en/docs/claude-code) on NixOS, Raspberry Pi, Ubuntu, and macOS. It wraps Anthropic's Claude Code CLI with OS-native sandboxing to defend against prompt injection attacks and accidental credential exposure.
-
-## The Problem
-
-AI coding assistants run with broad system access. A single prompt injection or misconfigured tool call could leak credentials, exfiltrate code, or modify system files. Claude Code ships with a built-in sandbox, but a bug in that sandbox disables it — there is no independent safety net.
+<img src="/images/claude-sandbox-architecture.svg" alt="Claude Sandbox architecture diagram showing namespace boundary, filesystem isolation, socat bridge, and egress proxy" style="width:100%;max-width:640px;margin:1.5rem auto;display:block;" />
 
 ## What I Built
 
-Claude Sandbox implements **external isolation layers** independent of Claude Code's built-in protections. Even if internal safeguards fail, the outer boundary remains secure.
+~3,700 lines of shell and Python that wrap Claude Code in three independent security layers: kernel-level isolation, a filtering egress proxy, and post-session anomaly analysis. The entire stack has zero external runtime dependencies — the proxy is pure Python stdlib, the config parser is pure awk, and Nix handles reproducible builds across four platforms.
 
 ### Filesystem Isolation
 
-Precise bind mounts on Linux and Seatbelt kernel-level denial rules on macOS control exactly what the agent can read and write. Sensitive paths are blocked by default: `~/.ssh`, `~/.aws`, `~/.config/gcloud`, browser session data, keyrings, and credential stores. System directories are mounted read-only, and the agent's writes are confined to an explicit workspace directory.
+On Linux, bubblewrap bind mounts control exactly what the agent can see. Sensitive paths — `~/.ssh`, `~/.aws`, `~/.gnupg`, browser session data, git credential stores, 13+ categories total — are mounted to `/dev/null` or empty tmpfs. System directories are read-only. Claude Code's own `settings.json` is bind-mounted read-only inside the sandbox to prevent prompt injection from disabling deny rules. On macOS, dynamically generated Seatbelt profiles enforce equivalent restrictions at the kernel level.
+
+Writable paths go through a TOCTOU mitigation: each path is canonicalized before mounting, then re-resolved immediately before `exec`. If a symlink target changed between those two checks — indicating a possible race attack swapping a writable path to point at a blocked one — the sandbox aborts. A separate verification suite (308 lines) tests this against direct symlinks, path traversal, multi-hop chains, and circular symlinks.
 
 ### Network Isolation
 
-Linux uses empty network namespaces via bubblewrap so the sandboxed process has no network interfaces at all — only a `socat` bridge connects it to the egress proxy. macOS uses Seatbelt kernel profiles denying all non-localhost traffic. This prevents data exfiltration to attacker-controlled servers and blocks C2 (command-and-control) communication channels entirely.
+On Linux, bubblewrap's `--unshare-net` creates an empty network namespace — no interfaces, no DNS, no routes. The sandboxed process literally cannot make network connections. The only way out is a two-stage socat bridge: TCP inside the namespace → Unix domain socket through a bind mount → TCP on the host to the egress proxy. This indirection exists because Node.js (which Claude Code runs on) doesn't support Unix socket proxy URLs, so the bridge translates between what Node expects and what the namespace boundary requires.
+
+On macOS, Seatbelt kernel profiles deny all outbound traffic except `localhost:$PROXY_PORT`, and `HTTP_PROXY` environment variables route Claude Code through the proxy.
 
 ### Egress Proxy
 
-A Python-based HTTP CONNECT proxy acts as the single point of network egress. Every outbound request is checked against a domain allowlist defined in the profile configuration. The proxy logs all connection attempts (allowed and denied), detects DNS exfiltration patterns in hostnames, and assigns risk scores to suspicious requests. Only explicitly permitted domains — package registries, documentation sites, APIs — can be reached.
+A Python HTTP/CONNECT proxy (~300 lines, stdlib only) checks every outbound connection against a per-profile domain allowlist. Allowed domains automatically include subdomains. Every request — allowed and blocked — is logged with timestamps in JSON-lines format. After the session ends, a separate report generator analyzes the audit log for anomalies: repeated attempts at blocked domains, unusually high block ratios, direct IP access bypassing domain filtering, and port-scanning patterns. Each session gets a 0–100 risk score.
 
-### Security Profiles
+An honest limitation: HTTPS CONNECT tunneling means the proxy sees `CONNECT github.com:443` and then encrypted bytes. It can filter by domain but cannot inspect HTTP methods or payloads inside TLS.
 
-Built-in profiles provide different isolation levels for different trust contexts — a development session needs package registry access that a strict review session does not:
+### Profiles
 
-- **dev**: Full project access, writable workspace, package registry access
-- **strict**: Minimal system access, workspace-only writes, API-only networking
-- **nixos-admin / macos-admin**: System configuration readability for admin tasks
+Four built-in profiles in `config.toml` define isolation levels for different trust contexts:
 
-### Defense in Depth
+- **dev**: Writable workspace, ~45 allowed domains (npm, PyPI, crates.io, GitHub, docs)
+- **strict**: Workspace-only writes, API-only networking (3 domains)
+- **nixos-admin / macos-admin**: Read-only system config access for diagnosis tasks
 
-The architecture stacks 15+ independent security mechanisms across multiple layers: OS-level isolation (network namespaces, filesystem bind mounts, read-only system trees), credential protection (blocking sensitive paths, git credential stores, environment variable isolation), network control (egress proxy, domain allowlisting, DNS isolation, HTTP CONNECT tunneling, suspicious pattern detection), and operational security (audit logging, session isolation, workspace containment, profile-based access control). An attacker would need to simultaneously compromise multiple independent systems.
+### Platform Compatibility
 
-## Cross-Platform Architecture
+One `config.toml` drives both Linux (bubblewrap) and macOS (Seatbelt) sandboxes. Nix packages the tool for x86_64-linux, aarch64-linux, aarch64-darwin, and x86_64-darwin with locked dependencies.
 
-A single `config.toml` defines all profile rules — allowed paths, writable directories, permitted domains — and the sandbox translates them into platform-native isolation. On Linux, this drives bubblewrap bind mounts and network namespace configuration. On macOS, it generates Seatbelt sandbox profiles with equivalent restrictions. Nix handles cross-platform packaging and dependency management, producing reproducible builds with no manual dependency installation.
+On Raspberry Pi and Debian 12+ (usr-merged systems where `/bin` → `/usr/bin`), bubblewrap's `--ro-bind` follows the source symlink but creates a directory at the destination, breaking dynamic linking. The sandbox detects usr-merge at runtime and reconstructs the correct symlink layout inside the namespace. It also handles atomically-replaced config files (`~/.claude.json`) by copying rather than bind-mounting — bind mounts go stale when the host replaces the inode. And it cleans up bubblewrap's zero-byte mount-point stubs after each session to prevent git status pollution.
+
+## Key Decisions
+
+**Why bubblewrap over containers.** Docker/Podman add a full container runtime, image management, and a larger attack surface. Bubblewrap is a single static binary that creates unprivileged namespaces — exactly the isolation primitive needed, nothing more. It also works on systems (like a Raspberry Pi) where running a container daemon is impractical.
+
+**Why a separate egress proxy instead of firewall rules.** iptables/nftables operate at the IP level and can't filter by domain name without DNS interception. A userspace proxy sees the actual hostname in HTTP CONNECT requests and can allowlist at the domain level. It also produces a complete audit trail without packet capture.
+
+**Why TOCTOU verification instead of just blocking symlinks.** Rejecting all symlinks would break too many legitimate tools. The resolve-compare-resolve approach allows normal symlinks while catching the specific attack vector: a symlink that changes targets between validation and use.
 
 ## Outcome
 
-The sandbox is in daily use across NixOS (x86_64), Raspberry Pi (aarch64), and macOS environments. It provides a security boundary that is independent of the tool it wraps — the same architecture isolates any CLI agent, not just Claude Code.
+The sandbox runs daily on NixOS (x86_64) and Raspberry Pi (aarch64). It wraps Claude Code but the isolation architecture is agent-agnostic — the same profile-driven namespace, proxy, and audit pipeline works for any CLI tool that makes network requests.

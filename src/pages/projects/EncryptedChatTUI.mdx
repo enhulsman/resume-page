@@ -1,50 +1,34 @@
 ---
 title: "Encrypted Chat TUI"
-description: "Self-hosted encrypted chat system built as a Cargo workspace with Tokio async networking, a custom typed JSON protocol, and single-command Docker Compose deployment"
+description: "Self-hosted terminal chat system built as a Cargo workspace — Tokio async server, Cursive TUI client, and a shared typed ndjson protocol with compile-time checked PostgreSQL queries"
 date: 2025-08-26
-tech: ["Rust", "Tokio", "Cursive", "PostgreSQL", "Docker", "JSON Protocol"]
+tech: ["Rust", "Tokio", "Cursive", "PostgreSQL", "sqlx", "ndjson"]
 layout: "../../layouts/ProjectLayout.astro"
-showcase: true
+showcase: false
+dateLabel: "Started"
+hook: "A self-hosted terminal chat system in Rust with a typed JSON protocol and PostgreSQL persistence, built with one collaborator who contributed initial project scaffolding."
 ---
-
-# Encrypted Chat TUI
-
-A self-hosted terminal chat application built in Rust. No third-party servers, no data collection — encrypted conversations running on your own infrastructure.
-
-## Motivation
-
-This project started as a Computer Security course assignment and continued independently afterward. I wanted to apply cryptographic concepts to a real networked system rather than leave them as academic exercises. Building the full stack — protocol, server, client, deployment — from scratch gave me direct experience with the tradeoffs involved in encrypted communications and async systems programming.
 
 ## What I Built
 
-Designed a Cargo workspace with three crates: a Tokio-based async server, a Cursive terminal UI client, and a shared protocol library.
+The project is a Cargo workspace with three crates, originally started as a Computer Security course project and actively developed since.
 
-- **Server**: Tokio async runtime handling concurrent connections with per-connection request routing, backed by PostgreSQL for persistent storage of users, rooms, and message history
-- **Client**: Terminal UI built with Cursive, using a threaded reader/writer architecture for non-blocking I/O and request-response pairing via channels
-- **Protocol Migration**: Replaced the original fragile text-based protocol with typed newline-delimited JSON (ndjson) and a dedicated codec module — this added structured serialization, version negotiation, and made new message types trivial to add without breaking backward compatibility
-- **Deployment**: Dockerized the full stack so a single `docker compose up` launches server and database together
-
-## Technical Highlights
-
-- **Encrypted Credentials at Rest**: Login credentials and session tokens are encrypted in the database, preventing credential exposure even if the backing store is compromised
-- **Persistent Multiplexed Connections**: The client maintains a single long-lived connection with multiplexed request/response handling — connect once, interact continuously
-- **Typed Protocol with Version Negotiation**: The ndjson protocol carries type discriminators and version fields, allowing server and client to negotiate capabilities at connection time
-- **Single-Command Deployment**: Docker Compose orchestrates server and PostgreSQL with configured networking, volumes, and health checks
+- **Common protocol library**: Defines all request and response types as tagged enums with structured error codes, shared user types, and a newline-delimited JSON codec. The protocol is the single source of truth — adding a new message type is one enum variant, and the compiler enforces exhaustive handling on both sides.
+- **Async server**: Tokio-based server that spawns a task per TCP connection, decodes typed requests from the wire, dispatches them through a central handler, and responds with encoded JSON. PostgreSQL persistence via sqlx with compile-time checked queries that validate against the actual database schema at build time. Migrations run automatically on startup.
+- **Terminal client**: Cursive TUI with a persistent connection layer that bridges network I/O to the synchronous UI event loop. Two dedicated threads — one for writing requests, one for reading responses — communicate with the main thread through channels, keeping the interface responsive over a single long-lived TCP connection. The connection sends a clean disconnect on teardown and documents its ordering invariants explicitly.
 
 ## Key Decisions
 
-**Why Rust?** Memory safety guarantees and zero-cost abstractions suit a networked application handling concurrent users. Tokio's async runtime provides efficient I/O multiplexing without spawning a thread per connection.
+**ndjson over raw text.** The original protocol was string-matching on plaintext commands with manual slicing. Replacing it with typed newline-delimited JSON and a shared enum gave both sides structured serialization, typed error codes, and a compiler-enforced contract — adding a new request type won't compile until both server and client handle it.
 
-**Why ndjson over raw text?** The original text protocol was fragile and hard to extend. Typed ndjson provides structured serialization, version negotiation, and makes adding new message types trivial without breaking backward compatibility.
+**Threaded connection bridge.** Cursive runs a blocking event loop, so async network I/O inside it isn't straightforward. Rather than fight the framework, I split the TCP socket across two OS threads with channels, letting the UI send requests synchronously while network reads happen in the background.
 
-**Why a TUI?** Terminal interfaces are lightweight, work over SSH, and appeal to the same users who value self-hosting and privacy.
+**Compile-time checked SQL.** All database queries are validated against the Postgres schema at compile time via sqlx macros. A cached query metadata directory means CI and fresh clones build without a running database.
 
-**Why Docker Compose?** Bundles server, database, and networking into a single reproducible deployment. New users run one command instead of manually configuring PostgreSQL, setting up schemas, and managing ports.
+## Current State
 
-## Collaboration
+The server accepts concurrent connections and handles user lookup and listing with PostgreSQL-backed persistence. The registration flow works end-to-end through the UI and protocol — the database write is the next piece to wire in. The client provides a working TUI with a login flow, user listing, an in-app command terminal, and hacker-themed ranks that progress from "Newbie" through "Zero-Day Hunter" to "Root Admin" based on account age. The full request-response lifecycle works over persistent connections.
 
-Built as the primary developer, responsible for server architecture, database layer, authentication, and the v2 JSON protocol. A collaborator contributed initial project scaffolding. The project originated from a Computer Security course.
+## Planned
 
-## Outcome
-
-The project is a working end-to-end encrypted chat system. Building it deepened my understanding of async Rust, protocol design, and the practical challenges of encrypted communication systems — from key management to connection multiplexing to deployment orchestration.
+The protocol already defines message types for authentication, direct messaging, message history, and status updates — the wire format and error codes are in place, and the next phase wires them to real handlers. TLS will encrypt all connections, JWT-based authentication will handle sessions, and a server-push channel sketched into the client's connection architecture will enable real-time message delivery. The goal is a fully encrypted, self-hostable chat system with a single-command Docker Compose deployment for production.
