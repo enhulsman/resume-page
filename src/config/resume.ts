@@ -44,7 +44,7 @@ export const skillCategories: SkillCategory[] = [
   {
     label: 'Programming',
     badgeClass: 'primary',
-    items: ['Python', 'Java', 'React/TS/JS', 'Rust', 'C/C++', 'Bash'],
+    items: ['Python', 'Java', 'TypeScript', 'React', 'Bash', 'Rust', 'C/C++ (academic)'],
   },
   {
     label: 'Pega Platform',
@@ -54,12 +54,12 @@ export const skillCategories: SkillCategory[] = [
   {
     label: 'Methods & Practices',
     badgeClass: 'secondary',
-    items: ['Agile', 'Scrum', 'DevOps', 'CI/CD'],
+    items: ['Agile', 'Scrum', 'Kanban', 'DevOps', 'CI/CD', 'IaC', 'Monitoring'],
   },
   {
     label: 'Infrastructure & Tools',
     badgeClass: 'primary',
-    items: ['Linux', 'Docker', 'Kubernetes', 'Git', 'SQL', 'Postman'],
+    items: ['Linux', 'Docker', 'Kubernetes', 'Git', 'SQL', 'Prometheus', 'Grafana', 'Cloudflare'],
   },
 ];
 
@@ -68,7 +68,7 @@ export const experience: Experience[] = [
     role: 'DevOps & Software Engineer',
     client: 'Major European bank',
     startDate: '2025',
-    summary: 'Lead developer of internal operations portal, CI/CD pipelines, workflow automation, and cross-platform incident resolution on the Pega platform.',
+    summary: 'Sole developer of an enterprise self-service portal (React, Node.js, Oracle) used by ~20 tenants across 80+ Pega environments for pipeline management via Azure DevOps, operational audit logging, and ServiceNow ticketing. Manages incident resolution, platform upgrades, and infrastructure operations across multi-tenant DTAP environments using Ansible and AWX.',
     group: 'consulting',
   },
   {
@@ -76,21 +76,21 @@ export const experience: Experience[] = [
     client: 'Nordic financial regulator',
     startDate: '2024',
     endDate: '2025',
-    summary: 'Set up Kubernetes infrastructure for Pega clusters and built a responsive web application for internal portal use.',
+    summary: 'Replaced a legacy VM-based Pega setup — where only 2.5 of 150 planned case types had shipped in 4 years — with four fresh containerized DTAP environments on self-hosted Kubernetes (~18 pods each, including Kafka and SRS). Built and integrated a React portal backed by Pega\'s DX API with a custom OIDC flow, unifying internal and external access under strict network-separation policies and reducing the case type footprint from 150 to ~25.',
     group: 'consulting',
   },
   {
     role: 'DevOps Engineer',
     client: 'European staffing company',
     startDate: '2023',
-    summary: 'Linux system administration, Pega automation scripting, internal tooling, and monitoring infrastructure.',
+    summary: 'Solo-built a Java/Playwright automation that replaced a daily 10–15 minute manual health report across ~50 VMs, with CI/CD-triggered email delivery, Teams alerts, and an issue-annotation page. Created a Bash maintenance toolbox of scheduled scripts to prevent storage exhaustion and piped PDC notifications into Teams channels.',
     group: 'consulting',
   },
   {
     role: 'Pega Developer',
     client: 'Anamata',
     startDate: '2023',
-    summary: 'Internal practice development and platform certification.',
+    summary: 'Solo-built Anna — a conversational AI assistant (Python, Claude, MCP) that unifies a consultancy\'s internal tools behind a single chat interface, giving employees natural-language access to leave tracking, case management, seat booking, and company policy instead of switching between separate apps. Also earned Pega System Architect and Business Architect certifications during this period.',
     group: 'consulting',
   },
   {
@@ -98,7 +98,7 @@ export const experience: Experience[] = [
     client: 'MovingMedia BV',
     startDate: '2022',
     endDate: '2023',
-    summary: 'Technical support and internal automation tooling.',
+    summary: 'Replaced plaintext password storage in documentation with a Python-based OTP encryption system using XOR with random bitstrings on a secure remote VPS. Maintained client Synology NAS infrastructure and provided technical support.',
     group: 'prior',
   },
   {

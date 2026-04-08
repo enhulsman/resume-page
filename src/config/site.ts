@@ -8,11 +8,11 @@ const site = {
   location: 'Utrecht, NL 🇳🇱',
   quote: '"Proverbs 3:5-7 NIV"',
   quoteUrl: "https://www.bible.com/bible/111/PRO.3.NIV#:~:text=Trust%20in%20the,and%20shun%20evil.", 
-  summary: 'Linux-first Junior DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce friction — driven to continuously improve systems and skills.',
+  summary: 'Linux-first DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce friction — driven to continuously improve systems and skills.',
   contactMessage: `Send a message and I'll get back to you soon. Whether it's about work opportunities, requesting my full CV, open source projects, or just to chat about Formula 1!`,
 
   skills: {
-    languages: ['Python', 'Rust', 'Bash', 'Java', 'TS/JS'],
+    languages: ['Python', 'Bash', 'Java', 'TypeScript'],
     tools: ['Linux', 'Docker', 'K8s', 'Git', 'CI/CD'],
     frameworks: ['React', 'Pega', 'Astro'],
   },
@@ -49,7 +49,7 @@ const site = {
     don't break at 3 AM. I genuinely enjoy the challenge of building reliable infrastructure and creating 
     tools that make mine and other developers' lives easier.
 
-    In my free time, I work on personal projects like an encrypted chat TUI in Rust and contribute
+    In my free time, I work on personal projects like a self-hosted chat TUI in Rust and contribute
     to open source when I can. I'm also a big Formula 1 fan - there's something satisfying about both 
     well-tuned race cars and well-optimized code.
   `,
@@ -74,7 +74,7 @@ const site = {
     },
     {
       title: 'Encrypted Chat TUI',
-      description: 'Self-hosted encrypted chat system built as a Cargo workspace with Tokio async networking, a custom typed JSON protocol, and Docker Compose deployment.',
+      description: 'Self-hosted terminal chat system built as a Cargo workspace with Tokio async networking, a typed ndjson protocol, and compile-time checked PostgreSQL queries.',
       tech: ['Rust', 'Tokio', 'PostgreSQL', 'Docker'],
       github: 'https://github.com/enhulsman',
       link: '/projects/EncryptedChatTUI',
