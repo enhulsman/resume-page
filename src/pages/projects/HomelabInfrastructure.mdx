@@ -1,0 +1,34 @@
+---
+title: "Homelab Infrastructure"
+description: "Three-device hybrid cloud-home infrastructure with automated cross-device backups, Prometheus monitoring and alerting, recursive DNSSEC resolution, and Cloudflare Zero Trust networking"
+date: 2025-06-01
+tech: ["Docker", "Prometheus", "Grafana", "Tailscale", "Cloudflare", "Bash", "Linux"]
+layout: "../../layouts/ProjectLayout.astro"
+showcase: true
+dateLabel: "Operating since"
+hook: "A 3-device homelab spanning a Raspberry Pi 5, a Hetzner VPS, and a Raspberry Pi 2 — connected by a Tailscale mesh, fronted by Cloudflare tunnels, monitored by Prometheus, and backed up cross-device every night."
+---
+
+## What I Built
+
+**Compute and networking.** Three devices share the workload: a Raspberry Pi 5 runs the primary DNS, Docker containers, and acts as a Tailscale exit node. A Hetzner VPS hosts Prometheus, Grafana, and Taiga for project management. A Raspberry Pi 2 — 1GB of RAM, no Docker — serves as backup DNS and a metrics endpoint. All three sit on a Tailscale WireGuard mesh for encrypted inter-device communication. External access runs through Cloudflare Tunnel endpoints across two domains — one for infrastructure services, one for user-facing applications. Zero Trust policies gate sensitive endpoints. Every tunnel uses token-based remote config, so device replacement is trivial: install cloudflared, paste a token, done.
+
+**Monitoring and alerting.** Prometheus on the VPS scrapes six targets across all devices: node-exporter on each for system metrics, cadvisor on Pi5 and VPS for per-container resource usage, and an adguard-exporter for DNS statistics. Fourteen alert rules cover system health (CPU, memory, disk), container stability via restart detection, DNS processing time with per-device thresholds tuned to measured baselines — because a Pi 2 and a VPS shouldn't alert at the same latency — and backup freshness. Grafana delivers dashboards with Discord webhook notifications.
+
+**Backups.** Automated nightly backups run cross-device over Tailscale. The VPS dumps Taiga's PostgreSQL database and CouchDB, snapshots Grafana and Prometheus Docker volumes, and collects configs — all rsynced to Pi5. Pi5 backs up DNS configs, Docker compose files, credentials, and systemd units to the VPS. Each script tracks errors per-step so a single failure doesn't prevent the remaining backups from completing. Prometheus textfile exporter metrics feed BackupStale and BackupErrors alerts. AdGuard query logs and InfluxDB data are deliberately excluded from cross-device sync — a value assessment based on size versus recoverability, not an oversight.
+
+**DNS.** Dual-layer resolution on all three devices: AdGuard Home for ad and tracker blocking with query logging, forwarding recursive queries to Unbound for DNSSEC validation from root servers. Pi5 runs the primary instance with adguardhome-sync keeping all three in lockstep. If Pi5 goes down, clients fall back to Pi2 or VPS.
+
+## Key Decisions
+
+**Tailscale over traditional VPN.** Zero-config WireGuard mesh with direct peer-to-peer where possible and DERP relay for NAT traversal. No VPN server to maintain, no certificates to rotate, no port forwarding to configure.
+
+**Cloudflare Tunnels over port forwarding.** No public IPs exposed on home devices. Token-based remote config eliminates local config files — device replacement and disaster recovery become a one-minute operation rather than hours of reconfiguration.
+
+**Prometheus on VPS, applications on Pi5.** Monitoring independent of the application host means metrics survive Pi5 reboots. Alert rules keep firing even when the thing being monitored is down.
+
+**Documentation as infrastructure.** Every service, dependency, startup order, and recovery procedure is documented in an Astro Starlight site with architecture diagrams, a critical path analysis identifying single points of failure, and tested disaster recovery runbooks. Infrastructure that only exists in one person's head is a liability.
+
+## Outcome
+
+The infrastructure runs 24/7 and self-heals from process failures without manual intervention. Backups run nightly, monitored by Prometheus — a stale or failed backup triggers an alert within 26 hours. A complete device failure on either Pi5 or VPS is recoverable from the cross-device backup using documented runbooks. Active hardening continues, with Tailscale ACL lockdown and Tailnet Lock in progress.

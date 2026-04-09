@@ -87,6 +87,13 @@ const site = {
       link: '/projects/ResumePage',
       featured: false,
     },
+    {
+      title: 'Homelab Infrastructure',
+      description: 'Three-device hybrid cloud-home infrastructure with automated cross-device backups, Prometheus monitoring and alerting, recursive DNSSEC resolution, and Cloudflare Zero Trust networking',
+      tech: ['Docker', 'Prometheus', 'Grafana', 'Tailscale', 'Cloudflare', 'Bash', 'Linux'],
+      link: '/projects/HomelabInfrastructure',
+      featured: true,
+    },
   ],
 
   // SEO and social media configuration
