@@ -111,13 +111,22 @@ export function initHeroAnimations(): void {
   const tl = gsap.timeline({
     delay: 0.15,
     onComplete: () => {
-      // SplitType revert restores innerHTML; inline styles on first/last survive since they're on the element
+      // Revert SplitType first — restores direct text content so background-clip:text works
+      // (gradient can't show through inline-block child spans, only direct text)
       firstSplit.revert();
       lastSplit.revert();
-      first!.style.removeProperty('-webkit-text-fill-color');
-      last!.style.removeProperty('-webkit-text-fill-color');
       gsap.set([first, last], { opacity: 1, clearProps: 'filter,y' });
       initScrollExit();
+      // Cross-fade inline solid gold → transparent, revealing the shimmer gradient
+      gsap.to([first, last], {
+        webkitTextFillColor: accentTransparent,
+        duration: 0.5,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          first!.style.removeProperty('-webkit-text-fill-color');
+          last!.style.removeProperty('-webkit-text-fill-color');
+        },
+      });
     },
   });
 
@@ -146,22 +155,12 @@ export function initHeroAnimations(): void {
   // 4. Amber line
   if (line) tl.to(line, { scaleX: 1, duration: 0.4, ease: 'power2.inOut' }, '-=0.15');
 
-  // Label marks the post-line position so shimmer and UI tweens run in parallel without pushing each other
-  tl.addLabel('postLine');
-
-  // Shimmer cross-fade — parallel with role/summary/scroll; chars inherit fade dynamically via 'inherit'
-  tl.to([first, last], {
-    webkitTextFillColor: accentTransparent,
-    duration: 0.8,
-    ease: 'power2.inOut',
-  }, 'postLine');
-
   // 5. Role
-  if (role) tl.to(role, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 'postLine+=0.05');
+  if (role) tl.to(role, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, '-=0.1');
 
   // 6. Summary
-  if (summary) tl.to(summary, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 'postLine+=0.15');
+  if (summary) tl.to(summary, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.1');
 
   // 7. Scroll indicator
-  if (scroll) tl.to(scroll, { opacity: 1, duration: 0.3, ease: 'power2.out' }, 'postLine+=0.25');
+  if (scroll) tl.to(scroll, { opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.15');
 }
