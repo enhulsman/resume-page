@@ -44,7 +44,7 @@ function initScrollExit() {
   }, 0.1);
 
   // Aurora canvas — subtle zoom-blur (applied via CSS transform on the canvas/container element)
-  const auroraEl = document.querySelector('[data-hero-aurora-canvas]');
+  const auroraEl = document.querySelector('[data-hero-dots-canvas]');
   if (auroraEl) {
     exitTl.to(auroraEl, {
       scale: 1.05, filter: 'blur(4px)', duration: 1.0, ease: 'none',
@@ -71,9 +71,21 @@ export function initHeroAnimations(): void {
 
   if (!first || !last) return;
 
+  // Remove shimmer before SplitType splits — `-webkit-text-fill-color: transparent` on the parent
+  // makes chars inherit transparent fill but not the gradient, rendering them invisible during GSAP animation
+  first.classList.remove('hero-name-shimmer');
+  last.classList.remove('hero-name-shimmer');
+
   // Split name chars for animation
   const firstSplit = new SplitType(first, { types: 'chars' });
   const lastSplit  = new SplitType(last,  { types: 'chars' });
+
+  // Without shimmer class, chars inherit body text color — set explicit gold so entrance matches
+  // the shimmer gradient's dominant color for a seamless handoff
+  [...(firstSplit.chars || []), ...(lastSplit.chars || [])].forEach(c => {
+    (c as HTMLElement).style.color = 'var(--color-accent-primary)';
+    (c as HTMLElement).style.webkitTextFillColor = 'inherit';
+  });
 
   // Set initial states
   if (badge)   gsap.set(badge,   { opacity: 0, scale: 0.9 });
@@ -92,6 +104,9 @@ export function initHeroAnimations(): void {
       // Revert SplitType so background-clip:text shimmer works on restored text nodes
       firstSplit.revert();
       lastSplit.revert();
+      // Re-add shimmer class — revert() restores innerHTML only, not classList
+      first!.classList.add('hero-name-shimmer');
+      last!.classList.add('hero-name-shimmer');
       // Keep opacity: 1 inline to override .hero-initial-hidden CSS class
       gsap.set([first, last], { opacity: 1, clearProps: 'filter,y' });
 

@@ -8,7 +8,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 
 <section id="hero" class="relative flex min-h-dvh items-end overflow-hidden pb-24 md:items-center md:pb-0">
   <!-- Aurora WebGL background — JS replaces with canvas; CSS gradient mesh is the fallback -->
-  <div id="hero-aurora-container" class="absolute inset-0" aria-hidden="true">
+  <div id="hero-dots-container" class="absolute inset-0" aria-hidden="true">
     <div
       class="hero-gradient-fallback absolute inset-0 opacity-50"
       style="background: radial-gradient(ellipse at 20% 50%, rgba(212,160,48,0.3), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.2), transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(212,160,48,0.15), transparent 50%); background-size: 200% 200%; animation: gradient-shift 8s ease-in-out infinite;"
@@ -92,13 +92,6 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 
   <!-- Bottom fade (smooth color transition) -->
   <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--color-bg-primary)] to-transparent pointer-events-none" aria-hidden="true"></div>
-
-  <!-- Dot grid overlay — only visible at the bottom where the fade covers the main grid -->
-  <div
-    class="absolute inset-0 pointer-events-none"
-    style="background-image: radial-gradient(var(--color-accent-primary) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.15; -webkit-mask-image: linear-gradient(to bottom, transparent 85%, black 100%); mask-image: linear-gradient(to bottom, transparent 85%, black 100%);"
-    aria-hidden="true"
-  ></div>
 </section>
 
 <style>
@@ -155,19 +148,19 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 </style>
 
 <script>
-  import { initAurora } from '../scripts/hero-aurora';
+  import { initDotSwarm } from '../scripts/hero-dots';
   import { initHeroAnimations } from '../scripts/hero-animations';
 
-  // Aurora — starts immediately, independent of text animations
-  const auroraContainer = document.getElementById('hero-aurora-container');
-  if (auroraContainer) {
-    const aurora = initAurora(auroraContainer);
-    if (aurora) {
-      // Hide CSS gradient fallback since WebGL is active
-      const fallback = auroraContainer.querySelector('.hero-gradient-fallback') as HTMLElement | null;
+  // Dot swarm — starts immediately, independent of text animations
+  const dotsContainer = document.getElementById('hero-dots-container');
+  if (dotsContainer) {
+    const swarm = initDotSwarm(dotsContainer);
+    if (swarm) {
+      // Hide CSS gradient fallback since canvas is active
+      const fallback = dotsContainer.querySelector('.hero-gradient-fallback') as HTMLElement | null;
       if (fallback) fallback.style.display = 'none';
       // Tag canvas so scroll-exit can target it
-      aurora.canvas.setAttribute('data-hero-aurora-canvas', '');
+      swarm.canvas.setAttribute('data-hero-dots-canvas', '');
     }
   }
 
