@@ -34,7 +34,7 @@ const NOISE_SPEED     = 0.00035;
 const PULSE_ONSET  = 500;  // ms still before pulse begins
 const PULSE_RAMP   = 500;  // ms fade-in after onset
 const PULSE_SPEED  = 0.002;
-const PULSE_AMOUNT = 0.15; // ±15% strength variation
+const PULSE_AMOUNT = 0.25; // ±25% strength variation
 
 // ─── 2D gradient noise (2-octave Perlin) ──────────────────────────────────────
 const PERM = new Uint8Array(512);

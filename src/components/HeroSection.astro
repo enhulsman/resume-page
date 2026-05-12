@@ -17,7 +17,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
   <!-- Vignette -->
   <div
     class="absolute inset-0 pointer-events-none"
-    style="background: radial-gradient(ellipse at center, transparent 50%, var(--color-bg-primary) 100%);"
+    style="background: radial-gradient(ellipse at center, transparent 40%, var(--color-bg-primary) 100%);"
     aria-hidden="true"
   ></div>
 
@@ -115,6 +115,8 @@ const lastName = site.name.split(' ').slice(1).join(' ');
       radial-gradient(ellipse at 50% 80%, rgba(212,160,48,0.12), transparent 50%);
     background-size: 200% 200%;
     animation: gradient-shift 8s ease-in-out infinite;
+    mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 95%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 95%);
   }
 
   [data-theme="light"] .hero-glow-layer {

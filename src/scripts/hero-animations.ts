@@ -90,8 +90,8 @@ export function initHeroAnimations(): void {
   if (badge)  gsap.set(badge,  { opacity: 0, scale: 0.9 });
   if (glow)   gsap.set(glow,   { opacity: 0 });
   gsap.set([first, last], { opacity: 1 });
-  if (firstSplit.chars) gsap.set(firstSplit.chars, { opacity: 0, y: 40, filter: 'blur(12px)' });
-  if (lastSplit.chars)  gsap.set(lastSplit.chars,  { opacity: 0, y: 40, filter: 'blur(12px)' });
+  if (firstSplit.chars) gsap.set(firstSplit.chars, { opacity: 0, y: 40, filter: 'blur(16px)' });
+  if (lastSplit.chars)  gsap.set(lastSplit.chars,  { opacity: 0, y: 40, filter: 'blur(16px)' });
   if (line)    gsap.set(line,    { scaleX: 0, transformOrigin: 'left center' });
   if (role)    gsap.set(role,    { opacity: 0, y: 20 });
   if (summary) gsap.set(summary, { opacity: 0, y: 20 });
@@ -117,7 +117,7 @@ export function initHeroAnimations(): void {
   if (firstSplit.chars && firstSplit.chars.length > 0) {
     tl.to(firstSplit.chars, {
       opacity: 1, y: 0, filter: 'blur(0px)',
-      duration: 0.55, stagger: 0.038, ease: 'power3.out',
+      duration: 0.75, stagger: 0.038, ease: 'power3.out',
       onUpdate: scrambleOnUpdate(firstSplit.chars, firstFinal),
     }, '+=0.05');
   }
@@ -126,7 +126,7 @@ export function initHeroAnimations(): void {
   if (lastSplit.chars && lastSplit.chars.length > 0) {
     tl.to(lastSplit.chars, {
       opacity: 1, y: 0, filter: 'blur(0px)',
-      duration: 0.55, stagger: 0.038, ease: 'power3.out',
+      duration: 0.75, stagger: 0.038, ease: 'power3.out',
       onUpdate: scrambleOnUpdate(lastSplit.chars, lastFinal),
     }, '-=0.38');
   }
