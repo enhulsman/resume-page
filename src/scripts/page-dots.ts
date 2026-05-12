@@ -1,7 +1,6 @@
 // ─── Tunable physics constants ────────────────────────────────────────────────
-const SPRING_STIFFNESS = 0.018; // Overdamped — ~1.2s to trail across ultrawide
-const SPRING_DAMPING   = 0.96;
-const EASE_FACTOR      = 0.08;  // Dot lerp rate at 60fps — frame-rate corrected
+const CURSOR_EASE = 0.06;  // Cursor lerp rate at 60fps — ~1.2s trail across ultrawide
+const EASE_FACTOR = 0.08;  // Dot lerp rate at 60fps — frame-rate corrected
 
 // Hero zone (repel only)
 const HERO_REPEL_RADIUS   = 200;
@@ -106,11 +105,9 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
   }
   window.addEventListener('theme-changed', onThemeChange);
 
-  // Spring cursor — operates in page-space coords
+  // Cursor lerp — operates in page-space coords
   let lastClientX = 0, lastClientY = 0;
-  let targetCX = 0, targetCY = 0;
-  let currCX   = 0, currCY   = 0;
-  let springVX = 0, springVY = 0;
+  let currCX = 0, currCY = 0;
   let mouseHasEntered = false;
 
   function onMouseMove(e: MouseEvent) {
@@ -209,17 +206,11 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
     const vh = window.innerHeight;
     const t  = (now - startTime) * NOISE_SPEED;
 
-    // Recompute page-space spring target every frame — handles scroll-without-mousemove
+    // Lerp cursor toward mouse — handles scroll-without-mousemove; no velocity, no overshoot
     if (mouseHasEntered) {
-      targetCX = lastClientX;
-      targetCY = lastClientY + scrollY;
-      const ax = (targetCX - currCX) * SPRING_STIFFNESS;
-      const ay = (targetCY - currCY) * SPRING_STIFFNESS;
-      const dampDt = Math.pow(SPRING_DAMPING, dt);
-      springVX = (springVX + ax) * dampDt;
-      springVY = (springVY + ay) * dampDt;
-      currCX += springVX;
-      currCY += springVY;
+      const cursorEase = 1 - Math.pow(1 - CURSOR_EASE, dt);
+      currCX += (lastClientX              - currCX) * cursorEase;
+      currCY += (lastClientY + scrollY    - currCY) * cursorEase;
     }
 
     // Frame-rate-independent lerp factor
