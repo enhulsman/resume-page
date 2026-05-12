@@ -110,21 +110,21 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 
   .hero-glow-layer {
     background:
-      radial-gradient(ellipse at 20% 50%, rgba(212,160,48,0.25), transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.15), transparent 50%),
-      radial-gradient(ellipse at 50% 80%, rgba(212,160,48,0.12), transparent 50%);
-    background-size: 200% 200%;
-    animation: gradient-shift 8s ease-in-out infinite;
-    mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 95%);
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 95%);
+      radial-gradient(ellipse at 20% 50%, rgba(212,160,48,0.12), transparent 55%),
+      radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.07), transparent 55%),
+      radial-gradient(ellipse at 50% 80%, rgba(212,160,48,0.06), transparent 55%);
+    background-size: 160% 160%;
+    animation: gradient-shift 12s ease-in-out infinite;
+    mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 85%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 85%);
   }
 
   [data-theme="light"] .hero-glow-layer {
     background:
-      radial-gradient(ellipse at 20% 50%, rgba(184,136,42,0.15), transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(160,90,40,0.10), transparent 50%),
-      radial-gradient(ellipse at 50% 80%, rgba(184,136,42,0.08), transparent 50%);
-    background-size: 200% 200%;
+      radial-gradient(ellipse at 20% 50%, rgba(184,136,42,0.07), transparent 55%),
+      radial-gradient(ellipse at 80% 20%, rgba(160,90,40,0.05), transparent 55%),
+      radial-gradient(ellipse at 50% 80%, rgba(184,136,42,0.04), transparent 55%);
+    background-size: 160% 160%;
   }
 
   @keyframes gradient-shift {

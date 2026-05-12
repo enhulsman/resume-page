@@ -9,7 +9,7 @@ const HERO_REPEL_STRENGTH = 58;
 // Below-fold zone (gentle repel + flashlight glow)
 const FOLD_REPEL_RADIUS   = 150;
 const FOLD_REPEL_STRENGTH = 15;
-const FOLD_GLOW_RADIUS    = 150;
+const FOLD_GLOW_RADIUS    = 200;
 
 // Blend zone at hero/fold boundary
 const BLEND_RANGE = 200;
@@ -22,9 +22,9 @@ const CULL_BUFFER  = 200;
 const BASE_RADIUS = 1.0;
 const MAX_RADIUS  = 2.0;
 const GLOW_RADIUS = 4.0;
-const GLOW_DIST   = 200; // Hero zone glow radius
+const GLOW_DIST   = 260; // Hero zone glow radius
 const BASE_ALPHA  = 0.18;
-const GLOW_ALPHA  = 0.12; // Per-dot max alpha, modulated by proximity²
+const GLOW_ALPHA  = 0.12; // Per-dot max alpha, modulated by proximity^1.5
 
 // Noise
 const NOISE_AMPLITUDE = 4.0;
@@ -306,9 +306,9 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
     ctx.globalAlpha = BASE_ALPHA;
     ctx.fill(basePath);
 
-    // Glow dots — per-dot alpha scaled by proximity² for smooth spotlight falloff
+    // Glow dots — per-dot alpha scaled by proximity^1.5 (softer than quadratic, faraway dots ~2x brighter)
     for (const g of glowDots) {
-      ctx.globalAlpha = GLOW_ALPHA * g.proximity * g.proximity;
+      ctx.globalAlpha = GLOW_ALPHA * Math.pow(g.proximity, 1.5);
       ctx.beginPath();
       ctx.arc(g.x, g.y, GLOW_RADIUS, 0, Math.PI * 2);
       ctx.fill();

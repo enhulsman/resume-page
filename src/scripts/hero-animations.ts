@@ -59,9 +59,11 @@ export function initHeroAnimations(): void {
 
   if (!first || !last) return;
 
-  // Remove shimmer before SplitType — background-clip:text makes chars invisible during GSAP
-  first.classList.remove('hero-name-shimmer');
-  last.classList.remove('hero-name-shimmer');
+  // Override shimmer's transparent fill with resolved solid gold — gradient stays present but hidden.
+  // Shimmer class is never removed, so the gradient is active from the start.
+  const accentColor = getComputedStyle(first).getPropertyValue('--color-accent-primary').trim();
+  first.style.webkitTextFillColor = accentColor;
+  last.style.webkitTextFillColor  = accentColor;
 
   const firstSplit = new SplitType(first, { types: 'chars' });
   const lastSplit  = new SplitType(last,  { types: 'chars' });
@@ -100,12 +102,21 @@ export function initHeroAnimations(): void {
   const tl = gsap.timeline({
     delay: 0.15,
     onComplete: () => {
+      // SplitType revert restores innerHTML; inline styles on first/last survive since they're on the element
       firstSplit.revert();
       lastSplit.revert();
-      first!.classList.add('hero-name-shimmer');
-      last!.classList.add('hero-name-shimmer');
       gsap.set([first, last], { opacity: 1, clearProps: 'filter,y' });
-      initScrollExit();
+      initScrollExit(); // targets opacity/transform — no conflict with text-fill-color cross-fade
+      // Cross-fade: solid gold → transparent, gradually revealing shimmer gradient underneath
+      gsap.to([first, last], {
+        webkitTextFillColor: 'transparent',
+        duration: 0.8,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          first!.style.removeProperty('-webkit-text-fill-color');
+          last!.style.removeProperty('-webkit-text-fill-color');
+        },
+      });
     },
   });
 
