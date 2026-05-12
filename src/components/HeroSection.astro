@@ -10,7 +10,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
   <!-- Grain texture -->
   <div
     class="absolute inset-0 opacity-[0.035] pointer-events-none"
-    style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27noise%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23noise)%27/%3E%3C/svg%3E'); background-repeat: repeat; background-size: 128px 128px;"
+    style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27noise%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23noise)%27/%3E%3C/svg%3E'); background-repeat: repeat; background-size: 128px 128px; mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 95%); -webkit-mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 95%);"
     aria-hidden="true"
   ></div>
 
@@ -115,8 +115,8 @@ const lastName = site.name.split(' ').slice(1).join(' ');
       radial-gradient(ellipse at 50% 80%, rgba(212,160,48,0.06), transparent 55%);
     background-size: 160% 160%;
     animation: gradient-shift 12s ease-in-out infinite;
-    mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 85%);
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 85%);
+    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 75%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 75%);
   }
 
   [data-theme="light"] .hero-glow-layer {
