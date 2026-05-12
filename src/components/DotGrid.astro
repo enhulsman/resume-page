@@ -1,7 +1,8 @@
 ---
 // Dot grid + warmth background
-// Absolute positioned first child of body — paints behind content by DOM order
-// No z-index, no mask. Dots everywhere. Warmth hotspots below hero (or from top on non-hero pages).
+// Canvas mount (#page-dots-mount) and reduced-motion fallback are first.
+// Warmth hotspot wrapper (#dot-grid-wrapper) is second — paints on top of
+// the transparent canvas by DOM order. z-index 0 vs 1 makes this explicit.
 
 interface Props { hasHero?: boolean; }
 const { hasHero = false } = Astro.props;
@@ -15,10 +16,14 @@ const hotspots = [
 ];
 ---
 
-<div id="dot-grid-wrapper" class="pointer-events-none absolute inset-x-0 top-0 overflow-hidden" aria-hidden="true">
-  <div class="absolute inset-0 dot-grid-pattern"></div>
+<!-- Canvas mount point — z-index:0, canvas is appended here by page-dots.ts -->
+<div id="page-dots-mount" class="fixed inset-0 pointer-events-none" style="z-index:0;" aria-hidden="true"></div>
 
-  <!-- Warmth hotspots — individual positioned divs, no tiling -->
+<!-- Reduced-motion fallback — static CSS dot grid, hidden until JS confirms canvas is unavailable -->
+<div id="dot-grid-fallback" class="hidden fixed inset-0 pointer-events-none dot-grid-pattern" aria-hidden="true"></div>
+
+<!-- Warmth hotspot wrapper — z-index:1, paints above the transparent canvas -->
+<div id="dot-grid-wrapper" class="pointer-events-none absolute inset-x-0 top-0 overflow-hidden" style="z-index:1;" aria-hidden="true">
   <div class={`absolute left-0 right-0 bottom-0 ${hasHero ? 'warmth-below-hero' : 'warmth-full'}`}>
     {hotspots.map((spot) => (
       <div
@@ -38,6 +43,7 @@ const hotspots = [
 </div>
 
 <style is:global>
+  /* Used by the reduced-motion fallback only */
   .dot-grid-pattern {
     background-image: radial-gradient(var(--color-accent-primary) 1px, transparent 1px);
     background-size: 40px 40px;
@@ -91,18 +97,26 @@ const hotspots = [
   }
 </style>
 
+<!-- Height tracking for warmth hotspot wrapper (percentage positions need full page height) -->
 <script>
   const wrapper = document.getElementById('dot-grid-wrapper');
   if (wrapper) {
     function setGridHeight() {
       wrapper.style.height = document.documentElement.scrollHeight + 'px';
     }
-
     setGridHeight();
-
     const ro = new ResizeObserver(setGridHeight);
     ro.observe(document.documentElement);
-
     setTimeout(setGridHeight, 3000);
+  }
+</script>
+
+<script>
+  import { initPageDots } from '../scripts/page-dots';
+
+  const result = initPageDots();
+  if (!result) {
+    // Canvas unavailable (reduced-motion or no canvas support) — show CSS fallback
+    document.getElementById('dot-grid-fallback')?.classList.remove('hidden');
   }
 </script>

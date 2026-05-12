@@ -7,14 +7,6 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 ---
 
 <section id="hero" class="relative flex min-h-dvh items-end overflow-hidden pb-24 md:items-center md:pb-0">
-  <!-- Aurora WebGL background — JS replaces with canvas; CSS gradient mesh is the fallback -->
-  <div id="hero-dots-container" class="absolute inset-0" aria-hidden="true">
-    <div
-      class="hero-gradient-fallback absolute inset-0 opacity-50"
-      style="background: radial-gradient(ellipse at 20% 50%, rgba(212,160,48,0.3), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.2), transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(212,160,48,0.15), transparent 50%); background-size: 200% 200%; animation: gradient-shift 8s ease-in-out infinite;"
-    ></div>
-  </div>
-
   <!-- Grain texture -->
   <div
     class="absolute inset-0 opacity-[0.035] pointer-events-none"
@@ -148,21 +140,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 </style>
 
 <script>
-  import { initDotSwarm } from '../scripts/hero-dots';
   import { initHeroAnimations } from '../scripts/hero-animations';
-
-  // Dot swarm — starts immediately, independent of text animations
-  const dotsContainer = document.getElementById('hero-dots-container');
-  if (dotsContainer) {
-    const swarm = initDotSwarm(dotsContainer);
-    if (swarm) {
-      // Hide CSS gradient fallback since canvas is active
-      const fallback = dotsContainer.querySelector('.hero-gradient-fallback') as HTMLElement | null;
-      if (fallback) fallback.style.display = 'none';
-      // Tag canvas so scroll-exit can target it
-      swarm.canvas.setAttribute('data-hero-dots-canvas', '');
-    }
-  }
 
   // Cinematic entrance + scroll-linked exit
   initHeroAnimations();

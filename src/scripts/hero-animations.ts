@@ -43,13 +43,7 @@ function initScrollExit() {
     scale: 1.5, opacity: 0, duration: 0.8, ease: 'none',
   }, 0.1);
 
-  // Aurora canvas — subtle zoom-blur (applied via CSS transform on the canvas/container element)
-  const auroraEl = document.querySelector('[data-hero-dots-canvas]');
-  if (auroraEl) {
-    exitTl.to(auroraEl, {
-      scale: 1.05, filter: 'blur(4px)', duration: 1.0, ease: 'none',
-    }, 0);
-  }
+
 }
 
 export function initHeroAnimations(): void {
