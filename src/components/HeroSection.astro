@@ -17,9 +17,12 @@ const lastName = site.name.split(' ').slice(1).join(' ');
   <!-- Vignette -->
   <div
     class="absolute inset-0 pointer-events-none"
-    style="background: radial-gradient(ellipse at center, transparent 40%, var(--color-bg-primary) 100%);"
+    style="background: radial-gradient(ellipse at center, transparent 50%, var(--color-bg-primary) 100%);"
     aria-hidden="true"
   ></div>
+
+  <!-- Warm ambient glow behind name -->
+  <div class="absolute inset-0 pointer-events-none hero-initial-hidden hero-glow-layer" aria-hidden="true" data-hero-glow></div>
 
   <!-- Orbiting dots -->
   <div class="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true" data-hero-orbits>
@@ -82,8 +85,6 @@ const lastName = site.name.split(' ').slice(1).join(' ');
     <div class="w-[1px] h-8 bg-gradient-to-b from-[var(--color-accent-primary)] to-transparent" style="animation: scroll-bob 2s ease-in-out infinite;"></div>
   </div>
 
-  <!-- Bottom fade (smooth color transition) -->
-  <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--color-bg-primary)] to-transparent pointer-events-none" aria-hidden="true"></div>
 </section>
 
 <style>
@@ -105,6 +106,23 @@ const lastName = site.name.split(' ').slice(1).join(' ');
   @keyframes shimmer {
     0% { background-position: 0% 50%; }
     100% { background-position: 300% 50%; }
+  }
+
+  .hero-glow-layer {
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(212,160,48,0.25), transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.15), transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(212,160,48,0.12), transparent 50%);
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease-in-out infinite;
+  }
+
+  [data-theme="light"] .hero-glow-layer {
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(184,136,42,0.15), transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(160,90,40,0.10), transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(184,136,42,0.08), transparent 50%);
+    background-size: 200% 200%;
   }
 
   @keyframes gradient-shift {
@@ -130,6 +148,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
   @media (prefers-reduced-motion: reduce) {
     .hero-name-shimmer { animation: none; }
     .hero-initial-hidden { opacity: 1; }
+    .hero-glow-layer,
     [style*="animation: gradient-shift"],
     [style*="animation: orbit-spin"],
     [style*="animation: pulse-line"],

@@ -4,7 +4,7 @@ const isContactPage = Astro.url.pathname === '/contact';
 ---
 <footer class="mt-16 relative">
   <div class="mx-auto max-w-6xl px-4 sm:px-6">
-    <div class="h-px bg-gradient-to-r from-transparent via-[var(--color-accent-primary)] to-transparent opacity-30"></div>
+    <div class="h-px bg-gradient-to-r from-transparent via-[var(--color-accent-primary)] to-transparent opacity-30" data-footer-line></div>
   </div>
   <div class="mx-auto max-w-6xl px-4 sm:px-6 py-8 text-sm text-theme-muted">
     <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
@@ -33,3 +33,21 @@ const isContactPage = Astro.url.pathname === '/contact';
     </div>
   </div>
 </footer>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const footerLine = document.querySelector('[data-footer-line]');
+    if (footerLine) {
+      gsap.from(footerLine, {
+        scaleX: 0,
+        duration: 0.8,
+        ease: 'power2.inOut',
+        scrollTrigger: { trigger: footerLine, start: 'top 90%', once: true },
+      });
+    }
+  }
+</script>
