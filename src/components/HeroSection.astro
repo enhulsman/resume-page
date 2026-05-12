@@ -10,7 +10,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
   <!-- Animated gradient mesh background -->
   <div
     class="absolute inset-0 opacity-50"
-    style="background: radial-gradient(ellipse at 20% 50%, rgba(201,148,43,0.3), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.2), transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(201,148,43,0.15), transparent 50%); background-size: 200% 200%; animation: gradient-shift 8s ease-in-out infinite;"
+    style="background: radial-gradient(ellipse at 20% 50%, rgba(212,160,48,0.3), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.2), transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(212,160,48,0.15), transparent 50%); background-size: 200% 200%; animation: gradient-shift 8s ease-in-out infinite;"
     aria-hidden="true"
   ></div>
 
@@ -104,7 +104,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 
 <style>
   .hero-name-shimmer {
-    background: linear-gradient(90deg, rgb(201 148 43), rgb(240 234 214), rgb(190 100 60), rgb(201 148 43));
+    background: linear-gradient(90deg, var(--color-accent-primary), var(--color-text-primary), rgb(190 100 60), var(--color-accent-primary));
     background-size: 300% 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
