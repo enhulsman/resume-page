@@ -7,8 +7,8 @@ const HERO_REPEL_RADIUS   = 200;
 const HERO_REPEL_STRENGTH = 58;
 
 // Below-fold zone (gentle repel + flashlight glow)
-const FOLD_REPEL_RADIUS   = 150;
-const FOLD_REPEL_STRENGTH = 15;
+const FOLD_REPEL_RADIUS   = 180;
+const FOLD_REPEL_STRENGTH = 25;
 const FOLD_GLOW_RADIUS    = 200;
 
 // Blend zone at hero/fold boundary

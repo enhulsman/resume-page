@@ -60,10 +60,19 @@ export function initHeroAnimations(): void {
   if (!first || !last) return;
 
   // Override shimmer's transparent fill with resolved solid gold — gradient stays present but hidden.
-  // Shimmer class is never removed, so the gradient is active from the start.
-  const accentColor = getComputedStyle(first).getPropertyValue('--color-accent-primary').trim();
-  first.style.webkitTextFillColor = accentColor;
-  last.style.webkitTextFillColor  = accentColor;
+  // Canvas 2D fillStyle normalizes any CSS color format to #rrggbb (spec behavior, no DOM insertion).
+  const rawAccent = getComputedStyle(first).getPropertyValue('--color-accent-primary').trim();
+  const ctx2d = document.createElement('canvas').getContext('2d')!;
+  ctx2d.fillStyle = rawAccent;
+  const hex = ctx2d.fillStyle;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const accentRgb = `rgb(${r}, ${g}, ${b})`;
+  const accentTransparent = `rgba(${r}, ${g}, ${b}, 0)`;
+
+  first.style.webkitTextFillColor = accentRgb;
+  last.style.webkitTextFillColor  = accentRgb;
 
   const firstSplit = new SplitType(first, { types: 'chars' });
   const lastSplit  = new SplitType(last,  { types: 'chars' });
@@ -77,7 +86,7 @@ export function initHeroAnimations(): void {
     el.style.color = 'var(--color-accent-primary)';
     el.style.webkitTextFillColor = 'inherit';
     el.style.display = 'inline-block';
-    el.style.width = `${el.offsetWidth}px`;
+    el.style.width = `${el.getBoundingClientRect().width}px`;
   });
 
   // Set chars to random glyphs for scramble start
@@ -105,18 +114,10 @@ export function initHeroAnimations(): void {
       // SplitType revert restores innerHTML; inline styles on first/last survive since they're on the element
       firstSplit.revert();
       lastSplit.revert();
+      first!.style.removeProperty('-webkit-text-fill-color');
+      last!.style.removeProperty('-webkit-text-fill-color');
       gsap.set([first, last], { opacity: 1, clearProps: 'filter,y' });
-      initScrollExit(); // targets opacity/transform — no conflict with text-fill-color cross-fade
-      // Cross-fade: solid gold → transparent, gradually revealing shimmer gradient underneath
-      gsap.to([first, last], {
-        webkitTextFillColor: 'transparent',
-        duration: 0.8,
-        ease: 'power2.inOut',
-        onComplete: () => {
-          first!.style.removeProperty('-webkit-text-fill-color');
-          last!.style.removeProperty('-webkit-text-fill-color');
-        },
-      });
+      initScrollExit();
     },
   });
 
@@ -145,12 +146,22 @@ export function initHeroAnimations(): void {
   // 4. Amber line
   if (line) tl.to(line, { scaleX: 1, duration: 0.4, ease: 'power2.inOut' }, '-=0.15');
 
+  // Label marks the post-line position so shimmer and UI tweens run in parallel without pushing each other
+  tl.addLabel('postLine');
+
+  // Shimmer cross-fade — parallel with role/summary/scroll; chars inherit fade dynamically via 'inherit'
+  tl.to([first, last], {
+    webkitTextFillColor: accentTransparent,
+    duration: 0.8,
+    ease: 'power2.inOut',
+  }, 'postLine');
+
   // 5. Role
-  if (role) tl.to(role, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, '-=0.1');
+  if (role) tl.to(role, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 'postLine+=0.05');
 
   // 6. Summary
-  if (summary) tl.to(summary, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.1');
+  if (summary) tl.to(summary, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 'postLine+=0.15');
 
   // 7. Scroll indicator
-  if (scroll) tl.to(scroll, { opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.15');
+  if (scroll) tl.to(scroll, { opacity: 1, duration: 0.3, ease: 'power2.out' }, 'postLine+=0.25');
 }
