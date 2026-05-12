@@ -1,15 +1,15 @@
 // ─── Tunable physics constants ────────────────────────────────────────────────
-const CURSOR_EASE = 0.06;  // Cursor lerp rate at 60fps — ~1.2s trail across ultrawide
+const CURSOR_EASE = 0.07;  // Cursor lerp rate at 60fps — ~1.0s trail across ultrawide
 const EASE_FACTOR = 0.08;  // Dot lerp rate at 60fps — frame-rate corrected
 
 // Hero zone (repel only)
 const HERO_REPEL_RADIUS   = 200;
-const HERO_REPEL_STRENGTH = 25;  // px at center; squared falloff → ~6px at half-radius
+const HERO_REPEL_STRENGTH = 58;  // px at center; squared falloff → ~14px at half-radius
 
 // Below-fold zone (gentle repel + flashlight glow)
 const FOLD_REPEL_RADIUS   = 150;
-const FOLD_REPEL_STRENGTH = 6;
-const FOLD_GLOW_RADIUS    = 200;
+const FOLD_REPEL_STRENGTH = 15;
+const FOLD_GLOW_RADIUS    = 150;
 
 // Blend zone at hero/fold boundary
 const BLEND_RANGE = 200;
@@ -22,7 +22,7 @@ const CULL_BUFFER  = 200; // px above/below viewport to keep active
 const BASE_RADIUS = 1.0;
 const MAX_RADIUS  = 2.0;
 const GLOW_RADIUS = 4.0;
-const GLOW_DIST   = 150; // Hero zone glow radius
+const GLOW_DIST   = 200; // Hero zone glow radius
 const BASE_ALPHA  = 0.18;
 const GLOW_ALPHA  = 0.08;
 
