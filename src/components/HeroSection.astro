@@ -7,12 +7,13 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 ---
 
 <section id="hero" class="relative flex min-h-dvh items-end overflow-hidden pb-24 md:items-center md:pb-0">
-  <!-- Animated gradient mesh background -->
-  <div
-    class="absolute inset-0 opacity-50"
-    style="background: radial-gradient(ellipse at 20% 50%, rgba(212,160,48,0.3), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.2), transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(212,160,48,0.15), transparent 50%); background-size: 200% 200%; animation: gradient-shift 8s ease-in-out infinite;"
-    aria-hidden="true"
-  ></div>
+  <!-- Aurora WebGL background — JS replaces with canvas; CSS gradient mesh is the fallback -->
+  <div id="hero-aurora-container" class="absolute inset-0" aria-hidden="true">
+    <div
+      class="hero-gradient-fallback absolute inset-0 opacity-50"
+      style="background: radial-gradient(ellipse at 20% 50%, rgba(212,160,48,0.3), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(190,100,60,0.2), transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(212,160,48,0.15), transparent 50%); background-size: 200% 200%; animation: gradient-shift 8s ease-in-out infinite;"
+    ></div>
+  </div>
 
   <!-- Grain texture -->
   <div
@@ -29,7 +30,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
   ></div>
 
   <!-- Orbiting dots -->
-  <div class="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true" data-hero-orbits>
     <div class="relative w-[600px] h-[600px] md:w-[800px] md:h-[800px]" style="animation: orbit-spin 30s linear infinite;">
       <div class="absolute top-0 left-1/2 w-1.5 h-1.5 -translate-x-1/2 rounded-full bg-[var(--color-accent-primary)] opacity-30"></div>
       <div class="absolute bottom-0 left-1/2 w-1 h-1 -translate-x-1/2 rounded-full bg-[var(--color-accent-primary)] opacity-20"></div>
@@ -39,7 +40,7 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 
   <div class="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-12">
     <!-- Status badge (clickable) -->
-    <a href="/contact" class="mb-8 inline-flex items-center gap-3 animate-fade-in group" style="animation-delay: 200ms;">
+    <a href="/contact" class="mb-8 inline-flex items-center gap-3 hero-initial-hidden group" data-hero-badge>
       <span class="relative flex h-2.5 w-2.5">
         <span class="absolute inline-flex h-full w-full rounded-full bg-[var(--color-employment-primary)] opacity-75 animate-ping"></span>
         <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--color-employment-primary)]"></span>
@@ -52,22 +53,22 @@ const lastName = site.name.split(' ').slice(1).join(' ');
     <!-- Name -->
     <h1 class="leading-[0.85] tracking-[-0.02em] md:tracking-[-0.04em] font-display font-[800] w-full overflow-visible" style="font-size: clamp(2.5rem, 11vw, 10rem);">
       <span
-        class="block hero-name-shimmer"
-        data-scramble={firstName}
+        class="block hero-name-shimmer hero-initial-hidden"
         aria-label={firstName}
+        data-hero-firstname
       >{firstName}</span>
       <span
-        class="block hero-name-shimmer"
-        data-scramble={lastName}
+        class="block hero-name-shimmer hero-initial-hidden"
         aria-label={lastName}
+        data-hero-lastname
       >{lastName}</span>
     </h1>
 
     <!-- Pulsing amber line -->
-    <div class="my-6 md:my-8 h-[2px] w-24 md:w-32 bg-[var(--color-accent-primary)] rounded-full" style="animation: pulse-line 3s ease-in-out infinite;" aria-hidden="true"></div>
+    <div class="my-6 md:my-8 h-[2px] w-24 md:w-32 bg-[var(--color-accent-primary)] rounded-full hero-initial-hidden" style="animation: pulse-line 3s ease-in-out infinite;" aria-hidden="true" data-hero-line></div>
 
     <!-- Role rotator -->
-    <div class="h-8 overflow-hidden mb-6">
+    <div class="h-8 overflow-hidden mb-6 hero-initial-hidden" data-hero-role>
       <span
         class="inline-block font-mono text-sm md:text-base text-theme-accent tracking-wider uppercase transition-all duration-300 ease-out"
         data-role-rotator
@@ -78,15 +79,13 @@ const lastName = site.name.split(' ').slice(1).join(' ');
     </div>
 
     <!-- Summary -->
-    <p class="max-w-xl text-base md:text-lg text-theme-secondary leading-relaxed animate-fade-in" style="animation-delay: 1800ms;">
+    <p class="max-w-xl text-base md:text-lg text-theme-secondary leading-relaxed hero-initial-hidden" data-hero-summary>
       {site.summary}
     </p>
-
-
   </div>
 
   <!-- Scroll indicator — page-centered, outside content container -->
-  <div class="absolute bottom-8 inset-x-0 mx-auto w-fit flex flex-col items-center gap-2 animate-fade-in" style="animation-delay: 2400ms;">
+  <div class="absolute bottom-8 inset-x-0 mx-auto w-fit flex flex-col items-center gap-2 hero-initial-hidden" data-hero-scroll>
     <span class="text-xs text-theme-muted font-mono tracking-widest uppercase">Explore my work</span>
     <div class="w-[1px] h-8 bg-gradient-to-b from-[var(--color-accent-primary)] to-transparent" style="animation: scroll-bob 2s ease-in-out infinite;"></div>
   </div>
@@ -109,8 +108,13 @@ const lastName = site.name.split(' ').slice(1).join(' ');
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    padding-right: 0.05em; /* Prevent last glyph clipping from background-clip */
+    padding-right: 0.05em;
     animation: shimmer 6s linear infinite;
+  }
+
+  /* Initial hidden state — GSAP entrance reveals these; auto-visible for reduced-motion */
+  .hero-initial-hidden {
+    opacity: 0;
   }
 
   @keyframes shimmer {
@@ -138,24 +142,9 @@ const lastName = site.name.split(' ').slice(1).join(' ');
     50% { transform: translateY(6px); opacity: 0.4; }
   }
 
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .animate-fade-in {
-    opacity: 0;
-    animation: fade-in 0.8s ease-out forwards;
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .hero-name-shimmer {
-      animation: none;
-    }
-    .animate-fade-in {
-      opacity: 1;
-      animation: none;
-    }
+    .hero-name-shimmer { animation: none; }
+    .hero-initial-hidden { opacity: 1; }
     [style*="animation: gradient-shift"],
     [style*="animation: orbit-spin"],
     [style*="animation: pulse-line"],
@@ -166,44 +155,31 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 </style>
 
 <script>
-  // Text scramble effect
-  document.querySelectorAll('[data-scramble]').forEach((el, i) => {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) return;
+  import { initAurora } from '../scripts/hero-aurora';
+  import { initHeroAnimations } from '../scripts/hero-animations';
 
-    const finalText = el.getAttribute('data-scramble');
-    if (!finalText) return;
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*';
-    const delay = (i + 1) * 400;
+  // Aurora — starts immediately, independent of text animations
+  const auroraContainer = document.getElementById('hero-aurora-container');
+  if (auroraContainer) {
+    const aurora = initAurora(auroraContainer);
+    if (aurora) {
+      // Hide CSS gradient fallback since WebGL is active
+      const fallback = auroraContainer.querySelector('.hero-gradient-fallback') as HTMLElement | null;
+      if (fallback) fallback.style.display = 'none';
+      // Tag canvas so scroll-exit can target it
+      aurora.canvas.setAttribute('data-hero-aurora-canvas', '');
+    }
+  }
 
-    setTimeout(() => {
-      const start = performance.now();
-      const duration = 1200;
+  // Cinematic entrance + scroll-linked exit
+  initHeroAnimations();
 
-      function tick() {
-        const elapsed = performance.now() - start;
-        const progress = Math.min(elapsed / duration, 1);
-        const resolved = Math.floor(progress * finalText.length);
-
-        let display = '';
-        for (let j = 0; j < finalText.length; j++) {
-          if (finalText[j] === ' ') { display += ' '; continue; }
-          display += j < resolved ? finalText[j] : chars[Math.floor(Math.random() * chars.length)];
-        }
-        el.textContent = display;
-        if (progress < 1) requestAnimationFrame(tick);
-        else el.textContent = finalText;
-      }
-      requestAnimationFrame(tick);
-    }, delay);
-  });
-
-  // Role rotator
+  // Role rotator (independent interval, stays as-is)
   const rotator = document.querySelector('[data-role-rotator]');
   if (rotator && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const rolesAttr = rotator.getAttribute('data-roles');
     if (rolesAttr) {
-      const roles = JSON.parse(rolesAttr);
+      const roles = JSON.parse(rolesAttr) as string[];
       let index = 0;
       setInterval(() => {
         index = (index + 1) % roles.length;
