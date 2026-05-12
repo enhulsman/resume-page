@@ -1,18 +1,18 @@
 // ─── Tunable physics constants ────────────────────────────────────────────────
 const SPRING_STIFFNESS = 0.018; // Overdamped — ~1.2s to trail across ultrawide
 const SPRING_DAMPING   = 0.96;
-const DOT_DAMPING      = 0.88;
-const DOT_RETURN_SPEED = 0.10;
+const DOT_DAMPING      = 0.93;  // Higher friction — no overshoot/yoyo
+const DOT_RETURN_SPEED = 0.045; // Gentler spring — slow smooth return
 
 // Hero zone (attract inner + repel outer)
 const HERO_ATTRACT_RADIUS   = 120;
 const HERO_REPEL_RADIUS     = 250;
-const HERO_ATTRACT_STRENGTH = 18;
-const HERO_REPEL_STRENGTH   = 10;
+const HERO_ATTRACT_STRENGTH = 8;   // Smooth pull, not yank
+const HERO_REPEL_STRENGTH   = 5;   // Soft repel ring
 
 // Below-fold zone (gentle repel + flashlight glow)
 const FOLD_REPEL_RADIUS   = 180;
-const FOLD_REPEL_STRENGTH = 1.8;
+const FOLD_REPEL_STRENGTH = 1.0;
 const FOLD_GLOW_RADIUS    = 200;
 
 // Blend zone at hero/fold boundary
@@ -23,11 +23,11 @@ const GRID_SPACING = 40;
 const CULL_BUFFER  = 200; // px above/below viewport to keep active
 
 // Visual
-const BASE_RADIUS = 0.5;
-const MAX_RADIUS  = 1.5;
-const GLOW_RADIUS = 3.0;
+const BASE_RADIUS = 1.0;  // Match old CSS grid's 1px radius
+const MAX_RADIUS  = 2.0;
+const GLOW_RADIUS = 4.0;
 const GLOW_DIST   = 150; // Hero zone glow radius
-const BASE_ALPHA  = 0.15;
+const BASE_ALPHA  = 0.18; // Slightly above CSS 0.15 for canvas AA compensation
 const GLOW_ALPHA  = 0.08;
 
 // Noise
