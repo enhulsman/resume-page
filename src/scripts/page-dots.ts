@@ -1,3 +1,6 @@
+// Fold interaction: glow-only below hero (no repel, just spotlight)
+const FOLD_GLOW_ONLY = true;
+
 // ─── Tunable physics constants ────────────────────────────────────────────────
 const CURSOR_EASE = 0.07;  // Cursor lerp rate at 60fps — ~1.0s trail across ultrawide
 const EASE_FACTOR = 0.08;  // Dot lerp rate at 60fps — frame-rate corrected
@@ -30,9 +33,7 @@ const GLOW_ALPHA  = 0.12; // Per-dot max alpha, modulated by proximity^1.5
 const NOISE_AMPLITUDE = 4.0;
 const NOISE_SPEED     = 0.00035;
 
-// Ambient cursor pulse
-const PULSE_ONSET  = 500;  // ms still before pulse begins
-const PULSE_RAMP   = 500;  // ms fade-in after onset
+// Ambient cursor pulse (always active)
 const PULSE_SPEED  = 0.002;
 const PULSE_AMOUNT = 0.25; // ±25% strength variation
 
@@ -116,7 +117,6 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
   let prevClientX = 0, prevClientY = 0;
   let currCX = 0, currCY = 0;
   let mouseHasEntered = false;
-  let cursorStillTime = 0;
 
   function onMouseMove(e: MouseEvent) {
     lastClientX = e.clientX;
@@ -132,7 +132,6 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
   }
   function onMouseLeave() {
     mouseHasEntered = false;
-    cursorStillTime = 0;
   }
   document.addEventListener('mousemove', onMouseMove, { passive: true });
   document.addEventListener('mouseleave', onMouseLeave);
@@ -213,25 +212,15 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
     const vh = window.innerHeight;
     const t  = (now - startTime) * NOISE_SPEED;
 
-    // Cursor lerp + stillness tracking
+    // Cursor lerp
     if (mouseHasEntered) {
       const cursorEase = 1 - Math.pow(1 - CURSOR_EASE, dt);
       currCX += (lastClientX           - currCX) * cursorEase;
       currCY += (lastClientY + scrollY - currCY) * cursorEase;
-
-      const moved = Math.abs(lastClientX - prevClientX) > 0.5 || Math.abs(lastClientY - prevClientY) > 0.5;
-      cursorStillTime = moved ? 0 : cursorStillTime + rawDelta;
-      prevClientX = lastClientX;
-      prevClientY = lastClientY;
     }
 
-    // Ambient pulse — ramps in after cursor is still for PULSE_ONSET ms
-    const pulseRamp = cursorStillTime > PULSE_ONSET
-      ? Math.min((cursorStillTime - PULSE_ONSET) / PULSE_RAMP, 1)
-      : 0;
-    const pulseMod = pulseRamp > 0
-      ? 1 + Math.sin((now - startTime) * PULSE_SPEED) * PULSE_AMOUNT * pulseRamp
-      : 1;
+    // Ambient pulse — always active
+    const pulseMod = 1 + Math.sin((now - startTime) * PULSE_SPEED) * PULSE_AMOUNT;
 
     const ease = 1 - Math.pow(1 - EASE_FACTOR, dt);
 
@@ -260,8 +249,11 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
                        : dot.hy >= heroHeight ? 0
                        : 1 - (dot.hy - blendStart) / BLEND_RANGE;
 
+      // Below fold: glow-only (no repel). Repel strength blends to zero outside hero zone.
+      const foldRepelMul = FOLD_GLOW_ONLY ? heroBlend : 1;
+
       const effectiveRadius   = heroBlend * HERO_REPEL_RADIUS   + (1 - heroBlend) * FOLD_REPEL_RADIUS;
-      const effectiveStrength = (heroBlend * HERO_REPEL_STRENGTH + (1 - heroBlend) * FOLD_REPEL_STRENGTH) * pulseMod;
+      const effectiveStrength = (heroBlend * HERO_REPEL_STRENGTH + (1 - heroBlend) * FOLD_REPEL_STRENGTH) * pulseMod * foldRepelMul;
 
       let dispX = 0, dispY = 0;
       let dist  = Infinity;
@@ -271,7 +263,7 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
         const dy = dot.hy - currCY;
         dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist > 0 && dist < effectiveRadius) {
+        if (dist > 0 && dist < effectiveRadius && effectiveStrength > 0) {
           const t2   = 1 - dist / effectiveRadius;
           const str  = t2 * t2 * effectiveStrength;
           const norm = 1 / dist;
