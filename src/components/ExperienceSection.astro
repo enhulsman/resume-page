@@ -25,12 +25,12 @@ function formatDate(entry: typeof experience[0]): string {
     <!-- Timeline -->
     <div class="relative">
       <!-- Vertical line -->
-      <div class="absolute left-4 md:left-8 top-0 bottom-0 w-px bg-[var(--color-border-primary)]" aria-hidden="true"></div>
+      <div class="absolute left-4 md:left-8 top-0 bottom-0 w-px bg-[var(--color-border-primary)]" aria-hidden="true" data-timeline-line></div>
 
       {highlights.map((entry, i) => (
         <div class="relative mb-8 md:mb-12 pl-12 md:pl-20" data-reveal>
           <!-- Timeline dot -->
-          <div class="absolute left-4 md:left-8 top-2 w-2.5 h-2.5 rounded-full border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-primary)] -translate-x-1/2 z-10" aria-hidden="true"></div>
+          <div class="absolute left-4 md:left-8 top-2 w-2.5 h-2.5 rounded-full border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-primary)] -translate-x-1/2 z-10" aria-hidden="true" data-timeline-dot></div>
 
           <!-- Card -->
           <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6 hover:border-[var(--color-accent-border)] transition-colors">
@@ -57,3 +57,32 @@ function formatDate(entry: typeof experience[0]): string {
     </div>
   </div>
 </section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const timelineLine = document.querySelector('[data-timeline-line]');
+    if (timelineLine) {
+      gsap.set(timelineLine, { scaleY: 0, transformOrigin: 'top center' });
+      ScrollTrigger.create({
+        trigger: timelineLine,
+        start: 'top 80%',
+        end: 'bottom 20%',
+        scrub: true,
+        onUpdate: (self) => gsap.set(timelineLine, { scaleY: self.progress }),
+      });
+    }
+
+    document.querySelectorAll('[data-timeline-dot]').forEach((dot) => {
+      gsap.from(dot, {
+        scale: 0,
+        duration: 0.4,
+        ease: 'back.out(2)',
+        scrollTrigger: { trigger: dot, start: 'top 85%', once: true },
+      });
+    });
+  }
+</script>

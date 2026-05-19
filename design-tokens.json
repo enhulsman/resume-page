@@ -1,0 +1,314 @@
+{
+  "meta": {
+    "schemaVersion": "1",
+    "project": "resume-page",
+    "created": "2026-05-12",
+    "updated": "2026-05-12",
+    "aesthetic": "neon-dashboard-evolved",
+    "extends": null
+  },
+  "colors": {
+    "background": "#141018",
+    "surface": "#1e1b28",
+    "surfaceRaised": "#2a2636",
+    "text": "#f0ead6",
+    "textMuted": "#9a9488",
+    "primary": "#d4a030",
+    "primaryHover": "#e2b445",
+    "primaryLight": "#eac870",
+    "teal": "#2dd4a8",
+    "tealAlpha": "rgba(45, 212, 168, 0.15)",
+    "tealBorder": "rgba(45, 212, 168, 0.30)",
+    "glass": "rgba(20, 16, 24, 0.7)",
+    "textSecondary": "#d2ccba",
+    "textTertiary": "#aaa496",
+    "elevated": "rgba(30, 27, 40, 0.8)",
+    "accent": "#d4a030",
+    "border": "rgba(255, 255, 255, 0.10)",
+    "borderSubtle": "rgba(255, 255, 255, 0.06)",
+    "semantic": {
+      "success": "#22c55e",
+      "warning": "#f59e0b",
+      "error": "#ef4444",
+      "info": "#3b82f6"
+    },
+    "alpha": {
+      "primary15": "rgba(212, 160, 48, 0.15)",
+      "primary30": "rgba(212, 160, 48, 0.30)",
+      "teal15": "rgba(45, 212, 168, 0.15)",
+      "teal30": "rgba(45, 212, 168, 0.30)",
+      "success15": "rgba(34, 197, 94, 0.15)",
+      "success30": "rgba(34, 197, 94, 0.30)",
+      "warning15": "rgba(245, 158, 11, 0.15)",
+      "warning30": "rgba(245, 158, 11, 0.30)",
+      "info15": "rgba(59, 130, 246, 0.15)",
+      "info30": "rgba(59, 130, 246, 0.30)"
+    },
+    "light": {
+      "background": "#fcfaf5",
+      "surface": "#f5f2eb",
+      "surfaceRaised": "#ebe8e1",
+      "text": "#1a1a1a",
+      "textSecondary": "#3c372d",
+      "textTertiary": "#5a5547",
+      "textMuted": "#6b6660",
+      "elevated": "rgba(252, 250, 245, 0.8)",
+      "glass": "rgba(252, 250, 245, 0.75)",
+      "primary": "#b8882a",
+      "primaryHover": "#a07824",
+      "teal": "#20b090",
+      "tealAlpha": "rgba(32, 176, 144, 0.15)",
+      "tealBorder": "rgba(32, 176, 144, 0.30)",
+      "border": "rgba(0, 0, 0, 0.10)",
+      "borderSubtle": "rgba(0, 0, 0, 0.06)"
+    },
+    "gradients": {
+      "background": "linear-gradient(135deg, #1e1b28 0%, #141018 100%)",
+      "goldShimmer": "linear-gradient(135deg, #d4a030, #e2b445, #d4a030)",
+      "tealGlow": "linear-gradient(135deg, #2dd4a8, #20b090)",
+      "goldGlow": "linear-gradient(135deg, rgba(212,160,48,0.35), rgba(212,160,48,0.10))"
+    },
+    "glow": {
+      "gold": "0 0 20px rgba(212, 160, 48, 0.35)",
+      "goldSubtle": "0 0 10px rgba(212, 160, 48, 0.20)",
+      "teal": "0 0 20px rgba(45, 212, 168, 0.30)",
+      "text": {
+        "sm": "0 0 6px rgba(212, 160, 48, 0.4)",
+        "md": "0 0 10px rgba(212, 160, 48, 0.5)",
+        "lg": "0 0 16px rgba(212, 160, 48, 0.6)"
+      }
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "heading": "Syne",
+      "body": "Outfit",
+      "mono": "JetBrains Mono"
+    },
+    "scale": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "2xl": "clamp(1.25rem, 2.5vw, 1.5rem)",
+      "3xl": "clamp(1.5rem, 3vw, 1.875rem)",
+      "4xl": "clamp(1.5rem, 3vw, 2.25rem)",
+      "5xl": "clamp(1.875rem, 4vw, 3rem)",
+      "6xl": "clamp(2.25rem, 5vw, 3.75rem)"
+    },
+    "lineHeight": {
+      "tight": "1.2",
+      "snug": "1.35",
+      "normal": "1.5",
+      "relaxed": "1.625",
+      "loose": "2"
+    },
+    "fontWeight": {
+      "light": "300",
+      "normal": "400",
+      "medium": "500",
+      "semibold": "600",
+      "bold": "700",
+      "extrabold": "800"
+    },
+    "letterSpacing": {
+      "tight": "-0.025em",
+      "normal": "0em",
+      "wide": "0.05em",
+      "wider": "0.1em",
+      "widest": "0.2em"
+    }
+  },
+  "spacing": {
+    "unit": "0.25rem",
+    "scale": {
+      "0": "0",
+      "1": "0.25rem",
+      "2": "0.5rem",
+      "3": "0.75rem",
+      "4": "1rem",
+      "5": "1.25rem",
+      "6": "1.5rem",
+      "8": "2rem",
+      "10": "2.5rem",
+      "12": "3rem",
+      "16": "4rem",
+      "20": "5rem",
+      "24": "6rem",
+      "32": "8rem"
+    }
+  },
+  "borders": {
+    "radius": {
+      "none": "0",
+      "sm": "2px",
+      "md": "4px",
+      "lg": "6px",
+      "xl": "8px",
+      "2xl": "14px",
+      "3xl": "16px",
+      "full": "9999px"
+    },
+    "width": {
+      "thin": "1px",
+      "default": "1px",
+      "thick": "2px"
+    }
+  },
+  "shadows": {
+    "sm": "0 2px 4px 0 rgba(212, 160, 48, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.20)",
+    "md": "0 4px 12px 0 rgba(212, 160, 48, 0.12), 0 2px 4px 0 rgba(0, 0, 0, 0.25)",
+    "lg": "0 8px 20px 0 rgba(212, 160, 48, 0.16), 0 4px 8px 0 rgba(0, 0, 0, 0.35)",
+    "xl": "0 16px 32px 0 rgba(212, 160, 48, 0.20), 0 8px 16px 0 rgba(0, 0, 0, 0.45)",
+    "accent": "0 6px 20px 0 rgba(212, 160, 48, 0.30), 0 2px 6px 0 rgba(212, 160, 48, 0.15)",
+    "accentLg": "0 12px 30px 0 rgba(212, 160, 48, 0.35), 0 4px 12px 0 rgba(212, 160, 48, 0.18)",
+    "glow": "0 0 20px rgba(212, 160, 48, 0.25)"
+  },
+  "animations": {
+    "duration": {
+      "instant": "0ms",
+      "fast": "150ms",
+      "normal": "300ms",
+      "slow": "500ms",
+      "slower": "700ms"
+    },
+    "easing": {
+      "default": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "in": "cubic-bezier(0.4, 0, 1, 1)",
+      "out": "cubic-bezier(0, 0, 0.2, 1)",
+      "inOut": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "spring": "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+      "bounce": "cubic-bezier(0.34, 1.56, 0.64, 1)"
+    },
+    "patterns": [
+      {
+        "name": "fade-up",
+        "description": "Scroll reveal: elements fade in and slide up 40px",
+        "duration": "800ms",
+        "easing": "power3.out (GSAP)",
+        "trigger": "scrollTrigger, top 85%",
+        "properties": ["opacity 0→1", "y 40→0"]
+      },
+      {
+        "name": "hover-lift",
+        "description": "Cards lift with gold glow shadow on hover",
+        "duration": "250ms",
+        "easing": "ease-in-out",
+        "properties": ["translateY 0→-4px", "shadow sm→accent"]
+      },
+      {
+        "name": "hover-scale",
+        "description": "Interactive elements scale slightly on hover",
+        "duration": "200ms",
+        "easing": "ease-out",
+        "properties": ["scale 1→1.02"]
+      },
+      {
+        "name": "gold-pulse",
+        "description": "Accent elements pulse with gold glow",
+        "duration": "2000ms",
+        "easing": "ease-in-out",
+        "properties": ["box-shadow goldSubtle→gold→goldSubtle", "infinite"]
+      },
+      {
+        "name": "stagger-children",
+        "description": "Sequential reveal of child elements",
+        "duration": "500ms",
+        "stagger": "100ms",
+        "easing": "power3.out (GSAP)",
+        "properties": ["opacity 0→1", "y 20→0"]
+      }
+    ],
+    "hero": {
+      "archetype": "ambient-glow",
+      "library": "GSAP + CSS",
+      "videoBackground": {
+        "enabled": false,
+        "source": "",
+        "poster": "",
+        "reducedMotionFallback": ""
+      },
+      "reducedMotionStrategy": "pause-all"
+    }
+  },
+  "breakpoints": {
+    "sm": "640px",
+    "md": "768px",
+    "lg": "1024px",
+    "xl": "1280px",
+    "2xl": "1536px"
+  },
+  "layout": {
+    "maxWidth": "1280px",
+    "contentWidth": "768px",
+    "gutter": "1.5rem"
+  },
+  "accessibility": {
+    "wcag": "AA",
+    "minContrastRatioText": 4.5,
+    "minContrastRatioLarge": 3.0,
+    "minContrastRatioUI": 3.0,
+    "minTouchTarget": "44px",
+    "respectReducedMotion": true
+  },
+  "components": {
+    "nav": {
+      "layout": "top-bar-fixed",
+      "background": "surface with backdrop-blur",
+      "border": "bottom border-subtle",
+      "height": "4rem"
+    },
+    "hero": {
+      "layout": "centered-text",
+      "background": "gradient-bg with dot-grid overlay",
+      "padding": "spacing.32 top, spacing.20 bottom",
+      "heading": "6xl, extrabold, wide letter-spacing, gold text-glow"
+    },
+    "infoStrip": {
+      "layout": "horizontal-badges",
+      "background": "surface",
+      "border": "top and bottom border"
+    },
+    "about": {
+      "layout": "centered-prose",
+      "maxWidth": "contentWidth",
+      "text": "lg body, relaxed line-height"
+    },
+    "projectCard": {
+      "layout": "image-top card",
+      "background": "surface",
+      "border": "border with radius-xl",
+      "hover": "hover-lift pattern, border → primary30 alpha",
+      "shadow": "sm → accent on hover"
+    },
+    "experienceTimeline": {
+      "layout": "vertical-timeline-left",
+      "connector": "2px primary alpha line",
+      "node": "8px primary circle"
+    },
+    "skillsBadge": {
+      "layout": "inline pill",
+      "background": "primary15 alpha",
+      "border": "primary30 alpha, radius-full",
+      "text": "sm, medium weight"
+    },
+    "contactCTA": {
+      "layout": "centered-banner",
+      "background": "surface with gold gradient border",
+      "heading": "4xl, bold",
+      "button": "primary bg, radius-lg, bold"
+    },
+    "footer": {
+      "layout": "minimal-centered",
+      "background": "background",
+      "border": "top border",
+      "text": "sm, muted"
+    },
+    "themeToggle": {
+      "type": "icon-button",
+      "size": "44px touch target",
+      "transition": "fast duration, spring easing"
+    }
+  }
+}

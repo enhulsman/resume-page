@@ -18,5 +18,8 @@ next-env.d.ts
 tsconfig.tsbuildinfo
 public/react-demo-app.iife*
 TODO
+.playwright-mcp/
 # Personal CV/resume reference files
 *CV*.*
+public/resume.pdf
+*.png
