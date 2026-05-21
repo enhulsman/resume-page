@@ -37,6 +37,14 @@ const NOISE_SPEED     = 0.00035;
 const PULSE_SPEED  = 0.002;
 const PULSE_AMOUNT = 0.25; // ±25% strength variation
 
+// Click ripple
+const RIPPLE_SPEED      = 0.3;   // px/ms (~300px/s ring expansion)
+const RIPPLE_WIDTH      = 60;    // ring thickness px
+const RIPPLE_STRENGTH   = 12;    // peak displacement px
+const RIPPLE_MAX_RADIUS = 600;   // cull when ring exceeds this
+const RIPPLE_HOLD_INTERVAL = 450; // ms between hold ripples
+const MAX_RIPPLES       = 6;
+
 // ─── 2D gradient noise (2-octave Perlin) ──────────────────────────────────────
 const PERM = new Uint8Array(512);
 const GRAD = new Float32Array(512 * 2);
@@ -88,6 +96,7 @@ interface Dot {
   x:  number; y:  number;
 }
 interface GlowDot { x: number; y: number; proximity: number; }
+interface Ripple  { ox: number; oy: number; birth: number; strength: number; }
 
 // ─── Module ───────────────────────────────────────────────────────────────────
 export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void } | null {
@@ -135,6 +144,34 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
   }
   document.addEventListener('mousemove', onMouseMove, { passive: true });
   document.addEventListener('mouseleave', onMouseLeave);
+
+  // Click ripple handlers
+  let ripples: Ripple[] = [];
+  let holdTimer = 0;
+
+  function pushRipple(ox: number, oy: number, strength: number) {
+    if (ripples.length >= MAX_RIPPLES) ripples.shift();
+    ripples.push({ ox, oy, birth: performance.now(), strength });
+  }
+  function onMouseDown(e: MouseEvent) {
+    clearInterval(holdTimer);
+    const scrollY: number = (window as any).__lenis?.scroll ?? window.scrollY;
+    pushRipple(e.clientX, e.clientY + scrollY, 1.0);
+    holdTimer = window.setInterval(() => {
+      pushRipple(currCX, currCY, 1.0);
+    }, RIPPLE_HOLD_INTERVAL);
+  }
+  function onMouseUp() {
+    clearInterval(holdTimer);
+    holdTimer = 0;
+  }
+  function onDblClick(e: MouseEvent) {
+    const scrollY: number = (window as any).__lenis?.scroll ?? window.scrollY;
+    pushRipple(e.clientX, e.clientY + scrollY, 2.0);
+  }
+  document.addEventListener('mousedown', onMouseDown);
+  document.addEventListener('mouseup', onMouseUp);
+  document.addEventListener('dblclick', onDblClick);
 
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   let cols = 0, totalRows = 0;
@@ -212,6 +249,10 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
     const vh = window.innerHeight;
     const t  = (now - startTime) * NOISE_SPEED;
 
+    // Cull expired ripples
+    const rippleCutoff = RIPPLE_MAX_RADIUS / RIPPLE_SPEED;
+    ripples = ripples.filter(r => (now - r.birth) < rippleCutoff);
+
     // Cursor lerp
     if (mouseHasEntered) {
       const cursorEase = 1 - Math.pow(1 - CURSOR_EASE, dt);
@@ -277,6 +318,28 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
       dot.x += (targetX - dot.x) * ease;
       dot.y += (targetY - dot.y) * ease;
 
+      // Ripple displacement — post-lerp direct offset for crisp ring visuals
+      if (ripples.length > 0) {
+        let ripX = 0, ripY = 0;
+        for (const rip of ripples) {
+          const rdx = dot.hx - rip.ox;
+          const rdy = dot.hy - rip.oy;
+          const dOrig = Math.sqrt(rdx * rdx + rdy * rdy);
+          if (dOrig < 1) continue;
+          const ringR = RIPPLE_SPEED * (now - rip.birth);
+          const dRing = Math.abs(dOrig - ringR);
+          if (dRing < RIPPLE_WIDTH) {
+            const envelope = (1 - dRing / RIPPLE_WIDTH) ** 2;
+            const fade = Math.max(0, 1 - ringR / RIPPLE_MAX_RADIUS);
+            const str = envelope * fade * rip.strength * RIPPLE_STRENGTH;
+            ripX += (rdx / dOrig) * str;
+            ripY += (rdy / dOrig) * str;
+          }
+        }
+        dot.x += ripX;
+        dot.y += ripY;
+      }
+
       // Proximity glow — smooth 0..1 falloff
       const effectiveGlowRadius = heroBlend * GLOW_DIST + (1 - heroBlend) * FOLD_GLOW_RADIUS;
       const proximity = (mouseHasEntered && dist < effectiveGlowRadius)
@@ -315,9 +378,13 @@ export function initPageDots(): { canvas: HTMLCanvasElement; destroy: () => void
   function destroy() {
     cancelAnimationFrame(rafId);
     clearTimeout(resizeTimer);
+    clearInterval(holdTimer);
     ro.disconnect();
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseleave', onMouseLeave);
+    document.removeEventListener('mousedown', onMouseDown);
+    document.removeEventListener('mouseup', onMouseUp);
+    document.removeEventListener('dblclick', onDblClick);
     window.removeEventListener('theme-changed', onThemeChange);
     canvas.remove();
   }
