@@ -59,8 +59,7 @@ export function initHeroAnimations(): void {
 
   if (!first || !last) return;
 
-  // Override shimmer's transparent fill with resolved solid gold — gradient stays present but hidden.
-  // Canvas 2D fillStyle normalizes any CSS color format to #rrggbb (spec behavior, no DOM insertion).
+  // Resolve accent color — Canvas 2D fillStyle normalizes any CSS format to #rrggbb
   const rawAccent = getComputedStyle(first).getPropertyValue('--color-accent-primary').trim();
   const ctx2d = document.createElement('canvas').getContext('2d')!;
   ctx2d.fillStyle = rawAccent;
@@ -71,13 +70,13 @@ export function initHeroAnimations(): void {
   const accentRgb = `rgb(${r}, ${g}, ${b})`;
   const accentTransparent = `rgba(${r}, ${g}, ${b}, 0)`;
 
+  // Override shimmer's transparent fill with solid gold — gradient stays but hidden
   first.style.webkitTextFillColor = accentRgb;
   last.style.webkitTextFillColor  = accentRgb;
 
   const firstSplit = new SplitType(first, { types: 'chars' });
   const lastSplit  = new SplitType(last,  { types: 'chars' });
 
-  // Store final text and lock char widths before scramble to prevent layout jitter
   const firstFinal = firstSplit.chars?.map(c => c.textContent) ?? [];
   const lastFinal  = lastSplit.chars?.map(c => c.textContent)  ?? [];
 
@@ -111,22 +110,30 @@ export function initHeroAnimations(): void {
   const tl = gsap.timeline({
     delay: 0.15,
     onComplete: () => {
-      // Revert SplitType first — restores direct text content so background-clip:text works
-      // (gradient can't show through inline-block child spans, only direct text)
       firstSplit.revert();
       lastSplit.revert();
       gsap.set([first, last], { opacity: 1, clearProps: 'filter,y' });
-      initScrollExit();
-      // Cross-fade inline solid gold → transparent, revealing the shimmer gradient
+
+      // Restart shimmer from frame 0 — starts at the gold-dominant position,
+      // matching the solid gold the text was just showing
+      [first!, last!].forEach(el => {
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = 'shimmer 6s linear infinite';
+      });
+
+      // Fast fade from solid gold → transparent reveals the synced gradient
       gsap.to([first, last], {
         webkitTextFillColor: accentTransparent,
-        duration: 0.5,
-        ease: 'power2.inOut',
+        duration: 0.15,
+        ease: 'none',
         onComplete: () => {
           first!.style.removeProperty('-webkit-text-fill-color');
           last!.style.removeProperty('-webkit-text-fill-color');
         },
       });
+
+      initScrollExit();
     },
   });
 
@@ -134,7 +141,7 @@ export function initHeroAnimations(): void {
   if (badge) tl.to(badge, { opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out' });
   if (glow)  tl.to(glow,  { opacity: 1, duration: 0.8, ease: 'power2.out' }, 0);
 
-  // 2. First name — blur-reveal + scramble via onUpdate
+  // 2. First name — per-char blur-reveal + scramble
   if (firstSplit.chars && firstSplit.chars.length > 0) {
     tl.to(firstSplit.chars, {
       opacity: 1, y: 0, filter: 'blur(0px)',
