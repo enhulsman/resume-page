@@ -1,8 +1,6 @@
 ---
 import site from "../config/site";
-import IconEmail from "./icons/IconEmail.astro";
-import IconGitHub from "./icons/IconGitHub.astro";
-import IconLinkedIn from "./icons/IconLinkedIn.astro";
+import AnimatedIcon from "./AnimatedIcon";
 
 const statusMessage = site.employment.message[site.employment.status];
 ---
@@ -31,7 +29,7 @@ const statusMessage = site.employment.message[site.employment.status];
         >
           <span class="cta-border-spin" aria-hidden="true"></span>
           <span class="relative z-10 inline-flex items-center gap-2 rounded-xl bg-[var(--color-bg-primary)] px-8 py-4 font-display text-base md:text-lg font-bold text-theme-primary group-hover:text-theme-accent transition-colors duration-300">
-            <IconEmail class="w-5 h-5" />
+            <AnimatedIcon name="mailbox" size="md" client:idle />
             Get in touch
           </span>
         </a>
@@ -54,7 +52,7 @@ const statusMessage = site.employment.message[site.employment.status];
           class="text-theme-muted hover:text-theme-accent transition-colors duration-200"
           aria-label="Email"
         >
-          <IconEmail class="w-6 h-6" />
+          <AnimatedIcon name="mailbox" size="lg" client:visible />
         </a>
         <a
           href={site.social.GitHub}
@@ -63,7 +61,7 @@ const statusMessage = site.employment.message[site.employment.status];
           class="text-theme-muted hover:text-theme-accent transition-colors duration-200"
           aria-label="GitHub"
         >
-          <IconGitHub class="w-6 h-6" />
+          <AnimatedIcon name="github" size="lg" client:visible />
         </a>
         <a
           href={site.social.LinkedIn}
@@ -72,7 +70,7 @@ const statusMessage = site.employment.message[site.employment.status];
           class="text-theme-muted hover:text-theme-accent transition-colors duration-200"
           aria-label="LinkedIn"
         >
-          <IconLinkedIn class="w-6 h-6" />
+          <AnimatedIcon name="linkedin" size="lg" client:visible />
         </a>
       </div>
 

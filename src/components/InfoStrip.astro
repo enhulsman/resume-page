@@ -1,9 +1,6 @@
 ---
 import site from "../config/site";
-import IconEmail from "./icons/IconEmail.astro";
-import IconGitHub from "./icons/IconGitHub.astro";
-import IconLinkedIn from "./icons/IconLinkedIn.astro";
-import IconDocument from "./icons/IconDocument.astro";
+import AnimatedIcon from "./AnimatedIcon";
 
 const keySkills = ['Python', 'Linux', 'Docker', 'K8s', 'Pega', 'CI/CD'];
 ---
@@ -57,18 +54,18 @@ const keySkills = ['Python', 'Linux', 'Docker', 'K8s', 'Pega', 'CI/CD'];
         <span class="font-mono text-[11px] tracking-[0.2em] uppercase text-theme-muted block mb-1.5">Links</span>
         <div class="flex items-center gap-2.5">
           <a href="/resume" class="flex items-center gap-1.5 text-xs md:text-sm text-theme-secondary hover:text-theme-accent transition-colors font-medium">
-            <IconDocument class="w-4 h-4" />
+            <AnimatedIcon name="file-text" size="md" client:idle />
             Resume
           </a>
           <span class="text-theme-muted">·</span>
           <a href={`mailto:${site.social.email}`} class="text-theme-secondary hover:text-theme-accent transition-colors" title="Email">
-            <IconEmail class="w-4 h-4" />
+            <AnimatedIcon name="mailbox" size="md" client:idle />
           </a>
           <a href={site.social.GitHub} target="_blank" rel="noopener noreferrer" class="text-theme-secondary hover:text-theme-accent transition-colors" title="GitHub">
-            <IconGitHub class="w-4 h-4" />
+            <AnimatedIcon name="github" size="md" client:idle />
           </a>
           <a href={site.social.LinkedIn} target="_blank" rel="noopener noreferrer" class="text-theme-secondary hover:text-theme-accent transition-colors" title="LinkedIn">
-            <IconLinkedIn class="w-4 h-4" />
+            <AnimatedIcon name="linkedin" size="md" client:idle />
           </a>
         </div>
       </div>

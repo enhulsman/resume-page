@@ -1,6 +1,5 @@
 ---
-import IconGitHub from "./icons/IconGitHub.astro";
-import IconArrowRight from "./icons/IconArrowRight.astro";
+import AnimatedIcon from "./AnimatedIcon";
 
 // Dynamically import MDX projects and filter by showcase tag
 const projectFiles = Object.values(
@@ -49,7 +48,7 @@ const projects = projectFiles
               </h3>
               {project.github && (
                 <span class="text-theme-muted group-hover:text-theme-primary transition-colors shrink-0 ml-3" aria-hidden="true">
-                  <IconGitHub class="w-5 h-5" />
+                  <AnimatedIcon name="github" size="md" client:visible />
                 </span>
               )}
             </div>
@@ -77,7 +76,7 @@ const projects = projectFiles
         class="inline-flex items-center gap-2 text-sm font-medium font-display px-5 py-2.5 rounded-lg border border-[var(--color-accent-border)] text-theme-accent bg-[var(--color-accent-alpha)] hover:bg-[var(--color-accent-primary)] hover:text-[var(--color-bg-primary)] transition-all duration-200"
       >
         View all projects
-        <IconArrowRight class="w-4 h-4" />
+        <AnimatedIcon name="arrow-right" size="sm" client:visible />
       </a>
     </div>
   </div>

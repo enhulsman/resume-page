@@ -1,5 +1,6 @@
 ---
 import site from "../config/site";
+import AnimatedIcon from "./AnimatedIcon";
 import { gravatarUrl } from "../lib/gravatar";
 import { experience, education, certifications, skillCategories } from "../config/resume";
 
@@ -101,9 +102,12 @@ const terminalData = {
                 href={site.quoteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-sm italic text-theme-muted opacity-50 hover:opacity-80 hover:text-theme-accent transition-all duration-200 mt-1"
+                class="relative text-sm italic text-theme-muted opacity-50 hover:opacity-80 hover:text-theme-accent transition-all duration-200 mt-1"
               >
                 {site.quote}
+                <span class="inline-flex ml-1.5 opacity-30 pointer-events-none" style="transform: translateY(6px);">
+                  <AnimatedIcon name="fish-symbol" size="lg" client:visible />
+                </span>
               </a>
             )}
           </div>
