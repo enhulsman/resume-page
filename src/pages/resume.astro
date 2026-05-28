@@ -5,9 +5,7 @@ import ExperienceTimeline from '../components/resume/ExperienceTimeline.astro';
 import EducationList from '../components/resume/EducationList.astro';
 import CertificationList from '../components/resume/CertificationList.astro';
 import site from '../config/site';
-import IconEmail from '../components/icons/IconEmail.astro';
-import IconGitHub from '../components/icons/IconGitHub.astro';
-import IconLinkedIn from '../components/icons/IconLinkedIn.astro';
+import AnimatedIcon from '../components/AnimatedIcon';
 ---
 
 <BaseLayout
@@ -35,9 +33,7 @@ import IconLinkedIn from '../components/icons/IconLinkedIn.astro';
             href="/contact"
             class="inline-flex items-center gap-2 text-sm font-medium font-display px-4 py-2 rounded-lg border border-[var(--color-accent-border)] text-theme-accent bg-[var(--color-accent-alpha)] hover:bg-[var(--color-accent-primary)] hover:text-[var(--color-bg-primary)] transition-all duration-200"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
+            <AnimatedIcon name="mailbox" size="sm" client:idle />
             Inquire about my full CV
           </a>
           <a
@@ -50,13 +46,13 @@ import IconLinkedIn from '../components/icons/IconLinkedIn.astro';
       </div>
       <div class="flex items-center gap-3 shrink-0">
         <a href={`mailto:${site.social.email}`} class="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border-primary)] text-theme-muted hover:text-theme-accent hover:border-[var(--color-accent-border)] transition-colors" aria-label="Email" title="Email">
-          <IconEmail />
+          <AnimatedIcon name="mailbox" size="sm" client:idle />
         </a>
         <a href={site.social.GitHub} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border-primary)] text-theme-muted hover:text-theme-accent hover:border-[var(--color-accent-border)] transition-colors" aria-label="GitHub" title="GitHub">
-          <IconGitHub />
+          <AnimatedIcon name="github" size="sm" client:idle />
         </a>
         <a href={site.social.LinkedIn} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border-primary)] text-theme-muted hover:text-theme-accent hover:border-[var(--color-accent-border)] transition-colors" aria-label="LinkedIn" title="LinkedIn">
-          <IconLinkedIn />
+          <AnimatedIcon name="linkedin" size="sm" client:idle />
         </a>
       </div>
     </div>
