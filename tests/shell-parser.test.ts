@@ -1,5 +1,5 @@
 // Unit tests for shell-parser.ts — parseLine()
-import { parseLine } from '../src/scripts/shell-parser';
+import { parseLine } from '../src/scripts/shell-parser.ts';
 
 function assertParsed(result: ReturnType<typeof parseLine>) {
   if ('error' in result) throw new Error(`Unexpected error: ${result.error}`);

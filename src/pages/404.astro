@@ -1,0 +1,67 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import site from "../config/site";
+---
+
+<BaseLayout
+  title={`404 — Page not found · ${site.name}`}
+  description="The page you were looking for doesn't exist."
+  noindex={true}
+>
+  <section class="min-h-[60vh] flex flex-col items-center justify-center text-center py-16">
+    <p class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent mb-6">// 404</p>
+
+    <!-- Terminal-styled block -->
+    <div
+      class="w-full max-w-xl text-left rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] shadow-sm overflow-hidden"
+    >
+      <div class="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--color-border-primary)]">
+        <span class="w-3 h-3 rounded-full bg-[#ff5f56]/70"></span>
+        <span class="w-3 h-3 rounded-full bg-[#ffbd2e]/70"></span>
+        <span class="w-3 h-3 rounded-full bg-[#27c93f]/70"></span>
+        <span class="ml-2 font-mono text-xs text-theme-muted">zsh — 80×24</span>
+      </div>
+      <div class="p-5 font-mono text-sm leading-relaxed">
+        <p>
+          <span class="text-theme-accent">ezra@hulsman</span><span class="text-theme-muted">:</span><span
+            class="text-theme-secondary">~$</span
+          > cd <span class="text-theme-primary" id="requested-path">/requested/path</span>
+        </p>
+        <p class="text-[rgb(239,68,68)] mt-1">zsh: cd: no such file or directory</p>
+        <p class="text-theme-muted mt-4"># That page doesn't exist. Try one of these:</p>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 text-sm font-medium font-display px-5 py-2.5 rounded-lg border border-[var(--color-accent-border)] text-theme-accent bg-[var(--color-accent-alpha)] hover:bg-[var(--color-accent-primary)] hover:text-[var(--color-bg-primary)] transition-all duration-200"
+      >
+        Home
+      </a>
+      <a
+        href="/projects"
+        class="inline-flex items-center gap-2 text-sm font-medium font-display px-5 py-2.5 rounded-lg border border-[var(--color-border-primary)] text-theme-secondary hover:text-theme-primary hover:border-[var(--color-accent-border)] transition-all duration-200"
+      >
+        Projects
+      </a>
+      <a
+        href="/resume"
+        class="inline-flex items-center gap-2 text-sm font-medium font-display px-5 py-2.5 rounded-lg border border-[var(--color-border-primary)] text-theme-secondary hover:text-theme-primary hover:border-[var(--color-accent-border)] transition-all duration-200"
+      >
+        Resume
+      </a>
+    </div>
+  </section>
+
+  <script is:inline>
+    // Show the path the visitor actually requested inside the terminal line.
+    (function () {
+      var el = document.getElementById("requested-path");
+      if (el && window.location && window.location.pathname && window.location.pathname !== "/") {
+        el.textContent = window.location.pathname;
+      }
+    })();
+  </script>
+</BaseLayout>

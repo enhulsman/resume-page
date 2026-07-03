@@ -12,6 +12,9 @@ binding = "ASSETS"
 # Email configuration via environment variables for local development (.dev.vars)
 # For production deployment, use secrets:
 # wrangler secret put TO_EMAIL
-# wrangler secret put FROM_EMAIL  
+# wrangler secret put FROM_EMAIL
 # wrangler secret put FROM_NAME
 # wrangler secret put RESEND_API_KEY
+#
+# Contact-form abuse protection (optional — the honeypot + scoped CORS work without it):
+# wrangler secret put TURNSTILE_SECRET   # then set `turnstileSiteKey` in src/config/site.ts

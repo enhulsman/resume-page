@@ -7,7 +7,8 @@
     "build": "NODE_ENV=production astro build",
     "preview": "astro preview",
     "start": "astro dev",
-    "generate-pdf": "node scripts/generate-pdf.js"
+    "generate-pdf": "node scripts/generate-pdf.js",
+    "test": "node --test \"tests/*.test.ts\""
   },
   "devDependencies": {
     "@astrojs/mdx": "^4.3.10",
