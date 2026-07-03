@@ -59,7 +59,10 @@ const site = {
     well-tuned race cars and well-optimized code.
   `,
 
-  // Homepage project showcase cards
+  // SOURCE OF TRUTH: this array feeds the About-section terminal ONLY (the `ls projects/`
+  // and `cat projects/<name>` data in AboutSection.astro / virtual-fs).
+  // The homepage showcase cards come from MDX frontmatter `showcase: true` (ProjectsShowcase.astro);
+  // the /projects gallery order comes from MDX `order`. Nothing reads a `featured` flag.
   projects: [
     {
       title: 'Claude Sandbox',
@@ -67,28 +70,24 @@ const site = {
       tech: ['Nix', 'Python', 'Bash', 'Linux'],
       github: 'https://github.com/enhulsman/claude-sandbox',
       link: '/projects/ClaudeSandbox',
-      featured: true,
     },
     {
       title: 'Anna Assistant',
       description: 'AI assistant living inside Microsoft Teams that unifies a consultancy\'s internal tools behind a single conversational interface. 22 MCP tool integrations, used daily by 30 employees.',
       tech: ['Python', 'Bot Framework', 'Claude', 'MCP'],
       link: '/projects/AnnaAssistant',
-      featured: true,
     },
     {
       title: 'Homelab Infrastructure',
       description: 'Four devices (Pi 5, Hetzner VPS, Pi 2, WSL workstation) connected by Tailscale, monitored by Prometheus, backed up cross-device nightly. Hardened with a 7-phase zero-trust plan.',
       tech: ['Docker', 'Prometheus', 'Grafana', 'Tailscale', 'Cloudflare', 'Bash', 'Linux'],
       link: '/projects/HomelabInfrastructure',
-      featured: true,
     },
     {
       title: 'Finance Bot',
       description: 'Discord bot that turns Dutch bank CSV exports into a categorized Google Sheets budget. Regex rules handle the predictable transactions, Claude handles the rest, with an anonymization layer in between.',
       tech: ['Python', 'discord.py', 'Claude', 'Google Sheets API'],
       link: '/projects/FinanceBot',
-      featured: true,
     },
     {
       title: 'pytaiga-mcp',
@@ -96,7 +95,6 @@ const site = {
       tech: ['Python', 'MCP', 'pytest', 'CI/CD'],
       github: 'https://github.com/talhaorak/pytaiga-mcp',
       link: '/projects/PytaigaMcp',
-      featured: true,
     },
     {
       title: 'Encrypted Chat TUI',
@@ -104,14 +102,12 @@ const site = {
       tech: ['Rust', 'Tokio', 'PostgreSQL', 'Docker'],
       github: 'https://github.com/enhulsman',
       link: '/projects/EncryptedChatTUI',
-      featured: false,
     },
     {
       title: 'Portfolio Site',
       description: 'The site you\'re looking at. Astro, GSAP scroll animations, and a 42-command interactive terminal hidden in the About section.',
       tech: ['Astro', 'TypeScript', 'Tailwind', 'GSAP'],
       link: '/projects/ResumePage',
-      featured: false,
     },
   ],
 

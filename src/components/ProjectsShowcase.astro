@@ -1,7 +1,9 @@
 ---
 import AnimatedIcon from "./AnimatedIcon";
 
-// Dynamically import MDX projects and filter by showcase tag
+// SOURCE OF TRUTH for homepage cards: MDX frontmatter `showcase: true`. Toggling that flag in a
+// project's .mdx adds/removes its card here. (The site.ts `projects[]` array is terminal data only;
+// the /projects gallery order comes from MDX `order`.)
 const projectFiles = Object.values(
   import.meta.glob("../pages/projects/*.mdx", { eager: true })
 ) as any[];
