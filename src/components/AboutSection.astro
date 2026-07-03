@@ -1,7 +1,6 @@
 ---
 import site from "../config/site";
 import AnimatedIcon from "./AnimatedIcon";
-import { gravatarUrl } from "../lib/gravatar";
 import { experience, education, certifications, skillCategories } from "../config/resume";
 
 const aboutParagraphs = site.about.trim().split('\n\n').map(p => p.trim()).filter(Boolean);
@@ -89,7 +88,8 @@ const terminalData = {
         <div class="flex flex-col sm:flex-row items-start gap-6" data-reveal>
           <div class="flex flex-col items-center shrink-0 gap-2">
             <img
-              src={gravatarUrl}
+              src="/images/portrait.webp"
+              onerror="this.onerror=null;this.src='/avatar.svg'"
               alt={`${site.name} profile photo`}
               width="200"
               height="200"

@@ -18,7 +18,7 @@
   <rect width="1200" height="630" fill="url(#glow)" />
 
   <!-- Avatar -->
-  <image href="/avatar.png" x="55" y="160" width="310" height="310" clip-path="url(#avatar-clip)"
+  <image href="/images/portrait.webp" x="55" y="160" width="310" height="310" clip-path="url(#avatar-clip)"
     preserveAspectRatio="xMidYMid slice" />
 
   <!-- Indigo accent bar -->

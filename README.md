@@ -64,7 +64,7 @@ src/
 ├── config/              # site.ts (personal info, projects) + resume.ts (experience, education)
 ├── layouts/             # BaseLayout + ProjectLayout for MDX
 ├── pages/               # File-based routing — homepage, /resume, /contact, /projects/*.mdx
-├── lib/                 # Theme utilities, Gravatar integration
+├── lib/                 # Theme utilities, helpers
 ├── styles/global.css    # Theme system, keyframes, print styles
 └── worker.ts            # Cloudflare Worker for contact form (Resend API)
 scripts/

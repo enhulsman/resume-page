@@ -1,5 +1,4 @@
 ---
-import { gravatarUrl } from '../lib/gravatar';
 import site from '../config/site';
 import AnimatedIcon from './AnimatedIcon';
 const { name = site.name, role = site.role, company = site.company, location = site.location } = Astro.props;
@@ -19,7 +18,7 @@ const employmentClass = `employment-${employmentStatus}`;
         <!-- Avatar and name section -->
         <div class="flex items-start gap-4 md:gap-6 mb-4 md:mb-4 w-full">
           <img
-            src={gravatarUrl}
+            src="/images/portrait.webp"
             onerror="this.onerror=null;this.src='/avatar.svg'"
             alt={name}
             width={200}
