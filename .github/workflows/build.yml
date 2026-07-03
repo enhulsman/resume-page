@@ -45,6 +45,9 @@ jobs:
         env:
           PORT: 8180
 
+      # NOTE: the generated PDF is a PRIVATE ARTIFACT ONLY by design — it is never deployed to
+      # production. Production deploys run via Cloudflare Workers Builds (plain `astro build`),
+      # which does not run this step, and the public `/resume.pdf` URL 301-redirects to `/resume`.
       - name: Generate PDF(s)
         run: |
           node scripts/generate-pdf.js

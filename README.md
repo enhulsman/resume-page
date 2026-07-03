@@ -136,10 +136,29 @@ node scripts/generate-pdf.js    # outputs dist/resume.pdf
 
 The GitHub Actions workflow (`.github/workflows/build.yml`) runs this automatically on push to main and uploads the PDF as an artifact.
 
+> The generated PDF is a **private CI artifact only** — it is not deployed to production. The public
+> `/resume.pdf` URL 301-redirects to `/resume`, where the primary CTA ("Inquire about my full CV")
+> gates the full CV behind a contact request.
+
 ## Deployment
+
+Production deploys are handled automatically by **Cloudflare Workers Builds** — the Git
+integration configured on the Cloudflare dashboard. Every push to `main` triggers a build that
+runs `npm run build` (plain `astro build`) and publishes the Worker together with the static
+assets in `./dist`. This is configured dashboard-side, so it is invisible to the repository:
+there is **no deploy step in CI** — `.github/workflows/build.yml` only builds and uploads
+artifacts (see [PDF Generation](#pdf-generation)).
+
+Because the production build is plain `astro build`, anything that must ship to production has to
+be produced by that command. The resume PDF is intentionally **not** shipped — it is a private CI
+artifact only, and `/resume.pdf` 301-redirects to `/resume`.
+
+Manual deploy (fallback — normally unnecessary):
 
 ```bash
 npx wrangler deploy
 ```
 
-Deploys to Cloudflare Workers. The `wrangler.toml` is configured with the build command and asset directory.
+> **Verifying the active trigger:** run `npx wrangler deployments list` (the *source* column shows
+> whether deploys come from Workers Builds vs. manual uploads), or check the Cloudflare dashboard →
+> Workers & Pages → this Worker → Settings → Builds.
