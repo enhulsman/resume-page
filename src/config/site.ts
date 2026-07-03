@@ -8,7 +8,7 @@ const site = {
   location: 'Utrecht, NL 🇳🇱',
   quote: '"Proverbs 3:5-7 NIV"',
   quoteUrl: "https://www.bible.com/bible/111/PRO.3.NIV#:~:text=Trust%20in%20the,and%20shun%20evil.", 
-  summary: 'Linux-first DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce friction — driven to continuously improve systems and skills.',
+  summary: 'Linux-first DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce friction, driven to continuously improve systems and skills.',
   contactMessage: `Send a message and I'll get back to you soon. Whether it's about work opportunities, requesting my full CV, open source projects, or just to chat about Formula 1!`,
 
   skills: {
@@ -58,15 +58,36 @@ const site = {
   projects: [
     {
       title: 'Claude Sandbox',
-      description: 'Defense-in-depth sandbox isolating Claude Code with network namespaces, filesystem bind mounts, a domain-filtering egress proxy, and cross-platform Nix packaging.',
+      description: 'OS-level sandbox that keeps Claude Code isolated from your filesystem, network, and credentials, even if its own protections fail. Cross-platform via Nix, with a domain-filtering proxy and post-session risk scoring.',
       tech: ['Nix', 'Python', 'Bash', 'Linux'],
       github: 'https://github.com/enhulsman/claude-sandbox',
       link: '/projects/ClaudeSandbox',
       featured: true,
     },
     {
+      title: 'Anna Assistant',
+      description: 'AI assistant living inside Microsoft Teams that unifies a consultancy\'s internal tools behind a single conversational interface. 22 MCP tool integrations, used daily by 30 employees.',
+      tech: ['Python', 'Bot Framework', 'Claude', 'MCP'],
+      link: '/projects/AnnaAssistant',
+      featured: true,
+    },
+    {
+      title: 'Homelab Infrastructure',
+      description: 'Four devices (Pi 5, Hetzner VPS, Pi 2, WSL workstation) connected by Tailscale, monitored by Prometheus, backed up cross-device nightly. Hardened with a 7-phase zero-trust plan.',
+      tech: ['Docker', 'Prometheus', 'Grafana', 'Tailscale', 'Cloudflare', 'Bash', 'Linux'],
+      link: '/projects/HomelabInfrastructure',
+      featured: true,
+    },
+    {
+      title: 'Finance Bot',
+      description: 'Discord bot that turns Dutch bank CSV exports into a categorized Google Sheets budget. Regex rules handle the predictable transactions, Claude handles the rest, with an anonymization layer in between.',
+      tech: ['Python', 'discord.py', 'Claude', 'Google Sheets API'],
+      link: '/projects/FinanceBot',
+      featured: true,
+    },
+    {
       title: 'pytaiga-mcp',
-      description: 'Merged PR adding security hardening, centralized error handling (14% code reduction), and the project\'s first test suite to a Taiga MCP server.',
+      description: 'Open-source PR that got reviewed and merged, adding security hardening, the first test suite, and a refactoring that cut 14% of the server code.',
       tech: ['Python', 'MCP', 'pytest', 'CI/CD'],
       github: 'https://github.com/talhaorak/pytaiga-mcp',
       link: '/projects/PytaigaMcp',
@@ -74,7 +95,7 @@ const site = {
     },
     {
       title: 'Encrypted Chat TUI',
-      description: 'Self-hosted terminal chat system built as a Cargo workspace with Tokio async networking, a typed ndjson protocol, and compile-time checked PostgreSQL queries.',
+      description: 'Terminal chat system in Rust, built as a Cargo workspace with typed protocols and compile-time SQL. Encryption is the goal, not yet the state.',
       tech: ['Rust', 'Tokio', 'PostgreSQL', 'Docker'],
       github: 'https://github.com/enhulsman',
       link: '/projects/EncryptedChatTUI',
@@ -82,17 +103,10 @@ const site = {
     },
     {
       title: 'Portfolio Site',
-      description: 'Config-driven portfolio with MDX auto-discovery, multi-theme support, dynamic OG images, and server-side form handling on Cloudflare Workers.',
+      description: 'The site you\'re looking at. Astro, GSAP scroll animations, and a 42-command interactive terminal hidden in the About section.',
       tech: ['Astro', 'TypeScript', 'Tailwind', 'GSAP'],
       link: '/projects/ResumePage',
       featured: false,
-    },
-    {
-      title: 'Homelab Infrastructure',
-      description: 'Three-device hybrid cloud-home infrastructure with automated cross-device backups, Prometheus monitoring and alerting, recursive DNSSEC resolution, and Cloudflare Zero Trust networking',
-      tech: ['Docker', 'Prometheus', 'Grafana', 'Tailscale', 'Cloudflare', 'Bash', 'Linux'],
-      link: '/projects/HomelabInfrastructure',
-      featured: true,
     },
   ],
 

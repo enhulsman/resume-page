@@ -1,38 +1,35 @@
 ---
 title: "pytaiga-mcp"
-description: "Merged PR adding security hardening, centralized error handling (14% code reduction), and the project's first test suite to a Taiga MCP server"
+description: "Open-source contribution: merged PR adding security hardening, centralized error handling, and the project's first test suite to a Taiga MCP server"
 date: 2026-01-12
 github: "https://github.com/talhaorak/pytaiga-mcp"
 tech: ["Python", "MCP", "Pydantic", "pytest", "CI/CD", "Ruff"]
 layout: "../../layouts/ProjectLayout.astro"
 showcase: false
 dateLabel: "Merged"
-hook: "A merged pull request to pytaiga-mcp, an MCP server that integrates Taiga project management with AI assistants. The contribution addressed three areas — security, AI context efficiency, and code quality — reducing server code by 14% and adding the project's first test suite."
+hook: "Open-source PR merged into pytaiga-mcp: security hardening with credential masking, centralized error handling that cut 14% of the server code, and the project's first test suite with CI across Python 3.10 through 3.12. Found the problems while using the tool myself, proposed fixes, got them reviewed and shipped."
 ---
 
-## Security Hardening
+pytaiga-mcp is an MCP server that connects Taiga project management to AI assistants like Claude. MCP (Model Context Protocol) is an open standard that lets AI models call external tools and services through a structured interface, so instead of copying and pasting between Taiga and your AI assistant, the assistant can directly create stories, update tasks, and query your board. I was using it for my own project management setup and kept running into rough edges: passwords showing up in tracebacks, duplicated error handling everywhere, no tests. So I opened a PR to fix all of it.
 
-- **Credential Protection**: Introduced a config module using Pydantic's `SecretStr` so that passwords and tokens are masked in all logs, tracebacks, and `repr()` output — credentials cannot leak even in unhandled exceptions
-- **Auto-Authentication**: Server authenticates on startup using environment variables, eliminating the manual auth step users previously had to perform before every session
-- **Input Validation**: Added parameter allowlists per resource type to reject unexpected input
-- **Session Masking**: Session IDs display only the first 8 characters in logs
+## What I Changed
 
-## AI Context Efficiency
+**Security hardening.** The original server passed credentials around as plain strings, which means any unhandled exception could dump passwords and API tokens straight into logs or traceback output. That's a real production risk, not a theoretical one, because Python's default exception handler prints local variables and `repr()` output for debugging. I introduced a config module using Pydantic's `SecretStr` type, which wraps sensitive values so they display as `'**********'` in all logs, tracebacks, and string representations. Even if something crashes unexpectedly, credentials can't leak. On top of that, I added auto-authentication on startup using environment variables (eliminating the manual auth step users had to perform before every session), parameter allowlists per resource type to reject unexpected input, and session ID masking that only shows the first 8 characters in log output.
 
-Added a response filtering system with three verbosity levels:
+**Response filtering for AI context efficiency.** AI assistants work within token budgets, and the Taiga API returns dense JSON objects with 50+ fields per item. I added a response filtering system with three verbosity levels: minimal (just id, ref, subject, status, project), standard as the default (useful fields including version numbers needed for updates), and full for backward compatibility with the complete API response. In minimal mode, a user story list goes from roughly 50 fields per item down to 5, which makes a pretty significant difference when you're querying a full sprint board.
 
-- **minimal**: Core fields only (id, ref, subject, status, project)
-- **standard** (default): Useful fields including version for updates
-- **full**: Complete API response for backward compatibility
+**Centralized error handling.** Every endpoint in the original server had its own try/catch block with nearly identical error handling logic, the kind of duplication that makes bugs harder to spot and changes harder to make consistently. I refactored it into a single `_execute_taiga_operation()` helper that all endpoints route through. The refactoring actually ended up cutting about 14% of the server code (roughly 207 lines from `server.py`), which wasn't the goal but was a nice side effect of removing all that duplication.
 
-This reduces token usage — a user story list response goes from ~50 fields to 5 in minimal mode.
+**Dependency and tooling cleanup.** Removed 3 unused dependencies (fastapi, uvicorn, httpx) that were listed in the project but never imported, and consolidated 3 separate linting tools (black, isort, flake8) down to just ruff.
 
-## Code Quality
+**Testing and CI.** The project had no tests at all before this PR. I added 11 unit tests covering the core server operations, config validation, credential masking behavior, and the response filtering logic. The CI pipeline runs a matrix across Python 3.10, 3.11, and 3.12, which matters because MCP servers need to work across whatever Python version the user happens to have. Testing three versions catches compatibility issues (type hint syntax, async behavior differences) before they hit users.
 
-- **Centralized Error Handling**: Refactored with a `_execute_taiga_operation()` helper that eliminated duplicated try/catch blocks across every endpoint, reducing `server.py` by ~207 lines (14%)
-- **Dependency Cleanup**: Removed 3 unused dependencies (fastapi, uvicorn, httpx) and consolidated 3 linting tools (black, isort, flake8) down to 1 (ruff)
-- **Testing & CI**: Added the project's first test suite — 11 unit tests with pytest — plus a CI pipeline with matrix testing across Python 3.10–3.12
+## Why It Matters
 
-## Outcome
+This is someone else's project that I was using as a dependency. Rather than forking it or working around the issues locally, I contributed the fixes upstream so every user benefits. The security fixes in particular are the kind of thing that's easy to overlook in a hobby project but becomes a real liability once other people are running the code with their own credentials.
 
-The PR was reviewed and merged by the maintainer. All changes are included in the released package.
+The combination of security hardening, code reduction, and a test suite with CI is also just good open-source citizenship. It leaves the project in a state where the maintainer can accept future contributions more confidently, because there's now a baseline of tests and linting to catch regressions.
+
+## The PR
+
+The PR was reviewed and merged by the maintainer. All changes are included in the released package. The full diff and review conversation are on the GitHub repo if you want to see the specifics.

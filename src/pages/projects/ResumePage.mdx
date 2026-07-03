@@ -1,6 +1,6 @@
 ---
 title: "Portfolio Site"
-description: "Astro portfolio with GSAP scroll animations and a 42-command interactive terminal hidden in the About section"
+description: "Astro portfolio with GSAP scroll animations, a virtual unix filesystem, and a 42-command interactive terminal you can actually type into"
 date: 2026-03-29
 github: "resume-page"
 preview: "https://hulsman.dev"
@@ -8,13 +8,21 @@ tech: ["Astro", "TypeScript", "Tailwind CSS", "GSAP", "Cloudflare Workers", "MDX
 layout: "../../layouts/ProjectLayout.astro"
 showcase: false
 dateLabel: "Launched"
-hook: "A static-first portfolio at hulsman.dev, built with Astro and hiding a fully interactive terminal behind a scroll animation."
+hook: "A static-first portfolio at hulsman.dev with scroll-pinned animations, a contact form on Cloudflare Workers, and a fully interactive terminal hiding in the About section."
 ---
 
-## Stack Choices
+Most developer portfolios are a template with some text swapped in. I figured if I'm going to have one, it should be something I'd actually want to build. The result is a static Astro site with scroll-driven animations, project pages in MDX, and a terminal you can actually type commands into.
 
-Astro over Next or Remix because this site has no client-side app state — pages are static HTML with islands of JS where interactivity demands it. GSAP ScrollTrigger over Framer Motion because it works without React and gives fine-grained control over scroll-pinned sequences; all animations degrade gracefully with `prefers-reduced-motion`. The contact form runs server-side on Cloudflare Workers with the Resend API — no separate backend, no CORS proxy, just an edge function co-deployed with the static assets.
+## Why These Tools
+
+Astro over Next or Remix because this site has no client-side app state. Pages are static HTML with islands of JS where interactivity demands it. GSAP ScrollTrigger over Framer Motion because it works without React and gives fine-grained control over scroll-pinned sequences. The About section's terminal card, for example, pins in the viewport while a typing animation plays through, then unpins and releases back into the document flow. All animations respect `prefers-reduced-motion` by disabling ScrollTrigger pins and replacing timeline-driven sequences with immediate final states, which matters more than most developers think it does (screen reader users and people with vestibular disorders aren't edge cases). Tailwind handles all styling with a custom theme extended for the site's color palette and spacing scale. The contact form runs server-side on Cloudflare Workers with the Resend API, no separate backend, no CORS proxy, just an edge function co-deployed with the static assets.
 
 ## The Terminal
 
-The About section has a terminal card that plays a typing animation on scroll. After the animation finishes, the blinking cursor is real — you can type into it. It implements 42 commands in vanilla TypeScript: filesystem navigation over a virtual filesystem (`ls`, `cd`, `cat resume`), unix staples (`grep`, `head`, `tail`, `wc`, `sort`, `env`), fun stuff (`cowsay`, `sl`, `matrix`, `neofetch`), and routing commands that actually navigate the site. Pipes work end-to-end (`cat resume | grep TypeScript | wc -l`), alongside tab completion, command history, and aliases. Mobile input uses a transparent overlay with touch gesture detection to separate taps from scrolls — reliably opening the software keyboard across Android and iOS was the hardest part of the build.
+The About section has a terminal card that plays a typing animation on scroll. After the animation finishes, the blinking cursor is real and you can type into it. It implements 42 commands in vanilla TypeScript across a few categories: filesystem navigation over a virtual filesystem (`ls`, `cd`, `cat resume`), unix staples (`grep`, `head`, `tail`, `wc`, `sort`, `env`), fun stuff (`cowsay`, `sl`, `matrix`, `neofetch`), and routing commands that actually navigate the site.
+
+The virtual filesystem is a tree of nodes representing directories and files, with the content defined inline. `~` contains directories like `projects/`, `skills/`, and `about/`, plus files like `resume` and `contact.txt`. Running `cat resume` renders a plain-text resume, `ls projects` lists the actual project pages, and `cd` navigates the tree with support for relative and absolute paths including `..` resolution. It's not a real filesystem, but it behaves like one enough that muscle memory works.
+
+Pipes work end-to-end by streaming output through commands left to right. `cat resume | grep TypeScript | wc -l` runs `cat`, feeds its stdout line-by-line into `grep`, then feeds the filtered output into `wc`. Each command in the pipeline receives the previous command's output as its stdin argument, so the implementation stays simple without needing actual stream objects or async iterators. Tab completion, command history with up/down arrows, and aliases (`ll` for `ls -la`) round out the experience.
+
+Mobile input was the most surprising challenge. The terminal uses a transparent textarea overlay with touch gesture detection to separate taps from scrolls, reliably opening the software keyboard across Android and iOS was the hardest part of the build. Android and iOS handle focus, viewport resizing, and virtual keyboard events differently enough that what works perfectly on one platform breaks on the other, and there's no spec to fall back on.
