@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hulsman.dev/sitemap-index.xml

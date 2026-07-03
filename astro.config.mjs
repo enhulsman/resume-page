@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import react from '@astrojs/react';
+import sitemap from '@astrojs/sitemap';
 import site from './src/config/site';
 
 export default defineConfig({
@@ -11,10 +12,13 @@ export default defineConfig({
       shikiConfig: {
         theme: 'github-dark'
       }
-    }), 
-    react()
+    }),
+    react(),
+    sitemap()
   ],
-  site: site.url,
+  // Canonical origin — drives sitemap absolute URLs and Astro.site. (Was `site.url`, which
+  // never existed on the config object, so Astro.site was silently undefined.)
+  site: site.seo.baseUrl,
   markdown: {
     // Configure layout for MDX files
     layouts: {
