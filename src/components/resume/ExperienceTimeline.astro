@@ -18,7 +18,7 @@ function formatDate(entry: typeof experience[0]) {
         <div class="timeline-entry">
           <div class="timeline-dot"></div>
           <div>
-            <span class="text-xs text-theme-tertiary">{formatDate(entry)}</span>
+            <span class="text-xs text-theme-tertiary">{formatDate(entry)}{entry.note && <span class="text-theme-muted"> · {entry.note}</span>}</span>
             <p class="text-sm font-medium text-theme-primary">{entry.role} — <span class="text-theme-secondary font-normal">{entry.client}</span></p>
             <p class="text-sm text-theme-tertiary mt-0.5">{entry.summary}</p>
           </div>
@@ -34,7 +34,7 @@ function formatDate(entry: typeof experience[0]) {
         <div class="timeline-entry">
           <div class="timeline-dot"></div>
           <div>
-            <span class="text-xs text-theme-tertiary">{formatDate(entry)}</span>
+            <span class="text-xs text-theme-tertiary">{formatDate(entry)}{entry.note && <span class="text-theme-muted"> · {entry.note}</span>}</span>
             <p class="text-sm font-medium text-theme-primary">{entry.role} — <span class="text-theme-secondary font-normal">{entry.client}</span></p>
             <p class="text-sm text-theme-tertiary mt-0.5">{entry.summary}</p>
           </div>

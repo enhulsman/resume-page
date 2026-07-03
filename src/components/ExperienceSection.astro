@@ -36,7 +36,7 @@ function formatDate(entry: typeof experience[0]): string {
           <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6 hover:border-[var(--color-accent-border)] transition-colors">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2">
               <h3 class="font-display text-base md:text-lg font-bold text-theme-primary">{entry.role}</h3>
-              <span class="font-mono text-xs text-theme-accent shrink-0">{formatDate(entry)}</span>
+              <span class="font-mono text-xs text-theme-accent shrink-0">{formatDate(entry)}{entry.note && <span class="text-theme-muted"> · {entry.note}</span>}</span>
             </div>
             <p class="text-sm text-theme-accent mb-2">{entry.client}</p>
             <p class="text-sm text-theme-secondary leading-relaxed">{entry.summary}</p>

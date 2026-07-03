@@ -17,6 +17,9 @@ export interface Experience {
   summary: string;
   relatedProject?: string;
   group: 'consulting' | 'prior';
+  // Qualifier rendered next to the date range (e.g. an ongoing on-call engagement) so a
+  // "Present" end date doesn't read as a data error.
+  note?: string;
 }
 
 export interface Education {
@@ -83,6 +86,7 @@ export const experience: Experience[] = [
     role: 'DevOps Engineer',
     client: 'European staffing company',
     startDate: '2023',
+    note: 'on-call',
     summary: 'Solo-built a Java/Playwright automation that replaced a daily 10–15 minute manual health report across ~50 VMs, with CI/CD-triggered email delivery, Teams alerts, and an issue-annotation page. Created a Bash maintenance toolbox of scheduled scripts to prevent storage exhaustion and piped PDC notifications into Teams channels.',
     group: 'consulting',
   },
