@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Page — Site Architecture Overview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0f1419;
+      --surface-primary: #1a1f2e;
+      --surface-secondary: #242d3d;
+      --border: rgba(212, 160, 48, 0.15);
+      --border-accent: rgba(212, 160, 48, 0.3);
+      --text-primary: #e4e6eb;
+      --text-secondary: #b0b5c1;
+      --text-dim: #7a8294;
+      --accent-primary: #d4a030;
+      --accent-light: rgba(212, 160, 48, 0.15);
+      --accent-lighter: rgba(212, 160, 48, 0.08);
+      --success: #34d399;
+      --info: #60a5fa;
+      --warning: #f59e0b;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8f9fa;
+        --surface-primary: #ffffff;
+        --surface-secondary: #f3f4f6;
+        --border: rgba(212, 160, 48, 0.2);
+        --border-accent: rgba(212, 160, 48, 0.4);
+        --text-primary: #1a1f2e;
+        --text-secondary: #4a5568;
+        --text-dim: #94a3b8;
+        --accent-primary: #d4a030;
+        --accent-light: rgba(212, 160, 48, 0.12);
+        --accent-lighter: rgba(212, 160, 48, 0.05);
+      }
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'JetBrains Mono', monospace;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      margin-bottom: 4rem;
+      padding: 3rem 2rem;
+      background: linear-gradient(135deg, var(--surface-primary) 0%, var(--surface-secondary) 100%);
+      border-radius: 1rem;
+      border: 1px solid var(--border-accent);
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent-primary), var(--info));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .tech-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--accent-lighter);
+      border: 1px solid var(--border-accent);
+      border-radius: 0.5rem;
+      font-size: 0.85rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      color: var(--accent-primary);
+      transition: var(--transition);
+    }
+
+    .tech-badge:hover {
+      background: var(--accent-light);
+      border-color: var(--accent-primary);
+    }
+
+    /* Section */
+    section {
+      margin-bottom: 3rem;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border-accent);
+    }
+
+    /* Grid layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Card styles */
+    .card {
+      background: var(--surface-primary);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      border-color: var(--border-accent);
+      background: var(--surface-secondary);
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 0.4rem;
+      background: var(--accent-light);
+      color: var(--accent-primary);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .card-description {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-list {
+      list-style: none;
+      margin-bottom: 1rem;
+    }
+
+    .card-list li {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      padding: 0.5rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+    }
+
+    .card-list li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--accent-primary);
+      font-weight: 700;
+    }
+
+    /* File structure */
+    .file-tree {
+      background: var(--surface-secondary);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+    }
+
+    .file-tree code {
+      color: var(--text-secondary);
+    }
+
+    .dir-name {
+      color: var(--info);
+      font-weight: 600;
+    }
+
+    .file-name {
+      color: var(--text-secondary);
+    }
+
+    .file-desc {
+      color: var(--text-dim);
+      margin-left: 1rem;
+      font-size: 0.85rem;
+    }
+
+    /* Architecture diagram */
+    .architecture {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-accent);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .arch-section {
+      margin-bottom: 2rem;
+    }
+
+    .arch-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .arch-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent-primary);
+      margin-bottom: 1rem;
+    }
+
+    .arch-layer {
+      background: var(--surface-secondary);
+      border: 2px solid var(--border-accent);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .arch-layer-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .arch-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .arch-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      background: var(--accent-lighter);
+      border: 1px solid var(--border-accent);
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    .arch-item.highlight {
+      background: var(--accent-light);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    /* Flow arrow */
+    .flow-arrow {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 1.5rem;
+      margin: 1rem 0;
+    }
+
+    /* Data flow */
+    .data-flow {
+      background: var(--surface-secondary);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .data-flow-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .flow-step:last-child {
+      margin-bottom: 0;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: var(--accent-light);
+      border: 2px solid var(--accent-primary);
+      color: var(--accent-primary);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .step-desc {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Comparison table */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface-primary);
+    }
+
+    thead {
+      background: var(--surface-secondary);
+      border-bottom: 2px solid var(--border-accent);
+      position: sticky;
+      top: 0;
+    }
+
+    th {
+      padding: 1rem;
+      text-align: left;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    tbody tr:hover {
+      background: var(--surface-secondary);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .status-badge.active {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--success);
+    }
+
+    .status-badge.config {
+      background: rgba(96, 165, 250, 0.15);
+      color: var(--info);
+    }
+
+    .status-badge.utility {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 2rem 1rem;
+      }
+
+      .hero {
+        padding: 2rem 1rem;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+      }
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        font-size: 0.85rem;
+      }
+
+      th,
+      td {
+        padding: 0.75rem;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(1rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    section {
+      animation: fadeUp 0.6s ease-out forwards;
+    }
+
+    section:nth-child(1) { animation-delay: 0.1s; }
+    section:nth-child(2) { animation-delay: 0.2s; }
+    section:nth-child(3) { animation-delay: 0.3s; }
+    section:nth-child(4) { animation-delay: 0.4s; }
+    section:nth-child(5) { animation-delay: 0.5s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
+    /* Code blocks */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--surface-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.3rem;
+      font-size: 0.9em;
+    }
+
+    a {
+      color: var(--accent-primary);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <h1>Resume Page Architecture</h1>
+      <p>Astro-based portfolio with config-driven projects, MDX case studies, and dynamic OG images</p>
+      <div class="tech-stack">
+        <span class="tech-badge">Astro 5.16</span>
+        <span class="tech-badge">TypeScript</span>
+        <span class="tech-badge">Tailwind CSS</span>
+        <span class="tech-badge">MDX</span>
+        <span class="tech-badge">GSAP</span>
+        <span class="tech-badge">Cloudflare Workers</span>
+      </div>
+    </section>
+
+    <!-- Project Metadata & Config -->
+    <section>
+      <h2 class="section-title">Project Metadata & Configuration</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">⚙</div>
+            <code>src/config/site.ts</code>
+          </div>
+          <div class="card-description">Centralized site configuration</div>
+          <ul class="card-list">
+            <li><strong>Author Info:</strong> Name, role, location, social links</li>
+            <li><strong>Employment Status:</strong> Available/employed-open with messaging</li>
+            <li><strong>Project Showcase:</strong> 5 featured projects with metadata</li>
+            <li><strong>Skills:</strong> Languages, tools, frameworks, interests</li>
+            <li><strong>SEO Config:</strong> Keywords, OG image, robots, base URL</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">📋</div>
+            <code>src/config/resume.ts</code>
+          </div>
+          <div class="card-description">Resume data for /resume page</div>
+          <ul class="card-list">
+            <li><strong>Experience:</strong> 5 roles with consulting/prior grouping</li>
+            <li><strong>Education:</strong> BSc CS, VWO, VAVO diplomas</li>
+            <li><strong>Certifications:</strong> PSM I, CPSA 8.8, CPBA 8.8, CPE</li>
+            <li><strong>Skills Categories:</strong> Programming, Pega, Methods, Infrastructure</li>
+            <li><strong>Spoken Languages:</strong> Dutch (native), English (fluent)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Page Structure -->
+    <section>
+      <h2 class="section-title">Page Structure & Routing</h2>
+      <div class="architecture">
+        <div class="arch-section">
+          <div class="arch-label">Static Pages (Astro)</div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Pages Directory</div>
+            <div class="arch-items">
+              <div class="arch-item"><code>/</code> index.astro</div>
+              <div class="arch-item"><code>/resume</code> resume.astro</div>
+              <div class="arch-item"><code>/contact</code> contact.astro</div>
+              <div class="arch-item"><code>/projects</code> index.astro</div>
+              <div class="arch-item highlight"><code>/projects/[slug]</code> .mdx files</div>
+              <div class="arch-item"><code>/404</code> 404.astro (served with HTTP 404 by the worker)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-arrow">↓</div>
+
+        <div class="arch-section">
+          <div class="arch-label">Layouts & Components</div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">BaseLayout.astro</div>
+            <div class="card-description" style="margin: 0 0 1rem 0;">
+              Wraps all pages with navigation, footer, theme toggle, metadata. Supports fullWidth mode for hero sections.
+            </div>
+            <div class="arch-items">
+              <div class="arch-item"><code>Header</code> + <code>Nav</code></div>
+              <div class="arch-item"><code>DotGrid</code> background</div>
+              <div class="arch-item"><code>Footer</code></div>
+              <div class="arch-item"><code>Metadata</code> SEO</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-section">
+          <div class="arch-label">Project Layout (MDX)</div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">ProjectLayout.astro</div>
+            <div class="card-description" style="margin: 0 0 1rem 0;">
+              Specialized layout for case studies with header, metadata extraction, tech badges, and styled prose.
+            </div>
+            <div class="arch-items">
+              <div class="arch-item">Frontmatter parsing</div>
+              <div class="arch-item">Tech tags</div>
+              <div class="arch-item">GitHub links</div>
+              <div class="arch-item">Date formatting</div>
+              <div class="arch-item">Hook summaries</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Project Data Discovery -->
+    <section>
+      <h2 class="section-title">Project Data Discovery</h2>
+      <div class="data-flow">
+        <div class="data-flow-title">MDX Auto-Discovery Pipeline</div>
+        <div class="flow-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">Write MDX File</div>
+            <div class="step-desc">Create <code>/src/pages/projects/ProjectName.mdx</code> with frontmatter metadata (title, description, date, tech, showcase flag)</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">Frontmatter Parsing</div>
+            <div class="step-desc"><code>ProjectsShowcase.astro</code> & <code>/projects/index.astro</code> use <code>import.meta.glob()</code> to discover all <code>.mdx</code> files</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-title">Filter & Sort</div>
+            <div class="step-desc">Filter by <code>showcase: true</code> flag. Sort by date descending. Extract title, description, tech tags, GitHub URL</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <div class="step-title">Render Cards</div>
+            <div class="step-desc"><code>ProjectCard.astro</code> renders as spotlight cards with hover glow effect and link to full case study</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <div class="step-title">Layout Applied</div>
+            <div class="step-desc"><code>ProjectLayout.astro</code> auto-applied via Astro config to all <code>*/projects/*.mdx</code> files</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Component Breakdown -->
+    <section>
+      <h2 class="section-title">Component Breakdown</h2>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">🏠</div>
+            Home Page Components
+          </div>
+          <ul class="card-list">
+            <li><code>HeroSection</code> — Headline + CTA</li>
+            <li><code>InfoStrip</code> — Employment status</li>
+            <li><code>AboutSection</code> — Bio paragraph</li>
+            <li><code>ProjectsShowcase</code> — Featured projects</li>
+            <li><code>ExperienceSection</code> — Work timeline</li>
+            <li><code>SkillsSection</code> — Skill categories</li>
+            <li><code>ContactCTA</code> — Get in touch button</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">📄</div>
+            Resume Page Components
+          </div>
+          <ul class="card-list">
+            <li><code>SkillsGrid</code> — Category badges</li>
+            <li><code>ExperienceTimeline</code> — Timeline view</li>
+            <li><code>EducationList</code> — Degree list</li>
+            <li><code>CertificationList</code> — Certs with links</li>
+            <li><code>AnimatedIcon</code> — Social icons</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">🎨</div>
+            Layout & UI Components
+          </div>
+          <ul class="card-list">
+            <li><code>BaseLayout</code> — Master wrapper</li>
+            <li><code>ProjectLayout</code> — Case study wrapper</li>
+            <li><code>ProjectCard</code> — Spotlight card</li>
+            <li><code>Header</code> + <code>Nav</code> — Navigation</li>
+            <li><code>Footer</code> — Footer</li>
+            <li><code>DotGrid</code> — Background pattern</li>
+            <li><code>Metadata</code> — SEO metadata</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Project Files -->
+    <section>
+      <h2 class="section-title">Featured Projects (MDX Files)</h2>
+      <div class="file-tree">
+        <div style="margin-bottom: 0.5rem;"><span class="dir-name">src/pages/projects/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ ClaudeSandbox.mdx</span> <span class="file-desc">Defense-in-depth sandbox [featured]</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ PytaigaMcp.mdx</span> <span class="file-desc">Taiga MCP PR contribution [featured]</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ HomelabInfrastructure.mdx</span> <span class="file-desc">3-device hybrid setup [featured]</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ FinanceBot.mdx</span> <span class="file-desc">Discord bot + Google Sheets [featured]</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ AnnaAssistant.mdx</span> <span class="file-desc">Teams AI bot [featured]</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ EncryptedChatTUI.mdx</span> <span class="file-desc">Rust Tokio chat system</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ ResumePage.mdx</span> <span class="file-desc">This portfolio + terminal</span></div>
+        <div><span class="file-name">└─ index.astro</span> <span class="file-desc">Projects listing page</span></div>
+      </div>
+      <p style="color: var(--text-secondary); margin-top: 1rem; font-size: 0.9rem;">
+        Each MDX file has <code>showcase: true</code> flag controlling homepage display. Frontmatter includes date, tech stack, GitHub link, and hook summary.
+      </p>
+    </section>
+
+    <!-- Data Flow Table -->
+    <section>
+      <h2 class="section-title">Data Flow & Rendering</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Discovery Method</th>
+              <th>Used By</th>
+              <th>Output</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>src/config/site.ts</code></td>
+              <td>Direct import</td>
+              <td>All pages, layouts, components</td>
+              <td>Author info, skills, social links, SEO config</td>
+            </tr>
+            <tr>
+              <td><code>src/config/resume.ts</code></td>
+              <td>Direct import</td>
+              <td><code>/resume</code> page components</td>
+              <td>Skills grid, experience timeline, education, certs</td>
+            </tr>
+            <tr>
+              <td><code>src/pages/projects/*.mdx</code></td>
+              <td><code>import.meta.glob()</code> eager mode</td>
+              <td><code>ProjectsShowcase</code>, <code>/projects</code> index</td>
+              <td>Project cards, project listing</td>
+            </tr>
+            <tr>
+              <td>Frontmatter (each MDX)</td>
+              <td><code>.frontmatter</code> object</td>
+              <td><code>ProjectLayout</code></td>
+              <td>Project page header, metadata, badges</td>
+            </tr>
+            <tr>
+              <td>MDX content</td>
+              <td><code>ProjectLayout</code> slot</td>
+              <td>Case study pages</td>
+              <td>Rendered prose with syntax highlighting</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Key Features -->
+    <section>
+      <h2 class="section-title">Key Features & Architecture Decisions</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">🔄</div>
+            Config-Driven Architecture
+          </div>
+          <div class="card-description">
+            Single source of truth for projects, skills, and metadata. Changes to <code>site.ts</code> propagate across homepage showcase and SEO.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">📝</div>
+            MDX Auto-Discovery
+          </div>
+          <div class="card-description">
+            Write a new <code>.mdx</code> file → automatically appears in listings. No route configuration needed. Astro config applies layout automatically.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">🎬</div>
+            Scroll-Triggered Animations
+          </div>
+          <div class="card-description">
+            GSAP ScrollTrigger with <code>[data-reveal]</code> attributes. Fade-up on scroll. Respects <code>prefers-reduced-motion</code>.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">✨</div>
+            Spotlight Glow Effect
+          </div>
+          <div class="card-description">
+            Project and ProjectCard components track mouse position with CSS custom properties for dynamic radial gradient glow on hover.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">🌓</div>
+            Theme Toggle
+          </div>
+          <div class="card-description">
+            Dark/light mode stored in localStorage. Inline script prevents flash. CSS custom properties for semantic color names.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">📱</div>
+            Contact Form
+          </div>
+          <div class="card-description">
+            Server-side form submission to Cloudflare Workers with Resend API. Client-side loading state, error/success messaging.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">🎨</div>
+            Responsive Design
+          </div>
+          <div class="card-description">
+            Tailwind CSS with semantic spacing. Grid-based layouts. Mobile-first approach. Vite dev server on port 4321.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">🔍</div>
+            SEO-Optimized
+          </div>
+          <div class="card-description">
+            Dynamic OG image. Custom metadata per page. Structured project descriptions. Keywords from config propagated to all pages.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Development Info -->
+    <section>
+      <h2 class="section-title">Development & Deployment</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">🛠</div>
+            Development Stack
+          </div>
+          <ul class="card-list">
+            <li><strong>Framework:</strong> Astro 5.16</li>
+            <li><strong>Styling:</strong> Tailwind CSS 3 + CSS custom properties</li>
+            <li><strong>Animations:</strong> GSAP 3.14</li>
+            <li><strong>Fonts:</strong> Syne (display), Outfit (body) via Google Fonts</li>
+            <li><strong>Icons:</strong> UI icon components (React + Astro)</li>
+            <li><strong>Dev Server:</strong> <code>astro dev</code> on port 4321</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="card-icon">🚀</div>
+            Build & Deployment
+          </div>
+          <ul class="card-list">
+            <li><strong>Build:</strong> <code>NODE_ENV=production astro build</code></li>
+            <li><strong>Output:</strong> Static HTML + CSS + JS</li>
+            <li><strong>Hosting:</strong> Cloudflare Pages</li>
+            <li><strong>Custom Domain:</strong> hulsman.dev</li>
+            <li><strong>Allowed Hosts:</strong> .arc8.dev, .hulsman.dev</li>
+            <li><strong>Form Backend:</strong> Cloudflare Workers (worker.ts)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- File Organization -->
+    <section>
+      <h2 class="section-title">Directory Structure</h2>
+      <div class="file-tree">
+        <div style="margin-bottom: 0.5rem;"><span class="dir-name">resume-page/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ src/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  ├─ config/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ site.ts</span> <span class="file-desc">Site metadata & projects</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  └─ resume.ts</span> <span class="file-desc">Experience, skills, education</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  ├─ pages/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ index.astro</span> <span class="file-desc">Home page</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ resume.astro</span> <span class="file-desc">Resume page</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ contact.astro</span> <span class="file-desc">Contact form</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  └─ projects/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │     ├─ index.astro</span> <span class="file-desc">All projects listing</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │     └─ *.mdx</span> <span class="file-desc">Case studies (7 projects)</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  ├─ layouts/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ BaseLayout.astro</span> <span class="file-desc">Master wrapper</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  └─ ProjectLayout.astro</span> <span class="file-desc">Case study wrapper</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  ├─ components/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ ProjectCard.astro</span> <span class="file-desc">Spotlight card</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ ProjectsShowcase.astro</span> <span class="file-desc">Featured projects section</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ HeroSection.astro</span> <span class="file-desc">Homepage hero</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ ExperienceSection.astro</span> <span class="file-desc">Work timeline</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ SkillsSection.astro</span> <span class="file-desc">Skill categories</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ resume/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  │  ├─ SkillsGrid.astro</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  │  ├─ ExperienceTimeline.astro</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  │  ├─ EducationList.astro</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  │  └─ CertificationList.astro</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  ├─ icons/</span> <span class="file-desc">Social & UI icons (Astro)</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  └─ ui/</span> <span class="file-desc">Icon components (React)</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  ├─ styles/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  └─ global.css</span> <span class="file-desc">Tailwind + custom properties</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  ├─ scripts/</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  │  └─ smooth-scroll.ts</span> <span class="file-desc">Scroll behavior</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  ├─ worker.ts</span> <span class="file-desc">Cloudflare Workers (contact form)</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">│  └─ env.d.ts</span> <span class="file-desc">TypeScript environment types</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ astro.config.mjs</span> <span class="file-desc">Astro config (MDX, React, vite)</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ tailwind.config.cjs</span> <span class="file-desc">Tailwind customization</span></div>
+        <div style="margin-bottom: 0.5rem;"><span class="file-name">├─ tsconfig.json</span> <span class="file-desc">TypeScript config</span></div>
+        <div><span class="file-name">└─ package.json</span> <span class="file-desc">Dependencies & scripts</span></div>
+      </div>
+    </section>
+
+    <!-- Summary -->
+    <section>
+      <h2 class="section-title">Summary: How It All Fits Together</h2>
+      <div class="card" style="border-color: var(--accent-primary); border-width: 2px;">
+        <p style="margin-bottom: 1rem; color: var(--text-secondary);">
+          <strong>The site is built on a config-driven, zero-maintenance architecture:</strong>
+        </p>
+        <ol style="color: var(--text-secondary); margin-left: 1.5rem; line-height: 1.8;">
+          <li style="margin-bottom: 0.75rem;"><strong>Single config file</strong> (<code>site.ts</code>) defines author, skills, featured projects, and SEO metadata</li>
+          <li style="margin-bottom: 0.75rem;"><strong>Pages import config</strong> and render everything dynamically — no hardcoding project lists or skill badges</li>
+          <li style="margin-bottom: 0.75rem;"><strong>MDX files in <code>/projects</code></strong> are auto-discovered via <code>import.meta.glob()</code> — write frontmatter, get a page</li>
+          <li style="margin-bottom: 0.75rem;"><strong><code>ProjectLayout.astro</code> applied automatically</strong> to all project MDX files via Astro config</li>
+          <li style="margin-bottom: 0.75rem;"><strong>Homepage showcase filters by <code>showcase: true</code> flag</strong> — same MDX drives both homepage cards and dedicated listing page</li>
+          <li style="margin-bottom: 0.75rem;"><strong>All pages wrap with <code>BaseLayout</code></strong> for consistent nav, footer, theme toggle, and animations</li>
+          <li><strong>Cloudflare Workers handle contact form</strong> server-side with Resend API integration</li>
+        </ol>
+        <p style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.9rem;">
+          Result: Add a new project by creating one <code>.mdx</code> file. Update portfolio metadata once in <code>site.ts</code>. Everything else cascades automatically across homepage, project pages, SEO, and social shares.
+        </p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
