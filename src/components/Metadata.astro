@@ -55,6 +55,37 @@ const fullOgImage = ogImage?.startsWith("http")
 const fullTwitterImage = twitterImage?.startsWith("http")
   ? twitterImage
   : `${site.seo.baseUrl}${twitterImage}`;
+
+// Site-wide structured data (Person + WebSite). Project pages emit an additional
+// SoftwareSourceCode node from ProjectLayout.astro.
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      name: site.name,
+      jobTitle: site.role,
+      url: site.seo.baseUrl,
+      email: `mailto:${site.social.email}`,
+      worksFor: {
+        "@type": "Organization",
+        name: site.company,
+        url: site.social.employer,
+      },
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Utrecht",
+        addressCountry: "NL",
+      },
+      sameAs: [site.social.GitHub, site.social.LinkedIn],
+    },
+    {
+      "@type": "WebSite",
+      name: `${site.name} — Portfolio & Resume`,
+      url: site.seo.baseUrl,
+    },
+  ],
+};
 ---
 
 <meta charset="utf-8" />
@@ -85,3 +116,5 @@ const fullTwitterImage = twitterImage?.startsWith("http")
 <meta name="theme-color" content="#c9942b" />
 <meta name="color-scheme" content="light dark" />
 <link rel="sitemap" href="/sitemap-index.xml" />
+
+<script type="application/ld+json" set:html={JSON.stringify(structuredData)} is:inline />

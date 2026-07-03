@@ -20,6 +20,18 @@ const projectKeywords =
   tech.length > 0
     ? `${site.seo.keywords}, ${tech.join(", ")}, project case study, portfolio`
     : `${site.seo.keywords}, project case study, portfolio`;
+
+// Structured data for this project (supplements the site-wide Person/WebSite in Metadata.astro).
+const projectStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  name: title,
+  description: projectDescription,
+  url: new URL(Astro.url.pathname, site.seo.baseUrl).href,
+  author: { "@type": "Person", name: site.name, url: site.seo.baseUrl },
+  ...(tech.length > 0 ? { programmingLanguage: tech } : {}),
+  ...(github ? { codeRepository: githubUrl } : {}),
+};
 ---
 
 <BaseLayout
@@ -30,6 +42,8 @@ const projectKeywords =
   ogDescription={projectDescription}
   ogType="article"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(projectStructuredData)} is:inline />
+
   <article class="mx-auto max-w-5xl">
     <!-- Project header -->
     <header class="mb-8">
