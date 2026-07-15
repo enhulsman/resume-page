@@ -1,0 +1,55 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import site from "../../config/site";
+
+// Auto-discover MDX posts in this folder, excluding drafts (leading underscore)
+const entries = Object.entries(
+  import.meta.glob("./*.mdx", { eager: true })
+) as [string, any][];
+
+const posts = entries
+  .filter(([path]) => !path.split("/").pop()!.startsWith("_"))
+  .map(([, m]) => ({
+    title: m.frontmatter?.title ?? "Untitled",
+    description: m.frontmatter?.description ?? "",
+    href: m.url ?? "",
+    date: m.frontmatter?.date,
+  }))
+  .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+
+const formatDate = (date: string) =>
+  date
+    ? new Date(date).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      })
+    : "";
+
+const blogDescription = `Writing from ${site.name} — ${site.summary}`;
+---
+
+<BaseLayout
+  title={`Blog — ${site.name}`}
+  description={blogDescription}
+  ogTitle={`Blog — ${site.name}`}
+  ogDescription={blogDescription}
+>
+  <header class="mt-2">
+    <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// Blog</span>
+    <h1 class="mt-2 font-display text-3xl md:text-4xl font-bold tracking-tight text-theme-primary">Blog</h1>
+    <p class="text-theme-muted mt-2 text-sm">Notes on infrastructure, tooling, and the occasional detour.</p>
+  </header>
+  <section class="mt-4 sm:mt-6 flex flex-col gap-4 sm:gap-5">
+    {posts.map((p) => (
+      <article class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
+        <h2 class="font-display text-base md:text-lg font-bold tracking-tight text-theme-primary">
+          <a href={p.href} class="hover:text-theme-accent transition-colors duration-200">{p.title}</a>
+        </h2>
+        <p class="mt-1 text-sm text-theme-muted">{formatDate(p.date)}</p>
+        <p class="text-responsive-sm text-theme-tertiary mt-2 leading-relaxed">{p.description}</p>
+      </article>
+    ))}
+  </section>
+</BaseLayout>

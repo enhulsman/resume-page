@@ -1,0 +1,102 @@
+---
+title: "The last day of a smarter model"
+description: "Temporary access to a smarter model, one day left on the clock: why I spent it building a spec factory instead of clearing tickets."
+date: 2026-07-06
+updated: 2026-07-15
+layout: "../../layouts/BlogLayout.astro"
+---
+
+So, here's a situation that's going to become normal and that nobody really has a playbook for
+yet: you get temporary access to a model that's meaningfully smarter than your daily driver, and
+you know the exact day it goes away. Anthropic's Fable 5 was included in subscriptions for six
+days. I came back from my off-grid holidays with about one day left.
+
+The obvious move is to just use it, right? Point it at your backlog, watch it clear tickets faster
+than usual, feel good about it. That's what I think a lot of people did with their window, and I
+think it's the wrong call. Ticket-clearing is exactly the work the cheaper model already does
+fine. Spending frontier hours on it is like hiring a structural engineer and asking them to
+paint the fence.
+
+The question I ended up ranking everything by: what can THIS model produce that next week's
+model can't? Not "what's important"; importance is a trap here. My broken homelab alert delivery was
+important and urgent, and also completely fixable by the everyday model. It went to the backlog.
+
+What made the cut was judgment. Decisions, specs, taste, the reasoning behind choices. So the
+plan became a spec factory: have the smart model make every hard decision it could reach, write
+each one down as an executable document, and leave the typing to its successor.
+
+## What a spec has to survive
+
+A spec written by a smarter model for a dumber one has a documented failure mode, the
+instructions can just overwhelm the executor. So every spec followed one contract: fresh-session
+executable, all decisions pre-made with a one-line why, and every step ends with a mechanical
+acceptance check. An exact command and its expected output. Never "verify it works".
+
+Four specs came out of the first block: a health API extension for my status page, a deep-link
+plan for a WASM Bible reader, an Ansible migration for the homelab (a Pi 5, an old Pi 2, and a
+Hetzner box), and a DNS failover decision that had been nagging me for months.
+
+That last one is a nice example of why the judgment layer matters. The textbook answer for DNS
+failover is keepalived, a floating IP between resolvers. The model rejected it for a reason I
+hadn't articulated: my clients get DNS through Tailscale, and a LAN VIP would only be reachable
+through the subnet router, which runs on the exact machine whose failure it's supposed to
+survive. The mechanism dies with its own trigger. Two lines in the Tailscale admin console do
+the job instead. That paragraph of reasoning is worth more than any amount of generated YAML.
+
+## The part where the specs turn out to be wrong
+
+Writing the specs was maybe a third of the day. The rest was adversarial review, every spec went
+to a separate reviewer agent briefed to be hostile, and none of them survived the first round.
+
+The reviewers caught things I find pretty humbling in hindsight. The DNS spec's failover test
+required stopping a service over SSH with sudo, and my Pis run scoped sudoers where mutating
+commands need a password, so the command would just hang forever in a non-interactive session.
+The Ansible spec managed a cron job with `ansible.builtin.cron`, which quietly stamps marker
+comments into your crontab, guaranteeing the spec's own "nothing changed" parity check could
+never pass. A rude default, honestly. The health API spec had a rollback procedure that rebuilt
+the broken code instead of the old code, because the deploy rsync had deleted the old source
+before anything got tagged.
+
+Every one of those would have burned an evening of the successor model's time, or worse, taken
+down DNS for the house.
+
+Two to three review rounds each, until a clean approval. Then the closing move, and if you take
+one thing from this post, take this one: I handed a finished spec to the weaker model, cold, no
+context, and asked it to explain its execution plan back to me. Not to run it. Just to read it
+and say what it would do.
+
+It read everything right. It also found seven small gaps, including a Go testing deadlock where
+the spec demanded failing tests before the types they referenced existed, so nothing could even
+compile. The format survived contact with its actual audience, which is the only review that
+counts.
+
+## Honest limits
+
+The specs are validated as readable, not as executable, those are different claims. The smoke
+test says the successor understands the plan; whether the plan survives contact with live
+infrastructure is next week's news. And the spend limit killed three reviewer agents mid-run at
+one point, which cost me an hour of resuming and re-briefing. Frontier windows and rate limits
+are an annoying combination, and I don't have a fix for that.
+
+There's a bigger loop here I've only started on as well. The same day produced a handoff
+document where the smart model predicts, in writing, where the cheaper model will fumble on my
+setup specifically, and a rewrite of my two most judgment-heavy workflow files with those
+predictions baked in. Whether the predictions hold is perhaps the most interesting experiment of
+the lot, the model wrote down how its successor will fail, and starting tomorrow I get to
+watch it be right or wrong.
+
+The backlog is queued, one spec per fresh session, cheapest model that can follow instructions.
+First up is the security findings doc, because the smart model's parting gift was pointing out
+that a token file on my workstation had been world-readable since October.
+
+I'll write up what the successor actually does with all this once it's had a week.
+
+---
+
+**Update, 2026-07-15, nine days later.** The successor is real and it shipped. The first thing
+through the queue wasn't the security doc after all, it was the weekly review system, because
+the enforcement gap it closes is exactly what let this post slip its own publish date. That
+system has been running in production since the 13th, first report generated, two small bugs
+found and fixed after contact with reality, both visible in the commit log. The token file got
+its chmod today, rotation queued right behind it. So the week-later write-up promised above now
+has actual material, where the predictions held and where they didn't is post #2.

@@ -1,0 +1,112 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import site from "../config/site";
+
+const { frontmatter } = Astro.props;
+const { title, description = "", date, updated = "" } = frontmatter;
+
+const formattedDate = date
+  ? new Date(date).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    })
+  : null;
+
+const formattedUpdated = updated
+  ? new Date(updated).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    })
+  : null;
+---
+
+<BaseLayout
+  title={`${title} — ${site.name}`}
+  description={description}
+  ogType="article"
+>
+  <article class="mx-auto max-w-5xl">
+    <!-- Post header -->
+    <header class="mb-8">
+      <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-6 md:p-8">
+        <h1 class="font-display text-3xl md:text-4xl font-bold tracking-tight text-theme-primary">
+          {title}
+        </h1>
+
+        {formattedDate && (
+          <p class="mt-2 text-sm text-theme-muted">
+            {formattedDate}
+            {formattedUpdated && <span> · Updated {formattedUpdated}</span>}
+          </p>
+        )}
+      </div>
+    </header>
+
+    <!-- Main content with prose styling -->
+    <div class="prose prose-slate max-w-none custom-prose">
+      <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-6 md:p-8">
+        <slot />
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  /* Enhanced prose styling to match homepage aesthetic */
+  /* Use very high specificity to override Tailwind's base styles */
+  article .prose.custom-prose > div > :global(:first-child) {
+    margin-top: 0;
+  }
+
+  article .prose.custom-prose h1,
+  article .prose.custom-prose h2,
+  article .prose.custom-prose h3,
+  article .prose.custom-prose h4,
+  article .prose.custom-prose h5,
+  article .prose.custom-prose h6 {
+    color: var(--color-text-primary);
+    font-weight: 600;
+    font-family: 'Syne', ui-sans-serif, system-ui, sans-serif;
+    transition: var(--transition-fast);
+  }
+
+  article .prose.custom-prose :global(hr) {
+    border-color: var(--color-border-primary);
+    margin: 2rem 0;
+  }
+
+  article .prose.custom-prose h1 {
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  article .prose.custom-prose h2 {
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    line-height: 1.35;
+  }
+
+  article .prose.custom-prose h3 {
+    font-size: 1.25rem; /* 20px */
+    line-height: 1.75rem; /* 28px */
+  }
+
+  article .prose.custom-prose h4 {
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.5rem; /* 24px */
+  }
+
+  article .prose.custom-prose h5 {
+    font-size: 1rem; /* 16px */
+    line-height: 1.25rem; /* 20px */
+  }
+
+  article .prose.custom-prose h6 {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.125rem; /* 18px */
+  }
+</style>
