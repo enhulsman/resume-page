@@ -138,8 +138,9 @@ The GitHub Actions workflow (`.github/workflows/build.yml`) runs this automatica
 
 ## Deployment
 
-```bash
-npx wrangler deploy
-```
+**Main is the deploy cycle.** Every push to `main` triggers Cloudflare Workers Builds, which
+builds and deploys the Worker automatically — there is no manual deploy step, ever. Verify a
+deploy by checking the live site a minute or two after pushing, not by running wrangler.
 
-Deploys to Cloudflare Workers. The `wrangler.toml` is configured with the build command and asset directory.
+The `wrangler.toml` is configured with the build command and asset directory; it exists for
+the Workers Builds pipeline (and local `wrangler dev`), not for hand-run deploys.
