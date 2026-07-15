@@ -3,6 +3,7 @@ type EmploymentStatus = 'available' | 'employed-open';
 
 const site = {
   name: 'Ezra Hulsman',
+  url: 'https://hulsman.dev',
   role: 'DevOps / Pega Engineer',
   company: 'Anamata',
   location: 'Utrecht, NL 🇳🇱',
