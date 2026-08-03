@@ -58,6 +58,14 @@ const site = {
   // Homepage project showcase cards
   projects: [
     {
+      title: 'Henk — Homelab Agent',
+      description: 'Security-first homelab agent on the Claude Agent SDK: default-deny toolset that refused a live prompt-injection payload, exactly-once event replay across restarts, cadence state surviving redeploys.',
+      tech: ['Python', 'Claude Agent SDK', 'Docker', 'Signal', 'Tailscale'],
+      github: 'https://github.com/enhulsman/henk',
+      link: '/projects/Henk',
+      featured: true,
+    },
+    {
       title: 'Claude Sandbox',
       description: 'Defense-in-depth sandbox isolating Claude Code with network namespaces, filesystem bind mounts, a domain-filtering egress proxy, and cross-platform Nix packaging.',
       tech: ['Nix', 'Python', 'Bash', 'Linux'],

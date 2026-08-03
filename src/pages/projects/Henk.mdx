@@ -1,0 +1,35 @@
+---
+title: "Henk — Homelab Agent"
+description: "Security-first homelab agent on the Claude Agent SDK: a default-deny toolset that refused a live prompt-injection payload, exactly-once event replay across hard container kills, and cadence state that survives redeploys"
+date: 2026-07-24
+github: "https://github.com/enhulsman/henk"
+tech: ["Python", "Claude Agent SDK", "Docker", "Signal", "ntfy", "Tailscale", "pytest"]
+layout: "../../layouts/ProjectLayout.astro"
+showcase: true
+dateLabel: "Running since"
+hook: "A personal homelab agent — Henk, the Dutch neighbor who knows where everything is — that turns infrastructure alerts into Signal conversations. Built on the Claude Agent SDK around a default-deny security posture, with an event pipeline whose delivery guarantees were proven on real hardware, not just in tests."
+---
+
+## What I Built
+
+**Channel and agent core.** Henk lives in Signal, on a dedicated number behind a containerized signal-cli bridge that publishes no ports. The adapter layer is channel-neutral — only one module knows Signal exists — and everything inbound passes an owner-only allowlist that refuses to even construct with an empty owner id, so there's no fail-open path. The agent core runs typed turns through a serial queue, one session per conversation, wrapping the Claude Agent SDK.
+
+**Event pipeline.** Alerts arrive over an ntfy subscription, get a per-source identity, and pass a cadence policy — debounce, per-identity cooldown, recurrence tracking, and a daily cap on unprompted messages — before becoming a triage turn. Every outcome lands in an append-only JSONL audit log with a versioned schema. Triage output goes to Signal plus a published handoff other tooling can pick up.
+
+**Security posture.** Default-deny everywhere: a closed toolset enforced at a `PreToolUse` choke point, read-only tools only, an inline approval gate for any future mutation, one ntfy token scoped per-topic server-side, and its own Tailscale identity with egress to exactly the four ports it uses. No SSH keys, no broad API credentials, nothing it doesn't need.
+
+## Key Decisions
+
+**Structure over prompting for injection defense.** Untrusted sensor payloads are bracketed and framed as data, but the repo is explicit that framing is defense-in-depth, not the defense. The real guarantee is structural: the SDK's permission callback turned out to be skippable for auto-approved tools (observed, not assumed — built-ins executed without it being consulted), so the closed toolset is enforced by a hook that cannot be bypassed by settings-file allow rules.
+
+**The checkpoint advances only on durable outcomes.** The intake cursor is a one-value file that moves only after an event's audit record is confirmed written, in delivery order. The first failed flush latches the cursor in place process-wide and notifies the owner — replay over silent loss, always.
+
+**Cadence state rehydrates from the audit log.** No second store to drift out of sync: cooldowns, cap windows, and recurrence references are rebuilt from audit records at startup. This is a regression fix for a witnessed bug, where three redeploys in a day wiped in-memory state and let capped alerts through.
+
+**Probe the contract you depend on.** ntfy's `since` parameter is undocumented, so I measured it: resume is exclusive, an evicted id silently returns the whole cache, an unparseable one returns 400. The probing exposed a wedge the durability work itself had introduced — a server-rejected cursor would be retried forever, killing intake silently. The fix is a bounded replay-all fallback scoped to 400 responses only, since a false positive costs bounded over-replay while a false negative costs permanent silent death.
+
+## Outcome
+
+Everything above was verified live on the Raspberry Pi 5 it runs on. A hostile payload attempting instruction override, out-of-registry tool calls, and env-var exfiltration produced a call pattern identical to a benign event — and Henk flagged the injection as a possible compromise of the alert source, lowering its confidence *because* the input was anomalous. An event published while the container was down was triaged exactly once after restart. Cap state survived a full rebuild redeploy. 233 tests cover the pipeline, permissions, and durability paths, with the SDK mocked out.
+
+The honest caveat, straight from the repo's own records: after the verification window, production went nine days with zero real events, so the cadence defaults remain untuned. Henk is a correctly-built, thoroughly-verified agent — the incident volume just hasn't arrived yet, and the project documents that rather than claiming otherwise.
