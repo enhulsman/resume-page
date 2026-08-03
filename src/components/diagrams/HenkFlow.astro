@@ -1,0 +1,234 @@
+---
+// Bespoke trust-boundary / event-flow diagram for the Henk case study.
+// Inline SVG, zero JS, themed entirely through the site's CSS variables.
+---
+
+<div class="henk-flow">
+  <svg
+    viewBox="0 0 440 652"
+    role="img"
+    aria-labelledby="henk-flow-title henk-flow-desc"
+  >
+    <title id="henk-flow-title">Henk's trust boundary and event flow</title>
+    <desc id="henk-flow-desc">
+      Untrusted sensor alerts and owner Signal messages both cross a trust
+      boundary into Henk, where events pass an intake cursor and cadence gate,
+      owner messages pass an allowlist, and everything converges on a serial
+      agent core whose every tool call must pass a default-deny PreToolUse
+      choke point before reaching read-only tools, the audit log, or Signal.
+    </desc>
+
+    <defs>
+      <marker
+        id="henk-arrow"
+        viewBox="0 0 8 8"
+        refX="7"
+        refY="4"
+        markerWidth="7"
+        markerHeight="7"
+        orient="auto-start-reverse"
+      >
+        <path d="M0 0 L8 4 L0 8 Z" class="arrow-head" />
+      </marker>
+    </defs>
+
+    <!-- zone captions -->
+    <text x="115" y="20" class="zone zone-untrusted" text-anchor="middle">UNTRUSTED INPUT</text>
+    <text x="325" y="20" class="zone" text-anchor="middle">OWNER</text>
+
+    <!-- outside world: sensors lane -->
+    <rect x="30" y="30" width="170" height="48" rx="9" class="box box-untrusted" />
+    <text x="115" y="50" class="label" text-anchor="middle">Gatus · Prometheus</text>
+    <text x="115" y="67" class="sub" text-anchor="middle">Grafana alert rules</text>
+
+    <!-- outside world: owner lane -->
+    <rect x="240" y="30" width="170" height="48" rx="9" class="box" />
+    <text x="325" y="50" class="label" text-anchor="middle">Owner on Signal</text>
+    <text x="325" y="67" class="sub" text-anchor="middle">dedicated number</text>
+
+    <line x1="115" y1="78" x2="115" y2="100" class="edge" marker-end="url(#henk-arrow)" />
+    <line x1="325" y1="78" x2="325" y2="100" class="edge" marker-end="url(#henk-arrow)" />
+
+    <rect x="30" y="104" width="170" height="48" rx="9" class="box box-untrusted" />
+    <text x="115" y="124" class="label" text-anchor="middle">ntfy henk-events</text>
+    <text x="115" y="141" class="sub" text-anchor="middle">deny-all topic</text>
+
+    <rect x="240" y="104" width="170" height="48" rx="9" class="box" />
+    <text x="325" y="124" class="label" text-anchor="middle">signal-cli bridge</text>
+    <text x="325" y="141" class="sub" text-anchor="middle">no published ports</text>
+
+    <!-- trust boundary -->
+    <text x="220" y="176" class="zone zone-untrusted" text-anchor="middle">TRUST BOUNDARY</text>
+    <line x1="14" y1="182" x2="426" y2="182" class="boundary" />
+
+    <line x1="115" y1="152" x2="115" y2="236" class="edge" marker-end="url(#henk-arrow)" />
+    <line x1="325" y1="152" x2="325" y2="236" class="edge" marker-end="url(#henk-arrow)" />
+
+    <!-- Henk container -->
+    <rect x="14" y="200" width="412" height="436" rx="14" class="container" />
+    <text x="220" y="224" class="header" text-anchor="middle">Henk · rp5 · tailnet tag:henk · zero inbound</text>
+
+    <rect x="30" y="240" width="170" height="48" rx="9" class="box" />
+    <text x="115" y="260" class="label" text-anchor="middle">event intake</text>
+    <text x="115" y="277" class="sub" text-anchor="middle">durable replay cursor</text>
+
+    <rect x="240" y="240" width="170" height="48" rx="9" class="box" />
+    <text x="325" y="260" class="label" text-anchor="middle">owner allowlist</text>
+    <text x="325" y="277" class="sub" text-anchor="middle">others dropped + logged</text>
+
+    <line x1="115" y1="288" x2="115" y2="310" class="edge" marker-end="url(#henk-arrow)" />
+
+    <rect x="30" y="314" width="170" height="48" rx="9" class="box" />
+    <text x="115" y="334" class="label" text-anchor="middle">cadence gate</text>
+    <text x="115" y="351" class="sub" text-anchor="middle">debounce · cooldown · cap</text>
+
+    <line x1="115" y1="362" x2="185" y2="392" class="edge" marker-end="url(#henk-arrow)" />
+    <line x1="325" y1="288" x2="255" y2="392" class="edge" marker-end="url(#henk-arrow)" />
+
+    <rect x="135" y="396" width="170" height="48" rx="9" class="box" />
+    <text x="220" y="416" class="label" text-anchor="middle">serial agent core</text>
+    <text x="220" y="433" class="sub" text-anchor="middle">Claude Agent SDK</text>
+
+    <line x1="220" y1="444" x2="220" y2="466" class="edge" marker-end="url(#henk-arrow)" />
+
+    <!-- the point of the diagram -->
+    <rect x="110" y="470" width="220" height="52" rx="9" class="box box-choke" />
+    <text x="220" y="491" class="label label-choke" text-anchor="middle">PreToolUse choke point</text>
+    <text x="220" y="509" class="sub" text-anchor="middle">default-deny · closed toolset</text>
+
+    <line x1="160" y1="522" x2="86" y2="554" class="edge" marker-end="url(#henk-arrow)" />
+    <line x1="220" y1="522" x2="220" y2="554" class="edge" marker-end="url(#henk-arrow)" />
+    <line x1="280" y1="522" x2="354" y2="554" class="edge" marker-end="url(#henk-arrow)" />
+
+    <rect x="24" y="558" width="124" height="48" rx="9" class="box box-safe" />
+    <text x="86" y="578" class="label label-out" text-anchor="middle">read-only tools</text>
+    <text x="86" y="594" class="sub sub-out" text-anchor="middle">health · todos</text>
+
+    <rect x="158" y="558" width="124" height="48" rx="9" class="box" />
+    <text x="220" y="578" class="label label-out" text-anchor="middle">audit log</text>
+    <text x="220" y="594" class="sub sub-out" text-anchor="middle">append-only JSONL</text>
+
+    <rect x="292" y="558" width="124" height="48" rx="9" class="box" />
+    <text x="354" y="578" class="label label-out" text-anchor="middle">Signal + handoff</text>
+    <text x="354" y="594" class="sub sub-out" text-anchor="middle">owner only</text>
+  </svg>
+
+  <div class="flow-caption">
+    Two ways in, one way through: every tool call passes the default-deny
+    choke point, every outcome lands in the audit log.
+  </div>
+</div>
+
+<style>
+  .henk-flow {
+    max-width: 480px;
+    margin: 2.25rem auto;
+  }
+
+  .henk-flow svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .henk-flow text {
+    font-family: inherit;
+  }
+
+  .box {
+    fill: var(--color-bg-tertiary);
+    stroke: var(--color-border-primary);
+    stroke-width: 1;
+    transition: var(--transition-theme);
+  }
+
+  .box-untrusted {
+    fill: var(--color-warning-alpha);
+    stroke: var(--color-warning-border);
+  }
+
+  .box-safe {
+    fill: var(--color-teal-alpha);
+    stroke: var(--color-teal-border);
+  }
+
+  .box-choke {
+    fill: var(--color-accent-alpha);
+    stroke: var(--color-accent-primary);
+    stroke-width: 1.5;
+  }
+
+  .container {
+    fill: var(--color-bg-tertiary);
+    fill-opacity: 0.3;
+    stroke: var(--color-border-primary);
+    stroke-width: 1;
+  }
+
+  .label {
+    font-size: 15px;
+    font-weight: 600;
+    fill: var(--color-text-primary);
+  }
+
+  .label-choke {
+    fill: var(--color-accent-primary);
+    font-weight: 700;
+  }
+
+  .label-out {
+    font-size: 13.5px;
+  }
+
+  .sub {
+    font-size: 12px;
+    fill: var(--color-text-muted);
+  }
+
+  .sub-out {
+    font-size: 11.5px;
+  }
+
+  .zone {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    fill: var(--color-text-muted);
+  }
+
+  .zone-untrusted {
+    fill: var(--color-warning);
+  }
+
+  .header {
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    fill: var(--color-text-muted);
+  }
+
+  .edge {
+    stroke: var(--color-text-muted);
+    stroke-width: 1.2;
+    stroke-opacity: 0.55;
+  }
+
+  .arrow-head {
+    fill: var(--color-text-muted);
+    fill-opacity: 0.7;
+  }
+
+  .boundary {
+    stroke: var(--color-warning);
+    stroke-width: 1.2;
+    stroke-opacity: 0.55;
+    stroke-dasharray: 6 5;
+  }
+
+  .flow-caption {
+    margin-top: 0.9rem;
+    text-align: center;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+</style>
