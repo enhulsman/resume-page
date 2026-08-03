@@ -1,6 +1,6 @@
 ---
 title: "Encrypted Chat TUI"
-description: "Self-hosted terminal chat system built as a Cargo workspace — Tokio async server, Cursive TUI client, and a shared typed ndjson protocol with compile-time checked PostgreSQL queries"
+description: "Self-hosted terminal chat system built as a Cargo workspace: Tokio async server, Cursive TUI client, and a shared typed ndjson protocol with compile-time checked PostgreSQL queries"
 date: 2025-08-26
 tech: ["Rust", "Tokio", "Cursive", "PostgreSQL", "sqlx", "ndjson"]
 layout: "../../layouts/ProjectLayout.astro"
@@ -13,13 +13,13 @@ hook: "A self-hosted terminal chat system in Rust with a typed JSON protocol and
 
 The project is a Cargo workspace with three crates, originally started as a Computer Security course project and actively developed since.
 
-- **Common protocol library**: Defines all request and response types as tagged enums with structured error codes, shared user types, and a newline-delimited JSON codec. The protocol is the single source of truth — adding a new message type is one enum variant, and the compiler enforces exhaustive handling on both sides.
+- **Common protocol library**: Defines all request and response types as tagged enums with structured error codes, shared user types, and a newline-delimited JSON codec. The protocol is the single source of truth: adding a new message type is one enum variant, and the compiler enforces exhaustive handling on both sides.
 - **Async server**: Tokio-based server that spawns a task per TCP connection, decodes typed requests from the wire, dispatches them through a central handler, and responds with encoded JSON. PostgreSQL persistence via sqlx with compile-time checked queries that validate against the actual database schema at build time. Migrations run automatically on startup.
-- **Terminal client**: Cursive TUI with a persistent connection layer that bridges network I/O to the synchronous UI event loop. Two dedicated threads — one for writing requests, one for reading responses — communicate with the main thread through channels, keeping the interface responsive over a single long-lived TCP connection. The connection sends a clean disconnect on teardown and documents its ordering invariants explicitly.
+- **Terminal client**: Cursive TUI with a persistent connection layer that bridges network I/O to the synchronous UI event loop. Two dedicated threads (one for writing requests, one for reading responses) communicate with the main thread through channels, keeping the interface responsive over a single long-lived TCP connection. The connection sends a clean disconnect on teardown and documents its ordering invariants explicitly.
 
 ## Key Decisions
 
-**ndjson over raw text.** The original protocol was string-matching on plaintext commands with manual slicing. Replacing it with typed newline-delimited JSON and a shared enum gave both sides structured serialization, typed error codes, and a compiler-enforced contract — adding a new request type won't compile until both server and client handle it.
+**ndjson over raw text.** The original protocol was string-matching on plaintext commands with manual slicing. Replacing it with typed newline-delimited JSON and a shared enum gave both sides structured serialization, typed error codes, and a compiler-enforced contract: adding a new request type won't compile until both server and client handle it.
 
 **Threaded connection bridge.** Cursive runs a blocking event loop, so async network I/O inside it isn't straightforward. Rather than fight the framework, I split the TCP socket across two OS threads with channels, letting the UI send requests synchronously while network reads happen in the background.
 
@@ -27,8 +27,8 @@ The project is a Cargo workspace with three crates, originally started as a Comp
 
 ## Current State
 
-The server accepts concurrent connections and handles user lookup and listing with PostgreSQL-backed persistence. The registration flow works end-to-end through the UI and protocol — the database write is the next piece to wire in. The client provides a working TUI with a login flow, user listing, an in-app command terminal, and hacker-themed ranks that progress from "Newbie" through "Zero-Day Hunter" to "Root Admin" based on account age. The full request-response lifecycle works over persistent connections.
+The server accepts concurrent connections and handles user lookup and listing with PostgreSQL-backed persistence. The registration flow works end-to-end through the UI and protocol, and the database write is the next piece to wire in. The client provides a working TUI with a login flow, user listing, an in-app command terminal, and hacker-themed ranks that progress from "Newbie" through "Zero-Day Hunter" to "Root Admin" based on account age. The full request-response lifecycle works over persistent connections.
 
 ## Planned
 
-The protocol already defines message types for authentication, direct messaging, message history, and status updates — the wire format and error codes are in place, and the next phase wires them to real handlers. TLS will encrypt all connections, JWT-based authentication will handle sessions, and a server-push channel sketched into the client's connection architecture will enable real-time message delivery. The goal is a fully encrypted, self-hostable chat system with a single-command Docker Compose deployment for production.
+The protocol already defines message types for authentication, direct messaging, message history, and status updates: the wire format and error codes are in place, and the next phase wires them to real handlers. TLS will encrypt all connections, JWT-based authentication will handle sessions, and a server-push channel sketched into the client's connection architecture will enable real-time message delivery. The goal is a fully encrypted, self-hostable chat system with a single-command Docker Compose deployment for production.
