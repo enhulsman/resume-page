@@ -23,3 +23,6 @@ TODO
 *CV*.*
 public/resume.pdf
 *.png
+
+# Unpublished blog drafts — public repo, keep local
+src/pages/blog/_*.mdx

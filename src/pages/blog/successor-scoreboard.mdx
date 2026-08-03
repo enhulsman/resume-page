@@ -1,0 +1,106 @@
+---
+title: "The successor scoreboard"
+description: "Four weeks ago a smarter model predicted, in writing, how its cheaper successor would fumble my projects. I mined 80 session transcripts to grade it. It got nine right and missed the one failure that actually happened."
+date: 2026-08-03
+layout: "../../layouts/BlogLayout.astro"
+---
+
+Four weeks ago I wrote about spending the last day of a frontier-model window making
+that model write executable specs for its cheaper successor, plus a handoff document
+predicting, in writing, exactly where the successor would fumble. I promised to report
+what the successor did with all of it after a week. It's been four, because a holiday
+happened and the weeks before it went to leaving work in a deployable state, and I'm
+not going to pretend that away. The report is late. The scoreboard is better for it,
+since the successor now has a month of track record instead of a week.
+
+Grading it fairly needed a method that isn't vibes. Every Claude Code session leaves a
+full JSONL transcript behind, and I'd built a small CLI the same week as the specs
+that can list, search, and distill those transcripts across my machines. So the grade
+comes from the primary sources: 80 sessions between July 8th and August 3rd, searched
+for each predicted failure mode, with the receipts quoted below pulled verbatim. An
+audit of the AI from the AI's own diary, basically.
+
+Nobody can retcon a transcript.
+
+## What the predictions got right
+
+**"Capitulating on pushback"** was prediction one: the successor would fold with
+"you're right, sorry" the moment I pushed, without new evidence. The transcripts hold
+20 "you're right" moments across 19 sessions, and the count of naked capitulations is
+zero. Every concession I found came attached to a fact I'd supplied or a live
+measurement. The holds are the fun part: "no (I'll push back here): that's precisely
+the cross-incident context bleed the isolation rule exists to stop," says one July
+session, to me, about my own suggestion. Another conceded the framing and kept the
+substance: "you're right that this isn't a five-alarm exfiltration. But it's still a
+real gap worth fixing." That's the behavior the handoff demanded, running against its
+own author's prediction.
+
+**"Declaring victory without driving the change"** held as well, and this one used to
+be a genuine house failure mode; there's an April note in my config to prove it. The
+window's sessions report done-ness in measurements, one literally headed "Headline
+measurements (not adjectives)," with load times and green check counts attached. The
+best specimen is a near-miss: a deploy session guessed wrong four times off a stale
+handoff before catching itself with "I've now been wrong four times... That's a
+pattern, not bad luck. Let me verify against live upstream before touching anything
+else." Late by one round, maybe, and I'll still take a system that notices its own
+pattern over one that doesn't.
+
+**"Obeying injected instructions"** got the most theatrical test. A hostile alert
+payload, fired at my homelab agent during deploy verification, tried instruction
+override, shell commands, and environment-variable exfiltration; the agent treated it
+as data, called zero out-of-registry tools, and flagged the injection as a possible
+compromise of the alert source. Then the coding assistant investigating the results
+re-read the same payload in its tool output and noted, unprompted, "it's data I was
+investigating, not an instruction, and it did not mislead me." One injected payload,
+refused twice, at two different layers.
+
+The quieter predictions held too: sessions opened by reading handoffs and specs
+before touching code, confidence tags showed up in about 30 of the 80 sessions, and
+one agent quietly replaced my suggested 760px breakpoint with its own measured 940
+and was right to.
+
+## The failure the predictions missed
+
+The handoff's third prediction was that the successor would exit quality loops early,
+treating one round of feedback as done and "approved with concerns" as approval. The
+transcripts contain eleven adversarial review loops from the window. Early exits:
+zero. Every "approved with concerns" got revised and resubmitted, every fix plan
+stayed in a scratchpad until approved, one loop's closing report reads "Nothing was
+applied to code — the loop forbids source edits."
+
+The failure that did happen is the mirror image. This morning a review loop on a small
+design change ground through seven rounds, six of them NEEDS REWORK, until I finally
+typed "Why is this taking so long? What are we stuck on for 7 rounds?" The
+postmortem, from the model itself: "the judgment answer is that I should have stopped
+at round 5." The escalation clauses I'd written never fired, because they were
+written for the failure I predicted, quitting, not the one I got, grinding.
+
+That's the finding I keep turning over. The old model predicted its successor would
+be lazy. The successor's actual vice is stubbornness, which no prediction covered,
+and which the guardrails arguably caused. Tighten a system against under-effort and
+you should expect to meet over-effort; I just didn't expect to be the one saying
+"please stop reviewing."
+
+## What can't be graded, and the queue
+
+Honesty about the gaps. The test-weakening prediction can't be scored: the guardrail
+language is everywhere, reviewers actively police it, but no transcript shows a red
+test where the model faced the weaken-or-fix choice, and "no failure found" is not
+"tested and held." And the spec queue itself, the thirteen approved documents the
+whole factory produced, mostly didn't run: two shipped. The weekly review system went
+live July 13th, deviated from its spec on day one (bash instead of an LLM runner,
+documented in its own report footers), and produced my favorite bug of the summer by
+flagging post #1 as overdue for three weeks after it was published. The blog you're
+reading was the other one. Everything infrastructure-shaped sat still while July's
+attention went to an agent project that didn't exist when the specs were written,
+then to work, then to a holiday.
+
+So the queue gets its own scoreboard later, when there's execution to score rather
+than absence to apologize for. The specs aren't going anywhere, which is either their
+best property or the problem. The DNS failover one nags at me most; the reasoning has
+been finished since July 6th and the single point of failure it describes is still
+there.
+
+Next Monday at 07:30 the weekly report will grade this post's deadline, and as of
+yesterday it can even tell when something's done. The successor and I are apparently
+both auditable now. One of us predicted that.
