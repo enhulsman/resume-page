@@ -22,22 +22,29 @@ function scrambleOnUpdate(chars: Element[], finalChars: (string | null)[]) {
 function initScrollExit() {
   if (!document.getElementById('hero')) return;
 
-  const exitTl = gsap.timeline({
-    scrollTrigger: {
-      trigger: '#hero',
-      start: 'top top',
-      end: 'bottom top',
-      scrub: true,
-    },
-  });
+  const mm = gsap.matchMedia();
 
-  exitTl.to('[data-hero-scroll]', { opacity: 0, duration: 0.3, ease: 'none' }, 0);
-  exitTl.to('[data-hero-firstname], [data-hero-lastname]', { y: -80, opacity: 0, duration: 0.6, ease: 'none' }, 0);
-  exitTl.to('[data-hero-line]', { scaleX: 20, opacity: 0, duration: 1.0, ease: 'none' }, 0);
-  exitTl.to('[data-hero-role], [data-hero-summary]', { y: -40, opacity: 0, duration: 0.7, ease: 'none' }, 0.1);
-  exitTl.to('[data-hero-badge]', { opacity: 0, duration: 0.7, ease: 'none' }, 0.1);
-  exitTl.to('[data-hero-orbits]', { scale: 1.5, opacity: 0, duration: 0.8, ease: 'none' }, 0.1);
-  exitTl.to('[data-hero-glow]', { opacity: 0, duration: 0.6, ease: 'none' }, 0.1);
+  // On mobile the hero isn't pinned, so the next section slides up underneath
+  // mid-fade — finish the exit within the first half of the scroll to avoid
+  // hero text ghosting over it. Desktop keeps the full-height scrub.
+  mm.add({ mobile: '(max-width: 767px)', desktop: '(min-width: 768px)' }, (ctx) => {
+    const exitTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: '#hero',
+        start: 'top top',
+        end: ctx.conditions?.mobile ? '55% top' : 'bottom top',
+        scrub: true,
+      },
+    });
+
+    exitTl.to('[data-hero-scroll]', { opacity: 0, duration: 0.3, ease: 'none' }, 0);
+    exitTl.to('[data-hero-firstname], [data-hero-lastname]', { y: -80, opacity: 0, duration: 0.6, ease: 'none' }, 0);
+    exitTl.to('[data-hero-line]', { scaleX: 20, opacity: 0, duration: 1.0, ease: 'none' }, 0);
+    exitTl.to('[data-hero-role], [data-hero-summary]', { y: -40, opacity: 0, duration: 0.7, ease: 'none' }, 0.1);
+    exitTl.to('[data-hero-badge]', { opacity: 0, duration: 0.7, ease: 'none' }, 0.1);
+    exitTl.to('[data-hero-orbits]', { scale: 1.5, opacity: 0, duration: 0.8, ease: 'none' }, 0.1);
+    exitTl.to('[data-hero-glow]', { opacity: 0, duration: 0.6, ease: 'none' }, 0.1);
+  });
 }
 
 export function initHeroAnimations(): void {
