@@ -1,0 +1,108 @@
+---
+title: "The redaction that told you where to look"
+description: "My pre-flip audit came back clean, then found a real leak on the second pass. The value was redacted; the sentence explaining the redaction wasn't."
+date: 2026-08-03
+layout: "../../layouts/BlogLayout.astro"
+---
+
+{/*
+  DRAFT — not published. The leading underscore keeps this out of routing, the blog
+  index, and RSS (both glob filters in blog/index.astro and rss.xml.ts drop `_*`).
+
+  QUEUE POSITION, read before publishing this:
+  This is NOT post #2. Post #2 is the successor-scoreboard piece, publicly promised in
+  the postscript of post #1 (spec-factory), and it owns the C5 slot due 2026-08-05.
+  Publishing this one in that slot would break a promise made in print. This piece is
+  queued after it, alongside the bible-tui write-up which PERSONAL-OPS.md already lists
+  as a post #3 candidate; their relative order is Ezra's call, not an assistant's.
+
+  Before publishing: set `date` to the real publish date, and drop this comment.
+*/}
+
+So, I made a repo public last week. It's Henk, a personal homelab agent that runs on a Pi 5
+and talks to me over Signal, and it had been private for its whole life, which means every
+commit in it was written by someone who assumed nobody else would read it. Before flipping
+the switch I ran a full hygiene audit over the history, because a commit to a public repo is
+a publication event and there is no unpublishing it afterwards. Thirty-seven commits, about
+864 KB of content, zero findings. The only hit anywhere in the working tree was the `.env`
+file, untracked and gitignored, exactly where it belongs. Clean sweep.
+
+Then I ran the same audit again right before the flip, mostly out of superstition, and it
+found a real problem.
+
+## The leak was in the sentence, not the value
+
+What the second pass caught wasn't a value my patterns had missed. It was prose.
+
+At some point I had written, in ordinary project documentation, a sentence that explained a
+particular value was being deliberately kept out of the repo, along with the reasoning for
+keeping it out. The value was redacted. The explanation of the redaction was sitting there in
+plain English, and it had been for a while, quietly propagating into commit messages.
+
+That combination is worse than either half alone. Redact something and say nothing about it,
+and a reader has no reason to care about the gap; gaps in a personal project are boring and
+there are hundreds of them. Publish the value outright and at least you have a known problem
+with a known fix, you rotate it and move on with your afternoon. Publish a redaction plus its
+justification, and you've done something stranger: you've marked the omission as interesting,
+explained why it's interesting, and given a reader the shape of the thing to go looking for.
+The prose invites the exact search the redaction existed to prevent.
+
+Which is why the first audit missed it. My audit was a pattern audit, and a pattern audit
+greps for values. Addresses in a known range, token-shaped strings, phone numbers outside the
+sanctioned placeholders, domains off the allowlist. This class of leak doesn't live in a
+value, it lives in framing, so it sails through a clean grep with room to spare. I just got a
+green result that was technically accurate and told me nothing about the actual risk.
+
+The scale of it was the part that stung. The value was still present at HEAD in two files,
+which is bad but bounded and fixable with an editor. The explanatory prose around it appeared
+in twenty-three commits and two commit messages, and commit messages are the one part of a
+repository you can't quietly fix later.
+
+## The gate had already demonstrated the fix
+
+The repo has a pre-commit hook that runs three layers on every commit. A secret scanner over
+the staged content for unknown shapes, then repo-specific pattern checks for the four shapes
+the scanner has no rule for, then an optional local layer that stays untracked on purpose, so
+operator-specific rules can exist without being published alongside the code they protect. The
+scanner is good at what it does, and what it does is entropy and known shapes; it has no
+opinion about English, which is where most public-repo checklists stop looking as well.
+
+Two design decisions in there earned their keep. It inspects added lines only, so removing an
+offending value is never itself blocked, which sounds obvious until you've been locked out of
+committing a cleanup by your own safety net. And it hard-fails when the scanner binary is
+missing rather than skipping the scan, because a silently skipped check reads as "checked and
+clean," and that's a worse state to be in than having no check at all.
+
+On its very first run, the hook blocked my commit because it had found a literal address of
+exactly the kind it exists to block, sitting inside one of its own explanatory comments. I had
+embedded a real example while writing the rule that forbids real examples.
+
+I could have allowlisted it. The comment is a comment, it isn't config, nothing reads it, and
+the argument for an exception was right there and pretty comfortable. Instead I reworded the
+comment to describe the pattern rather than contain it, which is what the hook's own failure
+message recommends, and which turned out to be a small rehearsal for the fix I'd need three
+tasks later.
+
+## Cleanup
+
+Prose genericized at HEAD. The operator-specific rule moved out of the published repo
+entirely and into that untracked third layer, with the master copy living in a private config
+repo, so a fresh clone gets a warning that local checks aren't installed rather than a false
+sense of completeness. Then history rewritten with `git-filter-repo` to purge the value and
+the framing, commit messages included.
+
+Verification after the rewrite: zero matches across all trees and all diffs, commit count
+preserved, scanner clean, 233 tests green, spec validation 11 for 11. The repo went public
+the next morning and I checked it while logged out, which I'd recommend to anyone, since the
+list of things GitHub considers "not secret" is longer than you'd hope.
+
+What I don't have is a check for this. A grep can tell you a string is present. It can't tell
+you a sentence is being too helpful about what's absent, and perhaps that isn't automatable at
+all, at least not by me and not this year.
+
+So the habit changed instead. Any time I write "this is deliberately not in the repo," I now
+delete the second half of the sentence, the half that says why. Say nothing, or say the value
+is out of scope and stop there. The reasoning is for the private notes.
+
+And I trust green audits less than I did in July. The one that came back clean the first time
+was the one hiding something.
