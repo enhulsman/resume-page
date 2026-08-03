@@ -6,7 +6,7 @@ const firstName = site.name.split(' ')[0];
 const lastName = site.name.split(' ').slice(1).join(' ');
 ---
 
-<section id="hero" class="relative flex min-h-dvh items-center overflow-hidden">
+<section id="hero" class="relative flex items-center overflow-hidden">
   <!-- Grain texture -->
   <div
     class="absolute inset-0 opacity-[0.035] pointer-events-none"
@@ -88,6 +88,13 @@ const lastName = site.name.split(' ').slice(1).join(' ');
 </section>
 
 <style>
+  /* svh keeps the hero stable when mobile browser chrome collapses (dvh would
+     resize and snap the page); vh first as fallback for browsers without svh */
+  #hero {
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+
   .hero-name-shimmer {
     background: linear-gradient(90deg, var(--color-accent-primary), var(--color-text-primary), rgb(190 100 60), var(--color-accent-primary));
     background-size: 300% 100%;

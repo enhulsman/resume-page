@@ -24,22 +24,28 @@ function initScrollExit() {
 
   const mm = gsap.matchMedia();
 
-  // On mobile the hero isn't pinned, so the next section slides up underneath
-  // mid-fade — finish the exit within the first half of the scroll to avoid
-  // hero text ghosting over it. Desktop keeps the full-height scrub.
   mm.add({ mobile: '(max-width: 767px)', desktop: '(min-width: 768px)' }, (ctx) => {
+    // The line stretches ~viewport-wide on exit: 96px * 3.5 fills a phone,
+    // 128px * 20 sweeps a desktop screen. Shorter duration on mobile so the
+    // stretch completes early in the scroll instead of dragging the whole way.
+    const isMobile = ctx.conditions?.mobile;
+    const lineScale = isMobile ? 3.5 : 20;
+    const lineDuration = isMobile ? 0.45 : 1.0;
+
     const exitTl = gsap.timeline({
       scrollTrigger: {
         trigger: '#hero',
         start: 'top top',
-        end: ctx.conditions?.mobile ? '55% top' : 'bottom top',
+        end: 'bottom top',
         scrub: true,
       },
     });
 
     exitTl.to('[data-hero-scroll]', { opacity: 0, duration: 0.3, ease: 'none' }, 0);
     exitTl.to('[data-hero-firstname], [data-hero-lastname]', { y: -80, opacity: 0, duration: 0.6, ease: 'none' }, 0);
-    exitTl.to('[data-hero-line]', { scaleX: 20, opacity: 0, duration: 1.0, ease: 'none' }, 0);
+    // autoAlpha, not opacity: the inline pulse-line CSS animation overrides
+    // inline opacity, but visibility still flips at the end of the fade
+    exitTl.to('[data-hero-line]', { scaleX: lineScale, autoAlpha: 0, duration: lineDuration, ease: 'none' }, 0);
     exitTl.to('[data-hero-role], [data-hero-summary]', { y: -40, opacity: 0, duration: 0.7, ease: 'none' }, 0.1);
     exitTl.to('[data-hero-badge]', { opacity: 0, duration: 0.7, ease: 'none' }, 0.1);
     exitTl.to('[data-hero-orbits]', { scale: 1.5, opacity: 0, duration: 0.8, ease: 'none' }, 0.1);
