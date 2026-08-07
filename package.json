@@ -10,12 +10,12 @@
     "generate-pdf": "node scripts/generate-pdf.js"
   },
   "devDependencies": {
-    "@astrojs/mdx": "^4.3.10",
-    "@astrojs/react": "^4.3.0",
+    "@astrojs/mdx": "^7.0.3",
+    "@astrojs/react": "^6.0.1",
     "@astrojs/rss": "^4.0.19",
     "@types/node": "^24.3.0",
     "@types/shell-quote": "^1.7.5",
-    "astro": "^5.16.3",
+    "astro": "^7.0.9",
     "autoprefixer": "^10.0.0",
     "http-server": "^14.1.1",
     "playwright": "^1.55.1",
