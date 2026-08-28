@@ -1,0 +1,112 @@
+---
+title: "Exactly-once, eventually, on a push notification server"
+description: "My homelab agent promises that alerts survive restarts. ntfy promises nothing of the sort. Closing that gap took a cursor, a latch, and an afternoon of measuring undocumented behavior."
+date: 2026-08-28
+layout: "../../layouts/BlogLayout.astro"
+---
+
+My homelab is watched by a colleague named Henk. He's a Claude Agent SDK project on a
+Raspberry Pi 5 that subscribes to the homelab's alert stream, and when something
+breaks, a service dies, a disk fills up, a backup goes stale, he doesn't forward me the
+raw alert, he triages it and messages me on Signal the way a person would: what broke,
+whether it matters right now, what he already checked. When nothing is wrong he says
+nothing. That silence is most of his value, and it only works if I can trust it, which
+means an alert that fires while Henk is down, or mid-redeploy, or crashing, has to
+reach me anyway. Exactly once, ideally.
+
+That's the promise this post is about. It's the write-up I wish I'd found before
+building him: what it takes to keep an event pipeline honest when it runs on a push
+notification server that makes no delivery guarantees at all. The pattern that came
+out is small and portable, one store, one cursor, and a rule about which failure
+you're willing to live with, and none of it is specific to homelabs. (The security
+side of Henk is written up [elsewhere](/projects/Henk), this is the less glamorous
+half of the work.)
+
+The reason I had to learn it: in late July I watched Henk let a capped alert through
+three times in one day, and the cause was so mundane it barely counts as a bug. I'd
+redeployed the container three times that day, and the cadence state (cooldowns, the
+daily message cap, all of it) lived in memory. The rate limiting worked exactly as
+designed, right up until the design met the fact that I redeploy a lot.
+
+Every `docker compose up` gave the alert pipeline a fresh conscience.
+
+## ntfy is not a message queue, and shouldn't be
+
+The events arrive over ntfy, which I want to say upfront is a lovely piece of software,
+and also not a message queue. It's a push notification server. Mine retains messages
+for 72 hours, there's a `since` parameter for catching up, and it makes roughly zero
+delivery guarantees, which is fair, because guarantees are expensive and notifications
+are supposed to be cheap. Most of my design work here was refusing to pretend
+otherwise.
+
+The restart problem had a second, quieter half besides the cadence wipe: any event
+published while Henk was down just vanished. No error, no gap in a sequence number,
+nothing. A monitoring agent that silently misses the alert that fired during its own
+redeploy is close to worthless, so "survives restarts" had to become an actual
+property, not a hope.
+
+## One store, one cursor
+
+The cadence fix was to refuse a second store. Half of it was making Henk write an
+append-only JSONL audit record per event outcome, as it happens, instead of flushing
+records only when a session closes gracefully, which a `kill -9` never does. The other
+half: instead of persisting cooldowns and cap windows separately (and inventing a new
+way for two stores to disagree), Henk rebuilds all of that from the audit log at
+startup. Cooldowns, the daily cap window, recurrence
+references, all reconstructed by reading back what it already wrote down. There's
+nothing to drift because there's only one copy.
+
+The missed-event fix is a cursor: a tiny file holding the last event id whose outcome
+is safely on disk. On startup, Henk resubscribes with `since=<cursor>` and replays
+whatever it missed, and the debounce and cooldown layers collapse a three-hour backlog into one
+catch-up conversation instead of a Signal storm. The rule that makes this exactly-once
+rather than roughly-once is about when the cursor moves: only after the event's audit
+record is confirmed written, in delivery order. If an audit write ever fails, a latch
+freezes the cursor for the life of the process and Henk sends me one Signal notice
+saying a restart would be wise. Frozen cursor means bounded over-replay later. A cursor
+that moved past an unrecorded event means silent loss forever. Replay over silent
+loss, always. (And yes, replay means duplicate deliveries can happen at the boundary;
+the rehydrated cooldowns absorb them. Exactly-once here means exactly one recorded
+outcome per event, which is the promise I actually need.)
+
+## Measuring the contract instead of assuming it
+
+Here's where it got interesting. ntfy's documentation tells you `since` exists. It
+doesn't tell you whether resume is inclusive or exclusive, what happens when your saved
+id has aged out of the cache, or what the server does with an id it can't parse. My
+whole durability story leaned on those three answers, so on July 24th I measured them
+against my live server: resume is exclusive, an evicted id silently returns the entire
+retained cache rather than erroring, and an unparseable one returns HTTP 400. Twenty
+minutes with curl, and all three answers turned out to be load-bearing.
+
+The 400 case was the one that stung, because probing it exposed a wedge my own
+durability work had introduced. A persisted cursor the server rejects would be retried
+forever, and intake would be dead while looking merely quiet. The fix is a fallback
+scoped to 400 responses only: drop the cursor, replay everything still retained, log
+loudly, tell the owner. The scoping is the point. A false positive costs a bounded
+over-replay that the cooldown layer absorbs; a false negative costs permanent silent
+death. When a heuristic has to fail in some direction, you pick the failure you can
+live with. (The one case I haven't probed is a cursor that ages past the 72-hour
+window entirely; there's a checklist item holding that door open before I trust it.)
+
+## Kill -9 as a test framework
+
+None of this counts until it survives real hardware, so verification day was pretty
+blunt: stop the container, publish an event while it's down, start it again. Triaged
+exactly once. Hit the daily cap, rebuild and redeploy the whole image, fire another
+event. Cap held, the incident still got triaged and handed off, just no Signal
+message. The pipeline, the permissions, and the durability paths are covered by 1,503
+tests with the SDK mocked out, but the tests earn trust and the Pi spends it.
+
+There's one number from all this I like less. In the first nine days after that
+verification window, production delivered zero real events, no Gatus failures, no
+threshold breaches, nothing. At the time I read that as an anticlimax: a pipeline
+proven to survive restarts, kills, and its own rejected cursor, not yet asked to
+survive an ordinary Tuesday.
+
+Then the silence turned out to be its own bug. Nine quiet days were only trustworthy
+because I'd been checking the subscription by hand; nothing in the pipeline could tell
+"the homelab is healthy" apart from "intake died quietly three days ago." The
+observable is identical, and it's nothing. The fix was a watchdog built from the
+keepalive frames ntfy was already sending every 45 seconds and Henk was already
+throwing away. But that's another post.
