@@ -26,3 +26,6 @@ public/resume.pdf
 
 # Unpublished blog drafts — public repo, keep local
 src/pages/blog/_*.mdx
+
+# Session handoffs — local only
+.handoff-*.md
