@@ -1,0 +1,102 @@
+---
+title: "The 102-line browser port"
+description: "I built a terminal Bible reader in Rust, then put the same UI code in the browser without rewriting it. The port was 102 lines. The three bugs it surfaced were the real work."
+date: 2026-09-16
+layout: "../../layouts/BlogLayout.astro"
+---
+
+My terminal Bible reader is about 5,200 lines of Rust. The part that makes it run in a
+browser is 102 of them. Everything that makes it a reader, the widgets, search,
+bookmarks, jump-to-reference, lives in a shared core crate of roughly 3,900 lines. The
+native binary wraps that in crossterm and talks to a real terminal. The web crate wraps
+the identical UI in ratzilla, ratatui's web backend, which renders the character grid
+into the DOM. Two backends, one app. Porting it to the web came down to telling it that
+the web exists.
+
+The reader came first, in late April: Rust, ratatui, vim keys, three translations
+bundled in (KJV, the World English Bible with red-letter text, and the Dutch
+Statenvertaling, because sometimes the seventeenth century is the right register). Two
+days and 42 commits later the same reader was running at bible.hulsman.dev.
+
+The 102 lines are less than they sound. A translation provider that lists the three
+bundled Bibles, a DomBackend mounted on an element by id, a queue that collects key
+events. Then a draw closure that drains the queue into the core's action handler, tells
+the app when the width changed, and calls render, plus one small file translating
+ratzilla's key events into the core's own key type. That took an afternoon. What took
+the rest of the two days is the part worth writing down.
+
+## The three bugs between demo and product
+
+Ratzilla out of the box assumes it owns the whole browser window, and my landing page
+wanted the terminal embedded in a fixed element, like a reading pane sitting on a
+desk. That one-line difference surfaced three bugs, and fixing them on a fork was
+where the actual engineering went.
+
+The first was spectacular: the backend measured the browser window instead of the
+element it was mounted in, so ratatui's buffer overran its allocated cell array. It
+panicked every frame. The second was subtle and mobile-only: phone browsers fire
+resize events when the address bar slides in and out during scroll, and every one of
+those tore down and rebuilt the entire character grid, stutter and vanishing text
+included. The fix is to re-measure first and only rebuild when the grid dimensions
+actually changed. The third was a classic: the grid element gets destroyed and
+recreated on resize, taking all its event listeners with it, so keys and mouse had to
+attach to the stable parent instead.
+
+None of these are exotic. They're just the bugs you find the first time someone embeds
+the thing instead of fullscreening it, which is why they matter. The three patches live
+on [my fork](https://github.com/enhulsman/ratzilla), branch
+`fix/dom-backend-embedded-size`, one commit per bug, and my web crate pins the last of
+them. They're still sitting there rather than upstream, which isn't fair to the next
+person who tries to put a ratzilla terminal inside a page.
+
+## Pre-wrapping, so a scroll offset is a row offset
+
+One design decision from the core carried the whole reading experience: text is
+pre-wrapped before it ever reaches ratatui, so a scroll offset maps one-to-one to
+screen rows. Ratatui scrolls by lines, and fighting that with dynamic wrapping is
+misery. Embracing it made scroll position, verse highlighting, and jump-to-reference
+all trivially consistent, and a little table maps wrapped lines back to verses. That's
+the whole trick.
+
+## Shipping 13 megabytes of scripture
+
+The WASM blob is 13.3 MB. All three translations ride inside it, parsed at build time
+into postcard's binary format so startup is a deserialize instead of a parse, and the
+binary goes through Git LFS because a 13 MB artifact in git history is its own sin.
+For a text application that's a pretty obscene payload. I know. The alternative was
+translations fetched on demand, which means a loading spinner between the reader and
+the text. The page says "nothing leaves your device" and means it; search, bookmarks,
+everything runs client-side once the blob lands.
+
+The landing page around the terminal went warm parchment and editorial serif,
+Cormorant Garamond over a faint paper texture, a wordmark and almost no chrome.
+Terminal-in-browser demos usually read as party tricks. I wanted something quiet, closer
+to a page than a demo, and quiet is what it turned into.
+
+## Where it stands
+
+The web version forgets you on reload.
+
+Position and bookmarks persist natively but the browser build shipped with no
+persistence, so every visit starts at Genesis 1 unless you navigate. Genesis 1, every
+time. There's an approved spec from July that fixes this properly, localStorage
+persistence plus path-based deep links like `/web/1-john/3`, and it sits unexecuted in
+my specs repo, for reasons I've [written about separately](/blog/spec-factory). The
+reasoning is done; the typing hasn't happened.
+
+The README commit is timestamped 00:52, two nights after the first one, and I declared
+victory there. Then I mostly left it alone. I'd like to say it became my daily reader and
+it didn't; most of my actual reading happens in AndBible or on paper, and I've opened the
+web version more than the binary, by a small margin, because I've used neither as much as
+I wanted to. On 25 August the core grew a verse range parser, 341 lines and 52 tests for
+things like `John 3:16-18`, and nothing calls it yet: `:goto` still takes a single
+reference and the web build hasn't been rebuilt since April. That's what a parked project
+looks like, a patch when an idea wants one, wiring later.
+
+I don't think it stays parked. There are a couple of ideas for the terminal side that
+would make it something I run rather than something I visit, none of them typed yet.
+Until then the port is still the part I'd point at, and the reader is still the part I'd
+hand you.
+
+It's at [bible.hulsman.dev](https://bible.hulsman.dev). Type `:goto John 3:16` and press
+enter.
