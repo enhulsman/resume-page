@@ -24,6 +24,9 @@ const site = {
 
   careerStart: '2023-09-01',
 
+  // Cloudflare Turnstile site key (public by design; the secret lives in Worker secrets).
+  turnstileSiteKey: '0x4AAAAAAE9MuQn91qx05gcz',
+
   employment: {
     status: 'employed-open' as EmploymentStatus,
     message: {

@@ -4,6 +4,10 @@ import site from "../config/site";
 
 const contactDescription = `Get in touch with ${site.name}. Send me a message about work opportunities, projects, or just to chat about Formula 1 and tech.`;
 const contactKeywords = `${site.seo.keywords}, contact, hire, collaborate, message, email`;
+
+// Turnstile: always-passing test key on the dev server, real key in production builds.
+// Test keys: https://developers.cloudflare.com/turnstile/troubleshooting/testing/
+const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site.turnstileSiteKey;
 ---
 
 <BaseLayout
@@ -20,7 +24,7 @@ const contactKeywords = `${site.seo.keywords}, contact, hire, collaborate, messa
   </header>
 
   <section class="mt-4 sm:mt-6">
-    <form id="contactForm" class="space-y-4 sm:space-y-5 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6 shadow-sm" method="POST">
+    <form id="contactForm" class="space-y-4 sm:space-y-5 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6 shadow-sm" method="POST" data-turnstile-sitekey={turnstileSiteKey}>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label for="name" class="block text-responsive-sm font-medium text-theme-secondary">Name</label>
@@ -35,6 +39,17 @@ const contactKeywords = `${site.seo.keywords}, contact, hire, collaborate, messa
         <label for="message" class="block text-responsive-sm font-medium text-theme-secondary">Message</label>
         <textarea id="message" name="message" rows="6" required class="mt-1 block w-full rounded-md border border-theme-primary bg-theme-primary px-3 py-2 text-responsive-sm shadow-sm transition focus:border-theme-accent focus:ring-2 focus:ring-theme-accent/20 focus:outline-none text-theme-primary resize-y"></textarea>
       </div>
+
+      <!-- Honeypot: humans never see or fill this; bots that fill every field do. Checked server-side. -->
+      <div class="hp-field" aria-hidden="true">
+        <label for="website">Website</label>
+        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+      <!-- Milliseconds between page load and submit, set by the script below. -->
+      <input type="hidden" name="elapsed" id="elapsed" value="" />
+
+      <!-- Cloudflare Turnstile widget, rendered explicitly by the script below -->
+      <div id="turnstile-container"></div>
 
       <!-- Status message area -->
       <div id="statusMessage" class="hidden"></div>
@@ -54,10 +69,42 @@ const contactKeywords = `${site.seo.keywords}, contact, hire, collaborate, messa
     </form>
   </section>
 
+  <style>
+    /* Honeypot: off-screen, not display:none, so naive bots still "see" it. */
+    .hp-field {
+      position: absolute;
+      left: -10000px;
+      top: auto;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+  </style>
+
+  <script is:inline>
+    // Called by the Turnstile script once loaded (see ?onload= on the script tag below).
+    // Explicit rendering so the widget id is known and can be reset after each submit;
+    // Turnstile tokens are single-use.
+    window.onTurnstileLoad = function () {
+      var form = document.getElementById('contactForm');
+      var sitekey = form ? form.getAttribute('data-turnstile-sitekey') : null;
+      if (!sitekey || !window.turnstile) return;
+      window.__turnstileWidgetId = window.turnstile.render('#turnstile-container', {
+        sitekey: sitekey,
+        action: 'contact',
+        theme: 'auto',
+        size: 'flexible',
+      });
+    };
+  </script>
+  <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
+
   <script>
     // Contact form submission handler
     document.addEventListener('DOMContentLoaded', function() {
+      const loadedAt = Date.now();
       const form = document.getElementById('contactForm') as HTMLFormElement;
+      const elapsedField = document.getElementById('elapsed') as HTMLInputElement;
       const statusMessage = document.getElementById('statusMessage') as HTMLElement;
       const submitButton = document.getElementById('submitButton') as HTMLButtonElement;
       const submitText = submitButton.querySelector('.submit-text') as HTMLElement;
@@ -99,8 +146,19 @@ const contactKeywords = `${site.seo.keywords}, contact, hire, collaborate, messa
         setLoading(true);
 
         try {
+          const turnstile = (window as any).turnstile;
+          const widgetId = (window as any).__turnstileWidgetId;
+          const token: string = turnstile && widgetId !== undefined ? turnstile.getResponse(widgetId) || '' : '';
+          if (!token) {
+            showStatus('Verification is still loading. Please wait a moment and try again.', true);
+            setLoading(false);
+            return;
+          }
+
+          elapsedField.value = String(Date.now() - loadedAt);
           const formData = new FormData(form);
-          
+          formData.set('cf-turnstile-response', token);
+
           const response = await fetch('/api/contact', {
             method: 'POST',
             body: formData,
@@ -117,6 +175,10 @@ const contactKeywords = `${site.seo.keywords}, contact, hire, collaborate, messa
         } catch (error) {
           showStatus('Network error. Please check your connection and try again.', true);
         } finally {
+          // Tokens are single-use: get a fresh one for any retry.
+          const turnstile = (window as any).turnstile;
+          const widgetId = (window as any).__turnstileWidgetId;
+          if (turnstile && widgetId !== undefined) turnstile.reset(widgetId);
           setLoading(false);
         }
       });

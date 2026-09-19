@@ -4,7 +4,16 @@ interface Env {
   FROM_EMAIL?: string;
   FROM_NAME?: string;
   RESEND_API_KEY?: string;
+  TURNSTILE_SECRET_KEY?: string;
 }
+
+// Anti-spam gate settings. Keep in sync with src/pages/contact.astro.
+const TURNSTILE_SITEVERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+const TURNSTILE_ACTION = 'contact';
+const TURNSTILE_MAX_TOKEN_LENGTH = 2048;
+const HONEYPOT_FIELD = 'website';
+const ELAPSED_FIELD = 'elapsed';
+const MIN_ELAPSED_MS = 3000;
 
 interface ContactFormData {
   name: string;
@@ -91,6 +100,74 @@ async function sendEmail(data: ContactFormData, env: Env): Promise<boolean> {
   }
 }
 
+// Cheap bot checks that need no network call. Returns true when the submission
+// looks automated: honeypot filled, or the form was submitted faster than a
+// human could fill it. The client computes `elapsed` itself, so clock skew
+// between visitor and server cannot reject real people.
+function looksLikeBot(formData: FormData): boolean {
+  const honeypot = formData.get(HONEYPOT_FIELD)?.toString() ?? '';
+  if (honeypot.trim() !== '') return true;
+
+  const elapsedRaw = formData.get(ELAPSED_FIELD)?.toString() ?? '';
+  const elapsed = Number(elapsedRaw);
+  if (elapsedRaw === '' || !Number.isFinite(elapsed) || elapsed < MIN_ELAPSED_MS) return true;
+
+  return false;
+}
+
+// Verify a Turnstile token with Cloudflare. Fails closed on any error.
+async function verifyTurnstile(
+  token: string | null,
+  secret: string,
+  remoteip: string | null,
+  expectedHostname: string,
+): Promise<boolean> {
+  if (!token || token.length > TURNSTILE_MAX_TOKEN_LENGTH) return false;
+
+  const body = new URLSearchParams({ secret, response: token });
+  if (remoteip) body.set('remoteip', remoteip);
+
+  try {
+    const response = await fetch(TURNSTILE_SITEVERIFY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) {
+      console.error('Turnstile siteverify HTTP error:', response.status);
+      return false;
+    }
+    const result = (await response.json()) as {
+      success?: boolean;
+      hostname?: string;
+      action?: string;
+      'error-codes'?: string[];
+    };
+    if (!result.success) {
+      console.log('Turnstile rejected token:', result['error-codes']);
+      return false;
+    }
+    if (result.hostname !== expectedHostname) {
+      console.log('Turnstile hostname mismatch:', result.hostname, '!=', expectedHostname);
+      return false;
+    }
+    if (result.action !== TURNSTILE_ACTION) {
+      console.log('Turnstile action mismatch:', result.action);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Turnstile siteverify failed:', error);
+    return false;
+  }
+}
+
+const jsonHeaders = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+};
+
 // Helper function to validate and sanitize form data
 function validateContactForm(formData: FormData): ContactFormData | null {
   const name = formData.get('name')?.toString()?.trim();
@@ -142,6 +219,36 @@ export default {
                 'Access-Control-Allow-Origin': '*',
               },
             }
+          );
+        }
+
+        // Honeypot / timing: answer like a success so bots learn nothing, send nothing.
+        if (looksLikeBot(formData)) {
+          console.log('Submission dropped by honeypot/timing gate');
+          return new Response(
+            JSON.stringify({ success: true, message: 'Message sent successfully!' }),
+            { status: 200, headers: jsonHeaders }
+          );
+        }
+
+        if (!env.TURNSTILE_SECRET_KEY) {
+          console.error('TURNSTILE_SECRET_KEY environment variable is not set');
+          return new Response(
+            JSON.stringify({ error: 'Contact form is not configured. Please try again later.' }),
+            { status: 500, headers: jsonHeaders }
+          );
+        }
+
+        const verified = await verifyTurnstile(
+          formData.get('cf-turnstile-response')?.toString() ?? null,
+          env.TURNSTILE_SECRET_KEY,
+          request.headers.get('CF-Connecting-IP'),
+          url.hostname,
+        );
+        if (!verified) {
+          return new Response(
+            JSON.stringify({ error: 'Verification failed. Please reload the page and try again.' }),
+            { status: 400, headers: jsonHeaders }
           );
         }
 

@@ -120,9 +120,18 @@ TO_EMAIL=your-email@example.com
 FROM_EMAIL=contact@your-domain.com
 FROM_NAME=Your Contact Form
 RESEND_API_KEY=re_your_api_key_here
+TURNSTILE_SECRET_KEY=0x4AAAAAA_your_turnstile_secret
 ```
 
-For local development, add these to `.dev.vars`. For production, use `npx wrangler secret put <KEY>`.
+For local development, add these to `.dev.vars`. For production, set them as Worker secrets
+(dashboard: Worker → Settings → Variables and Secrets, or `npx wrangler secret put <KEY>`).
+
+Spam protection is layered: a [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/)
+widget (site key in `src/config/site.ts`, verified server-side in `src/worker.ts`), a honeypot
+field, and a minimum fill time. The worker fails closed when `TURNSTILE_SECRET_KEY` is missing.
+For the dev server the always-passing Turnstile test key is used automatically.
+
+Run the worker tests with `npm test`.
 
 ## PDF Generation
 
