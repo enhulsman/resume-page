@@ -15,6 +15,8 @@ export default defineConfig({
     react()
   ],
   site: site.url,
+  // Astro 7 changed the default to 'jsx' whitespace stripping; keep HTML-rule collapsing for visual parity.
+  compressHTML: true,
   markdown: {
     // Configure layout for MDX files
     layouts: {
