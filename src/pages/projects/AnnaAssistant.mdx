@@ -1,42 +1,42 @@
 ---
-title: "Anna Assistant"
-description: "Microsoft Teams AI bot that unifies a consultancy's internal tools (leave tracking, employee handbook, seat booking, CV management) behind a single conversational interface powered by Claude"
-date: 2025-11-15
+title: "ANNA"
+description: "Anamata's AI assistant in Microsoft Teams, with per-user memory, documents and connectors over MCP, built and run in production"
+date: 2025-12-18
 tech: ["Python", "Bot Framework", "Claude", "MCP", "SQLite", "aiohttp", "Prometheus", "Microsoft Graph"]
 layout: "../../layouts/ProjectLayout.astro"
 showcase: true
 dateLabel: "In development since"
-hook: "An AI assistant that lives inside Microsoft Teams, the tool 30 employees already have open all day. Rather than logging into separate apps to check leave days, look up company policy, claim a desk, or update a CV, employees ask Anna in natural language and she handles the rest via MCP tool integrations."
+hook: "An AI assistant that lives inside Microsoft Teams, the tool people already have open all day. Instead of logging into separate apps to check leave days, log hours or dig through policy documents, they ask ANNA in plain language and it does the legwork through MCP connectors."
 ---
 
 ## What I Built
 
-The idea behind Anna is that every internal tool a consultancy uses (leave management, employee handbook, seat booking, CV builder, project management, case management) should be accessible through a single conversational interface. Instead of switching between apps, employees message Anna in Teams and she routes requests to the right system via Claude and MCP.
+ANNA is Anamata's AI assistant in Microsoft Teams. The idea is simple: the repetitive parts of the working day, like requesting leave, logging hours or finding the right policy document, shouldn't need a separate app each. People message ANNA in Teams, and it routes the request to the right system through Claude and MCP. I own it end to end, from the first commit to production, and work out the direction together with the rest of the team.
 
-The system is ~18,000 lines of Python organized into a service layer, a command registry, and two Claude backends.
+It's about 32,000 lines of Python, organised into a service layer, a command registry and two Claude backends.
 
-**Message flow** starts at the Microsoft Bot Framework SDK. When a user messages Anna in Teams, the bot extracts their identity via Azure AD, loads their profile and conversation history from SQLite, reads their persistent memories, and builds a system prompt tailored to their role, department, and active persona. Personas are markdown files that shape Claude's behavior, and three ship with the bot: a default generalist, a developer mode with platform-specific expertise for the company's tech stack, and a support mode for non-technical users. In group chats, the bot requires an @mention, shares a single Claude session across participants, and excludes personal memories from the context.
+**Message flow** starts at the Microsoft Bot Framework SDK. When someone messages ANNA, the bot resolves their identity through Entra ID, loads their profile, conversation history and memories, and builds a system prompt for their role and the active persona. Personas are markdown files that shape Claude's behaviour: a default generalist, a developer mode and a support mode for non-technical users.
 
-Memory is split into two types: pinned (created via `/remember`) and auto-extracted from Claude's responses. A hash of the memory context is included in the system prompt so changes trigger a fresh Claude session. Caps per user prevent unbounded prompt growth.
+**Everything is per user.** Memory, uploaded documents and connector access are all scoped to the person asking. Connector secrets are stored encrypted, and connectors that need a login go through an OAuth flow where ANNA keeps the token, not the user's chat. In group chats ANNA needs an @mention and leaves personal memory and history out of the context, and the six personal commands only work in a direct message.
 
-**Claude integration** supports two backends behind a common abstract interface. The CLI backend spawns the Claude Code CLI as a subprocess with streaming output, passing user context as environment variables so the co-located MCP server can enforce data isolation. Sessions are persisted to SQLite so conversations survive restarts. The API backend calls the Anthropic SDK directly for production scenarios requiring finer control over token accounting. A streaming orchestrator bridges Claude's chunked output to Teams by progressively updating a single message as the response generates, with internal metadata stripped before each update reaches the user.
+**Claude integration** runs behind a common interface with two backends. The CLI backend runs Claude Code as a subprocess with streaming output, passing the user's identity to the MCP layer so every tool call is scoped to that user. The API backend calls the Anthropic SDK directly. A streaming orchestrator turns Claude's chunked output into a single Teams message that updates as the answer is written.
 
-**MCP tool layer** is the integration backbone. It exposes 22 internal tools (memory, reminders, profiles, conversations, document retrieval, usage insights) via a FastMCP server, and connects to external systems through their own MCP servers: Pega for case management and assignments, Mendix for the company's internal apps like the seat-claiming tool and CV builder, Playwright for browser automation, and Taiga for project management. When Claude uses a tool, the user sees a clean label like "Pega" or "browser", and internal tools are hidden entirely. New integrations are added by registering another MCP server, not by changing Anna's core.
+**Connectors are MCP servers.** ANNA has its own MCP tools for memory, reminders, profiles and documents, and reaches other systems through a connector registry, for example Loket for leave balances and ClockWise for logging hours. Adding a system means registering a connector and granting access, not changing ANNA's core.
 
-**Reminders** use natural language time parsing with support for recurring schedules (daily, weekday, weekly, biweekly, monthly). They respect per-user timezones and deliver via Teams proactive messaging with a smart scheduler that sleeps until the next reminder is due rather than polling on a fixed interval.
-
-Error states surface through a typed exception hierarchy with per-user rate limiting and Adaptive Card error displays. An admin portal behind bcrypt authentication provides user management, document uploads, and maintenance mode toggling with auto-resume.
+**Running it** is as much of the work as building it. Health checks and a log analyser run alongside the bot, tokens that are about to expire raise an alert before they break anything, and an admin portal handles users, documents, connectors and maintenance mode.
 
 ## Key Decisions
 
-**Teams as the platform, Claude as the brain.** The company already uses Teams for daily communication. Putting the AI in the same channel employees already have open, rather than behind a separate web app, eliminates onboarding friction. The Bot Framework SDK handles authentication, group chat semantics, and Adaptive Card rendering out of the box.
+**Teams as the place, Claude as the brain.** People already live in Teams. Putting the assistant in the channel they have open, rather than behind yet another web app, removes the onboarding step entirely. The Bot Framework SDK handles authentication, group chat semantics and Adaptive Cards out of the box.
 
-**MCP as the integration layer.** Each connected system (Pega, Mendix, Playwright, Taiga) runs its own MCP server. Anna doesn't need custom code per integration; she discovers available tools at startup. This means connecting a new internal app is a configuration change, not a code change, and the same MCP servers work in local development with the Claude CLI.
+**MCP as the integration layer.** Each connected system is an MCP server, and ANNA discovers its tools at startup. Connecting a new system is mostly configuration, and the same servers work in local development with the Claude CLI.
 
-**Per-user data isolation via environment injection.** Rather than building a multi-tenant query layer, each Claude subprocess gets the user's identity and timezone injected as environment variables. The MCP tools scope every database query to that user. This is simple, auditable, and prevents one user's request from ever touching another user's data.
+**Privacy by design, not by policy.** Rather than a multi-tenant query layer, each request carries the user's identity down to the tools, and every query is scoped to it. Group chats get no personal context at all. It's simple, auditable, and it means one person's request never touches another person's data.
+
+**Honest about what it is.** ANNA introduces itself as an AI assistant, not a colleague. That's EU AI Act transparency, and it's also just how you earn the trust to be handed real work.
 
 ## Outcome
 
-Anna runs on a VPS as a systemd service behind a Cloudflare tunnel, serving the company's Teams tenant. The codebase has ~500 tests at 70%+ coverage. Employees use it daily for Pega case lookups, company policy questions via the employee handbook, checking leave balances, reminders, and general-purpose AI assistance. Prometheus metrics feed a Grafana dashboard tracking response times, token usage, active users, and error rates. The integration surface continues to grow as more internal tools get MCP servers.
+ANNA runs in production, and it runs at Anamata first, so new features are tried on our own work before a customer sees them. It's on v1.18 after 52 releases, with about 2,000 tests behind it, and Prometheus metrics feed a Grafana dashboard for response times, token usage, active users and errors.
 
 Source code is not public: the repository is company-internal.

@@ -27,8 +27,8 @@
   <!-- Text block -->
   <g font-family="Inter, Arial, sans-serif">
     <text x="418" y="272" font-weight="700" font-size="76" fill="#ffffff">Ezra Hulsman</text>
-    <text x="418" y="338" font-weight="500" font-size="38" fill="#cbd5e1">DevOps Engineer</text>
-    <text x="418" y="392" font-weight="400" font-size="26" fill="#94a3b8">Automation &amp; Infrastructure • Python • Rust</text>
+    <text x="418" y="338" font-weight="500" font-size="38" fill="#cbd5e1">Forward Deployed Engineer</text>
+    <text x="418" y="392" font-weight="400" font-size="26" fill="#94a3b8">AI Agents • MCP • Python • DevOps</text>
     <text x="418" y="442" font-weight="400" font-size="22" fill="#6366f1">https://hulsman.dev</text>
   </g>
 </svg>

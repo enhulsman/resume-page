@@ -4,18 +4,18 @@ type EmploymentStatus = 'available' | 'employed-open';
 const site = {
   name: 'Ezra Hulsman',
   url: 'https://hulsman.dev',
-  role: 'DevOps / Pega Engineer',
+  role: 'Forward Deployed Engineer',
   company: 'Anamata',
   location: 'Utrecht, NL 🇳🇱',
   quote: '"Proverbs 3:5-7 NIV"',
   quoteUrl: "https://www.bible.com/bible/111/PRO.3.NIV#:~:text=Trust%20in%20the,and%20shun%20evil.", 
-  summary: 'Linux-first DevOps Engineer who automates manual workflows with Python & Bash to speed deployments and reduce friction, driven to continuously improve systems and skills.',
+  summary: 'Forward Deployed Engineer building ANNA, an AI assistant in Microsoft Teams, and making it work for the people who use it. Python, AI agents and MCP, on a Linux and DevOps foundation.',
   contactMessage: `Send a message and I'll get back to you soon. Whether it's about work opportunities, requesting my full CV, open source projects, or just to chat about Formula 1!`,
 
   skills: {
     languages: ['Python', 'Bash', 'Java', 'TypeScript'],
     tools: ['Linux', 'Docker', 'K8s', 'Git', 'CI/CD'],
-    frameworks: ['React', 'Pega', 'Astro'],
+    frameworks: ['React', 'Astro', 'Claude Agent SDK'],
   },
 
   interests: [
@@ -46,12 +46,14 @@ const site = {
   },
 
   about: `
-    I'm a DevOps Engineer at Anamata where I work on infrastructure automation and Pega development. 
-    At 2 meters tall, I have a good overview of both server racks and code architecture.
+    I'm a Forward Deployed Engineer at Anamata, where I own ANNA, our AI assistant in Microsoft Teams,
+    and much of what we build around it. At 2 meters tall, I have a good overview of both the codebase
+    and the room it gets deployed in.
 
-    I spend most of my time writing Python and Rust, setting up CI/CD pipelines, and making sure systems 
-    don't break at 3 AM. I genuinely enjoy the challenge of building reliable infrastructure and creating 
-    tools that make mine and other developers' lives easier.
+    Most of that work is Python, connecting ANNA to the tools teams already use, and keeping it secure
+    and reliable in production. I came to AI coding agents as a sceptic. Now they write a lot of
+    my code, and I still build like one: tests first, a spec for anything bigger, and nothing ships that
+    I can't explain.
 
     In my free time, I work on personal projects like a self-hosted chat TUI in Rust and contribute
     to open source when I can. I'm also a big Formula 1 fan - there's something satisfying about both 
@@ -111,7 +113,7 @@ const site = {
   // SEO and social media configuration
   seo: {
     author: 'Ezra Hulsman',
-    keywords: 'DevOps Engineer, Pega Developer, Python, Rust, Infrastructure Automation, CI/CD, Kubernetes, Docker, Linux',
+    keywords: 'Forward Deployed Engineer, AI Agents, AI Deployment, Model Context Protocol, MCP, Microsoft Teams, Python, DevOps, Linux, Docker',
     robots: 'index, follow',
     ogImage: '/og-image.png',
     ogType: 'website',

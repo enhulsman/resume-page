@@ -47,9 +47,9 @@ export const skillCategories: SkillCategory[] = [
     items: ['Python', 'Java', 'TypeScript', 'React', 'Bash', 'Rust', 'C/C++ (academic)'],
   },
   {
-    label: 'Pega Platform',
+    label: 'AI & Agents',
     badgeClass: 'tertiary',
-    items: ['Pega Development', 'PDC', 'Pega Debugging'],
+    items: ['AI Deployment', 'AI Agents', 'Model Context Protocol (MCP)', 'Claude', 'Technical Consultation'],
   },
   {
     label: 'Methods & Practices',
@@ -61,9 +61,22 @@ export const skillCategories: SkillCategory[] = [
     badgeClass: 'primary',
     items: ['Linux', 'Docker', 'Kubernetes', 'Git', 'SQL', 'Prometheus', 'Grafana', 'Cloudflare'],
   },
+  {
+    label: 'Pega Platform',
+    badgeClass: 'tertiary',
+    items: ['Pega Development', 'PDC', 'Pega Debugging'],
+  },
 ];
 
 export const experience: Experience[] = [
+  {
+    role: 'Forward Deployed Engineer',
+    client: 'Anamata',
+    startDate: '2025',
+    summary: 'Owns ANNA, Anamata\'s AI assistant in Microsoft Teams, end to end: Python, Claude and MCP, including connectors to the systems people already use. With it, staff request leave, log hours or search policy documents without switching apps. Half the job is engineering, the other half is working with the people who use it and looking after ANNA in production, from security to EU AI Act transparency. Also built the anamata.ai website and is laying the groundwork for rolling ANNA out to other companies.',
+    relatedProject: 'AnnaAssistant',
+    group: 'consulting',
+  },
   {
     role: 'DevOps & Software Engineer',
     client: 'Major European bank',
@@ -87,10 +100,10 @@ export const experience: Experience[] = [
     group: 'consulting',
   },
   {
-    role: 'Pega Developer',
+    role: 'Pega DevOps Engineer',
     client: 'Anamata',
     startDate: '2023',
-    summary: 'Solo-built Anna — a conversational AI assistant (Python, Claude, MCP) that unifies a consultancy\'s internal tools behind a single chat interface, giving employees natural-language access to leave tracking, case management, seat booking, and company policy instead of switching between separate apps. Also earned Pega System Architect and Business Architect certifications during this period.',
+    summary: 'Pega platform and DevOps engineering for Anamata\'s clients, running alongside the Forward Deployed Engineer role. Earned the Pega Certified System Architect and Business Architect certifications in 2023.',
     group: 'consulting',
   },
   {
