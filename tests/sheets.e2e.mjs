@@ -18,8 +18,8 @@ let browser;
 before(async () => { browser = await chromium.launch(); });
 after(async () => { await browser?.close(); });
 
-async function open(path, { width = 1440, height = 900, reducedMotion = 'no-preference', colorScheme = 'light', storage } = {}) {
-  const context = await browser.newContext({ viewport: { width, height }, reducedMotion, colorScheme });
+async function open(path, { width = 1440, height = 900, scale = 1, reducedMotion = 'no-preference', colorScheme = 'light', storage } = {}) {
+  const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: scale, reducedMotion, colorScheme });
   if (storage) await context.addInitScript(s => { for (const [k, v] of Object.entries(s)) if (localStorage.getItem(k) === null) localStorage.setItem(k, v); }, storage);
   const page = await context.newPage();
   const errors = [];
@@ -327,7 +327,8 @@ async function greenAtTheEdges(page) {
       const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
       const x = c.getContext('2d'); x.drawImage(img, 0, 0);
       const d = x.getImageData(0, 0, c.width, c.height).data;
-      let k = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 1] > 140 && d[i] < 110 && d[i + 2] < 110) k++;
+      // any green tint counts, so a half-covered seam pixel is caught too
+      let k = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 1] - Math.max(d[i], d[i + 2]) > 30) k++;
       return k;
     }, png);
   }
@@ -343,6 +344,18 @@ for (const path of ['/', '/projects', '/projects/Henk', '/resume']) {
       await context.close();
     });
   }
+}
+
+// Phones draw at fractional pixel ratios, where the paper's edge and the bar's edge can both
+// land mid-pixel and leave a seam of page between them. 408x912 is whole device pixels at
+// each ratio, as a real screen is, so the screenshot has no half pixel past its edge.
+for (const scale of [2.625, 2.75, 3]) {
+  test(`at a ${scale}x phone screen no seam of scrolled content shows above the bar`, async () => {
+    const { context, page } = await open('/projects', { width: 408, height: 912, scale });
+    await page.addStyleTag({ content: 'astro-dev-toolbar{display:none!important}' });
+    assert.equal(await greenAtTheEdges(page), 0);
+    await context.close();
+  });
 }
 
 // ---------- a drawn project is one target: drawing, title or link ----------

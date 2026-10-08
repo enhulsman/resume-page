@@ -52,6 +52,8 @@ body::after {
   /* the paper past the bar and the frame's lines: scrolled content never shows there */
   content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 49;
   border: calc(var(--frame) + 6px) solid var(--sheet); transition: border-color .5s ease;
+  /* 1px under the bar, so at fractional pixel ratios no seam of page shows between the two */
+  border-top-width: calc(var(--frame) + 7px);
 }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .2em; }
 a:hover { color: var(--red); }
