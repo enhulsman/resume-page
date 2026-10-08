@@ -1,20 +1,20 @@
 ---
 title: "Portfolio Site"
-description: "Astro portfolio with GSAP scroll animations and a 42-command interactive terminal hidden in the About section"
+description: "Astro portfolio drawn as a set of technical drawings, with a canvas section of ANNA and a 42-command interactive terminal"
 date: 2026-03-29
 github: "resume-page"
 preview: "https://hulsman.dev"
-tech: ["Astro", "TypeScript", "Tailwind CSS", "GSAP", "Cloudflare Workers", "MDX"]
+tech: ["Astro", "TypeScript", "Canvas 2D", "Cloudflare Workers", "MDX", "Playwright"]
 layout: "../../layouts/ProjectLayout.astro"
 showcase: false
 dateLabel: "Launched"
-hook: "A static-first portfolio at hulsman.dev, built with Astro and hiding a fully interactive terminal behind a scroll animation."
+hook: "A static-first portfolio at hulsman.dev, built with Astro and drawn as a technical drawing set, with a fully interactive terminal on the homepage."
 ---
 
 ## Stack Choices
 
-Astro over Next or Remix because this site has no client-side app state: pages are static HTML with islands of JS where interactivity demands it. GSAP ScrollTrigger over Framer Motion because it works without React and gives fine-grained control over scroll-pinned sequences; all animations degrade gracefully with `prefers-reduced-motion`. The contact form runs server-side on Cloudflare Workers with the Resend API: no separate backend, no CORS proxy, just an edge function co-deployed with the static assets.
+Astro over Next or Remix because this site has no client-side app state: pages are static HTML with small scripts where interactivity demands it. The drawings are hand-written, ANNA's section is an orthographic canvas renderer of about 670 lines and the project details are inline SVG that plot themselves in, so the site ships no animation library and no CSS framework (about 87 KB of JavaScript in total). Every drawing has a still version for `prefers-reduced-motion`. The contact form runs server-side on Cloudflare Workers with the Resend API: no separate backend, no CORS proxy, just an edge function co-deployed with the static assets.
 
 ## The Terminal
 
-The About section has a terminal card that plays a typing animation on scroll. After the animation finishes, the blinking cursor is real, and you can type into it. It implements 42 commands in vanilla TypeScript: filesystem navigation over a virtual filesystem (`ls`, `cd`, `cat resume`), unix staples (`grep`, `head`, `tail`, `wc`, `sort`, `env`), fun stuff (`cowsay`, `sl`, `matrix`, `neofetch`), and routing commands that actually navigate the site. Pipes work end-to-end (`cat resume | grep TypeScript | wc -l`), alongside tab completion, command history, and aliases. Mobile input uses a transparent overlay with touch gesture detection to separate taps from scrolls. Reliably opening the software keyboard across Android and iOS was the hardest part of the build.
+Note 7 of the homepage's general notes is a terminal that plays a typing animation on scroll. After the animation finishes, the blinking cursor is real, and you can type into it. It implements 42 commands in vanilla TypeScript: filesystem navigation over a virtual filesystem (`ls`, `cd`, `cat resume`), unix staples (`grep`, `head`, `tail`, `wc`, `sort`, `env`), fun stuff (`cowsay`, `sl`, `matrix`, `neofetch`), and routing commands that actually navigate the site. Pipes work end-to-end (`cat resume | grep TypeScript | wc -l`), alongside tab completion, command history, and aliases. Mobile input uses a transparent overlay with touch gesture detection to separate taps from scrolls. Reliably opening the software keyboard across Android and iOS was the hardest part of the build.

@@ -96,8 +96,8 @@ const site = {
     },
     {
       title: 'Portfolio Site',
-      description: 'Config-driven portfolio with MDX auto-discovery, multi-theme support, dynamic OG images, and server-side form handling on Cloudflare Workers.',
-      tech: ['Astro', 'TypeScript', 'Tailwind', 'GSAP'],
+      description: 'Config-driven portfolio drawn as a technical drawing set, with MDX auto-discovery, a light and dark theme, and server-side form handling on Cloudflare Workers.',
+      tech: ['Astro', 'TypeScript', 'Canvas', 'Cloudflare Workers'],
       link: '/projects/ResumePage',
       featured: false,
     },
