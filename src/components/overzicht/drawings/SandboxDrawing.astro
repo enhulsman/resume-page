@@ -1,0 +1,41 @@
+---
+// Detail drawing, hand-placed: re-check label overlaps after any text change.
+---
+<svg class="dwg" viewBox="0 0 520 300" role="img" aria-labelledby="sb-t">
+        <title id="sb-t">Claude Sandbox drawn in section: Claude Code inside the thick walls of an empty network namespace, with three sensitive paths capped off at the roof. The only way out is one sleeve through the wall, a socat bridge, into an egress proxy that checks every connection against an allowlist.</title>
+        <g class="fill">
+          <path class="poche" fill-rule="evenodd" d="M40 80 H330 V262 H40 Z M52 92 H318 V250 H52 Z"/>
+          <path class="hatch" d="M0 262 H520 V290 H0 Z"/>
+        </g>
+        <g class="ln">
+          <path d="M40 80 H330 V262 H40 Z M52 92 H318 V250 H52 Z" />
+          <path d="M0 262 H520" />
+          <path d="M100 40 V80 M150 40 V80 M200 40 V80 M94 40 H106 M144 40 H156 M194 40 H206" />
+          <path d="M108 160 H252 V214 H108 Z" class="thin"/>
+          <path d="M252 182 H400 M252 192 H400" />
+          <path d="M318 176 H336 V198 H318" class="thin"/>
+          <path d="M400 150 H490 V224 H400 Z" />
+          <path d="M490 170 H520" class="arrow"/>
+        </g>
+        <g class="red">
+          <path d="M445 150 V122"/>
+          <path d="M437 114 L453 130 M453 114 L437 130"/>
+        </g>
+        <g class="lbl">
+          <text x="66" y="118" class="room">NETWORK NAMESPACE</text>
+          <text x="66" y="132" class="sm">no interfaces, DNS or routes</text>
+          <text x="86" y="32" class="sm">~/.ssh</text>
+          <text x="137" y="32" class="sm">~/.aws</text>
+          <text x="186" y="32" class="sm">~/.gnupg</text>
+          <text x="214" y="50" class="sm">capped: /dev/null</text>
+          <text x="180" y="192" class="room" text-anchor="middle">CLAUDE CODE</text>
+          <text x="340" y="164" class="sm">socat</text>
+          <text x="340" y="175" class="sm">bridge</text>
+          <text x="445" y="182" class="room" text-anchor="middle">EGRESS</text>
+          <text x="445" y="196" class="room" text-anchor="middle">PROXY</text>
+          <text x="445" y="212" class="sm" text-anchor="middle">allowlist</text>
+          <text x="518" y="162" class="sm" text-anchor="end">allowed</text>
+          <text x="460" y="114" class="red-t sm">blocked,</text>
+          <text x="460" y="126" class="red-t sm">logged</text>
+        </g>
+      </svg>

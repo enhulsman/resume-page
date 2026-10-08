@@ -1,0 +1,43 @@
+---
+// Detail drawing, hand-placed: re-check label overlaps after any text change.
+---
+<svg class="dwg" viewBox="0 0 520 300" role="img" aria-labelledby="henk-t">
+        <title id="henk-t">Henk drawn as a floor plan: alerts enter an intake room with a cadence gate, pass into the agent's room, and every tool call has to go through one door, the PreToolUse choke point, into a room of read-only tools. A call aimed anywhere else stops at the wall.</title>
+        <g class="fill">
+          <path class="poche" d="M20 40 H500 V48 H28 V140 H20 Z M20 172 H28 V252 H300 V260 H20 Z M332 252 H492 V48 H500 V260 H332 Z"/>
+          <path class="poche" d="M334 48 H346 V118 H334 Z M334 166 H346 V252 H334 Z"/>
+        </g>
+        <g class="ln">
+          <path d="M20 40 H500 V260 H332 M300 260 H20 V172 M20 140 V40"/>
+          <path d="M136 48 V112 M136 150 V252" class="thin"/>
+          <path d="M346 166 H394" />
+          <path d="M346 118 A48 48 0 0 1 394 166" class="swing"/>
+          <path d="M404 74 H480 V100 H404 Z M404 128 H480 V154 H404 Z M404 182 H480 V208 H404 Z" class="thin"/>
+          <path d="M0 156 H60" class="arrow"/>
+          <path d="M316 236 V290" class="arrow"/>
+          <path d="M370 226 L352 150" class="thin"/>
+        </g>
+        <g class="red">
+          <path d="M240 190 C270 200 300 214 326 226" class="dash"/>
+          <path d="M320 216 L336 232 M336 216 L320 232"/>
+        </g>
+        <g class="lbl">
+          <text x="78" y="78" class="room" text-anchor="middle">INTAKE</text>
+          <text x="40" y="100" class="sm">cadence gate</text>
+          <text x="40" y="114" class="sm">debounce</text>
+          <text x="40" y="126" class="sm">cooldown</text>
+          <text x="40" y="138" class="sm">daily cap</text>
+          <text x="4" y="149" class="sm">ntfy</text>
+          <text x="236" y="120" class="room" text-anchor="middle">AGENT</text>
+          <text x="236" y="136" class="sm" text-anchor="middle">Claude Agent SDK</text>
+          <text x="442" y="64" class="room" text-anchor="middle">TOOLSET</text>
+          <text x="412" y="91" class="sm">read-only</text>
+          <text x="412" y="145" class="sm">read-only</text>
+          <text x="412" y="199" class="sm">read-only</text>
+          <text x="358" y="236" class="sm">the one door:</text>
+          <text x="358" y="247">PreToolUse</text>
+          <text x="326" y="290" class="sm">Signal, owner only</text>
+          <text x="152" y="230" class="red-t sm">out-of-registry call:</text>
+          <text x="152" y="242" class="red-t sm">stops at the wall</text>
+        </g>
+      </svg>

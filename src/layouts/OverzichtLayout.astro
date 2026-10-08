@@ -1,0 +1,47 @@
+---
+// The homepage's own layout: the drawing sheet. No global.css, Tailwind, Lenis or dot grid;
+// scrolling is the browser's own, and the page only ever reads the scroll position.
+import Metadata, { type MetadataProps } from "../components/Metadata.astro";
+import Bar from "../components/overzicht/Bar.astro";
+import Foot from "../components/overzicht/Foot.astro";
+import "../styles/overzicht.css";
+
+export type Props = MetadataProps;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#16141D" />
+    <Metadata themeColor="#EFEDF3" {...Astro.props} />
+    <link rel="preload" href="/fonts/Archivo.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/B612Mono.woff2" as="font" type="font/woff2" crossorigin />
+    <script is:inline>
+      // theme before first paint: the stored choice, else the system's
+      try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <div class="frame" aria-hidden="true">
+      <div class="frame-refs"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span></div>
+    </div>
+
+    <Bar />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <Foot />
+
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0 V7" class="hatch-line"/></pattern><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="currentColor" stroke-width="1.2"/></marker></defs>
+    </svg>
+    <svg class="cloud-hl" aria-hidden="true"><path/></svg>
+    <script>
+      import '../scripts/overzicht/main.js';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,76 @@
+---
+import site from "../../config/site";
+
+// Sheet 1: the hero, then ANNA drawn as section A–A that turns into an exploded view.
+// The canvas and the leaders are driven by src/scripts/overzicht/main.ts.
+const [first, ...rest] = site.name.split(" ");
+---
+<section class="scrolly" id="anna" aria-label="ANNA, drawn as a section">
+  <div class="copy">
+
+    <div class="step step-hero" id="top" data-q="0">
+      <h1 class="name"><span>{first}</span> <span>{rest.join(" ")}</span></h1>
+      <p class="role">{site.role} at <a href={site.social.employer}>{site.company}</a></p>
+      <p class="lede">I build ANNA, an AI assistant in Microsoft Teams, and make it work for the people who use it. Python, AI agents and MCP, on a Linux and DevOps foundation.</p>
+      <p class="status"><span class="status-mark" aria-hidden="true"></span>{site.employment.message[site.employment.status]}</p>
+      <p class="actions">
+        <a class="act act-main" href="#contact">Get in touch</a>
+        <a class="act" href="/resume">Résumé</a>
+        <a class="act" href={site.social.GitHub}>GitHub</a>
+        <a class="act" href={site.social.LinkedIn}>LinkedIn</a>
+      </p>
+      <table class="titleblock" aria-label="Title block">
+        <tr><th>Drawn by</th><td>E. Hulsman</td><th>Location</th><td>Utrecht, NL</td></tr>
+        <tr><th>Project</th><td>ANNA, Anamata</td><th>Since</th><td>2025-12-18</td></tr>
+        <tr><th>Drawing</th><td colspan="3">Section A–A through one request</td></tr>
+      </table>
+    </div>
+
+    <div class="step" data-q="0" data-request>
+      <p class="tag">Section A–A</p>
+      <h2>One request, top to bottom</h2>
+      <p>Someone in Teams asks ANNA how much leave they have left. They don't open another app. ANNA works out who they are through Entra ID, loads their profile, history and memories, and hands the question to Claude, which reaches Loket through an MCP connector.</p>
+      <p>The answer comes back up the same way and lands as one Teams message that updates while it's being written.</p>
+      <figure class="callout callout-inline" aria-label="The conversation on the screen">
+        <figcaption>Detail: the screen</figcaption>
+        <p class="bubble bubble-q">How many leave days do I have left?</p>
+        <p class="bubble bubble-a"><b>ANNA</b> Checked Loket for you. Here's your balance for this year, and what's already booked.</p>
+      </figure>
+      <button class="replay" type="button">Replay the request</button>
+    </div>
+
+    <div class="step" data-q="1" data-cloud="connectors">
+      <p class="tag">Exploded view</p>
+      <h2>What holds it up</h2>
+      <p>About 32,000 lines of Python: a service layer, a command registry and two Claude backends. Every connected system is an MCP server, so adding one means registering a connector and granting access, not changing ANNA's core.</p>
+      <p>Memory, documents and connector access are scoped to the person asking. Connector secrets are stored encrypted, and when a login is needed, ANNA keeps the token, not the user's chat.</p>
+    </div>
+
+    <div class="step" data-q="1" data-cloud="ops">
+      <p class="tag">Level −4</p>
+      <h2>Running it is half the job</h2>
+      <p>The other half is working with the people who use it and looking after ANNA in production, from security to EU AI Act transparency. Health checks and a log analyser run alongside the bot, and tokens that are about to expire raise an alert before they break anything.</p>
+      <p><a class="more" href="/projects/AnnaAssistant">Read how ANNA is built</a></p>
+    </div>
+
+  </div>
+
+  <div class="stage">
+    <canvas class="drawing" aria-hidden="true"></canvas>
+    <div class="turn" role="group" aria-label="Turn the model"><button type="button" data-turn="-1" aria-label="Turn left">&larr;</button><button type="button" data-turn="1" aria-label="Turn right">&rarr;</button><span>Drag, or use these, to turn the model</span></div>
+    <svg class="leaders" aria-hidden="true"></svg>
+    <ol class="levels" aria-label="ANNA, level by level">
+      <li data-level="identity"><b>−1 Identity</b><span>Entra ID, profile, history, memories. Everything is per user.</span></li>
+      <li data-level="claude"><b>−2 Claude</b><span>Two backends behind one interface: Claude Code streaming as a subprocess, or the Anthropic API.</span></li>
+      <li data-level="connectors"><b>−3 MCP connectors</b><span>Loket for leave, ClockWise for hours, plus ANNA's own tools for memory, reminders and documents.</span></li>
+      <li data-level="ops"><b>−4 Running it</b><span>Health checks, a log analyser, alerts before tokens expire, an admin portal.</span></li>
+    </ol>
+    <figure class="callout" aria-label="The conversation on the screen">
+      <figcaption>Detail: the screen</figcaption>
+      <p class="bubble bubble-q">How many leave days do I have left?</p>
+      <p class="bubble bubble-a"><b>ANNA</b> Checked Loket for you. Here's your balance for this year, and what's already booked.</p>
+    </figure>
+    <button class="scale-note" type="button" aria-describedby="scale-tip"><span>E. Hulsman, for scale</span></button>
+    <p class="scale-tip" id="scale-tip" role="tooltip">At 2 meters tall, I have a good overview of both the codebase and the room it gets deployed in.</p>
+  </div>
+</section>

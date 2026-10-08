@@ -1,0 +1,108 @@
+---
+// Note 7 of the general notes: the real interactive terminal (42 commands, pipes, a
+// virtual filesystem). It types its intro once when scrolled into view, then becomes real.
+import site from "../../config/site";
+import { experience, education, certifications, skillCategories } from "../../config/resume";
+
+// Terminal config
+const user = 'ezra';
+const host = 'hulsman';
+const prompt = `${user}@${host}`;
+
+// Dynamic uptime from career start
+const start = new Date(site.careerStart);
+const diffMs = Date.now() - start.getTime();
+const days = Math.floor(diffMs / 86400000);
+const years = Math.floor(days / 365);
+const months = Math.floor((days % 365) / 30);
+const remDays = days - years * 365 - months * 30;
+const uptimeParts = [];
+if (years > 0) uptimeParts.push(`${years} year${years !== 1 ? 's' : ''}`);
+if (months > 0) uptimeParts.push(`${months} month${months !== 1 ? 's' : ''}`);
+if (remDays > 0) uptimeParts.push(`${remDays} day${remDays !== 1 ? 's' : ''}`);
+const uptimeStr = uptimeParts.join(', ');
+
+// Animation commands — the full set
+const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
+  { type: 'cmd', text: 'whoami' },
+  { type: 'out', text: user },
+  { type: 'blank', text: '' },
+  { type: 'cmd', text: 'hostname -f' },
+  { type: 'out', text: 'hulsman.dev' },
+  { type: 'blank', text: '' },
+  { type: 'cmd', text: 'cat /etc/role' },
+  { type: 'out', text: `${site.role} @ ${site.company}` },
+  { type: 'blank', text: '' },
+  { type: 'cmd', text: 'uptime -p' },
+  { type: 'out', text: `up ${uptimeStr}, 0 unplanned restarts` },
+  { type: 'blank', text: '' },
+  { type: 'cmd', text: 'ls projects/' },
+  ...site.projects.slice(0, 4).map(p => ({ type: 'out' as const, text: p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })),
+  { type: 'blank', text: '' },
+  { type: 'cmd', text: 'echo $STACK | tr ":" " - "' },
+  { type: 'out', text: [...site.skills.languages, ...site.skills.tools].join(' - ') },
+];
+
+// Data for interactive terminal (serialized to JSON for client-side)
+const terminalData = {
+  prompt,
+  site: {
+    name: site.name,
+    role: site.role,
+    company: site.company,
+    location: site.location,
+    skills: site.skills,
+    social: { email: site.social.email, GitHub: site.social.GitHub, LinkedIn: site.social.LinkedIn },
+    employment: site.employment,
+    careerStart: site.careerStart,
+  },
+  projects: site.projects.map(p => ({
+    title: p.title,
+    description: p.description,
+    tech: p.tech,
+    github: p.github || '',
+    link: p.link || '',
+    slug: (p.link || '').replace('/projects/', ''),
+  })),
+  experience: experience.map(e => ({ role: e.role, client: e.client, startDate: e.startDate, endDate: e.endDate || '', summary: e.summary, group: e.group })),
+  education: education.map(e => ({ degree: e.degree, institution: e.institution, startYear: e.startYear, endYear: e.endYear, gpa: e.gpa || '', result: e.result || '' })),
+  certifications: certifications.map(c => ({ name: c.name, institution: c.institution, year: c.year, credential: c.credential || '' })),
+  skills: skillCategories.map(s => ({ label: s.label, items: s.items })),
+};
+---
+<div class="term">
+  <p class="term-head"><span>Note 7: a terminal is provided</span><span class="term-hint">type <kbd>help</kbd></span></p>
+  <div
+    id="terminal-body"
+    class="term-body"
+    role="application"
+    aria-label="Interactive terminal"
+    tabindex="0"
+    data-prompt={prompt}
+    data-lines={JSON.stringify(terminalLines)}
+  >
+    <noscript>
+      {terminalLines.map(line => (
+        line.type === 'blank' ? <div class="h-1"></div>
+        : line.type === 'cmd' ? <div><span class="terminal-user">{prompt}</span><span class="terminal-separator">:</span><span class="terminal-path">~</span><span class="terminal-dollar">$ </span><span class="terminal-cmd">{line.text}</span></div>
+        : <div>{line.text}</div>
+      ))}
+    </noscript>
+  </div>
+  <!-- the hidden input and the hint are created by interactive-terminal.ts -->
+</div>
+
+<script type="application/json" id="terminal-data" set:html={JSON.stringify(terminalData)}></script>
+
+<script>
+  import { initTerminalAnimation } from '../../scripts/terminal-animation';
+  import { InteractiveTerminal } from '../../scripts/interactive-terminal';
+
+  const body = document.getElementById('terminal-body');
+  if (body) {
+    const dataEl = document.getElementById('terminal-data');
+    const terminal = new InteractiveTerminal(body, dataEl ? JSON.parse(dataEl.textContent || '{}') : {});
+    body.addEventListener('terminal-animation-complete', () => terminal.activate(), { once: true });
+    initTerminalAnimation(body);
+  }
+</script>

@@ -1,57 +1,26 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import HeroSection from "../components/HeroSection.astro";
-import AboutSection from "../components/AboutSection.astro";
-import ProjectsShowcase from "../components/ProjectsShowcase.astro";
-import ExperienceSection from "../components/ExperienceSection.astro";
-import SkillsSection from "../components/SkillsSection.astro";
-import ContactCTA from "../components/ContactCTA.astro";
-import InfoStrip from "../components/InfoStrip.astro";
+import OverzichtLayout from "../layouts/OverzichtLayout.astro";
+import AnnaSection from "../components/overzicht/AnnaSection.astro";
+import DetailsSheet from "../components/overzicht/DetailsSheet.astro";
+import RegisterSheet from "../components/overzicht/RegisterSheet.astro";
+import RevisionsSheet from "../components/overzicht/RevisionsSheet.astro";
+import NotesSheet from "../components/overzicht/NotesSheet.astro";
+import ContactSheet from "../components/overzicht/ContactSheet.astro";
 import site from "../config/site";
 
-const homeDescription = `${site.summary} Based in ${site.location}, specializing in ${site.skills.languages.join(", ")} and ${site.skills.tools.join(", ")}.`;
-const homeKeywords = `${site.seo.keywords}, resume, portfolio, ${site.location}, ${site.company}`;
+const title = `${site.name}, ${site.role}`;
+const description = `${site.name} is a ${site.role} at ${site.company}, building ANNA, an AI assistant in Microsoft Teams. Python, AI agents and MCP, on a Linux and DevOps foundation.`;
 ---
 
-<BaseLayout
-  title={`${site.name} — ${site.role}`}
-  description={homeDescription}
-  keywords={homeKeywords}
-  ogTitle={`${site.name} — ${site.role} Portfolio & Resume`}
-  ogDescription={homeDescription}
-  fullWidth
+<OverzichtLayout
+  title={title}
+  description={description}
+  keywords={`${site.seo.keywords}, resume, portfolio, Utrecht, ${site.company}`}
 >
-  <HeroSection />
-  <InfoStrip />
-  <AboutSection />
-  <ProjectsShowcase />
-  <ExperienceSection />
-  <SkillsSection />
-  <ContactCTA />
-
-  <!-- GSAP ScrollTrigger for scroll reveals -->
-  <script>
-    import { gsap } from 'gsap';
-    import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-    gsap.registerPlugin(ScrollTrigger);
-
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!prefersReduced) {
-      document.querySelectorAll('[data-reveal]').forEach((el) => {
-        gsap.set(el, { opacity: 0, y: 40 });
-        gsap.to(el, {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 85%',
-            once: true,
-          },
-        });
-      });
-    }
-  </script>
-</BaseLayout>
+  <AnnaSection />
+  <DetailsSheet />
+  <RegisterSheet />
+  <RevisionsSheet />
+  <NotesSheet />
+  <ContactSheet />
+</OverzichtLayout>

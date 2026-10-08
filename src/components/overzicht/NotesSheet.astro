@@ -1,0 +1,53 @@
+---
+import { notes } from "../../config/home";
+import Terminal from "./Terminal.astro";
+
+// The site diary: every published post (drafts start with "_"), newest first, with the
+// short `diary` line from its frontmatter. The posts are read as text: importing them
+// would pull their layout, and with it the old site's stylesheet, onto this page.
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const sources = import.meta.glob("../../pages/blog/*.mdx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
+
+function frontmatter(src: string): Record<string, string> {
+  const block = src.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
+  const fields: Record<string, string> = {};
+  for (const line of block.split("\n")) {
+    const m = line.match(/^(\w+):\s*(.*)$/);
+    if (m) fields[m[1]] = m[2].startsWith('"') ? JSON.parse(m[2]) : m[2];
+  }
+  return fields;
+}
+
+const posts = Object.entries(sources)
+  .map(([path, src]) => ({ slug: path.split("/").pop()!.replace(/\.mdx$/, ""), fm: frontmatter(src) }))
+  .filter(({ slug }) => !slug.startsWith("_"))
+  .map(({ slug, fm }) => {
+    const d = new Date(fm.date);
+    return {
+      title: fm.title,
+      line: fm.diary ?? fm.description,
+      href: `/blog/${slug}`,
+      iso: d.toISOString().slice(0, 10),
+      label: `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`,
+      time: d.getTime(),
+    };
+  })
+  .sort((a, b) => b.time - a.time);
+---
+<section class="sheet" id="notes" aria-labelledby="notes-h">
+  <header class="sheet-head">
+    <h2 id="notes-h">General notes</h2>
+    <p>The part of a drawing you read before building anything.</p>
+  </header>
+  <div class="notes-grid">
+    <ol class="notes">
+      {notes.map(n => <li>{n}</li>)}
+    </ol>
+    <Terminal />
+  </div>
+
+  <h3 class="sub">Site diary</h3>
+  <ul class="diary">
+    {posts.map(p => <li><time datetime={p.iso}>{p.label}</time><a href={p.href}>{p.title}</a><span>{p.line}</span></li>)}
+  </ul>
+</section>

@@ -1,0 +1,14 @@
+---
+import site from "../../config/site";
+---
+<section class="sheet sheet-contact" id="contact" aria-labelledby="contact-h">
+  <div class="stamp" aria-hidden="true"><span>Issued for</span><b>conversation</b><span>2026</span></div>
+  <h2 id="contact-h">Let's talk</h2>
+  <p class="contact-msg">{site.contactMessage}</p>
+  <p class="actions">
+    <a class="act act-main" href="/contact">Send a message</a>
+    <a class="act" href={`mailto:${site.social.email}`}>{site.social.email}</a>
+    <a class="act" href={site.social.LinkedIn}>LinkedIn</a>
+    <a class="act" href={site.social.GitHub}>GitHub</a>
+  </p>
+</section>

@@ -8,7 +8,8 @@
     "preview": "astro preview",
     "start": "astro dev",
     "generate-pdf": "node scripts/generate-pdf.js",
-    "test": "node --test tests/worker.test.ts"
+    "test": "node --test tests/worker.test.ts",
+    "test:e2e": "node --test tests/overzicht.e2e.mjs"
   },
   "devDependencies": {
     "@astrojs/mdx": "^8.0.1",

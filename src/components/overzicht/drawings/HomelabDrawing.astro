@@ -1,0 +1,39 @@
+---
+// Detail drawing, hand-placed: re-check label overlaps after any text change.
+---
+<svg class="dwg" viewBox="0 0 520 300" role="img" aria-labelledby="hl-t">
+        <title id="hl-t">The homelab drawn as a site plan: two plots, home with a Raspberry Pi 5 and a Raspberry Pi 2, and a Hetzner VPS, joined by a Tailscale mesh, with nightly backups crossing both ways and Cloudflare tunnels to the road.</title>
+        <g class="fill">
+          <path class="hatch" d="M150 70 H200 V120 H150 Z M150 196 H186 V232 H150 Z M344 92 H394 V150 H344 Z"/>
+        </g>
+        <g class="ln">
+          <path d="M30 40 H226 V268 H30 Z M330 60 H500 V196 H330 Z" class="plot"/>
+          <path d="M150 70 H200 V120 H150 Z M150 196 H186 V232 H150 Z M344 92 H394 V150 H344 Z" class="cut"/>
+          <path d="M200 100 C260 100 290 118 344 121" class="mesh"/>
+          <path d="M172 120 V196" class="mesh"/>
+          <path d="M186 214 C260 214 340 190 360 150" class="mesh"/>
+          <path d="M200 80 C250 72 300 84 344 100" class="dash arrow"/>
+          <path d="M344 140 C300 140 250 128 204 112" class="dash arrow"/>
+          <path d="M0 286 H520" class="thin"/>
+          <path d="M386 150 V286 M175 70 V0" class="faint"/>
+          <path d="M488 214 L496 236 L488 230 L480 236 Z M488 214 V252" class="thin"/>
+        </g>
+        <g class="lbl">
+          <text x="36" y="56" class="room">HOME</text>
+          <text x="338" y="78" class="room">HETZNER</text>
+          <text x="40" y="84">rp5</text>
+          <text x="40" y="98" class="sm">Raspberry Pi 5</text>
+          <text x="40" y="110" class="sm">DNS, Docker,</text>
+          <text x="40" y="122" class="sm">exit node</text>
+          <text x="80" y="210">rp2</text>
+          <text x="80" y="224" class="sm">1 GB RAM</text>
+          <text x="402" y="106">vps</text>
+          <text x="402" y="120" class="sm">Prometheus,</text>
+          <text x="402" y="132" class="sm">Grafana, Taiga</text>
+          <text x="232" y="66" class="sm">nightly backups</text>
+          <text x="236" y="232" class="sm">Tailscale mesh</text>
+          <text x="392" y="280" class="sm">Cloudflare tunnel</text>
+          <text x="181" y="12" class="sm">Cloudflare tunnel</text>
+          <text x="484" y="266" class="sm">N</text>
+        </g>
+      </svg>

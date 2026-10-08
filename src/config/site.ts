@@ -110,6 +110,14 @@ const site = {
     },
   ],
 
+  // Side pieces made for fun: the homepage's "Other sheets, drawn for fun"
+  sidePieces: [
+    { url: 'https://bible.hulsman.dev', line: 'A terminal Bible reader in Rust, running in the browser' },
+    { url: 'https://flag.hulsman.dev', line: '781 one-minute chess games, drawn as time' },
+    { url: 'https://sleep.hulsman.dev', line: 'One night of sleep, drawn' },
+    { url: 'https://wordle.hulsman.dev', line: 'A word game' },
+  ],
+
   // SEO and social media configuration
   seo: {
     author: 'Ezra Hulsman',
