@@ -341,6 +341,8 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
     const g = n => cs.getPropertyValue(n).trim();
     colors = { ink: g('--ink'), faint: g('--faint'), red: g('--red'), sheet: g('--sheet') };
   }
+  // read now as well: with reduced motion the drawing renders before start()
+  readColors();
 
   function resize() {
     const r = canvas.getBoundingClientRect();
@@ -648,7 +650,8 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
   function kick() { if (!raf) raf = requestAnimationFrame(loop); }
 
   const api = {
-    start() { readColors(); resize(); state.plotStart = performance.now(); kick(); },
+    start() { if (state.plotStart != null) return; readColors(); resize(); state.plotStart = performance.now(); kick(); },
+    started() { return state.plotStart != null; },
     setQ(q) { if (Math.abs(q - state.q) > 1e-4) { state.q = q; kick(); } },
     setFrame(f) { state.frame = f; fits = null; kick(); },
     request() { state.req = performance.now(); state.answer = 0; kick(); },

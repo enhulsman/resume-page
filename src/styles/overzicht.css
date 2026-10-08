@@ -178,6 +178,7 @@ main { padding: 0 calc(var(--frame) + 6px); }
 .dwg .ln .pipe { stroke-width: 5; }
 .dwg .ln .arrow { marker-end: url(#arrow); }
 .dwg .red path { fill: none; stroke: var(--red); stroke-width: 1.6; }
+.dwg .red .dash { stroke-dasharray: 5 4; }
 .dwg .lbl text { font: 400 11.5px var(--mono); fill: var(--ink); }
 .dwg .lbl .sm { font-size: 9.5px; fill: var(--ink-2); }
 .dwg .lbl .red-t { fill: var(--red); }
@@ -358,3 +359,8 @@ kbd { font: inherit; color: var(--red); }
 .turn button:hover { border-color: var(--red); color: var(--red); }
 .stage.turnable .turn { opacity: 1; visibility: visible; transition: opacity .5s; }
 
+/* print: everything drawn, nothing waiting on scroll */
+@media print {
+  .js .dwg path { stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
+  .js .dwg text, .js .dwg .fill { opacity: 1 !important; }
+}

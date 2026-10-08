@@ -212,3 +212,70 @@ for (const path of ['/projects', '/projects/Henk', '/blog', '/blog/bible-tui', '
     await context.close();
   });
 }
+
+test('the inner pages\' About link lands on a section that exists', async () => {
+  const { context, page } = await open('/resume');
+  const href = await page.locator('nav a', { hasText: 'About' }).first().getAttribute('href');
+  const id = href.split('#')[1];
+  await page.goto(BASE + '/');
+  assert.equal(await page.locator(`[id="${id}"]`).count(), 1, `${href} has a target`);
+  await context.close();
+});
+
+test('the drawings appear even if IntersectionObserver never fires', async () => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await context.addInitScript(() => { window.IntersectionObserver = class { observe() {} unobserve() {} disconnect() {} }; });
+  const page = await context.newPage();
+  await page.goto(BASE + '/');
+  await page.waitForTimeout(3500);
+  const inked = await page.evaluate(() => {
+    const c = document.querySelector('canvas.drawing');
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let n = 0; for (let i = 3; i < d.length; i += 4 * 16) if (d[i] > 0) n++;
+    return n;
+  });
+  assert.ok(inked > 500, 'the ANNA drawing plotted');
+  for (const id of ['henk', 'sandbox', 'homelab', 'pytaiga']) {
+    await page.locator(`#${id}`).scrollIntoViewIfNeeded();
+    await page.waitForTimeout(200);
+  }
+  assert.equal(await page.locator('.dwg.drawn').count(), 4);
+  await context.close();
+});
+
+test('reduced motion on a dark phone: the drawing is never inked in black', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce', colorScheme: 'dark' });
+  const page = await context.newPage();
+  await page.goto(BASE + '/');
+  await page.waitForTimeout(400);
+  const black = await page.evaluate(() => {
+    const c = document.querySelector('canvas.drawing');
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let n = 0; for (let i = 0; i < d.length; i += 4 * 8) if (d[i + 3] > 200 && d[i] + d[i + 1] + d[i + 2] < 30) n++;
+    return n;
+  });
+  assert.equal(black, 0);
+  await context.close();
+});
+
+test('the browser bar colour follows the chosen theme', async () => {
+  const context = await browser.newContext({ colorScheme: 'light' });
+  await context.addInitScript(() => { if (!localStorage.getItem('theme')) localStorage.setItem('theme', 'dark'); });
+  const page = await context.newPage();
+  await page.goto(BASE + '/');
+  await page.waitForTimeout(300);
+  const bar = () => page.evaluate(() => [...document.querySelectorAll('meta[name="theme-color"]')].map(m => m.content.toUpperCase()));
+  assert.deepEqual([...new Set(await bar())], ['#16141D']);
+  await page.locator('.theme').click();
+  await page.waitForTimeout(700);
+  assert.deepEqual([...new Set(await bar())], ['#EFEDF3']);
+  await context.close();
+});
+
+test('Henk\'s blocked call stays a dashed redline once drawn', async () => {
+  const { context, page } = await open('/', { reducedMotion: 'reduce' });
+  await page.waitForTimeout(300);
+  const dash = await page.evaluate(() => getComputedStyle(document.querySelector('#henk .red .dash')).strokeDasharray);
+  assert.notEqual(dash, 'none');
+  await context.close();
+});

@@ -17,6 +17,8 @@ function paintThemeButton() {
   themeBtn.querySelector('.theme-label').textContent = isDark() ? 'Whiteprint' : 'Light table';
   themeBtn.setAttribute('aria-pressed', String(isDark()));
   themeBtn.setAttribute('aria-label', isDark() ? 'Switch to the light theme' : 'Switch to the dark theme');
+  // the browser bar follows the chosen theme, not just the system's
+  for (const m of document.querySelectorAll('meta[name="theme-color"]')) m.content = isDark() ? '#16141D' : '#EFEDF3';
 }
 themeBtn.addEventListener('click', () => setTheme(isDark() ? 'light' : 'dark'));
 paintThemeButton();
@@ -40,6 +42,8 @@ for (const id of [...LEVELS.map(l => l.id), 'callout']) {
 }
 
 let firstFrame = true;
+// sizes of the callout and the first label, measured on layout rather than in every frame
+const sizes = { cw: 250, ch: 190, idH: 40 };
 const scene = createScene(canvas, {
   reduced,
   onFrame(A, st, cam) {
@@ -72,7 +76,7 @@ const scene = createScene(canvas, {
     const co = Math.max(0, 1 - st.q * 3) * plotted;
     if (lap) {
       // measured while shown; a hidden callout reports 0, so fall back to its usual size
-      const cw = callout.offsetWidth || 250, ch = callout.offsetHeight || 190;
+      const { cw, ch } = sizes;
       const room = P('room');
       const cx = isPhone ? rect.width - cw - 8 : Math.min(rect.width - cw - 26, room.x + 34);
       const cy = isPhone ? 8 : Math.max(96, room.y + 6);
@@ -86,7 +90,7 @@ const scene = createScene(canvas, {
       // no room beside the room (portrait phone, or a short landscape screen): move the chat into the text
       if (st.q < 0.02) {
         const firstLabel = P('identity');
-        const tooTight = isPhone || compact || (firstLabel && cy + ch + 14 > firstLabel.y - levelEls.identity.offsetHeight / 2);
+        const tooTight = isPhone || compact || (firstLabel && cy + ch + 14 > firstLabel.y - sizes.idH / 2);
         root.classList.toggle('chat-inline', !!tooTight);
       }
       const inline = root.classList.contains('chat-inline');
@@ -135,6 +139,10 @@ function layoutFrame() {
   const right = isPhone ? 124 : stage.classList.contains('short') ? 220 : 300;
   const left = isPhone ? 46 : 70;
   scene.setFrame({ x: left, y: top, w: r.width - left - right, h: r.height - top - bottom });
+  // a hidden callout reports 0, so keep the last real size
+  sizes.cw = callout.offsetWidth || sizes.cw;
+  sizes.ch = callout.offsetHeight || sizes.ch;
+  sizes.idH = levelEls.identity.offsetHeight || sizes.idH;
 }
 new ResizeObserver(() => { scene.resize(); layoutFrame(); }).observe(stage);
 
@@ -160,14 +168,14 @@ function readScroll() {
   const s = steps[active];
   if (!hoverCloud) scene.setCloud(s.dataset.cloud || null);
   stage.classList.toggle('turnable', q > 0.6);
-  if (s.hasAttribute('data-request') && lastActive !== active && scene.requestAge() > 6) scene.request();
+  if (s.hasAttribute('data-request') && lastActive !== active && scene.started() && scene.requestAge() > 6) scene.request();
   lastActive = active;
 }
 // one read per frame, however many scroll events arrive
-addEventListener('scroll', () => { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(() => { scrollQueued = false; readScroll(); }); } }, { passive: true });
+addEventListener('scroll', () => { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(() => { scrollQueued = false; readScroll(); revealInView(); }); } }, { passive: true });
 addEventListener('resize', readScroll);
 
-document.querySelector('.replay').addEventListener('click', () => scene.request());
+document.querySelector('.replay').addEventListener('click', () => (scene.started() ? scene.request() : startStage()));
 
 // in the exploded view the model can be turned by hand, about its vertical axis only
 let drag = null;
@@ -194,18 +202,37 @@ scaleNote.addEventListener('focus', () => scene.setHover('ezra'));
 scaleNote.addEventListener('blur', () => scene.setHover(null));
 
 // the drawing plots itself once it is actually on screen (on a phone it starts below the hero)
+function startStage() {
+  if (scene.started()) return;
+  scene.start();
+  // the request runs once the drawing has plotted
+  setTimeout(() => scene.requestAge() === Infinity && scene.request(), reduced ? 0 : 2300);
+}
+let fontsReady = false;
 document.fonts.ready.then(() => {
+  fontsReady = true;
   layoutFrame();
   readScroll();
   const io = new IntersectionObserver(es => {
     if (!es.some(e => e.isIntersecting)) return;
     io.disconnect();
-    scene.start();
-    // the request runs once the drawing has plotted
-    setTimeout(() => scene.requestAge() === Infinity && scene.request(), reduced ? 0 : 2300);
+    startStage();
   }, { threshold: 0.3 });
   io.observe(stage);
+  revealInView();
 });
+
+// The observers above and below do the work; this is the backstop, run on scroll, so the
+// drawings never stay hidden where an IntersectionObserver does not fire.
+const shown = (el, part) => {
+  const r = el.getBoundingClientRect();
+  const seen = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+  return r.height > 0 && seen >= Math.min(r.height, innerHeight) * part;
+};
+function revealInView() {
+  if (fontsReady && !scene.started() && shown(stage, 0.3)) startStage();
+  for (const d of dwgs) if (!d.classList.contains('drawn') && shown(d, 0.35)) plotIn(d);
+}
 
 // ---------- detail drawings plot themselves in when they arrive ----------
 const dwgs = [...document.querySelectorAll('.dwg')];
