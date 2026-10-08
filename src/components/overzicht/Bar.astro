@@ -1,14 +1,21 @@
 ---
-// The sheet's top bar. The theme button is painted by src/scripts/overzicht/main.ts.
+// The sheet's top bar. The theme button and the phone menu are driven by
+// src/scripts/overzicht/main.js; at 860px and below the section links fold into the menu.
 ---
 <header class="bar">
   <a class="bar-name" href="#top">E. Hulsman</a>
-  <nav aria-label="Sections">
-    <a href="#anna">ANNA</a>
-    <a href="#details">Work</a>
-    <a href="#revisions">Experience</a>
-    <a href="#notes">About</a>
-    <a href="#contact">Contact</a>
+  <nav id="bar-nav" aria-label="Sections">
+    <a href="#anna" style="--i:0">ANNA</a>
+    <a href="#details" style="--i:1">Work</a>
+    <a href="#revisions" style="--i:2">Experience</a>
+    <a href="#notes" style="--i:3">About</a>
+    <a href="#contact" style="--i:4">Contact</a>
   </nav>
   <button class="theme" type="button" aria-pressed="false"><span class="theme-label">Light table</span></button>
+  <button class="menu-btn" type="button" aria-label="Sections" aria-expanded="false" aria-controls="bar-nav">
+    <svg class="menu-lines" viewBox="0 0 18 14" aria-hidden="true">
+      <path pathLength="1" class="ml" d="M1 2 H17"/><path pathLength="1" class="ml" d="M1 7 H17"/><path pathLength="1" class="ml" d="M1 12 H17"/>
+      <path pathLength="1" class="mx" d="M3 1 L15 13"/><path pathLength="1" class="mx" d="M15 1 L3 13"/>
+    </svg>
+  </button>
 </header>

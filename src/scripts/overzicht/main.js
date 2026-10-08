@@ -23,6 +23,20 @@ function paintThemeButton() {
 themeBtn.addEventListener('click', () => setTheme(isDark() ? 'light' : 'dark'));
 paintThemeButton();
 
+// ---------- the phone menu: the bar's section links, folded away below 860px ----------
+const bar = document.querySelector('.bar');
+const menuBtn = bar.querySelector('.menu-btn');
+function setMenu(open, { focus = false } = {}) {
+  bar.classList.toggle('open', open);
+  menuBtn.setAttribute('aria-expanded', String(open));
+  if (!open && focus) menuBtn.focus();
+}
+menuBtn.addEventListener('click', () => setMenu(!bar.classList.contains('open')));
+bar.querySelector('nav').addEventListener('click', e => e.target.closest('a') && setMenu(false));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && bar.classList.contains('open')) setMenu(false, { focus: true }); });
+document.addEventListener('pointerdown', e => { if (bar.classList.contains('open') && !bar.contains(e.target)) setMenu(false); });
+matchMedia('(max-width: 860px)').addEventListener('change', e => { if (!e.matches) setMenu(false); });
+
 // ---------- the ANNA drawing ----------
 const stage = document.querySelector('.stage');
 const canvas = stage.querySelector('.drawing');

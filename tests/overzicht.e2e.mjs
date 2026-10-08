@@ -279,3 +279,43 @@ test('Henk\'s blocked call stays a dashed redline once drawn', async () => {
   assert.notEqual(dash, 'none');
   await context.close();
 });
+
+test('phones reach every section through the menu button', async () => {
+  const { context, page } = await open('/', { width: 390, height: 844 });
+  const btn = page.locator('.menu-btn');
+  const links = page.locator('.bar nav a');
+  assert.equal(await btn.isVisible(), true);
+  assert.equal(await links.first().isVisible(), false);
+  assert.equal(await btn.getAttribute('aria-expanded'), 'false');
+  assert.equal(await btn.getAttribute('aria-label'), 'Sections');
+
+  await btn.click();
+  assert.equal(await btn.getAttribute('aria-expanded'), 'true');
+  assert.deepEqual(await links.allInnerTexts(), ['ANNA', 'WORK', 'EXPERIENCE', 'ABOUT', 'CONTACT']);
+
+  // a link takes you there and closes the menu
+  await links.filter({ hasText: 'Experience' }).click();
+  await page.waitForTimeout(600);
+  assert.equal(await btn.getAttribute('aria-expanded'), 'false');
+  const top = await page.locator('#revisions').evaluate(el => el.getBoundingClientRect().top);
+  assert.ok(Math.abs(top) < 120, `#revisions is at the top (${top})`);
+
+  // Escape closes it and gives focus back to the button
+  await btn.click();
+  await page.keyboard.press('Escape');
+  assert.equal(await btn.getAttribute('aria-expanded'), 'false');
+  assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('menu-btn')), true);
+
+  // a tap outside closes it too
+  await btn.click();
+  await page.mouse.click(200, 600);
+  assert.equal(await btn.getAttribute('aria-expanded'), 'false');
+  await context.close();
+});
+
+test('wide screens keep the links in the bar and no menu button', async () => {
+  const { context, page } = await open('/', { width: 1440, height: 900 });
+  assert.equal(await page.locator('.menu-btn').isVisible(), false);
+  assert.equal(await page.locator('.bar nav a').first().isVisible(), true);
+  await context.close();
+});

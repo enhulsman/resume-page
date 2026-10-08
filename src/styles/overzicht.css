@@ -281,11 +281,58 @@ kbd { font: inherit; color: var(--red); }
 .cloud-hl path { fill: none; stroke: var(--red); stroke-width: 1.4; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
 .cloud-hl.on path { transition: stroke-dashoffset .45s cubic-bezier(.4,0,.2,1); stroke-dashoffset: 0; }
 
+/* ---------- the phone menu: the section links, folded into the bar ---------- */
+.menu-btn { display: none; }
+
 /* ---------- phone ---------- */
 @media (max-width: 860px) {
   :root { --bar: 46px; }
   .bar nav { display: none; }
   .bar { gap: 12px; }
+  .js .bar nav {
+    display: flex; flex-direction: column; gap: 0; position: absolute; top: 100%; left: -1px; right: -1px;
+    background: var(--sheet); border: 1.5px solid var(--ink); border-top-width: .75px;
+    visibility: hidden; clip-path: inset(0 0 100% 0); transition: clip-path .28s cubic-bezier(.4,0,.2,1), visibility 0s .28s;
+  }
+  .js .bar.open nav { visibility: visible; clip-path: inset(0 0 -2px 0); transition: clip-path .28s cubic-bezier(.4,0,.2,1); }
+  .js .bar nav a { padding: 15px calc(var(--gutter) - 6px); font-size: 13px; border-bottom: .75px solid var(--hair); }
+  .js .bar nav a:last-child { border-bottom: 0; }
+  .js .menu-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 34px; height: 28px; padding: 0 10px;
+    appearance: none; border: .75px solid var(--ink); border-radius: 0; background: none; color: inherit; cursor: pointer;
+    font: inherit; letter-spacing: inherit; text-transform: inherit;
+  }
+  /* hover only where there is one: a tap must not leave the button red */
+  @media (hover: hover) { .menu-btn:hover { color: var(--red); border-color: var(--red); } }
+
+  /* the drawn button: three strokes lift off like a pen, then a red cross plots in;
+     closing runs it backwards. Each path has pathLength 1, so one dash is the whole stroke. */
+  .menu-lines { width: 18px; height: 14px; display: block; overflow: visible; }
+  .menu-lines path { fill: none; stroke-width: 1.5; stroke-dasharray: 1 1; transition: stroke-dashoffset .2s cubic-bezier(.4,0,.2,1); }
+  .menu-lines .ml { stroke: currentColor; stroke-dashoffset: 0; }
+  .menu-lines .mx { stroke: var(--red); stroke-dashoffset: 1; }
+  .menu-lines .ml:nth-child(1) { transition-delay: .26s; }
+  .menu-lines .ml:nth-child(2) { transition-delay: .21s; }
+  .menu-lines .ml:nth-child(3) { transition-delay: .16s; }
+  .menu-lines .mx:nth-child(5) { transition-delay: .06s; }
+  .bar.open .menu-lines .ml { stroke-dashoffset: -1; }
+  .bar.open .menu-lines .mx { stroke-dashoffset: 0; }
+  .bar.open .menu-lines .ml:nth-child(1) { transition-delay: 0s; }
+  .bar.open .menu-lines .ml:nth-child(2) { transition-delay: .05s; }
+  .bar.open .menu-lines .ml:nth-child(3) { transition-delay: .1s; }
+  .bar.open .menu-lines .mx:nth-child(4) { transition-delay: .22s; }
+  .bar.open .menu-lines .mx:nth-child(5) { transition-delay: .32s; }
+
+  /* the dropdown plots like a table: each rule draws across, then its lettering */
+  .js .bar nav a { position: relative; border-bottom: 0; color: transparent; transition: color .25s ease; }
+  .js .bar nav a::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: .75px; background: var(--hair);
+    transform: scaleX(0); transform-origin: left; transition: transform .1s ease;
+  }
+  .js .bar nav a:last-child::after { display: none; }
+  .js .bar.open nav a { color: var(--ink); transition-delay: calc(.2s + var(--i, 0) * 55ms); }
+  .js .bar.open nav a::after { transform: scaleX(1); transition: transform .35s cubic-bezier(.4,0,.2,1) calc(.1s + var(--i, 0) * 55ms); }
+  .js .bar.open nav a:hover { color: var(--red); transition-delay: 0s; }
   .dwg-wrap { overflow-x: auto; margin: 0 -16px; padding: 0 16px 6px; scrollbar-width: thin; }
   .dwg { width: 620px; max-width: none; }
   .dwg-wrap::after { content: "Drawing scrolls sideways"; display: block; font: 400 10px/1 var(--mono); color: var(--label); margin-top: 6px; position: sticky; left: 0; }
