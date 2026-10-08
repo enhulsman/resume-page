@@ -1,8 +1,9 @@
 ---
 import site from "../../config/site";
+import { annaLevels } from "../../config/home";
 
 // Sheet 1: the hero, then ANNA drawn as section A–A that turns into an exploded view.
-// The canvas and the leaders are driven by src/scripts/overzicht/main.ts.
+// The canvas and the leaders are driven by src/scripts/overzicht/main.js.
 const [first, ...rest] = site.name.split(" ");
 ---
 <section class="scrolly" id="anna" aria-label="ANNA, drawn as a section">
@@ -60,10 +61,7 @@ const [first, ...rest] = site.name.split(" ");
     <div class="turn" role="group" aria-label="Turn the model"><button type="button" data-turn="-1" aria-label="Turn left">&larr;</button><button type="button" data-turn="1" aria-label="Turn right">&rarr;</button><span>Drag, or use these, to turn the model</span></div>
     <svg class="leaders" aria-hidden="true"></svg>
     <ol class="levels" aria-label="ANNA, level by level">
-      <li data-level="identity"><b>−1 Identity</b><span>Entra ID, profile, history, memories. Everything is per user.</span></li>
-      <li data-level="claude"><b>−2 Claude</b><span>Two backends behind one interface: Claude Code streaming as a subprocess, or the Anthropic API.</span></li>
-      <li data-level="connectors"><b>−3 MCP connectors</b><span>Loket for leave, ClockWise for hours, plus ANNA's own tools for memory, reminders and documents.</span></li>
-      <li data-level="ops"><b>−4 Running it</b><span>Health checks, a log analyser, alerts before tokens expire, an admin portal.</span></li>
+      {annaLevels.map(l => <li data-level={l.id}><b>{l.name}</b><span>{l.text}</span></li>)}
     </ol>
     <figure class="callout" aria-label="The conversation on the screen">
       <figcaption>Detail: the screen</figcaption>

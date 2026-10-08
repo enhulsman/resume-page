@@ -1,100 +1,82 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SkillsGrid from '../components/resume/SkillsGrid.astro';
-import ExperienceTimeline from '../components/resume/ExperienceTimeline.astro';
-import EducationList from '../components/resume/EducationList.astro';
-import CertificationList from '../components/resume/CertificationList.astro';
-import site from '../config/site';
-import AnimatedIcon from '../components/AnimatedIcon';
+// /resume: the CV as a sheet. Experience is the revision table (newest first, lettered from A),
+// skills and schooling are schedules. It prints on white: see the print block in overzicht.css.
+import OverzichtLayout from "../layouts/OverzichtLayout.astro";
+import site from "../config/site";
+import { certifications, education, experience, skillCategories, spokenLanguages } from "../config/resume";
+
+// The CV letters every role, oldest A, as the homepage's revision table does.
+const letter = (e: (typeof experience)[number]) => String.fromCharCode(65 + experience.length - 1 - experience.indexOf(e));
+const when = (e: (typeof experience)[number]) => `${e.startDate} – ${e.endDate ?? "present"}`;
+const groups = [
+  { id: "consulting", entries: experience.filter((e) => e.group === "consulting") },
+  { id: "prior", entries: experience.filter((e) => e.group === "prior") },
+];
+// a drawing has no emoji: the flag stays in the terminal's `whoami`
+const location = site.location.replace(/\s*[\u{1F1E6}-\u{1F1FF}]+/gu, "");
 ---
 
-<BaseLayout
+<OverzichtLayout
+  current="resume"
   title={`Resume — ${site.name}`}
   description={`Professional resume of ${site.name}. ${site.role} at ${site.company}, based in ${site.location}.`}
   keywords={`${site.seo.keywords}, resume, CV, work experience, certifications`}
   ogTitle={`Resume — ${site.name}`}
   ogDescription={`${site.role} at ${site.company}. Work experience, skills, education, and certifications.`}
 >
-  <!-- Compact profile header — makes this page standalone for recruiters -->
-  <div class="mb-10 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <section class="sheet sheet-first cv-head" aria-labelledby="cv-h">
+    <header class="sheet-head">
+      <h1 id="cv-h">{site.name}</h1>
       <div>
-        <h1 class="font-display text-2xl md:text-3xl font-bold tracking-tight text-theme-primary">
-          {site.name}
-        </h1>
-        <p class="mt-1 text-sm text-theme-secondary">
-          {site.role} at <a href={site.social.employer} target="_blank" rel="noopener noreferrer" class="text-theme-accent hover:underline">{site.company}</a> · {site.location}
-        </p>
-        <p class="mt-2 text-sm text-theme-muted max-w-xl">
-          {site.summary}
-        </p>
-        <div class="mt-4 flex flex-wrap gap-2">
-          <a
-            href="/contact"
-            class="inline-flex items-center gap-2 text-sm font-medium font-display px-4 py-2 rounded-lg border border-[var(--color-accent-border)] text-theme-accent bg-[var(--color-accent-alpha)] hover:bg-[var(--color-accent-primary)] hover:text-[var(--color-bg-primary)] transition-all duration-200"
-          >
-            <AnimatedIcon name="mailbox" size="sm" client:idle />
-            Inquire about my full CV
-          </a>
-          <a
-            href={`mailto:${site.social.email}`}
-            class="inline-flex items-center gap-2 text-sm font-medium font-display px-4 py-2 rounded-lg border border-[var(--color-border-primary)] text-theme-secondary hover:text-theme-accent hover:border-[var(--color-accent-border)] transition-all duration-200"
-          >
-            Get in touch
-          </a>
-        </div>
+        <p class="role">{site.role} at <a href={site.social.employer}>{site.company}</a> · {location}</p>
+        <p>{site.summary}</p>
       </div>
-      <div class="flex items-center gap-3 shrink-0">
-        <a href={`mailto:${site.social.email}`} class="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border-primary)] text-theme-muted hover:text-theme-accent hover:border-[var(--color-accent-border)] transition-colors" aria-label="Email" title="Email">
-          <AnimatedIcon name="mailbox" size="sm" client:idle />
-        </a>
-        <a href={site.social.GitHub} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border-primary)] text-theme-muted hover:text-theme-accent hover:border-[var(--color-accent-border)] transition-colors" aria-label="GitHub" title="GitHub">
-          <AnimatedIcon name="github" size="sm" client:idle />
-        </a>
-        <a href={site.social.LinkedIn} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--color-border-primary)] text-theme-muted hover:text-theme-accent hover:border-[var(--color-accent-border)] transition-colors" aria-label="LinkedIn" title="LinkedIn">
-          <AnimatedIcon name="linkedin" size="sm" client:idle />
-        </a>
+    </header>
+    <p class="actions">
+      <a class="act act-main" href="/contact">Inquire about my full CV</a>
+      <a class="act" href={`mailto:${site.social.email}`}>Get in touch</a>
+      <a class="act" href={site.social.LinkedIn}>LinkedIn</a>
+      <a class="act" href={site.social.GitHub}>GitHub</a>
+    </p>
+  </section>
+
+  <section class="sheet" aria-labelledby="exp-h">
+    <header class="sheet-head">
+      <h2 id="exp-h">Experience</h2>
+    </header>
+    {groups.map((g) => (
+      <>
+        <h3 class="sub">
+          {g.id === "consulting" ? <>Consultant via <a href="https://anamata.nl">Anamata</a> (2023 – present)</> : "Prior Experience"}
+        </h3>
+        <ol class="revs">
+          {g.entries.map((e) => (
+            <li><span class="rev">{letter(e)}</span><span class="when">{when(e)}</span><div><h4>{e.role} <i>{e.client}</i></h4><p>{e.summary}</p></div></li>
+          ))}
+        </ol>
+      </>
+    ))}
+
+    <div class="schedules schedules-cv">
+      <table class="schedule">
+        <caption>Skills</caption>
+        <tr><th scope="row">Languages</th><td>{spokenLanguages.map((l) => `${l.name} (${l.level})`).join(" · ")}</td></tr>
+        {skillCategories.map((c) => <tr><th scope="row">{c.label}</th><td>{c.items.join(" · ")}</td></tr>)}
+      </table>
+      <div class="schedule-stack">
+        <table class="schedule">
+          <caption>Education</caption>
+          {education.map((e) => (
+            <tr><th scope="row">{e.startYear} – {e.endYear}</th><td>{e.degree} — {e.institution}{(e.result || e.gpa) && <span class="sched-note">{[e.result, e.gpa && `${e.gpa} GPA`].filter(Boolean).join(" · ")}</span>}</td></tr>
+          ))}
+        </table>
+        <table class="schedule">
+          <caption>Certifications</caption>
+          {certifications.map((c) => (
+            <tr><th scope="row">{c.year}</th><td>{c.name} — {c.institution}{c.credential && <span class="sched-note">{c.credential}</span>}</td></tr>
+          ))}
+        </table>
       </div>
     </div>
-  </div>
-
-  <section class="mb-10">
-    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
-      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
-      Skills
-    </h2>
-    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
-      <SkillsGrid />
-    </div>
   </section>
-
-  <section class="mb-10">
-    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
-      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
-      Experience
-    </h2>
-    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
-      <ExperienceTimeline />
-    </div>
-  </section>
-
-  <section class="mb-10">
-    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
-      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
-      Education
-    </h2>
-    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
-      <EducationList />
-    </div>
-  </section>
-
-  <section class="mb-10">
-    <h2 class="font-display text-xl font-bold tracking-tight text-theme-primary mb-4 flex items-center gap-3">
-      <span class="w-6 h-px bg-[var(--color-accent-primary)]" aria-hidden="true"></span>
-      Certifications
-    </h2>
-    <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6">
-      <CertificationList />
-    </div>
-  </section>
-</BaseLayout>
+</OverzichtLayout>

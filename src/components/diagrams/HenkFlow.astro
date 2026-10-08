@@ -1,6 +1,6 @@
 ---
 // Bespoke trust-boundary / event-flow diagram for the Henk case study.
-// Inline SVG, zero JS, themed entirely through the site's CSS variables.
+// Inline SVG, zero JS, drawn in the Overzicht tokens (src/styles/overzicht.css).
 ---
 
 <div class="henk-flow">
@@ -120,115 +120,25 @@
 </div>
 
 <style>
-  .henk-flow {
-    max-width: 480px;
-    margin: 2.25rem auto;
-  }
-
-  .henk-flow svg {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  .henk-flow text {
-    font-family: inherit;
-  }
-
-  .box {
-    fill: var(--color-bg-tertiary);
-    stroke: var(--color-border-primary);
-    stroke-width: 1;
-    transition: var(--transition-theme);
-  }
-
-  .box-untrusted {
-    fill: var(--color-warning-alpha);
-    stroke: var(--color-warning-border);
-  }
-
-  .box-safe {
-    fill: var(--color-teal-alpha);
-    stroke: var(--color-teal-border);
-  }
-
-  .box-choke {
-    fill: var(--color-accent-alpha);
-    stroke: var(--color-accent-primary);
-    stroke-width: 1.5;
-  }
-
-  .container {
-    fill: var(--color-bg-tertiary);
-    fill-opacity: 0.3;
-    stroke: var(--color-border-primary);
-    stroke-width: 1;
-  }
-
-  .label {
-    font-size: 15px;
-    font-weight: 600;
-    fill: var(--color-text-primary);
-  }
-
-  .label-choke {
-    fill: var(--color-accent-primary);
-    font-weight: 700;
-  }
-
-  .label-out {
-    font-size: 13.5px;
-  }
-
-  .sub {
-    font-size: 12px;
-    fill: var(--color-text-muted);
-  }
-
-  .sub-out {
-    font-size: 11.5px;
-  }
-
-  .zone {
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    fill: var(--color-text-muted);
-  }
-
-  .zone-untrusted {
-    fill: var(--color-warning);
-  }
-
-  .header {
-    font-size: 11.5px;
-    letter-spacing: 0.04em;
-    fill: var(--color-text-muted);
-  }
-
-  .edge {
-    stroke: var(--color-text-muted);
-    stroke-width: 1.2;
-    stroke-opacity: 0.55;
-  }
-
-  .arrow-head {
-    fill: var(--color-text-muted);
-    fill-opacity: 0.7;
-  }
-
-  .boundary {
-    stroke: var(--color-warning);
-    stroke-width: 1.2;
-    stroke-opacity: 0.55;
-    stroke-dasharray: 6 5;
-  }
-
-  .flow-caption {
-    margin-top: 0.9rem;
-    text-align: center;
-    font-size: 0.8rem;
-    line-height: 1.45;
-    color: var(--color-text-muted);
-  }
+  /* drawn in the sheet's ink: square boxes, untrusted things and the choke point in red */
+  .henk-flow { max-width: 480px; margin: 8px 0 32px; }
+  .henk-flow svg { display: block; width: 100%; height: auto; }
+  .box { fill: var(--sheet); stroke: var(--ink); stroke-width: 1; rx: 0; transition: fill .5s ease; }
+  .box-untrusted { stroke: var(--red); stroke-dasharray: 5 4; }
+  .box-safe { stroke-width: 1.5; }
+  .box-choke { stroke: var(--red); stroke-width: 2; }
+  .container { fill: none; stroke: var(--ink); stroke-width: 1.5; rx: 0; }
+  .label { font: 600 14px var(--sans); font-stretch: 88%; fill: var(--ink); }
+  .label-choke { fill: var(--red); font-weight: 700; }
+  .label-out { font-size: 13px; }
+  /* .sub is also the sheet's subhead class: undo its lettering here */
+  .sub { font: 400 9px var(--mono); fill: var(--ink-2); text-transform: none; letter-spacing: 0; margin: 0; }
+  .sub-out { font-size: 8.5px; }
+  .zone { font: 400 10px var(--mono); letter-spacing: .1em; fill: var(--label); }
+  .zone-untrusted { fill: var(--red); }
+  .header { font: 400 9.5px var(--mono); fill: var(--ink-2); }
+  .edge { stroke: var(--ink); stroke-width: 1; }
+  .arrow-head { fill: var(--ink); }
+  .boundary { stroke: var(--red); stroke-width: 1.2; stroke-dasharray: 6 5; }
+  .flow-caption { margin-top: 10px; font: 400 11px/1.5 var(--mono); color: var(--ink-2); }
 </style>

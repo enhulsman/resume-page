@@ -1,11 +1,6 @@
 ---
 import { details } from "../../config/home";
-import HenkDrawing from "./drawings/HenkDrawing.astro";
-import SandboxDrawing from "./drawings/SandboxDrawing.astro";
-import HomelabDrawing from "./drawings/HomelabDrawing.astro";
-import PytaigaDrawing from "./drawings/PytaigaDrawing.astro";
-
-const drawings = { henk: HenkDrawing, sandbox: SandboxDrawing, homelab: HomelabDrawing, pytaiga: PytaigaDrawing };
+import DetailCard from "./DetailCard.astro";
 ---
 <section class="sheet" id="details" aria-labelledby="details-h">
   <header class="sheet-head">
@@ -14,21 +9,6 @@ const drawings = { henk: HenkDrawing, sandbox: SandboxDrawing, homelab: HomelabD
   </header>
 
   <div class="details">
-    {details.map(d => {
-      const Drawing = drawings[d.id];
-      return (
-        <article class="detail" id={d.id}>
-          <div class="dwg-wrap"><Drawing /></div>
-          <div class="detail-text">
-            <h3>{d.title}</h3>
-            <p>{d.text}</p>
-            <dl class="dims">
-              {d.dims.map(m => <div><dt>{m.value}</dt><dd>{m.label}</dd></div>)}
-            </dl>
-            <p class="links"><a href={d.caseStudy}>Case study</a>{d.code && <a href={d.code}>Code</a>}</p>
-          </div>
-        </article>
-      );
-    })}
+    {details.map(d => <DetailCard detail={d} />)}
   </div>
 </section>

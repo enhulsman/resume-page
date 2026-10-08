@@ -204,23 +204,7 @@ test('keyboard focus is visible', async () => {
   await context.close();
 });
 
-for (const path of ['/projects', '/projects/Henk', '/blog', '/blog/bible-tui', '/resume', '/contact', '/rss.xml']) {
-  test(`${path} still renders`, async () => {
-    const { context, res, errors } = await open(path);
-    assert.equal(res.status(), 200);
-    assert.deepEqual(errors.filter(e => !/turnstile|challenges\.cloudflare/i.test(e)), []);
-    await context.close();
-  });
-}
-
-test('the inner pages\' About link lands on a section that exists', async () => {
-  const { context, page } = await open('/resume');
-  const href = await page.locator('nav a', { hasText: 'About' }).first().getAttribute('href');
-  const id = href.split('#')[1];
-  await page.goto(BASE + '/');
-  assert.equal(await page.locator(`[id="${id}"]`).count(), 1, `${href} has a target`);
-  await context.close();
-});
+// The inner pages have their own checks in tests/sheets.e2e.mjs.
 
 test('the drawings appear even if IntersectionObserver never fires', async () => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });

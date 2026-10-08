@@ -1,0 +1,21 @@
+---
+// One drawn project: its detail drawing, what it is, three real dimensions, and its links.
+// The homepage's Details sheet and /projects both draw them; `heading` follows the page.
+import type { Detail } from "../../config/home";
+import { drawings } from "./drawings";
+
+interface Props { detail: Detail; heading?: "h2" | "h3"; }
+const { detail: d, heading: H = "h3" } = Astro.props;
+const Drawing = drawings[d.id];
+---
+<article class="detail" id={d.id}>
+  <div class="dwg-wrap"><Drawing /></div>
+  <div class="detail-text">
+    <H>{d.title}</H>
+    <p>{d.text}</p>
+    <dl class="dims">
+      {d.dims.map(m => <div><dt>{m.value}</dt><dd>{m.label}</dd></div>)}
+    </dl>
+    <p class="links"><a href={d.caseStudy}>Case study</a>{d.code && <a href={d.code}>Code</a>}</p>
+  </div>
+</article>

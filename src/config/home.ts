@@ -12,6 +12,23 @@ export interface Detail {
   code?: string;
 }
 
+/** ANNA's levels below the room, as the homepage labels them; /projects labels its plate the same way. */
+export const annaLevels = [
+  { id: 'identity', name: '−1 Identity', text: 'Entra ID, profile, history, memories. Everything is per user.' },
+  { id: 'claude', name: '−2 Claude', text: 'Two backends behind one interface: Claude Code streaming as a subprocess, or the Anthropic API.' },
+  { id: 'connectors', name: '−3 MCP connectors', text: 'Loket for leave, ClockWise for hours, plus ANNA\'s own tools for memory, reminders and documents.' },
+  { id: 'ops', name: '−4 Running it', text: 'Health checks, a log analyser, alerts before tokens expire, an admin portal.' },
+];
+
+/** ANNA on /projects, where it leads the set; its drawing is the homepage's section, turned. */
+export const annaLead = {
+  id: 'anna',
+  title: 'ANNA',
+  text: 'Anamata\'s AI assistant in Microsoft Teams: per-user memory, documents and MCP connectors, in production',
+  status: 'In development since Dec 2025',
+  caseStudy: '/projects/AnnaAssistant',
+};
+
 export const details: Detail[] = [
   {
     id: 'henk',

@@ -1,5 +1,7 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
+// /contact: the form, drawn as a transmittal sheet with the homepage's stamp. The Worker
+// (/api/contact) checks Turnstile, the honeypot and the elapsed time server-side.
+import OverzichtLayout from "../layouts/OverzichtLayout.astro";
 import site from "../config/site";
 
 const contactDescription = `Get in touch with ${site.name}. Send me a message about work opportunities, projects, or just to chat about Formula 1 and tech.`;
@@ -10,35 +12,25 @@ const contactKeywords = `${site.seo.keywords}, contact, hire, collaborate, messa
 const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site.turnstileSiteKey;
 ---
 
-<BaseLayout
+<OverzichtLayout
+  current="contact"
   title={`Contact — ${site.name}`}
   description={contactDescription}
   keywords={contactKeywords}
   ogTitle={`Contact ${site.name} — ${site.role}`}
   ogDescription={contactDescription}
 >
-  <header class="mt-2">
-    <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// Contact</span>
-    <h1 class="mt-2 font-display text-3xl md:text-4xl font-bold tracking-tight text-theme-primary">Get in touch</h1>
-    <p class="text-theme-tertiary mt-1 text-responsive-base">{site.contactMessage}</p>
-  </header>
+  <section class="sheet sheet-first sheet-transmittal" aria-labelledby="contact-h">
+    <header class="sheet-head">
+      <h1 id="contact-h">Get in touch</h1>
+      <p>{site.contactMessage}</p>
+    </header>
 
-  <section class="mt-4 sm:mt-6">
-    <form id="contactForm" class="space-y-4 sm:space-y-5 rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-5 md:p-6 shadow-sm" method="POST" data-turnstile-sitekey={turnstileSiteKey}>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label for="name" class="block text-responsive-sm font-medium text-theme-secondary">Name</label>
-          <input id="name" name="name" required class="mt-1 block w-full rounded-md border border-theme-primary bg-theme-primary px-3 py-2 text-responsive-sm shadow-sm transition focus:border-theme-accent focus:ring-2 focus:ring-theme-accent/20 focus:outline-none text-theme-primary" />
-        </div>
-        <div>
-          <label for="email" class="block text-responsive-sm font-medium text-theme-secondary">Email</label>
-          <input id="email" type="email" name="email" required class="mt-1 block w-full rounded-md border border-theme-primary bg-theme-primary px-3 py-2 text-responsive-sm shadow-sm transition focus:border-theme-accent focus:ring-2 focus:ring-theme-accent/20 focus:outline-none text-theme-primary" />
-        </div>
-      </div>
-      <div>
-        <label for="message" class="block text-responsive-sm font-medium text-theme-secondary">Message</label>
-        <textarea id="message" name="message" rows="6" required class="mt-1 block w-full rounded-md border border-theme-primary bg-theme-primary px-3 py-2 text-responsive-sm shadow-sm transition focus:border-theme-accent focus:ring-2 focus:ring-theme-accent/20 focus:outline-none text-theme-primary resize-y"></textarea>
-      </div>
+    <div class="tm-wrap">
+    <form id="contactForm" class="transmittal" method="POST" data-turnstile-sitekey={turnstileSiteKey}>
+      <div class="tm-row"><label for="name">Name</label><input id="name" name="name" autocomplete="name" required /></div>
+      <div class="tm-row"><label for="email">Email</label><input id="email" type="email" name="email" autocomplete="email" required /></div>
+      <div class="tm-row tm-msg"><label for="message">Message</label><textarea id="message" name="message" rows="7" required></textarea></div>
 
       <!-- Honeypot: humans never see or fill this; bots that fill every field do. Checked server-side. -->
       <div class="hp-field" aria-hidden="true">
@@ -48,38 +40,19 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
       <!-- Milliseconds between page load and submit, set by the script below. -->
       <input type="hidden" name="elapsed" id="elapsed" value="" />
 
-      <!-- Cloudflare Turnstile widget, rendered explicitly by the script below -->
-      <div id="turnstile-container"></div>
-
-      <!-- Status message area -->
-      <div id="statusMessage" class="hidden"></div>
-      
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <button type="submit" id="submitButton" class="btn-responsive btn-theme-accent inline-flex items-center justify-center rounded-md font-medium shadow-sm btn-align-right">
+      <div class="tm-foot">
+        <!-- Cloudflare Turnstile widget, rendered explicitly by the script below -->
+        <div id="turnstile-container"></div>
+        <button type="submit" id="submitButton" class="act act-main">
           <span class="submit-text">Send Message</span>
-          <span class="submit-loading hidden">
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Sending...
-          </span>
+          <span class="submit-loading" hidden>Sending...</span>
         </button>
       </div>
+      <p id="statusMessage" role="status" hidden></p>
     </form>
+      <div class="stamp" aria-hidden="true"><span>Issued for</span><b>conversation</b><span>2026</span></div>
+    </div>
   </section>
-
-  <style>
-    /* Honeypot: off-screen, not display:none, so naive bots still "see" it. */
-    .hp-field {
-      position: absolute;
-      left: -10000px;
-      top: auto;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-    }
-  </style>
 
   <script is:inline>
     // Called by the Turnstile script once loaded (see ?onload= on the script tag below).
@@ -92,7 +65,8 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
       window.__turnstileWidgetId = window.turnstile.render('#turnstile-container', {
         sitekey: sitekey,
         action: 'contact',
-        theme: 'auto',
+        // follow the sheet's chosen theme, not just the system's
+        theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : document.documentElement.dataset.theme === 'light' ? 'light' : 'auto',
         size: 'flexible',
       });
     };
@@ -111,38 +85,29 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
       const submitLoading = submitButton.querySelector('.submit-loading') as HTMLElement;
 
       function showStatus(message: string, isError: boolean = false) {
-        statusMessage.className = `p-3 rounded-md text-sm ${
-          isError 
-            ? 'bg-[rgba(239,68,68,0.1)] text-[rgb(239,68,68)] border border-[rgba(239,68,68,0.2)]'
-            : 'bg-[rgba(34,197,94,0.1)] text-[rgb(34,197,94)] border border-[rgba(34,197,94,0.2)]'
-        }`;
+        statusMessage.dataset.kind = isError ? 'error' : 'sent';
         statusMessage.textContent = message;
-        statusMessage.classList.remove('hidden');
-        
+        statusMessage.hidden = false;
+
         // Auto-hide success messages after 5 seconds
         if (!isError) {
           setTimeout(() => {
-            statusMessage.classList.add('hidden');
+            statusMessage.hidden = true;
           }, 5000);
         }
       }
 
       function setLoading(loading: boolean) {
         submitButton.disabled = loading;
-        if (loading) {
-          submitText.classList.add('hidden');
-          submitLoading.classList.remove('hidden');
-        } else {
-          submitText.classList.remove('hidden');
-          submitLoading.classList.add('hidden');
-        }
+        submitText.hidden = loading;
+        submitLoading.hidden = !loading;
       }
 
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         // Hide any previous status messages
-        statusMessage.classList.add('hidden');
+        statusMessage.hidden = true;
         setLoading(true);
 
         try {
@@ -184,4 +149,4 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
       });
     });
   </script>
-</BaseLayout>
+</OverzichtLayout>

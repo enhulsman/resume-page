@@ -10,7 +10,9 @@ dateLabel: "Released"
 hook: "An external, OS-level sandbox that isolates Claude Code from the rest of the system, independent of Claude Code's own built-in protections, so a vulnerability in one doesn't compromise the other."
 ---
 
-<img src="/images/claude-sandbox-architecture.svg" alt="Claude Sandbox architecture diagram showing namespace boundary, filesystem isolation, socat bridge, and egress proxy" style="width:100%;max-width:640px;margin:1.5rem auto;display:block;" />
+import SandboxArchitecture from "../../components/diagrams/SandboxArchitecture.astro";
+
+<SandboxArchitecture />
 
 ## What I Built
 

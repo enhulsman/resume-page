@@ -1,15 +1,20 @@
 ---
-// The sheet's top bar. The theme button and the phone menu are driven by
-// src/scripts/overzicht/main.js; at 860px and below the section links fold into the menu.
+// The sheet's top bar. On the homepage it links to the sections; on every other sheet it links
+// to the pages, with the one you are on marked. The theme button and the phone menu are driven
+// by src/scripts/overzicht/chrome.js; at 860px and below the links fold into the menu.
+interface Props {
+  /** The inner page this bar sits on; leave it out on the homepage. */
+  current?: "projects" | "blog" | "resume" | "contact";
+}
+const { current } = Astro.props;
+const links = current
+  ? [["projects", "/projects", "Projects"], ["blog", "/blog", "Blog"], ["resume", "/resume", "Résumé"], ["contact", "/contact", "Contact"]]
+  : [["anna", "#anna", "ANNA"], ["details", "#details", "Work"], ["revisions", "#revisions", "Experience"], ["notes", "#notes", "About"], ["contact", "#contact", "Contact"]];
 ---
 <header class="bar">
-  <a class="bar-name" href="#top">E. Hulsman</a>
-  <nav id="bar-nav" aria-label="Sections">
-    <a href="#anna" style="--i:0">ANNA</a>
-    <a href="#details" style="--i:1">Work</a>
-    <a href="#revisions" style="--i:2">Experience</a>
-    <a href="#notes" style="--i:3">About</a>
-    <a href="#contact" style="--i:4">Contact</a>
+  <a class="bar-name" href={current ? "/" : "#top"}>E. Hulsman</a>
+  <nav id="bar-nav" aria-label={current ? "Site" : "Sections"}>
+    {links.map(([id, href, label], i) => <a href={href} style={`--i:${i}`} aria-current={id === current ? "page" : undefined}>{label}</a>)}
   </nav>
   <button class="theme" type="button" aria-pressed="false"><span class="theme-label">Light table</span></button>
   <button class="menu-btn" type="button" aria-label="Sections" aria-expanded="false" aria-controls="bar-nav">
