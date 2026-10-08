@@ -5,7 +5,8 @@ import { createScene, LEVELS } from './scene.js';
 
 const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const phone = matchMedia('(max-width: 860px) and (orientation: portrait)');
+// the stacked layout; keep in step with its media query in overzicht.css
+const phone = matchMedia('(max-width: 860px) and (orientation: portrait), (max-aspect-ratio: 4/5)');
 const review = new URLSearchParams(location.search).has('review');
 
 // ---------- the ANNA drawing ----------
@@ -119,7 +120,7 @@ function layoutFrame() {
   // keep room for the label column on the right and the bar on top
   // side by side, the stage runs under the fixed bar; stacked, it starts below it
   const stacked = phone.matches, short = r.height < 560;
-  const top = stacked ? 14 : short ? 84 : 96, bottom = stacked ? 46 : short ? 26 : 50;
+  const top = stacked ? 14 : short ? 84 : 96, bottom = stacked ? 46 : short ? 46 : 50;
   const right = isPhone ? 124 : stage.classList.contains('short') ? 220 : 300;
   const left = isPhone ? 46 : 70;
   scene.setFrame({ x: left, y: top, w: r.width - left - right, h: r.height - top - bottom });
@@ -209,6 +210,14 @@ scaleNote.addEventListener('mouseenter', () => scene.setHover('ezra'));
 scaleNote.addEventListener('mouseleave', () => scene.setHover(null));
 scaleNote.addEventListener('focus', () => scene.setHover('ezra'));
 scaleNote.addEventListener('blur', () => scene.setHover(null));
+// a tap has no hover: it opens the note, and a tap elsewhere, Escape or a scroll closes it
+scaleNote.setAttribute('aria-expanded', 'false');
+const setNote = open => { scaleNote.setAttribute('aria-expanded', String(open)); scene.setHover(open ? 'ezra' : null); };
+scaleNote.addEventListener('click', () => setNote(!noteOpen()));
+const noteOpen = () => scaleNote.getAttribute('aria-expanded') === 'true';
+document.addEventListener('pointerdown', e => { if (noteOpen() && !scaleNote.contains(e.target)) setNote(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && noteOpen()) setNote(false); });
+addEventListener('scroll', () => noteOpen() && setNote(false), { passive: true });
 
 // the drawing plots itself once it is actually on screen (on a phone it starts below the hero)
 function startStage() {

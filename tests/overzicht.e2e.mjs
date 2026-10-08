@@ -351,14 +351,57 @@ test('on a phone the next step explodes the drawing once it is read to', async (
   await context.close();
 });
 
-test('on a phone no step trails a screen of blank paper', async () => {
-  const { context, page } = await open('/', PHONE);
+for (const [w, h] of [[390, 844], [912, 1368]]) test(`on a ${w}x${h} portrait screen no step trails a screen of blank paper`, async () => {
+  const { context, page } = await open('/', { width: w, height: h });
   const blanks = await page.locator('.step:not(.step-hero)').evaluateAll(steps => steps.map(s => {
     const last = [...s.children].filter(c => getComputedStyle(c).display !== 'none').at(-1);
     return Math.round(s.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom);
   }));
   for (const b of blanks) assert.ok(b <= 120, `blank under a step: ${blanks.join(', ')}px`);
   const pads = await page.locator('main > .sheet').evaluateAll(ss => ss.map(s => parseFloat(getComputedStyle(s).paddingTop)));
-  for (const p of pads) assert.ok(p <= 64, `sheet top padding ${pads.join(', ')}px`);
+  // a phone's sheets close up; wider screens keep the desktop spacing
+  if (w <= 860) for (const p of pads) assert.ok(p <= 64, `sheet top padding ${pads.join(', ')}px`);
+  await context.close();
+});
+
+test('without JavaScript a phone gets no empty stage over the text, and still has the links', async () => {
+  const { context, page } = await open('/', { ...PHONE, js: false });
+  // nothing would draw it, so no sticky box covers the text; ANNA's levels read as a list
+  assert.notEqual(await page.locator('.stage').evaluate(s => getComputedStyle(s).position), 'sticky');
+  assert.ok(await page.locator('.stage').evaluate(s => s.getBoundingClientRect().height) < 600);
+  for (const li of await page.locator('.levels li').all()) assert.equal(await li.evaluate(l => getComputedStyle(l).opacity), '1');
+  assert.ok(await page.locator('.bar nav a').first().isVisible(), 'the section links are reachable');
+  await context.close();
+});
+
+test('on a phone, tapping "for scale" shows the note, and a tap elsewhere hides it', async () => {
+  const context = await browser.newContext({ viewport: PHONE, hasTouch: true, isMobile: true });
+  const page = await context.newPage();
+  await page.goto(BASE + '/');
+  await page.locator('[data-request] h2').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(3500);
+  await page.locator('.scale-note').tap();
+  await page.waitForTimeout(400);
+  assert.equal(await page.locator('.scale-tip').evaluate(t => getComputedStyle(t).opacity), '1');
+  await page.touchscreen.tap(200, 780);
+  await page.waitForTimeout(400);
+  assert.equal(await page.locator('.scale-tip').evaluate(t => getComputedStyle(t).opacity), '0');
+  await context.close();
+});
+
+test('a landscape phone keeps the turn hint off the drawing', async () => {
+  const { context, page } = await open('/', { width: 844, height: 390 });
+  await page.locator('[data-cloud="connectors"]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(800);
+  assert.equal(await page.locator('.stage .turn span').evaluate(s => getComputedStyle(s).display), 'none');
+  await context.close();
+});
+
+test('the revision cloud shows over the bar when a bar link is pointed at', async () => {
+  const { context, page } = await open('/');
+  await page.locator('.bar nav a').nth(1).hover();
+  await page.waitForTimeout(600);
+  const [cloud, bar] = await page.evaluate(() => [+getComputedStyle(document.querySelector('.cloud-hl')).zIndex, +getComputedStyle(document.querySelector('.bar')).zIndex]);
+  assert.ok(cloud > bar, `cloud z ${cloud}, bar z ${bar}`);
   await context.close();
 });

@@ -1,7 +1,8 @@
 ---
 // The sheet's top bar. On the homepage it links to the sections; on every other sheet it links
 // to the pages, with the one you are on marked. The theme button and the phone menu are driven
-// by src/scripts/overzicht/chrome.js; at 860px and below the links fold into the menu.
+// by src/scripts/overzicht/chrome.js; at 860px and below the links fold into the menu. The menu
+// button comes before the links so they follow it in keyboard order; CSS draws it last.
 interface Props {
   /** The inner page this bar sits on; leave it out on the homepage. */
   current?: "projects" | "blog" | "resume" | "contact";
@@ -13,14 +14,14 @@ const links = current
 ---
 <header class="bar">
   <a class="bar-name" href={current ? "/" : "#top"}>E. Hulsman</a>
-  <nav id="bar-nav" aria-label={current ? "Site" : "Sections"}>
-    {links.map(([id, href, label], i) => <a href={href} style={`--i:${i}`} aria-current={id === current ? "page" : undefined}>{label}</a>)}
-  </nav>
-  <button class="theme" type="button" aria-pressed="false"><span class="theme-label">Light table</span></button>
   <button class="menu-btn" type="button" aria-label="Sections" aria-expanded="false" aria-controls="bar-nav">
     <svg class="menu-lines" viewBox="0 0 18 14" aria-hidden="true">
       <path pathLength="1" class="ml" d="M1 2 H17"/><path pathLength="1" class="ml" d="M1 7 H17"/><path pathLength="1" class="ml" d="M1 12 H17"/>
       <path pathLength="1" class="mx" d="M3 1 L15 13"/><path pathLength="1" class="mx" d="M15 1 L3 13"/>
     </svg>
   </button>
+  <nav id="bar-nav" aria-label={current ? "Site" : "Sections"}>
+    {links.map(([id, href, label], i) => <a href={href} style={`--i:${i}`} aria-current={id === current ? "page" : undefined}>{label}</a>)}
+  </nav>
+  <button class="theme" type="button" aria-pressed="false"><span class="theme-label">Light table</span></button>
 </header>

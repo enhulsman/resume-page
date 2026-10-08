@@ -22,6 +22,14 @@ const { current, ...meta } = Astro.props;
       // theme before first paint: the stored choice, else the system's
       try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
     </script>
+    <noscript><style>
+      /* without JS nothing draws the ANNA stage or folds the links into a menu: the stage's
+         levels become a plain list, the empty drawing area goes */
+      .stage { position: static !important; height: auto !important; background: none !important; border: 0 !important; padding: 0 var(--gutter) 40px; }
+      .stage .drawing, .stage .leaders, .stage .turn, .stage .callout, .stage .scale-note, .stage .scale-tip { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+      .stage .levels li { position: static; transform: none; opacity: 1; width: auto; max-width: 34em; margin: 0 0 14px; }
+      @media (max-width: 860px) { .bar nav { display: flex !important; gap: 14px; overflow-x: auto; } .theme { display: none !important; } .bar-name { white-space: nowrap; } }
+    </style></noscript>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>

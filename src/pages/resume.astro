@@ -59,19 +59,19 @@ const location = site.location.replace(/\s*[\u{1F1E6}-\u{1F1FF}]+/gu, "");
 
     <div class="schedules schedules-cv">
       <table class="schedule">
-        <caption>Skills</caption>
+        <caption><h2>Skills</h2></caption>
         <tr><th scope="row">Languages</th><td>{spokenLanguages.map((l) => `${l.name} (${l.level})`).join(" · ")}</td></tr>
         {skillCategories.map((c) => <tr><th scope="row">{c.label}</th><td>{c.items.join(" · ")}</td></tr>)}
       </table>
       <div class="schedule-stack">
         <table class="schedule">
-          <caption>Education</caption>
+          <caption><h2>Education</h2></caption>
           {education.map((e) => (
             <tr><th scope="row">{e.startYear} – {e.endYear}</th><td>{e.degree} — {e.institution}{(e.result || e.gpa) && <span class="sched-note">{[e.result, e.gpa && `${e.gpa} GPA`].filter(Boolean).join(" · ")}</span>}</td></tr>
           ))}
         </table>
         <table class="schedule">
-          <caption>Certifications</caption>
+          <caption><h2>Certifications</h2></caption>
           {certifications.map((c) => (
             <tr><th scope="row">{c.year}</th><td>{c.name} — {c.institution}{c.credential && <span class="sched-note">{c.credential}</span>}</td></tr>
           ))}

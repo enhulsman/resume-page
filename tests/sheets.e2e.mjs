@@ -358,6 +358,15 @@ test('clicking a project\'s drawing opens its case study, on /projects and on th
     await page.waitForURL('**/projects/Henk');
     await context.close();
   }
+  // the numbers are part of the card too
+  {
+    const { context, page } = await open('/projects');
+    const dims = page.locator('#henk .dims');
+    await dims.scrollIntoViewIfNeeded();
+    const hit = await dims.evaluate(d => { const r = d.getBoundingClientRect(); return document.elementFromPoint(r.x + 20, r.y + r.height / 2)?.closest('a')?.getAttribute('href'); });
+    assert.equal(hit, '/projects/Henk');
+    await context.close();
+  }
   // the card's own Code link still goes to the code, not to the case study
   const { context, page } = await open('/projects');
   const code = page.locator('#pytaiga .links a', { hasText: 'Code' });
@@ -386,4 +395,49 @@ test('/projects on a wide screen: the text sits beside each drawing, and ANNA is
     assert.ok(text >= art, `${id}: text starts at ${Math.round(text)}, drawing ends at ${Math.round(art)}`);
   }
   await context.close();
+});
+
+// ---------- keyboard and screen-reader paths ----------
+
+test('on a phone the opened menu\'s links come next in keyboard order', async () => {
+  for (const path of ['/', '/projects']) {
+    const { context, page } = await open(path, { width: 390, height: 844 });
+    await page.locator('.menu-btn').focus();
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(400);
+    await page.keyboard.press('Tab');
+    assert.ok(await page.evaluate(() => !!document.activeElement.closest('.bar nav')), `${path}: Tab after opening lands in the menu`);
+    await context.close();
+  }
+});
+
+test('/resume: every section is a heading a screen reader can jump to', async () => {
+  const { context, page } = await open('/resume');
+  const h2 = (await page.locator('main h2').allInnerTexts()).map(t => t.trim().toUpperCase());
+  for (const name of ['EXPERIENCE', 'SKILLS', 'EDUCATION', 'CERTIFICATIONS']) assert.ok(h2.includes(name), `${name} in ${h2.join(', ')}`);
+  await context.close();
+});
+
+// ---------- the drawings keep legible lettering at every width ----------
+
+for (const width of [900, 1024, 1180, 1440]) {
+  test(`at ${width}px every detail drawing is drawn at a legible scale`, async () => {
+    for (const path of ['/', '/projects', '/projects/Henk']) {
+      const { context, page } = await open(path, { width, height: 900 });
+      const scales = await page.locator('.dwg').evaluateAll(ds => ds.map(d => d.getBoundingClientRect().width / d.viewBox.baseVal.width));
+      // 11.5px lettering at the drawing's own scale; 0.9 keeps it above 10px
+      for (const k of scales) assert.ok(k >= 0.9 && k <= 1.3, `${path}: scales ${scales.map(x => x.toFixed(2)).join(', ')}`);
+      await context.close();
+    }
+  });
+}
+
+test('"Drawing scrolls sideways" shows only where the drawing does scroll', async () => {
+  for (const [width, height, scrolls] of [[390, 844, true], [820, 1180, false], [844, 390, false]]) {
+    const { context, page } = await open('/projects', { width, height });
+    const r = await page.locator('#henk .dwg-scroll').evaluate(el => ({ over: el.scrollWidth > el.clientWidth + 1, hint: getComputedStyle(el, '::after').content }));
+    assert.equal(r.over, scrolls, `${width}: drawing overflows`);
+    assert.equal(r.hint !== 'none' && r.hint !== 'normal', scrolls, `${width}: hint ${r.hint}`);
+    await context.close();
+  }
 });

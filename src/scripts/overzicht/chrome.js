@@ -93,6 +93,8 @@ let cloudTarget = null;
 function showCloud(el) {
   if (reduced || !el || cloudTarget === el) return;
   cloudTarget = el;
+  // the bar is fixed above the page, so a cloud around one of its links is drawn above it
+  cloud.classList.toggle('in-bar', !!el.closest('.bar'));
   const r = el.getBoundingClientRect();
   const pad = 7, w = r.width + pad * 2, h = r.height + pad * 2;
   cloud.style.transform = `translate(${r.left + scrollX - pad}px, ${r.top + scrollY - pad}px)`;

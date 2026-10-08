@@ -10,7 +10,7 @@ const { detail: d, heading: H = "h3" } = Astro.props;
 const Drawing = drawings[d.id];
 ---
 <article class="detail" id={d.id}>
-  <div class="dwg-wrap"><Drawing /></div>
+  <div class="dwg-wrap"><div class="dwg-scroll"><Drawing /></div></div>
   <div class="detail-text">
     <H><a class="card-link" href={d.caseStudy}>{d.title}</a></H>
     <p>{d.text}</p>
