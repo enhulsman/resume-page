@@ -1,6 +1,5 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
-import react from '@astrojs/react';
 import site from './src/config/site';
 
 export default defineConfig({
@@ -11,8 +10,7 @@ export default defineConfig({
       shikiConfig: {
         theme: 'github-dark'
       }
-    }), 
-    react()
+    }),
   ],
   site: site.url,
   // Astro 7 changed the default to 'jsx' whitespace stripping; keep HTML-rule collapsing for visual parity.

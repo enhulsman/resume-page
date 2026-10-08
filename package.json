@@ -9,34 +9,19 @@
     "start": "astro dev",
     "generate-pdf": "node scripts/generate-pdf.js",
     "test": "node --test tests/worker.test.ts tests/frontmatter.test.ts",
-    "test:e2e": "node --test tests/overzicht.e2e.mjs"
+    "test:e2e": "node --test --test-concurrency=1 tests/overzicht.e2e.mjs tests/sheets.e2e.mjs"
   },
   "devDependencies": {
     "@astrojs/mdx": "^8.0.1",
-    "@astrojs/react": "^6.0.6",
     "@astrojs/rss": "^4.0.19",
     "@types/node": "^24.3.0",
     "@types/shell-quote": "^1.7.5",
     "astro": "^7.3.3",
-    "autoprefixer": "^10.0.0",
     "http-server": "^14.1.1",
     "playwright": "^1.55.1",
-    "postcss": "^8.0.0",
-    "tailwindcss": "^3.0.0",
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@types/react": "^19.1.11",
-    "@types/react-dom": "^19.1.7",
-    "clsx": "^2.1.1",
-    "gsap": "^3.14.2",
-    "js-sha256": "^0.11.1",
-    "lenis": "^1.3.21",
-    "motion": "^12.40.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "shell-quote": "^1.8.3",
-    "split-type": "^0.3.4",
-    "tailwind-merge": "^3.6.0"
+    "shell-quote": "^1.8.3"
   }
 }
