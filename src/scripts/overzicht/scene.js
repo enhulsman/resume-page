@@ -629,13 +629,15 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
     // architectural ticks: short 45° strokes
     for (const P of [A, B]) { ctx.moveTo(P.x - (ux + nx) * px(4), P.y - (uy + ny) * px(4)); ctx.lineTo(P.x + (ux + nx) * px(4), P.y + (uy + ny) * px(4)); }
     ctx.stroke();
+    ctx.font = `400 ${px(11.5)}px "B612 Mono"`;
+    // a label longer than its dimension would run into the drawing (a small phone stage): leave it off
+    if (ctx.measureText(label).width > L - px(8)) return;
     ctx.save();
     ctx.translate((A.x + B.x) / 2 + nx * px(4), (A.y + B.y) / 2 + ny * px(4));
     let ang = Math.atan2(uy, ux);
     if (ang > Math.PI / 2 || ang < -Math.PI / 2) ang += Math.PI;
     ctx.rotate(ang);
     ctx.fillStyle = colors.ink;
-    ctx.font = `400 ${px(11.5)}px "B612 Mono"`;
     ctx.textAlign = 'center'; ctx.textBaseline = side > 0 ? 'top' : 'bottom';
     // keep the label off the line, on the outer side
     ctx.fillText(label, 0, side > 0 ? px(3) : -px(3));

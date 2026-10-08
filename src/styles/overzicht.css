@@ -56,7 +56,11 @@ a:hover { color: var(--red); }
 h1, h2, h3 { margin: 0; font-weight: 700; }
 
 /* ---------- the sheet frame ---------- */
-.frame { position: fixed; inset: var(--frame); border: 1.5px solid var(--ink); pointer-events: none; z-index: 50; }
+.frame {
+  position: fixed; inset: var(--frame); border: 1.5px solid var(--ink); pointer-events: none; z-index: 50;
+  /* the paper past the frame, and the band inside it: scrolled content never shows there */
+  box-shadow: 0 0 0 100vmax var(--sheet), inset 0 0 0 5px var(--sheet); transition: box-shadow .5s ease;
+}
 .frame::after { content: ""; position: absolute; inset: 5px; border: .75px solid var(--ink); opacity: .55; }
 .frame-refs { position: absolute; left: 0; right: 0; bottom: -1px; display: flex; justify-content: space-around; transform: translateY(100%); }
 .frame-refs span { font: 400 9px/1 var(--mono); color: var(--label); padding-top: 2px; }
@@ -291,9 +295,9 @@ kbd { font: inherit; color: var(--red); }
 
 /* /projects: ANNA leads across the whole width, its model on the left */
 .detail-lead { grid-column: 1 / -1; grid-template-columns: minmax(0, 62fr) minmax(0, 38fr); gap: 22px var(--gutter); }
-.detail-lead .detail-text { align-self: end; }
+.detail-lead .detail-text { align-self: start; }
 .anna-plate { display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, 250px); grid-template-rows: 1fr auto; column-gap: 28px; row-gap: 18px; align-items: end; }
-.plate-stage { grid-row: 1 / span 2; position: relative; aspect-ratio: 5 / 6; max-height: 78svh; width: 100%; cursor: grab; touch-action: pan-y; }
+.plate-stage { grid-row: 1 / span 2; position: relative; aspect-ratio: 1 / 1; max-height: 62svh; width: 100%; cursor: grab; touch-action: pan-y; }
 .plate-stage.turning { cursor: grabbing; }
 .plate-stage .turn { left: 0; bottom: 0; opacity: 1; visibility: visible; }
 .plate-levels { list-style: none; margin: 0; padding: 0; display: grid; border-top: .75px solid var(--ink); align-self: end; }
@@ -303,6 +307,19 @@ kbd { font: inherit; color: var(--red); }
 .plate-levels li.hot b { color: var(--red); }
 .anna-plate .replay { grid-column: 2; justify-self: start; }
 
+/* /projects: one project to a row, the text beside its drawing */
+.details-rows { grid-template-columns: 1fr; }
+.details-rows .detail { grid-template-columns: minmax(0, 56fr) minmax(0, 44fr); column-gap: calc(var(--gutter) * 1.4); align-items: center; padding: 34px 32px 36px; }
+.details-rows .dwg-wrap { max-width: 620px; }
+.details-rows .detail-text h2 { font-size: clamp(24px, 2vw, 30px); }
+.details-rows .detail-text p { font-size: 16.5px; }
+
+/* a drawn project is one target: its title's link covers the card; its other links stay on top */
+.detail { position: relative; }
+.card-link { text-decoration: none; }
+.card-link::after { content: ""; position: absolute; inset: 0; }
+.detail .links a { position: relative; z-index: 1; }
+
 /* a case study or a post: title block beside the title, the plate, then the write-up */
 .case-head { align-items: start; }
 .case-head h1 { font-size: clamp(36px, 4.2vw, 68px); line-height: .95; font-stretch: 104%; }
@@ -310,10 +327,14 @@ kbd { font: inherit; color: var(--red); }
 .case-meta .lede { margin: 0; font-size: clamp(17px, 1.25vw, 19px); color: var(--ink-2); max-width: 34em; }
 .case-meta .titleblock { max-width: 34rem; }
 .titleblock td a { text-decoration-color: var(--faint); }
-.plate { border-top: .75px solid var(--ink); border-bottom: .75px solid var(--ink); padding: clamp(24px, 4vh, 48px) 0; margin-bottom: clamp(40px, 7vh, 80px); }
-.plate .dwg { max-width: 940px; display: block; margin: 0 auto; }
-.plate .anna-plate { max-width: 1080px; margin: 0 auto; }
-.plate .anna-plate .plate-stage { aspect-ratio: 4 / 3; max-height: 74svh; }
+.plate {
+  display: grid; grid-template-columns: minmax(0, 38fr) minmax(0, 62fr); column-gap: var(--gutter);
+  border-top: .75px solid var(--ink); border-bottom: .75px solid var(--ink); padding: clamp(24px, 4vh, 40px) 0; margin-bottom: clamp(40px, 7vh, 72px);
+}
+/* in the write-up's column, near the drawing's own scale, so its lettering matches the page's */
+.plate > * { grid-column: 2; }
+.plate .dwg { max-width: 620px; display: block; }
+.plate .anna-plate .plate-stage { aspect-ratio: 4 / 3; max-height: 56svh; }
 
 /* the write-up: headings hung in the left column like a drawing's notes, text on the right */
 .prose { display: grid; grid-template-columns: minmax(0, 38fr) minmax(0, 62fr); column-gap: var(--gutter); font-size: 17px; }
@@ -456,7 +477,17 @@ kbd { font: inherit; color: var(--red); }
   .plate-stage, .plate .anna-plate .plate-stage { grid-row: auto; aspect-ratio: 1 / 1; max-height: 70svh; }
   .plate-levels { grid-template-columns: 1fr 1fr; column-gap: 16px; }
   .anna-plate .replay { grid-column: 1; }
+  .plate { grid-template-columns: 1fr; }
+  .plate > * { grid-column: 1; }
   .plate .dwg-wrap { margin: 0 -16px; }
+  .details-rows .detail { grid-template-columns: 1fr; padding: 20px 16px 24px; }
+  /* the drawing is a sideways scroll here, so it takes the touch; the rest of the card links */
+  .detail .dwg-wrap { position: relative; z-index: 1; }
+  /* the sheets close up on a phone: a screen of blank paper reads as the end of the page */
+  .sheet:not(.sheet-first) { padding-top: 56px; }
+  .sheet-contact { min-height: 0; padding-bottom: 56px; }
+  .sub { margin-top: 44px; }
+  .schedules { margin-top: 44px; }
   .prose { grid-template-columns: 1fr; }
   .prose > *, .prose > h2 { grid-column: 1; }
   .prose > h2 + :not(h2) { margin-top: 0; padding-top: 0; }
@@ -476,14 +507,14 @@ kbd { font: inherit; color: var(--red); }
 @media (max-width: 860px) and (orientation: portrait) {
   .scrolly { display: flex; flex-direction: column; }
   .copy { display: contents; }
-  .step { order: 2; min-height: 64svh; padding: 28px var(--gutter) 40px; justify-content: flex-start; position: relative; z-index: 1; }
+  .step { order: 2; min-height: 0; padding: 28px var(--gutter) 44px; justify-content: flex-start; position: relative; z-index: 1; }
   .step-hero { order: 0; min-height: 0; padding-top: calc(var(--bar) + 44px); padding-bottom: 28px; }
-  .stage { order: 1; height: 54svh; top: calc(var(--frame) + 6px + var(--bar)); z-index: 4; background: var(--sheet); border-bottom: 1.5px solid var(--ink); }
+  .stage { order: 1; height: 40svh; top: calc(var(--frame) + 6px + var(--bar)); z-index: 4; background: var(--sheet); border-bottom: 1.5px solid var(--ink); }
   .step:not(.step-hero):first-of-type { margin-top: 0; }
-  .step:last-child { min-height: 90svh; }
   .step:not(.step-hero)::before { content: ""; position: absolute; left: var(--gutter); right: var(--gutter); top: 0; border-top: .75px solid var(--ink); }
   .scale-tip { width: 190px; }
   .turn { left: 12px; bottom: 8px; }
+  .stage .turn span { display: none; }
 }
 
 /* the stage adapts to its own size: narrow or short stages keep the level names only */

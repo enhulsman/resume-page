@@ -111,7 +111,7 @@ function hideCloud(el) {
   cloud.classList.remove('on');
   cloudPath.setAttribute('d', '');
 }
-const cloudables = 'a.act, .links a, .register td:first-child a, .side a, .diary a, .more, .replay, .theme, .bar nav a';
+const cloudables = 'a.act, .card-link, .links a, .register td:first-child a, .side a, .diary a, .more, .replay, .theme, .bar nav a';
 document.addEventListener('pointerover', e => { const el = e.target.closest(cloudables); if (el) showCloud(el); });
 document.addEventListener('pointerout', e => { const el = e.target.closest(cloudables); if (el && !el.contains(e.relatedTarget)) hideCloud(el); });
 document.addEventListener('focusin', e => { const el = e.target.closest(cloudables); if (el && el.matches(':focus-visible')) showCloud(el); });

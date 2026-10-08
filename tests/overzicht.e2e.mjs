@@ -303,3 +303,62 @@ test('wide screens keep the links in the bar and no menu button', async () => {
   assert.equal(await page.locator('.bar nav a').first().isVisible(), true);
   await context.close();
 });
+
+// ---------- portrait phones: the drawing leaves room to read, and holds still while you do ----------
+
+const PHONE = { width: 390, height: 844 };
+
+test('on a phone the stage leaves most of the screen for the text', async () => {
+  const { context, page } = await open('/', PHONE);
+  await page.locator('[data-request] h2').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(400);
+  const h = await page.locator('.stage').evaluate(s => s.getBoundingClientRect().height);
+  assert.ok(h <= PHONE.height * 0.45, `the stage is ${Math.round(h)}px of ${PHONE.height}`);
+  await context.close();
+});
+
+test('on a phone the request replays in section, with the chat in view', async () => {
+  const { context, page } = await open('/?review', PHONE);
+  await page.waitForTimeout(600);
+  // scroll the way a thumb does until the replay button sits fully in the reading window
+  for (let i = 0; i < 80; i++) {
+    const bottom = await page.locator('.replay').evaluate(b => b.getBoundingClientRect().bottom);
+    if (bottom < PHONE.height - 12) break;
+    await page.mouse.wheel(0, 40);
+    await page.waitForTimeout(40);
+  }
+  await page.waitForTimeout(1200);
+  assert.ok(await page.evaluate(() => window.__scene.state.q) < 0.05, 'still the section, not half exploded');
+  // the chat sits below the stage, on screen, not under it
+  const [stageBottom, chat] = await page.evaluate(() => [
+    document.querySelector('.stage').getBoundingClientRect().bottom,
+    document.querySelector('.callout-inline .bubble-q').getBoundingClientRect().toJSON(),
+  ]);
+  assert.ok(chat.top >= stageBottom - 1 && chat.bottom <= PHONE.height, `chat at ${Math.round(chat.top)}, stage ends at ${Math.round(stageBottom)}`);
+  await page.locator('.replay').click();
+  assert.ok(await page.evaluate(() => window.__scene.requestAge()) < 1, 'the request restarted');
+  await context.close();
+});
+
+test('on a phone the next step explodes the drawing once it is read to', async () => {
+  const { context, page } = await open('/?review', PHONE);
+  await page.waitForTimeout(600);
+  await page.locator('[data-cloud="connectors"] p').first().scrollIntoViewIfNeeded();
+  await page.evaluate(() => scrollBy(0, innerHeight * 0.2));
+  await page.waitForTimeout(1400);
+  assert.ok(await page.evaluate(() => window.__scene.state.q) > 0.95, 'exploded');
+  assert.equal(await page.locator('.stage.turnable').count(), 1);
+  await context.close();
+});
+
+test('on a phone no step trails a screen of blank paper', async () => {
+  const { context, page } = await open('/', PHONE);
+  const blanks = await page.locator('.step:not(.step-hero)').evaluateAll(steps => steps.map(s => {
+    const last = [...s.children].filter(c => getComputedStyle(c).display !== 'none').at(-1);
+    return Math.round(s.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom);
+  }));
+  for (const b of blanks) assert.ok(b <= 120, `blank under a step: ${blanks.join(', ')}px`);
+  const pads = await page.locator('main > .sheet').evaluateAll(ss => ss.map(s => parseFloat(getComputedStyle(s).paddingTop)));
+  for (const p of pads) assert.ok(p <= 64, `sheet top padding ${pads.join(', ')}px`);
+  await context.close();
+});

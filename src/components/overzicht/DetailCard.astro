@@ -1,6 +1,7 @@
 ---
 // One drawn project: its detail drawing, what it is, three real dimensions, and its links.
 // The homepage's Details sheet and /projects both draw them; `heading` follows the page.
+// The title's link covers the whole card, so the drawing opens the case study too.
 import type { Detail } from "../../config/home";
 import { drawings } from "./drawings";
 
@@ -11,7 +12,7 @@ const Drawing = drawings[d.id];
 <article class="detail" id={d.id}>
   <div class="dwg-wrap"><Drawing /></div>
   <div class="detail-text">
-    <H>{d.title}</H>
+    <H><a class="card-link" href={d.caseStudy}>{d.title}</a></H>
     <p>{d.text}</p>
     <dl class="dims">
       {d.dims.map(m => <div><dt>{m.value}</dt><dd>{m.label}</dd></div>)}

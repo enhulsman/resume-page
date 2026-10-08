@@ -119,7 +119,7 @@ function layoutFrame() {
   // keep room for the label column on the right and the bar on top
   // side by side, the stage runs under the fixed bar; stacked, it starts below it
   const stacked = phone.matches, short = r.height < 560;
-  const top = stacked ? 14 : short ? 84 : 96, bottom = stacked ? 14 : short ? 26 : 50;
+  const top = stacked ? 14 : short ? 84 : 96, bottom = stacked ? 46 : short ? 26 : 50;
   const right = isPhone ? 124 : stage.classList.contains('short') ? 220 : 300;
   const left = isPhone ? 46 : 70;
   scene.setFrame({ x: left, y: top, w: r.width - left - right, h: r.height - top - bottom });
@@ -130,25 +130,50 @@ function layoutFrame() {
 }
 new ResizeObserver(() => { scene.resize(); layoutFrame(); }).observe(stage);
 
-// scroll position → q (0 section, 1 exploded), read from where each step sits
+// scroll position → q (0 section, 1 exploded), read from where each step sits. Side by side,
+// the scroll scrubs it between the steps. On a portrait phone the drawing sits above the text,
+// so it holds each step's view while that step is read, and turns to the next view once the
+// next step's text reaches the middle of the reading window below the drawing.
 const steps = [...document.querySelectorAll('.scrolly .step')];
-let hoverCloud = null, lastActive = 0, scrollQueued = false;
+let hoverCloud = null, lastActive = 0, scrollQueued = false, tween = null;
+function goTo(q) {
+  if (reduced) { scene.setQ(q); return; }
+  if (tween ? tween.to === q : Math.abs(scene.state.q - q) < 1e-3) return;
+  if (tween) cancelAnimationFrame(tween.raf);
+  const from = scene.state.q, t0 = performance.now(), dur = 300 + 700 * Math.abs(q - from);
+  const tick = now => {
+    const t = Math.min(1, (now - t0) / dur), e = t < 0.5 ? 2 * t * t : 1 - (2 - 2 * t) ** 2 / 2;
+    scene.setQ(from + (q - from) * e);
+    tween = t < 1 ? { to: q, raf: requestAnimationFrame(tick) } : null;
+  };
+  tween = { to: q, raf: requestAnimationFrame(tick) };
+}
 function readScroll() {
-  const probe = window.scrollY + innerHeight * (phone.matches ? 0.78 : 0.5);
-  const ys = steps.map(s => { const r = s.getBoundingClientRect(); return r.top + window.scrollY + r.height / 2; });
-  const qs = steps.map(s => +s.dataset.q);
-  let q = qs[0], active = 0;
-  if (probe <= ys[0]) q = qs[0];
-  else if (probe >= ys.at(-1)) { q = qs.at(-1); active = steps.length - 1; }
-  else for (let i = 0; i < ys.length - 1; i++) {
-    if (probe >= ys[i] && probe < ys[i + 1]) {
-      const t = (probe - ys[i]) / (ys[i + 1] - ys[i]);
-      q = qs[i] + (qs[i + 1] - qs[i]) * t;
-      active = t < 0.5 ? i : i + 1;
-      break;
+  let q, active = 0;
+  if (phone.matches) {
+    const below = Math.max(0, stage.getBoundingClientRect().bottom);
+    const line = below + (innerHeight - below) * 0.5;
+    steps.forEach((s, i) => { if (s.getBoundingClientRect().top < line) active = i; });
+    q = +steps[active].dataset.q;
+    goTo(q);
+  } else {
+    const probe = window.scrollY + innerHeight * 0.5;
+    const ys = steps.map(s => { const r = s.getBoundingClientRect(); return r.top + window.scrollY + r.height / 2; });
+    const qs = steps.map(s => +s.dataset.q);
+    q = qs[0];
+    if (probe <= ys[0]) q = qs[0];
+    else if (probe >= ys.at(-1)) { q = qs.at(-1); active = steps.length - 1; }
+    else for (let i = 0; i < ys.length - 1; i++) {
+      if (probe >= ys[i] && probe < ys[i + 1]) {
+        const t = (probe - ys[i]) / (ys[i + 1] - ys[i]);
+        q = qs[i] + (qs[i + 1] - qs[i]) * t;
+        active = t < 0.5 ? i : i + 1;
+        break;
+      }
     }
+    if (tween) { cancelAnimationFrame(tween.raf); tween = null; }
+    scene.setQ(reduced ? Math.round(q) : q);
   }
-  scene.setQ(reduced ? Math.round(q) : q);
   const s = steps[active];
   if (!hoverCloud) scene.setCloud(s.dataset.cloud || null);
   stage.classList.toggle('turnable', q > 0.6);

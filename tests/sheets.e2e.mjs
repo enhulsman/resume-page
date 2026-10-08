@@ -172,7 +172,7 @@ test('reduced motion: every plate arrives drawn', async () => {
 
 // ---------- a project page: title block, plate, then the write-up ----------
 
-test('a project page opens with its title block and its own drawing at full size', async () => {
+test('a project page opens with its title block and its own drawing', async () => {
   const src = readFileSync(new URL('../src/pages/projects/Henk.mdx', import.meta.url), 'utf8');
   const label = src.match(/^dateLabel: "(.*)"/m)[1];
   const { context, page } = await open('/projects/Henk');
@@ -180,8 +180,9 @@ test('a project page opens with its title block and its own drawing at full size
   assert.deepEqual(await block.locator('th').allInnerTexts(), ['PROJECT', label.toUpperCase(), 'STACK', 'CODE']);
   assert.match(await block.innerText(), /July 2026/);
   assert.equal(await page.locator('.plate .dwg').count(), 1, 'Henk\'s detail drawing');
-  // shown at full size: the plate is wider than the drawing on the homepage's half-width card
-  assert.ok(await page.locator('.plate .dwg').evaluate(d => d.getBoundingClientRect().width) > 900);
+  // drawn near its own scale, so its lettering matches the page's and the write-up keeps the stage
+  const w = await page.locator('.plate .dwg').evaluate(d => d.getBoundingClientRect().width);
+  assert.ok(w >= 480 && w <= 680, `the drawing is ${Math.round(w)}px wide`);
   // the stats are dimension strings, and the write-up is set in the sheet's type
   assert.ok(await page.locator('.prose .dims div').count() >= 4);
   assert.match(await page.locator('.prose h2').first().evaluate(h => getComputedStyle(h).fontFamily), /^"?Archivo/);
@@ -191,6 +192,8 @@ test('a project page opens with its title block and its own drawing at full size
 test('ANNA\'s case study carries the section drawing; a project without a drawing has none', async () => {
   let { context, page } = await open('/projects/AnnaAssistant');
   assert.equal(await page.locator('.plate canvas.drawing').count(), 1);
+  const h = await page.locator('.plate .plate-stage').evaluate(s => s.getBoundingClientRect().height);
+  assert.ok(h <= 900 * 0.6, `the model is ${Math.round(h)}px tall on a 900px screen`);
   await page.locator('.plate').scrollIntoViewIfNeeded();
   await page.waitForTimeout(3000);
   assert.ok(await inked(page) > 500);
@@ -290,5 +293,97 @@ test('/contact reports a failed send in the sheet\'s red, without Tailwind', asy
   assert.equal((await status.innerText()).trim(), 'Nope');
   assert.equal(await status.getAttribute('role'), 'status');
   assert.equal(await status.evaluate(el => getComputedStyle(el).color), 'rgb(184, 48, 26)');
+  await context.close();
+});
+
+// ---------- the paper: nothing shows past the frame ----------
+
+// Paints the whole document green under the chrome, then counts green pixels in the strips
+// between the screen's edge and the bar or frame. Scrolled content must never show there.
+async function greenAtTheEdges(page) {
+  await page.evaluate(() => {
+    const g = document.createElement('div');
+    g.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${document.documentElement.scrollHeight}px;background:#00c800;z-index:30;pointer-events:none`;
+    document.body.append(g);
+    scrollTo(0, Math.min(1200, document.documentElement.scrollHeight - innerHeight));
+  });
+  await page.waitForTimeout(300);
+  const { w, h, barTop, frame } = await page.evaluate(() => ({
+    w: innerWidth, h: innerHeight,
+    barTop: Math.floor(document.querySelector('.bar').getBoundingClientRect().top),
+    frame: Math.floor(document.querySelector('.frame').getBoundingClientRect().left),
+  }));
+  const strips = [
+    { x: 0, y: 0, width: w, height: barTop },
+    { x: 0, y: h - frame - 5, width: w, height: frame + 5 },
+    { x: 0, y: 0, width: frame + 5, height: h },
+    { x: w - frame - 5, y: 0, width: frame + 5, height: h },
+  ];
+  let n = 0;
+  for (const clip of strips) {
+    const png = (await page.screenshot({ clip })).toString('base64');
+    n += await page.evaluate(async b64 => {
+      const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+      const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      const d = x.getImageData(0, 0, c.width, c.height).data;
+      let k = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 1] > 140 && d[i] < 110 && d[i + 2] < 110) k++;
+      return k;
+    }, png);
+  }
+  return n;
+}
+
+for (const path of ['/', '/projects', '/projects/Henk', '/resume']) {
+  for (const [width, height] of [[1440, 900], [390, 844]]) {
+    test(`${path} at ${width}px: scrolled content never shows above the bar or past the frame`, async () => {
+      const { context, page } = await open(path, { width, height });
+      await page.addStyleTag({ content: 'astro-dev-toolbar{display:none!important}' });
+      assert.equal(await greenAtTheEdges(page), 0);
+      await context.close();
+    });
+  }
+}
+
+// ---------- a drawn project is one target: drawing, title or link ----------
+
+test('clicking a project\'s drawing opens its case study, on /projects and on the homepage', async () => {
+  for (const path of ['/projects', '/']) {
+    const { context, page } = await open(path);
+    const dwg = page.locator('#henk .dwg');
+    await dwg.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+    const r = await dwg.boundingBox();
+    await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
+    await page.waitForURL('**/projects/Henk');
+    await context.close();
+  }
+  // the card's own Code link still goes to the code, not to the case study
+  const { context, page } = await open('/projects');
+  const code = page.locator('#pytaiga .links a', { hasText: 'Code' });
+  await code.scrollIntoViewIfNeeded();
+  const top = await code.evaluate(a => { const r = a.getBoundingClientRect(); return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === a; });
+  assert.ok(top, 'the Code link is on top of the card link');
+  await context.close();
+});
+
+test('on a phone a project\'s drawing still scrolls sideways under the thumb', async () => {
+  const { context, page } = await open('/projects', { width: 390, height: 844 });
+  const dwg = page.locator('#henk .dwg');
+  await dwg.scrollIntoViewIfNeeded();
+  const hit = await dwg.evaluate(d => { const r = d.getBoundingClientRect(); return !!document.elementFromPoint(r.x + 60, r.y + r.height / 2)?.closest('.dwg-wrap'); });
+  assert.ok(hit, 'the drawing, not the card link, takes the touch');
+  await context.close();
+});
+
+test('/projects on a wide screen: the text sits beside each drawing, and ANNA is read on arrival', async () => {
+  const { context, page } = await open('/projects');
+  // ANNA's name and line are on the first screen, not under a screen of drawing
+  const lead = await page.locator('#anna .detail-text p').first().evaluate(p => p.getBoundingClientRect().bottom);
+  assert.ok(lead < 900, `ANNA's line ends at ${Math.round(lead)}px`);
+  for (const id of ['anna', 'henk', 'sandbox', 'homelab', 'pytaiga']) {
+    const [art, text] = await page.locator(`#${id}`).evaluate(a => [a.querySelector('.dwg-wrap, .anna-plate').getBoundingClientRect().right, a.querySelector('.detail-text').getBoundingClientRect().left]);
+    assert.ok(text >= art, `${id}: text starts at ${Math.round(text)}, drawing ends at ${Math.round(art)}`);
+  }
   await context.close();
 });

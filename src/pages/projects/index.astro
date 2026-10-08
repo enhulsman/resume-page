@@ -29,11 +29,11 @@ const projectsKeywords = `${site.seo.keywords}, projects, portfolio, case studie
       <p>Detailed write-ups for selected work.</p>
     </header>
 
-    <div class="details">
+    <div class="details details-rows">
       <article class="detail detail-lead" id={annaLead.id}>
         <AnnaPlate />
         <div class="detail-text">
-          <h2>{annaLead.title}</h2>
+          <h2><a href={annaLead.caseStudy}>{annaLead.title}</a></h2>
           <p>{annaLead.text}</p>
           <p class="detail-status">{annaLead.status}</p>
           <p class="links"><a href={annaLead.caseStudy}>Case study</a></p>
