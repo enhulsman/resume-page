@@ -6,6 +6,7 @@
 import OverzichtLayout from "./OverzichtLayout.astro";
 import site from "../config/site";
 import { readingMinutes, splitIntro, relatedProject } from "../lib/post";
+import { postDrawings } from "../components/overzicht/drawings";
 
 const { frontmatter } = Astro.props;
 const { title, description = "", date, updated = "" } = frontmatter;
@@ -13,6 +14,7 @@ const { title, description = "", date, updated = "" } = frontmatter;
 const html = await Astro.slots.render("default");
 const { intro, rest } = splitIntro(html);
 const minutes = readingMinutes(html);
+const Drawing = postDrawings[Astro.url.pathname.replace(/\/$/, "").split("/").pop() ?? ""];
 const project = relatedProject(
   frontmatter.project,
   import.meta.glob("../pages/projects/*.mdx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>,
@@ -26,7 +28,10 @@ const iso = (d: string) => new Date(d).toISOString().slice(0, 10);
 <OverzichtLayout current="blog" title={`${title} — ${site.name}`} description={description} ogType="article">
   <article class="sheet sheet-first case post">
     <header class="sheet-head case-head">
-      <h1>{title}</h1>
+      <div class="post-title">
+        <h1>{title}</h1>
+        {Drawing && <div class="post-dwg"><Drawing /></div>}
+      </div>
       <div class="case-meta">
         <table class="titleblock">
           {date && <tr><th scope="row">Date</th><td><time datetime={iso(date)}>{fmt(date)}</time></td></tr>}

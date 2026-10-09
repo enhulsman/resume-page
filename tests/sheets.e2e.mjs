@@ -624,6 +624,29 @@ test('every heading of a post still hangs in the left column after the intro', a
   await context.close();
 });
 
+test('the Henk post carries its own drawing under the title; a post without one has none', async () => {
+  let { context, page } = await open('/blog/henk-exactly-once');
+  const dwg = page.locator('.post-dwg svg.dwg');
+  assert.equal(await dwg.count(), 1);
+  assert.match(await dwg.locator('title').textContent(), /cursor/);
+  const [h1, tb, d] = await Promise.all([box(page, 'main h1'), box(page, '.titleblock'), box(page, '.post-dwg svg')]);
+  assert.ok(d.t >= h1.b, 'under the title');
+  assert.ok(d.r < tb.l, 'in the title\'s column, not over the text');
+  assert.ok(d.r - d.l > 280, `drawn at a legible size (${Math.round(d.r - d.l)}px)`);
+  await page.waitForFunction(() => document.querySelector('.post-dwg svg').classList.contains('drawn'));
+  await context.close();
+  ({ context, page } = await open('/blog/spec-factory'));
+  assert.equal(await page.locator('.post-dwg').count(), 0);
+  await context.close();
+});
+
+test('on a phone the post drawing fits the screen whole', async () => {
+  const { context, page } = await open('/blog/henk-exactly-once', { width: 390, height: 844 });
+  const d = await box(page, '.post-dwg svg');
+  assert.ok(d.l >= 0 && d.r <= 390);
+  await context.close();
+});
+
 test('the site\'s own case study says what it is, how it is checked, and the two jokes worth pointing at', async () => {
   const { context, page } = await open('/projects/ResumePage');
   assert.deepEqual(await page.locator('.prose > h2').allInnerTexts(), ['The Idea', 'Built Like It Matters', 'Stack Choices', 'The Terminal', 'Two Things You Might Have Missed']);

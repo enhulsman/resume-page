@@ -497,6 +497,8 @@ kbd { font: inherit; color: var(--red); }
 .post .prose > * { max-width: 36em; }
 /* a post's opening runs under its title block, in the title block's column */
 .post-intro { display: block; }
+/* a post's own drawn detail, under its title, near the project drawings' scale */
+.post-dwg { margin-top: clamp(32px, 6vh, 64px); max-width: 480px; }
 
 /* the blog index: the diary, with room for each post's description */
 .diary-full li { grid-template-columns: 140px minmax(0, 20em) minmax(0, 1fr); padding: 18px 0; }
