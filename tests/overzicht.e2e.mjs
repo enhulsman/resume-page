@@ -537,6 +537,18 @@ test('a mouse gets a drafting crosshair that follows it, with a coordinate reado
   await context.close();
 });
 
+test('the crosshair readout follows the sheet when the page scrolls under a still mouse', async () => {
+  const { context, page } = await open('/');
+  await page.mouse.move(500, 420);
+  await page.waitForTimeout(100);
+  const y = () => page.locator('.xhair-read').evaluate(r => +r.textContent.match(/y (\d+)/)[1]);
+  const y0 = await y();
+  await page.evaluate(() => scrollBy(0, 300));
+  await page.waitForTimeout(150);
+  assert.equal(await y() - y0, 300, 'y reads the sheet, not the screen');
+  await context.close();
+});
+
 test('touch screens get no crosshair', async () => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const page = await context.newPage();

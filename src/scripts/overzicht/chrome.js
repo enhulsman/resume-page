@@ -141,22 +141,28 @@ xhair.setAttribute('aria-hidden', 'true');
 xhair.innerHTML = '<i class="xhair-v"></i><i class="xhair-h"></i><span class="xhair-read"></span>';
 document.body.append(xhair);
 const [xv, xh, xread] = xhair.children;
-let xq = null;
-document.addEventListener('pointermove', e => {
-  if (e.pointerType !== 'mouse' || !fine.matches) return;
-  const { clientX: x, clientY: y } = e;
-  if (xq) return void (xq = [x, y]);
-  xq = [x, y];
+// the last mouse position on screen; a scroll moves the sheet under it, so it re-reads too
+let xat = null, xq = false;
+const xdraw = () => {
+  if (xq || !xat) return;
+  xq = true;
   requestAnimationFrame(() => {
-    const [cx, cy] = xq; xq = null;
+    xq = false;
+    const [cx, cy] = xat;
     xv.style.transform = `translateX(${cx}px)`;
     xh.style.transform = `translateY(${cy}px)`;
     xread.style.transform = `translate(${cx + 10}px, ${cy + 10}px)`;
     xread.textContent = `x ${Math.round(cx + scrollX)}  y ${Math.round(cy + scrollY)}`;
     xhair.classList.add('on');
   });
+};
+document.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse' || !fine.matches) return;
+  xat = [e.clientX, e.clientY];
+  xdraw();
 }, { passive: true });
-document.documentElement.addEventListener('pointerleave', () => xhair.classList.remove('on'));
+addEventListener('scroll', xdraw, { passive: true });
+document.documentElement.addEventListener('pointerleave', () => { xat = null; xhair.classList.remove('on'); });
 
 // A click on the paper leaves a red pencil mark that fades; links, controls and the
 // terminal are not paper. Reduced motion gets none: the mark is all motion.
