@@ -569,3 +569,15 @@ test('the favicon is the H in a double frame, with its own light and dark', asyn
   assert.doesNotMatch(svg, /Gradient|filter|#c9942b/i, 'none of the old amber glow');
   await context.close();
 });
+
+test('/contact offers plain mail under the form', async () => {
+  const { context, page } = await open('/contact');
+  const line = page.locator('.tm-mail');
+  assert.equal((await line.innerText()).trim(), 'Prefer your own mail app? Write to info@hulsman.dev.');
+  assert.equal(await line.locator('a').getAttribute('href'), 'mailto:info@hulsman.dev');
+  // under the form, not inside it
+  assert.equal(await line.evaluate(el => !!el.closest('form')), false);
+  const [form, mail] = await Promise.all([page.locator('#contactForm').boundingBox(), line.boundingBox()]);
+  assert.ok(mail.y >= form.y + form.height - 1, 'below the form');
+  await context.close();
+});

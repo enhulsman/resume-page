@@ -27,6 +27,7 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
     </header>
 
     <div class="tm-wrap">
+    <div class="tm-main">
     <form id="contactForm" class="transmittal" method="POST" data-turnstile-sitekey={turnstileSiteKey}>
       <div class="tm-row"><label for="name">Name</label><input id="name" name="name" autocomplete="name" required /></div>
       <div class="tm-row"><label for="email">Email</label><input id="email" type="email" name="email" autocomplete="email" required /></div>
@@ -50,6 +51,8 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
       </div>
       <p id="statusMessage" role="status" hidden></p>
     </form>
+    <p class="tm-mail">Prefer your own mail app? Write to <a href={`mailto:${site.social.email}`}>{site.social.email}</a>.</p>
+    </div>
       <div class="stamp" aria-hidden="true"><span>Issued for</span><b>conversation</b><span>2026</span></div>
     </div>
   </section>

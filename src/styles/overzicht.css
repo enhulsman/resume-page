@@ -526,6 +526,7 @@ kbd { font: inherit; color: var(--red); }
 .tm-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 20px; padding: 14px 12px; }
 .tm-foot .act-main { font-family: var(--sans); cursor: pointer; }
 .tm-foot .act-main:disabled { cursor: progress; opacity: .7; }
+.tm-mail { margin: 14px 0 0; font-size: 15px; color: var(--ink-2); }
 #statusMessage { margin: 0; padding: 12px; border-top: .75px solid var(--ink); font: 400 12.5px/1.45 var(--mono); color: var(--ink); }
 #statusMessage[data-kind="error"] { color: var(--red); }
 .hp-field { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
