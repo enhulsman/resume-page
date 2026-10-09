@@ -93,11 +93,21 @@ html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; 
 @media (max-width: 860px) { html.intro body { --tilt: 14deg; } }
 @keyframes tilt { from { transform: rotateX(var(--tilt)) scale(.94); } }
 @keyframes develop { from { --ink: var(--hair); --ink-2: var(--hair); --label: var(--hair); --faint: var(--hair); } }
-/* the name is lettered in the settled ink, line by line, while the rest develops */
+/* The name is drawn letter by letter (intro.js, from the font's own outlines): sketch lines
+   round each letter, its outline traced, then filled in the settled ink. The real text waits
+   underneath, invisible, until the last letter is done; it shows then even if the drawing
+   never came (no glyph data, a late font). Keep the 1.95 s in step with intro.js. */
 html.intro .name { color: var(--ink-0); }
-html.intro .name span { animation: ink .5s cubic-bezier(.6, 0, .25, 1) .4s backwards; }
-html.intro .name span + span { animation-delay: .62s; }
-@keyframes ink { from { clip-path: inset(-30% 100% -30% -6%); } to { clip-path: inset(-30% -6% -30% -6%); } }
+html.intro .name span { animation: letters 1.95s steps(1, end) backwards; }
+@keyframes letters { from { color: transparent; } }
+.glyphs { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.glyphs .g-box { fill: none; stroke: var(--faint); stroke-width: calc(var(--sw) * .7); stroke-dasharray: 1; opacity: 0;
+  animation: g-draw .24s cubic-bezier(.4, 0, .2, 1) var(--d) backwards, g-box .24s ease calc(var(--d) + .5s) backwards; }
+.glyphs .g-line { fill: var(--ink-0); stroke: var(--ink-0); stroke-width: var(--sw); stroke-dasharray: 1; stroke-linejoin: round;
+  animation: g-draw .5s cubic-bezier(.45, 0, .25, 1) calc(var(--d) + .12s) backwards, g-fill .26s ease calc(var(--d) + .5s) backwards; }
+@keyframes g-draw { from { stroke-dashoffset: 1; } }
+@keyframes g-box { from { opacity: 1; } }
+@keyframes g-fill { from { fill-opacity: 0; } }
 /* by night the light table switches on first: two short flickers, then steady */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]).intro { animation: develop 1s cubic-bezier(.5, 0, .3, 1) .2s backwards, lamp .45s steps(1, end) backwards; }
@@ -106,9 +116,9 @@ html.intro .name span + span { animation-delay: .62s; }
 @keyframes lamp { 0% { --sheet: #08070B; } 22% { --sheet: #16141D; } 38% { --sheet: #08070B; } 52% { --sheet: #16141D; } }
 
 /* lettering guides: cap line and baseline, ruled before the name is inked, erased after */
-.name-guides { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; animation: guides 1.45s linear backwards; opacity: 0; }
+.name-guides { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; animation: guides 2.3s linear backwards; opacity: 0; }
 .name-guides line { stroke: var(--faint); stroke-width: .75; }
-@keyframes guides { 0%, 18% { opacity: 0; } 26%, 72% { opacity: .9; } 100% { opacity: 0; } }
+@keyframes guides { 0%, 14% { opacity: 0; } 21%, 86% { opacity: .9; } 100% { opacity: 0; } }
 
 /* the name's dimension: its real width, in the sheet's own units (the crosshair's) */
 .name-dim { position: absolute; left: 0; overflow: visible; pointer-events: none; }

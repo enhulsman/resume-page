@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
-const SETTLED = 2600; // the whole arrival is about 1.6 s; this leaves margin on a slow box
+const SETTLED = 3200; // the whole arrival is about 2 s, the dimension .55 s more; margin for a slow box
 
 let browser;
 before(async () => { browser = await chromium.launch(); });
@@ -54,7 +54,7 @@ test('a first visit plays the arrival once, then leaves the page as it always is
   await page.waitForTimeout(SETTLED);
   const l = await log(page);
   assert.ok(l.arrived != null, 'the intro class is removed once it is over');
-  assert.ok(l.arrived - l.intro < 2400, `over in under 2.4 s (${Math.round(l.arrived - l.intro)} ms)`);
+  assert.ok(l.arrived - l.intro < 2800, `over in under 2.8 s (${Math.round(l.arrived - l.intro)} ms)`);
   // nothing is left transformed, clipped or faded, and the page scrolls again
   assert.equal(await page.locator('main').evaluate(m => getComputedStyle(m).transform), 'none');
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).transform), 'none');
@@ -70,7 +70,7 @@ test('a first visit plays the arrival once, then leaves the page as it always is
 test('the arrival develops the ink and letters the name, without hiding the page', async () => {
   const { context, page } = await open('/');
   const anims = await page.evaluate(() => document.getAnimations().map(a => a.animationName).filter(Boolean));
-  for (const name of ['develop', 'tilt', 'ink']) assert.ok(anims.includes(name), `${name} runs (got ${anims.join(', ')})`);
+  for (const name of ['develop', 'tilt', 'letters']) assert.ok(anims.includes(name), `${name} runs (got ${anims.join(', ')})`);
   // develop fades ink, never opacity: the page reads from the first frame
   assert.equal(await page.locator('main').evaluate(m => getComputedStyle(m).opacity), '1');
   assert.equal(await page.locator('.lede').evaluate(m => getComputedStyle(m).opacity), '1');
@@ -124,7 +124,7 @@ test('any key, wheel or tap hurries the arrival along', async () => {
   await page.keyboard.press('Shift');
   await page.waitForFunction(() => window.__log.arrived != null, null, { timeout: 4000 });
   const l = await log(page);
-  // left alone it takes about 1.6 s
+  // left alone it takes about 2 s
   assert.ok(l.arrived - l.intro < 1200, `over ${Math.round(l.arrived - l.intro)} ms after it began`);
   // hurried, not cut: the dimension still ends up there, with the name's width
   await page.waitForTimeout(600);
@@ -150,6 +150,85 @@ test('if the arrival script never runs, the page settles by itself', async () =>
   await page.waitForFunction(() => !document.documentElement.classList.contains('intro'), null, { timeout: 5000 });
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).transform), 'none');
   assert.ok(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight * 2), 'and scrolls');
+  await context.close();
+});
+
+// the arrival's CSS animations, all paused at t ms in their own clock
+const seek = (page, t) => page.evaluate(t => {
+  const t0 = document.body.getAnimations().find(a => a.animationName === 'tilt')?.startTime ?? 0;
+  for (const a of document.getAnimations()) if (a.animationName) { a.pause(); a.currentTime = Math.max(0, t - ((a.startTime ?? t0) - t0)); }
+}, t);
+
+test('each letter of the name is drawn from construction lines, then inked', async () => {
+  const { context, page } = await open('/');
+  await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
+  const lines = await page.locator('.name .glyphs').evaluateAll(ss => ss.map(s => ({
+    hidden: s.getAttribute('aria-hidden'),
+    letters: s.querySelectorAll('.glyph').length,
+    boxes: s.querySelectorAll('.glyph .g-box').length,
+    outlines: [...s.querySelectorAll('.glyph .g-line')].filter(p => p.getAttribute('pathLength') === '1').length,
+  })));
+  assert.deepEqual(lines, [
+    { hidden: 'true', letters: 4, boxes: 4, outlines: 4 },
+    { hidden: 'true', letters: 7, boxes: 7, outlines: 7 },
+  ]);
+  // the letters come one after another, not all at once
+  const delays = await page.locator('.name .glyph .g-line').evaluateAll(ps => ps.map(p => p.getAnimations()[0]?.effect.getComputedTiming().delay));
+  assert.ok(delays.every((d, i) => i === 0 || d > delays[i - 1]), `staggered (${delays.join(', ')})`);
+  // the real text waits, invisible, under the drawing; the page itself starts blank
+  assert.equal(await page.locator('.name').evaluate(n => getComputedStyle(n.querySelector('span')).color), 'rgba(0, 0, 0, 0)');
+  await context.close();
+});
+
+test('the drawn letters lie exactly on the real ones', async () => {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844, hasTouch: true, isMobile: true }]) {
+    const { context, page } = await open('/', viewport);
+    await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
+    await seek(page, 1500);
+    // each drawn letter's origin against the same letter in the real text, and each line's ink
+    // against its line box
+    const lines = await page.evaluate(() => [...document.querySelectorAll('.name > span')].map((span, n) => {
+      const svg = document.querySelectorAll('.name .glyphs')[n];
+      const sb = svg.getBoundingClientRect(), k = sb.width / svg.viewBox.baseVal.width;
+      const text = span.firstChild, chars = [];
+      for (let i = 0; i < text.length; i++) {
+        if (!text.data[i].trim()) continue;
+        const r = document.createRange(); r.setStart(text, i); r.setEnd(text, i + 1);
+        chars.push(r.getBoundingClientRect().left);
+      }
+      const origins = [...svg.querySelectorAll('.glyph')].map(g => sb.left + g.transform.baseVal[0].matrix.e * k);
+      const line = document.createRange(); line.selectNodeContents(span);
+      const t = line.getBoundingClientRect();
+      const ink = Math.max(...[...svg.querySelectorAll('.g-line')].map(p => p.getBoundingClientRect().bottom));
+      return { off: origins.map((o, i) => +(o - chars[i]).toFixed(2)), bottom: t.bottom - ink, h: t.height };
+    }));
+    for (const l of lines) {
+      assert.ok(l.off.every(d => Math.abs(d) < 1), `letters within 1 px of the text at ${viewport.width} (${l.off.join(', ')})`);
+      assert.ok(l.bottom > -2 && l.bottom < l.h * .4, `stands in its line box (${l.bottom.toFixed(1)})`);
+    }
+    await context.close();
+  }
+});
+
+test('once arrived the drawing is gone and the name is plain text again', async () => {
+  const { context, page } = await open('/');
+  await page.waitForTimeout(SETTLED);
+  assert.equal(await page.locator('.name .glyphs').count(), 0);
+  assert.equal(await page.locator('.name').evaluate(n => getComputedStyle(n.querySelector('span')).color), 'rgb(43, 39, 102)');
+  assert.equal((await page.locator('h1.name').textContent()).replace(/\s+/g, ' ').trim(), 'Ezra Hulsman');
+  await context.close();
+});
+
+test('a second visit, reduced motion and no JS never draw the letters', async () => {
+  for (const opts of [{ reducedMotion: 'reduce' }, { js: false }]) {
+    const { context, page } = await open('/', opts);
+    await page.waitForTimeout(400);
+    assert.equal(await page.locator('.name .glyphs').count(), 0, JSON.stringify(opts));
+    await context.close();
+  }
+  const { context, page } = await open('/?intro=0');
+  await page.waitForTimeout(400);
+  assert.equal(await page.locator('.name .glyphs').count(), 0, 'second visit');
   await context.close();
 });
 
@@ -203,7 +282,7 @@ test('the canvas takes its ink after the arrival, not the developing grey', asyn
 
 test('on a desktop the crosshair travels to the name by itself', async () => {
   const { context, page } = await open('/');
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(1400);
   assert.equal(await page.locator('.xhair').evaluate(x => x.classList.contains('on')), true, 'the crosshair is out, with no mouse moved');
   assert.match(await page.locator('.xhair-read').textContent(), /^x \d+ {2}y \d+$/);
   await context.close();
