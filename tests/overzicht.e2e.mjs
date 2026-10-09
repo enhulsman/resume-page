@@ -558,8 +558,11 @@ test('a click on the paper leaves a red pencil mark that fades; links and reduce
   assert.ok(Math.abs(m.x + m.width / 2 - (r.x + r.width + 40)) <= 3, 'centred on the click');
   await page.waitForTimeout(2600);
   assert.equal(await page.locator('.pencil-mark').count(), 0, 'gone again');
-  // a link is a link, not paper
-  await page.locator('.bar nav a').first().click({ trial: true });
+  // a link is a link, not paper: a real click on one leaves no mark (the navigation itself is held back)
+  await page.evaluate(() => document.addEventListener('click', e => { if (e.target.closest('a')) e.preventDefault(); }));
+  await page.locator('.bar nav a').first().click();
+  await page.waitForTimeout(150);
+  assert.equal(await page.locator('.pencil-mark').count(), 0, 'no mark on a link');
   await context.close();
 
   const reduced = await open('/', { reducedMotion: 'reduce' });
@@ -686,4 +689,13 @@ test('a mouse draws with a pencil: its tip on the paper, the usual cursors on li
   await p.goto(BASE + '/');
   assert.ok(!(await p.locator('main').evaluate(el => getComputedStyle(el).cursor)).startsWith('url('));
   await touch.close();
+});
+
+test('the terminal on the first sheet lists the projects that lead the set, ANNA first', async () => {
+  const { context, page } = await open('/', { reducedMotion: 'reduce' });
+  await page.waitForTimeout(500);
+  const text = await page.locator('#terminal-body').innerText();
+  const after = text.split('ls projects/')[1].split('\n').map(l => l.trim()).filter(Boolean).slice(0, 4);
+  assert.deepEqual(after, ['anna', 'henk-homelab-agent', 'finance-bot', 'homelab-infrastructure']);
+  await context.close();
 });

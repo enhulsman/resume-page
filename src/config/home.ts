@@ -136,10 +136,10 @@ export const details: Detail[] = [
 ];
 
 /** The projects without a drawing yet, each with a project page; they show as cards. */
-export interface Card { title: string; href: string; what: string; status: string; group: Group; }
+export interface Card { title: string; href: string; what: string; status: string; group: Group; /** Left off the homepage's cards. */ hideOnHome?: boolean; }
 export const register: Card[] = [
   { title: 'Encrypted Chat TUI', href: '/projects/EncryptedChatTUI', what: 'Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL', status: 'Started Aug 2024', group: 'paused' },
-  { title: 'This site', href: '/projects/ResumePage', what: 'Static-first Astro portfolio on Cloudflare Workers', status: 'Online since Aug 2025', group: 'running' },
+  { title: 'This site', href: '/projects/ResumePage', what: 'Static-first Astro portfolio on Cloudflare Workers', status: 'Online since Aug 2025', group: 'running', hideOnHome: true }, // you are on it
 ];
 
 /** Every project as a card, the drawn ones included, in /projects' group order. */

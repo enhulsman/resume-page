@@ -18,9 +18,6 @@ const site = {
     frameworks: ['React', 'Astro', 'Claude Agent SDK'],
   },
 
-  interests: [
-    'Formula 1 🏁', 'Open Source', 'System Tinkering', 'All things Raspberry Pi'
-  ],
 
   careerStart: '2023-09-01',
 
@@ -45,75 +42,33 @@ const site = {
     // Mastodon: 'https://mastodon.social/@yourname',
   },
 
-  about: `
-    I'm a Forward Deployed Engineer at Anamata, where I own ANNA, our AI assistant in Microsoft Teams,
-    and much of what we build around it. At 2 meters tall, I have a good overview of both the codebase
-    and the room it gets deployed in.
 
-    Most of that work is Python, connecting ANNA to the tools teams already use, and keeping it secure
-    and reliable in production. I came to AI coding agents as a sceptic. Now they write a lot of
-    my code, and I still build like one: tests first, a spec for anything bigger, and nothing ships that
-    I can't explain.
-
-    In my free time, I work on personal projects like a self-hosted chat TUI in Rust and contribute
-    to open source when I can. I'm also a big Formula 1 fan - there's something satisfying about both 
-    well-tuned race cars and well-optimized code.
-  `,
-
-  // Homepage project showcase cards
+  // Every project, for the terminal: its intro types the first four, `projects` lists them all.
   projects: [
+    {
+      title: 'ANNA',
+      description: 'Anamata\'s AI assistant in Microsoft Teams: per-user memory, documents and MCP connectors, in production.',
+      tech: ['Python', 'Claude', 'MCP', 'Microsoft Teams'],
+      link: '/projects/AnnaAssistant',
+    },
     {
       title: 'Henk — Homelab Agent',
       description: 'Security-first homelab agent on the Claude Agent SDK: default-deny toolset that refused a live prompt-injection payload, exactly-once event replay across restarts, cadence state surviving redeploys.',
       tech: ['Python', 'Claude Agent SDK', 'Docker', 'Signal', 'Tailscale'],
       github: 'https://github.com/enhulsman/henk',
       link: '/projects/Henk',
-      featured: true,
-    },
-    {
-      title: 'Claude Sandbox',
-      description: 'Defense-in-depth sandbox isolating Claude Code with network namespaces, filesystem bind mounts, a domain-filtering egress proxy, and cross-platform Nix packaging.',
-      tech: ['Nix', 'Python', 'Bash', 'Linux'],
-      github: 'https://github.com/enhulsman/claude-sandbox',
-      link: '/projects/ClaudeSandbox',
-      featured: true,
-    },
-    {
-      title: 'pytaiga-mcp',
-      description: 'Merged PR adding security hardening, centralized error handling, and the project\'s first test suite to a Taiga MCP server.',
-      tech: ['Python', 'MCP', 'pytest', 'CI/CD'],
-      github: 'https://github.com/talhaorak/pytaiga-mcp',
-      link: '/projects/PytaigaMcp',
-      featured: true,
-    },
-    {
-      title: 'Encrypted Chat TUI',
-      description: 'Self-hosted terminal chat system built as a Cargo workspace with Tokio async networking, a typed ndjson protocol, and compile-time checked PostgreSQL queries.',
-      tech: ['Rust', 'Tokio', 'PostgreSQL'],
-      github: 'https://github.com/enhulsman',
-      link: '/projects/EncryptedChatTUI',
-      featured: false,
-    },
-    {
-      title: 'Portfolio Site',
-      description: 'Config-driven portfolio drawn as a technical drawing set, with MDX auto-discovery, a light and dark theme, and server-side form handling on Cloudflare Workers.',
-      tech: ['Astro', 'TypeScript', 'Canvas', 'Cloudflare Workers'],
-      link: '/projects/ResumePage',
-      featured: false,
-    },
-    {
-      title: 'Homelab Infrastructure',
-      description: 'Three-device hybrid cloud-home infrastructure with automated cross-device backups, Prometheus monitoring and alerting, recursive DNSSEC resolution, and Cloudflare Zero Trust networking',
-      tech: ['Docker', 'Prometheus', 'Grafana', 'Tailscale', 'Cloudflare', 'Bash', 'Linux'],
-      link: '/projects/HomelabInfrastructure',
-      featured: true,
     },
     {
       title: 'Finance Bot',
       description: 'Discord bot that turns bank exports into a monthly household budget: about 40 rules first, Claude for the rest, and anything below 0.75 confidence written flagged instead of guessed.',
       tech: ['Python', 'discord.py', 'Claude', 'Google Sheets API'],
       link: '/projects/FinanceBot',
-      featured: true,
+    },
+    {
+      title: 'Homelab Infrastructure',
+      description: 'Three-device hybrid cloud-home infrastructure with automated cross-device backups, Prometheus monitoring and alerting, recursive DNSSEC resolution, and Cloudflare Zero Trust networking',
+      tech: ['Docker', 'Prometheus', 'Grafana', 'Tailscale', 'Cloudflare', 'Bash', 'Linux'],
+      link: '/projects/HomelabInfrastructure',
     },
     {
       title: 'bible-tui',
@@ -121,7 +76,33 @@ const site = {
       tech: ['Rust', 'ratatui', 'WebAssembly'],
       github: 'https://github.com/enhulsman/bible-tui',
       link: '/projects/BibleTui',
-      featured: false,
+    },
+    {
+      title: 'pytaiga-mcp',
+      description: 'Merged PR adding security hardening, centralized error handling, and the project\'s first test suite to a Taiga MCP server.',
+      tech: ['Python', 'MCP', 'pytest', 'CI/CD'],
+      github: 'https://github.com/talhaorak/pytaiga-mcp',
+      link: '/projects/PytaigaMcp',
+    },
+    {
+      title: 'Claude Sandbox',
+      description: 'Defense-in-depth sandbox isolating Claude Code with network namespaces, filesystem bind mounts, a domain-filtering egress proxy, and cross-platform Nix packaging.',
+      tech: ['Nix', 'Python', 'Bash', 'Linux'],
+      github: 'https://github.com/enhulsman/claude-sandbox',
+      link: '/projects/ClaudeSandbox',
+    },
+    {
+      title: 'Encrypted Chat TUI',
+      description: 'Self-hosted terminal chat system built as a Cargo workspace with Tokio async networking, a typed ndjson protocol, and compile-time checked PostgreSQL queries.',
+      tech: ['Rust', 'Tokio', 'PostgreSQL'],
+      github: 'https://github.com/enhulsman',
+      link: '/projects/EncryptedChatTUI',
+    },
+    {
+      title: 'Portfolio Site',
+      description: 'Config-driven portfolio drawn as a technical drawing set, with MDX auto-discovery, a light and dark theme, and server-side form handling on Cloudflare Workers.',
+      tech: ['Astro', 'TypeScript', 'Canvas', 'Cloudflare Workers'],
+      link: '/projects/ResumePage',
     },
   ],
 

@@ -7,7 +7,7 @@
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'node:url';
 
-const BASE = 'http://localhost:4321';
+const BASE = process.env.BASE || 'http://localhost:4321';
 const out = fileURLToPath(new URL('../public/og-image.png', import.meta.url));
 
 const html = `<!doctype html><html><head><meta charset="utf-8"><style>
