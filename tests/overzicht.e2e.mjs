@@ -83,6 +83,7 @@ const RETIRED = new Set([
   'PROJECT WHAT IT IS STATUS', // the register is a list now, not a table with a header row
   // corrected after the 2026-10-09 fact-check against the repos, the homelab docs and the owner
   '233', '6', '−207 lines',
+  'Three devices on a Tailscale mesh, fronted by Cloudflare tunnels, so no home device has a public port. Prometheus watches all of them, DNS resolves recursively with DNSSEC on every box, and backups cross devices every night.',
   'devices, one mesh', 'Also in the set', // the workstation makes four machines; the cards are "More projects"
   'Finance Bot Discord bot that turns bank exports into a categorized budget, with Claude for the hard cases Running since Jul 2025', // drawn now
   'A terminal Bible reader in Rust, running in the browser', // bible-tui has its own project now, not a side piece
@@ -312,7 +313,7 @@ test('phones reach every section through the menu button', async () => {
   assert.equal(await btn.isVisible(), true);
   assert.equal(await links.first().isVisible(), false);
   assert.equal(await btn.getAttribute('aria-expanded'), 'false');
-  assert.equal(await btn.getAttribute('aria-label'), 'Sections');
+  assert.equal(await btn.getAttribute('aria-label'), 'Menu');
 
   await btn.click();
   assert.equal(await btn.getAttribute('aria-expanded'), 'true');

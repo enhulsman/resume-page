@@ -77,13 +77,13 @@ export const details: Detail[] = [
   {
     id: 'homelab',
     title: 'Homelab infrastructure',
-    text: 'Three devices on a Tailscale mesh, fronted by Cloudflare tunnels, so no home device has a public port. Prometheus watches all of them, DNS resolves recursively with DNSSEC on every box, and backups cross devices every night.',
+    text: 'Three servers and my workstation on a Tailscale mesh, fronted by Cloudflare tunnels, so no home device has a public port. Prometheus watches the servers, DNS resolves recursively with DNSSEC on each of them, and backups cross devices every night.',
     dims: [
       { value: '4', label: 'machines, one mesh' },
       { value: '7', label: 'scrape targets' },
       { value: '19', label: 'alert rules, in Grafana' },
     ],
-    what: 'Three devices on a Tailscale mesh behind Cloudflare tunnels, with Prometheus, recursive DNS and nightly cross-device backups',
+    what: 'Three servers and a workstation on a Tailscale mesh behind Cloudflare tunnels, with Prometheus, recursive DNS and nightly cross-device backups',
     status: 'Operating since Jun 2025',
     group: 'running',
     caseStudy: '/projects/HomelabInfrastructure',

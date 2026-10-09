@@ -105,7 +105,7 @@ test('phones reach every page through the drawn menu', async () => {
   const btn = page.locator('.menu-btn');
   const links = page.locator('.bar nav a');
   assert.equal(await btn.isVisible(), true);
-  assert.equal(await btn.getAttribute('aria-label'), 'Sections');
+  assert.equal(await btn.getAttribute('aria-label'), 'Menu');
   assert.equal(await links.first().isVisible(), false);
   await btn.click();
   assert.equal(await btn.getAttribute('aria-expanded'), 'true');
@@ -485,6 +485,8 @@ test('the homelab counts the workstation: in the drawing, the figure and the wri
   assert.match(await page.locator('#homelab .dwg').textContent(), /w11/);
   assert.match(await page.locator('#homelab .dwg title').textContent(), /workstation/);
   assert.deepEqual(await page.locator('#homelab .dims dt').allInnerTexts(), ['4', '7']);
+  // and the card says the same: three servers and the workstation, not three devices
+  assert.match(await page.locator('#homelab .detail-text p').first().innerText(), /^Three servers and my workstation/);
   await page.goto(BASE + '/projects/HomelabInfrastructure');
   assert.match(await page.locator('main').innerText(), /is the fourth machine on the mesh/);
   await context.close();
