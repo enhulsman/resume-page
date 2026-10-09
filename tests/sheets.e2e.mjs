@@ -173,6 +173,20 @@ test('the ANNA plate turns by hand and by its buttons', async () => {
   await context.close();
 });
 
+test('ANNA\'s project page draws the model large: most of its box is model', async () => {
+  const { context, page } = await open('/projects/AnnaAssistant', { reducedMotion: 'reduce' });
+  await page.locator('.plate-stage').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1200);
+  const h = await page.evaluate(() => {
+    const c = document.querySelector('.plate-stage canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let y0 = 1e9, y1 = -1;
+    for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 4) if (d[(y * c.width + x) * 4 + 3] > 20) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    return (y1 - y0) / devicePixelRatio;
+  });
+  assert.ok(h >= 480, `the model is ${Math.round(h)}px tall`);
+  await context.close();
+});
+
 test('turning the ANNA plate by hand draws no pencil line on the page', async () => {
   const { context, page } = await open('/projects/AnnaAssistant');
   const stage = page.locator('.plate-stage');
@@ -221,7 +235,8 @@ test('ANNA\'s case study carries the section drawing; a project without a drawin
   let { context, page } = await open('/projects/AnnaAssistant');
   assert.equal(await page.locator('.plate canvas.drawing').count(), 1);
   const h = await page.locator('.plate .plate-stage').evaluate(s => s.getBoundingClientRect().height);
-  assert.ok(h <= 900 * 0.6, `the model is ${Math.round(h)}px tall on a 900px screen`);
+  // tall enough to draw the exploded model large, never the whole screen (2026-10-09: was 60%)
+  assert.ok(h <= 900 * 0.75, `the model is ${Math.round(h)}px tall on a 900px screen`);
   await page.locator('.plate').scrollIntoViewIfNeeded();
   await page.waitForTimeout(3000);
   assert.ok(await inked(page) > 500);

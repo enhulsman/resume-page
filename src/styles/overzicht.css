@@ -468,7 +468,8 @@ kbd { font: inherit; color: var(--red); }
 /* in the write-up's column, near the drawing's own scale, so its lettering matches the page's */
 .plate > * { grid-column: 2; }
 .plate .dwg { max-width: 620px; display: block; }
-.plate .anna-plate .plate-stage { aspect-ratio: 4 / 3; max-height: 56svh; }
+/* the exploded model is tall and narrow: a tall box draws it large */
+.plate .anna-plate .plate-stage { aspect-ratio: 4 / 5; max-height: 78svh; }
 
 /* the write-up: headings hung in the left column like a drawing's notes, text on the right */
 .prose { display: grid; grid-template-columns: minmax(0, 38fr) minmax(0, 62fr); column-gap: var(--gutter); font-size: 17px; }
