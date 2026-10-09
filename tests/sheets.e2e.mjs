@@ -276,7 +276,9 @@ test('/resume: every role as a revision, skills and schooling as schedules', asy
   const { context, page } = await open('/resume');
   assert.equal(await page.locator('.revs li').count(), roles);
   assert.deepEqual(await page.locator('.schedule caption').allInnerTexts(), ['SKILLS', 'EDUCATION', 'CERTIFICATIONS']);
-  assert.equal(await page.locator('a', { hasText: 'Inquire about my full CV' }).getAttribute('href'), '/contact');
+  // one says the form, the other says mail
+  assert.equal(await page.locator('.actions a', { hasText: 'Request my full CV' }).getAttribute('href'), '/contact');
+  assert.match(await page.locator('.actions a', { hasText: 'Email me' }).getAttribute('href'), /^mailto:/);
   await context.close();
 });
 
