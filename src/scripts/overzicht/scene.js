@@ -536,12 +536,12 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
     dimension(S(v3(-1.88, roomDy, 0.55)), S(v3(-1.88, 2.0 + roomDy, 0.55)), '2,00', px, -1);
     anchors.ezra = S(v3(-1.45, -0.24 + roomDy, 0.55));
 
-    // the stack: 32 000 lines of Python, as one dimension along the levels (exploded only)
+    // the stack: 37 000 lines of Python, as one dimension along the levels (exploded only)
     const stackA = smooth(clamp((state.q - 0.55) / 0.3));
     if (stackA > 0) {
       ctx.globalAlpha = stackA;
       const xS = -PW - 0.35, zS = PD + 0.35;
-      dimension(S(v3(xS, levelY(3, cam.e) - 0.07, zS)), S(v3(xS, levelY(0, cam.e), zS)), 'about 32 000 lines of Python', px, 1);
+      dimension(S(v3(xS, levelY(3, cam.e) - 0.07, zS)), S(v3(xS, levelY(0, cam.e), zS)), 'about 37 000 lines of Python', px, 1);
     }
     // where the section was cut: the A-A line along the front of the room, once it has turned
     const secA = smooth(clamp((state.q - 0.35) / 0.3));
