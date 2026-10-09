@@ -23,5 +23,5 @@ const links = current
   <nav id="bar-nav" aria-label={current ? "Site" : "Sections"}>
     {links.map(([id, href, label], i) => <a href={href} style={`--i:${i}`} aria-current={id === current ? "page" : undefined}>{label}</a>)}
   </nav>
-  <button class="theme" type="button" aria-pressed="false"><span class="theme-label">Light table</span></button>
+  <button class="theme" type="button" aria-pressed="false" title="Switch to the dark sheet"><svg class="lamp" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 15h7M5 15v-5l4-4"/><path class="shade" d="M8 4.5 12 3l2.5 6.5-3.5.5z"/></svg><span class="theme-label">Light table</span></button>
 </header>

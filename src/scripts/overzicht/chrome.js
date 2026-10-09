@@ -13,6 +13,7 @@ function paintThemeButton() {
   themeBtn.querySelector('.theme-label').textContent = isDark() ? 'Whiteprint' : 'Light table';
   themeBtn.setAttribute('aria-pressed', String(isDark()));
   themeBtn.setAttribute('aria-label', isDark() ? 'Switch to the light theme' : 'Switch to the dark theme');
+  themeBtn.title = isDark() ? 'Switch to the light sheet' : 'Switch to the dark sheet';
   // the browser bar follows the chosen theme, not just the system's
   for (const m of document.querySelectorAll('meta[name="theme-color"]')) m.content = isDark() ? '#16141D' : '#EFEDF3';
 }

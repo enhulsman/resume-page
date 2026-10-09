@@ -18,6 +18,7 @@
   --bar: 52px;
   /* past 1920 the set keeps its 1920 layout, centred on the table */
   --wide: max(0px, (100vw - 1920px) / 2);
+  --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg stroke='%232B2766' stroke-width='1.4' stroke-linejoin='round' fill='none'%3E%3Cpath d='M2 30 5 22 24 3 29 8 10 27Z' fill='%23EFEDF3'/%3E%3Cpath d='M5 22l5 5M21 6l5 5'/%3E%3C/g%3E%3Cpath d='M2 30 3.5 25.8 6.2 28.5Z' fill='%232B2766'/%3E%3C/svg%3E") 2 30, crosshair;
   --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --mono: "B612 Mono", ui-monospace, Menlo, monospace;
   color-scheme: light;
@@ -26,11 +27,13 @@
   :root:not([data-theme="light"]) {
     --sheet: #16141D; --ink: #D8D4F0; --ink-2: #A9A4CC; --faint: #6E6992; --hair: #34304A; --red: #FF6247; --label: #8A85B0;
     --grain-blend: screen; --grain-a: 0.035; color-scheme: dark;
+    --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg stroke='%23D8D4F0' stroke-width='1.4' stroke-linejoin='round' fill='none'%3E%3Cpath d='M2 30 5 22 24 3 29 8 10 27Z' fill='%2316141D'/%3E%3Cpath d='M5 22l5 5M21 6l5 5'/%3E%3C/g%3E%3Cpath d='M2 30 3.5 25.8 6.2 28.5Z' fill='%23D8D4F0'/%3E%3C/svg%3E") 2 30, crosshair;
   }
 }
 :root[data-theme="dark"] {
   --sheet: #16141D; --ink: #D8D4F0; --ink-2: #A9A4CC; --faint: #6E6992; --hair: #34304A; --red: #FF6247; --label: #8A85B0;
   --grain-blend: screen; --grain-a: 0.035; color-scheme: dark;
+  --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg stroke='%23D8D4F0' stroke-width='1.4' stroke-linejoin='round' fill='none'%3E%3Cpath d='M2 30 5 22 24 3 29 8 10 27Z' fill='%2316141D'/%3E%3Cpath d='M5 22l5 5M21 6l5 5'/%3E%3C/g%3E%3Cpath d='M2 30 3.5 25.8 6.2 28.5Z' fill='%23D8D4F0'/%3E%3C/svg%3E") 2 30, crosshair;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -86,7 +89,11 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .theme {
   appearance: none; border: .75px solid var(--ink); background: none; color: inherit; cursor: pointer;
   font: inherit; letter-spacing: inherit; text-transform: inherit; padding: 7px 10px; border-radius: 0;
+  display: inline-flex; align-items: center; gap: 7px;
 }
+.lamp { width: 13px; height: 13px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: round; stroke-linecap: round; }
+:root[data-theme="dark"] .lamp .shade { fill: currentColor; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lamp .shade { fill: currentColor; } }
 .theme:hover { color: var(--red); border-color: var(--red); }
 
 main { padding: 0 calc(var(--frame) + 6px); }
@@ -128,6 +135,12 @@ main { padding: 0 calc(var(--frame) + 6px); }
 }
 
 /* ---------- the pointer layer: crosshair, pencil marks, registration marks ---------- */
+/* a mouse draws with a pencil whose tip sits where the crosshair meets; links and fields keep their own */
+@media (hover: hover) and (pointer: fine) {
+  html { cursor: var(--pencil); }
+  a, button, summary, label, select, [role="button"] { cursor: pointer; }
+  input, textarea, [contenteditable] { cursor: text; }
+}
 .xhair { display: none; position: fixed; inset: 0; pointer-events: none; z-index: 48; opacity: 0; transition: opacity .3s ease; }
 @media (hover: hover) and (pointer: fine) { .xhair { display: block; } }
 .xhair.on { opacity: 1; }
@@ -239,7 +252,7 @@ main { padding: 0 calc(var(--frame) + 6px); }
 /* ---------- the other sheets ---------- */
 .sheet { padding: clamp(80px, 12vh, 140px) calc(var(--gutter) + var(--wide)) 40px; border-top: 1.5px solid var(--ink); position: relative; }
 .sheet-head { display: grid; grid-template-columns: minmax(0, 38fr) 62fr; gap: var(--gutter); align-items: end; margin-bottom: clamp(36px, 6vh, 64px); }
-.sheet-head h2 { font-size: clamp(40px, 5vw, 80px); line-height: .9; font-stretch: 112%; font-weight: 780; letter-spacing: -.03em; }
+.sheet-head h2 { text-wrap: balance; font-size: clamp(40px, 5vw, 80px); line-height: .9; font-stretch: 112%; font-weight: 780; letter-spacing: -.03em; }
 .sheet-head p { margin: 0; color: var(--ink-2); max-width: 34em; }
 .sub { font: 700 12px/1 var(--sans); font-stretch: 80%; letter-spacing: .1em; text-transform: uppercase; margin: 64px 0 18px; }
 
@@ -529,6 +542,12 @@ kbd { font: inherit; color: var(--red); }
   .js .bar.open nav a::after { transform: scaleX(1); transition: transform .35s cubic-bezier(.4,0,.2,1) calc(.1s + var(--i, 0) * 55ms); }
   .js .bar.open nav a:hover { color: var(--red); transition-delay: 0s; }
   .titleblock { max-width: none; }
+  /* the title block restacks as label and value pairs, so no value breaks mid-word */
+  .titleblock { display: grid; grid-template-columns: auto minmax(0, 1fr); }
+  .titleblock tbody, .titleblock tr { display: contents; }
+  .titleblock th, .titleblock td { border: 0; border-top: .75px solid var(--ink); width: auto; }
+  .titleblock th { border-right: .75px solid var(--ink); }
+  .titleblock tr:first-child > :nth-child(-n+2) { border-top: 0; }
   /* one column, the face before the title block: who, then the paperwork */
   .sheet-you { display: flex; flex-direction: column; align-items: stretch; min-height: 0; padding: calc(var(--bar) + 44px) var(--gutter) 36px; }
   .you-text, .you-side { display: contents; }
@@ -583,6 +602,8 @@ kbd { font: inherit; color: var(--red); }
   .tm-row label { border-right: 0; padding: 12px 12px 0; }
   .tm-row input, .tm-row textarea { padding-top: 6px; }
 }
+/* a portrait tablet has the room for a face you can see */
+@media (min-width: 600px) and (max-width: 860px) { .site-photo { grid-template-columns: 200px 1fr; } }
 
 
 /* stacked layout: portrait phones, and tall portrait screens (tablets, portrait monitors) */
@@ -591,6 +612,8 @@ kbd { font: inherit; color: var(--red); }
   .copy { display: contents; }
   .step { order: 2; min-height: 0; padding: 28px var(--gutter) 44px; justify-content: flex-start; position: relative; z-index: 1; }
   .stage { order: 1; height: 40svh; top: calc(var(--frame) + 6px + var(--bar)); z-index: 4; background: var(--sheet); border-bottom: 1.5px solid var(--ink); }
+  /* the text scrolling under the drawing fades out instead of meeting a hard cut */
+  .stage::after { content: ""; position: absolute; left: 0; right: 0; top: calc(100% + 1.5px); height: 20px; background: linear-gradient(var(--sheet), transparent); pointer-events: none; }
   .step:first-of-type { margin-top: 0; }
   .step::before { content: ""; position: absolute; left: var(--gutter); right: var(--gutter); top: 0; border-top: .75px solid var(--ink); }
   .scale-tip { width: 190px; }
@@ -604,13 +627,6 @@ kbd { font: inherit; color: var(--red); }
 .plate-stage { container-type: inline-size; }
 @container (max-width: 480px) { .plate-stage .turn span { display: none; } }
 
-/* where a drawing would shrink below ~0.9 of its own scale (phones), it keeps its size and
-   scrolls sideways instead */
-@container (max-width: 480px) {
-  .dwg-scroll { overflow-x: auto; margin: 0 -16px; padding: 0 16px 6px; scrollbar-width: thin; position: relative; z-index: 2; }
-  .dwg-scroll .dwg { width: 620px; max-width: none; }
-  .dwg-scroll::after { content: "Drawing scrolls sideways"; display: block; font: 400 10px/1 var(--mono); color: var(--label); margin-top: 6px; position: sticky; left: 0; }
-}
 .stage.short .levels li { width: 180px; }
 .stage.compact .levels li { width: 108px; font-size: 11px; }
 .stage.compact .levels span, .stage.short .levels span { display: none; }

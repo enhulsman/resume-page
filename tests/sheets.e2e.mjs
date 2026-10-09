@@ -389,12 +389,12 @@ test('clicking a project\'s drawing opens its case study, on /projects and on th
   await context.close();
 });
 
-test('on a phone a project\'s drawing still scrolls sideways under the thumb', async () => {
+test('on a phone a project\'s drawing fits the screen whole', async () => {
   const { context, page } = await open('/projects', { width: 390, height: 844 });
-  const dwg = page.locator('#henk .dwg');
-  await dwg.scrollIntoViewIfNeeded();
-  const hit = await dwg.evaluate(d => { const r = d.getBoundingClientRect(); return !!document.elementFromPoint(r.x + 60, r.y + r.height / 2)?.closest('.dwg-wrap'); });
-  assert.ok(hit, 'the drawing, not the card link, takes the touch');
+  for (const id of ['henk', 'sandbox', 'homelab', 'pytaiga']) {
+    const r = await page.locator(`#${id} .dwg`).evaluate(d => ({ right: d.getBoundingClientRect().right, left: d.getBoundingClientRect().left }));
+    assert.ok(r.left >= 0 && r.right <= 390, `${id}: drawing spans ${Math.round(r.left)}..${Math.round(r.right)}`);
+  }
   await context.close();
 });
 
@@ -445,12 +445,14 @@ for (const width of [900, 1024, 1180, 1440]) {
   });
 }
 
-test('"Drawing scrolls sideways" shows only where the drawing does scroll', async () => {
-  for (const [width, height, scrolls] of [[390, 844, true], [820, 1180, false], [844, 390, false]]) {
-    const { context, page } = await open('/projects', { width, height });
-    const r = await page.locator('#henk .dwg-scroll').evaluate(el => ({ over: el.scrollWidth > el.clientWidth + 1, hint: getComputedStyle(el, '::after').content }));
-    assert.equal(r.over, scrolls, `${width}: drawing overflows`);
-    assert.equal(r.hint !== 'none' && r.hint !== 'normal', scrolls, `${width}: hint ${r.hint}`);
+test('no project drawing scrolls sideways at any width, and none says it does', async () => {
+  for (const path of ['/', '/projects']) for (const [width, height] of [[390, 844], [820, 1180], [844, 390]]) {
+    const { context, page } = await open(path, { width, height });
+    const r = await page.locator('.dwg-scroll').evaluateAll(els => els.map(el => ({ over: el.scrollWidth > el.clientWidth + 1, hint: getComputedStyle(el, '::after').content })));
+    for (const x of r) {
+      assert.equal(x.over, false, `${path} ${width}: a drawing overflows`);
+      assert.ok(x.hint === 'none' || x.hint === 'normal', `${path} ${width}: hint ${x.hint}`);
+    }
     await context.close();
   }
 });

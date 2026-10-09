@@ -555,3 +555,79 @@ test('an ultra-wide screen centres the set at the 1920 layout; 1920 and below ke
   assert.ok(uw.term < 3440 - shift, `the terminal stays inside the centred set: ${uw.term}`);
   assert.ok(fhd.name < 100, `1920 keeps the name at the left: ${fhd.name}`);
 });
+
+// Lines a block's text breaks into, by the tops of its words' boxes.
+const lineCount = el => {
+  const tops = new Set();
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  for (let n; (n = walk.nextNode());) {
+    const re = /\S+/g; let m;
+    while ((m = re.exec(n.data))) { const r = document.createRange(); r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length); tops.add(Math.round(r.getBoundingClientRect().top)); }
+  }
+  return tops.size;
+};
+
+test('on a phone the title block reads one line per value', async () => {
+  const { context, page } = await open('/', { width: 390, height: 844 });
+  const cells = await page.locator('.sheet-you .titleblock td').evaluateAll((tds, f) => tds.map(td => [td.innerText, new Function('return ' + f)()(td)]), lineCount.toString());
+  for (const [text, lines] of cells) assert.equal(lines, 1, `"${text}" breaks over ${lines} lines`);
+  await context.close();
+});
+
+test('a portrait tablet shows the photo at a size you can see the face', async () => {
+  const { context, page } = await open('/', { width: 834, height: 1194 });
+  const w = await page.locator('.site-photo .photo').evaluate(p => p.getBoundingClientRect().width);
+  assert.ok(w >= 180, `photo is ${Math.round(w)}px`);
+  await context.close();
+});
+
+test('section titles never leave one short word on a line of its own', async () => {
+  for (const width of [1194, 1440]) {
+    const { context, page } = await open('/', { width, height: 900 });
+    const words = await page.locator('.sheet-head h2').evaluateAll(hs => hs.map(h => {
+      const lines = new Map();
+      const walk = document.createTreeWalker(h, NodeFilter.SHOW_TEXT);
+      for (let n; (n = walk.nextNode());) { const re = /\S+/g; let m; while ((m = re.exec(n.data))) { const r = document.createRange(); r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length); const t = Math.round(r.getBoundingClientRect().top); lines.set(t, [...(lines.get(t) || []), m[0]]); } }
+      return [h.innerText, [...lines.values()].map(l => l.join(' '))];
+    }));
+    for (const [title, lines] of words) if (lines.length > 1) for (const l of lines) assert.ok(!(l.split(' ').length === 1 && l.length <= 4), `${width}: "${title}" breaks as ${JSON.stringify(lines)}`);
+    await context.close();
+  }
+});
+
+test('the theme button carries a lamp mark and says what it does on hover', async () => {
+  const { context, page } = await open('/', { storage: { theme: 'light' } });
+  const btn = page.locator('.theme');
+  assert.equal(await btn.locator('svg.lamp').count(), 1);
+  assert.equal(await btn.getAttribute('title'), 'Switch to the dark sheet');
+  await btn.click();
+  assert.equal(await btn.getAttribute('title'), 'Switch to the light sheet');
+  await context.close();
+});
+
+test('on a phone the drawing\'s lower edge fades into the text scrolling under it', async () => {
+  const { context, page } = await open('/', { width: 390, height: 844 });
+  const r = await page.locator('.stage').evaluate(s => { const a = getComputedStyle(s, '::after'); return { img: a.backgroundImage, h: parseFloat(a.height) }; });
+  assert.match(r.img, /gradient/);
+  assert.ok(r.h >= 12, `fade is ${r.h}px`);
+  await context.close();
+});
+
+test('a mouse draws with a pencil: its tip on the paper, the usual cursors on links and text fields', async () => {
+  const { context, page } = await open('/');
+  const cur = sel => page.locator(sel).first().evaluate(el => getComputedStyle(el).cursor);
+  assert.match(await cur('.sheet-you .lede'), /^url\(.+\) 2 30, crosshair$/);
+  assert.equal(await cur('.sheet-you .act-main'), 'pointer');
+  assert.equal(await cur('.term-body'), 'text');
+  // the light table gets a pencil drawn in its own inks
+  const light = await cur('main');
+  await page.locator('.theme').click();
+  assert.notEqual(await cur('main'), light);
+  await context.close();
+  // touch screens keep their own
+  const touch = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const p = await touch.newPage();
+  await p.goto(BASE + '/');
+  assert.ok(!(await p.locator('main').evaluate(el => getComputedStyle(el).cursor)).startsWith('url('));
+  await touch.close();
+});
