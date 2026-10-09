@@ -533,3 +533,25 @@ test('pointing at a project draws registration marks round it and replots its re
   assert.equal(await card.locator('.dwg .red path').first().evaluate(p => parseFloat(getComputedStyle(p).strokeDashoffset) || 0), 0, 'and the redline is whole again');
   await context.close();
 });
+
+test('an ultra-wide screen centres the set at the 1920 layout; 1920 and below keep theirs', async () => {
+  const edges = async (width, height) => {
+    const { context, page } = await open('/', { width, height, reducedMotion: 'reduce' });
+    const r = await page.evaluate(() => {
+      const box = s => document.querySelector(s).getBoundingClientRect();
+      return { name: box('.sheet-you .name').left, term: box('.sheet-you .term').right,
+        head: box('#work .sheet-head h2, .sheet .sheet-head h2').left, step: box('.scrolly .step').left,
+        barName: box('.bar-name').left, foot: box('.foot p').left, stamp: box('.sheet-contact .stamp').left };
+    });
+    await context.close();
+    return r;
+  };
+  const fhd = await edges(1920, 1080);
+  const uw = await edges(3440, 1440);
+  const shift = (3440 - 1920) / 2;
+  for (const k of ['name', 'head', 'step', 'barName', 'foot', 'stamp']) {
+    assert.ok(Math.abs(uw[k] - (fhd[k] + shift)) <= 2, `${k}: ${uw[k]} vs ${fhd[k] + shift}`);
+  }
+  assert.ok(uw.term < 3440 - shift, `the terminal stays inside the centred set: ${uw.term}`);
+  assert.ok(fhd.name < 100, `1920 keeps the name at the left: ${fhd.name}`);
+});
