@@ -508,3 +508,16 @@ test('the sandbox says it is retired, not that it runs daily', async () => {
   assert.match(text, /auto mode covered what I needed/);
   await context.close();
 });
+
+test('the sitemap the pages advertise exists and lists every page', async () => {
+  const { context, page } = await open('/');
+  assert.equal(await page.locator('link[rel="sitemap"]').getAttribute('href'), '/sitemap-index.xml');
+  const res = await page.request.get(BASE + '/sitemap-index.xml');
+  assert.equal(res.status(), 200);
+  assert.match(res.headers()['content-type'], /xml/);
+  const locs = [...(await res.text()).matchAll(/<loc>(.*?)<\/loc>/g)].map(m => new URL(m[1]).pathname.replace(/\/$/, '') || '/');
+  for (const path of ['/', '/projects', '/blog', '/resume', '/contact', ...PROJECTS.map(p => `/projects/${p}`), ...POSTS.map(p => `/blog/${p}`)]) {
+    assert.ok(locs.includes(path), `sitemap lists ${path}`);
+  }
+  await context.close();
+});
