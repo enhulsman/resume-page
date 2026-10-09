@@ -9,7 +9,7 @@
     "start": "astro dev",
     "generate-pdf": "node scripts/generate-pdf.js",
     "og-image": "node scripts/og-image.mjs",
-    "test": "node --test tests/worker.test.ts tests/frontmatter.test.ts tests/depth.test.mjs",
+    "test": "node --test tests/worker.test.ts tests/frontmatter.test.ts tests/depth.test.mjs tests/post.test.ts",
     "test:e2e": "node --test --test-concurrency=1 tests/overzicht.e2e.mjs tests/sheets.e2e.mjs"
   },
   "devDependencies": {

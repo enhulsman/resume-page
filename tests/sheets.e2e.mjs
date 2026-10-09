@@ -581,3 +581,45 @@ test('/contact offers plain mail under the form', async () => {
   assert.ok(mail.y >= form.y + form.height - 1, 'below the form');
   await context.close();
 });
+
+const box = (page, sel) => page.locator(sel).first().evaluate(el => { const r = el.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom }; });
+
+test('a post\'s text starts beside its title, right under the title block', async () => {
+  const { context, page } = await open('/blog/henk-exactly-once');
+  const [h1, tb, p] = await Promise.all([box(page, 'main h1'), box(page, '.titleblock'), box(page, '.post-intro p')]);
+  assert.ok(p.l > h1.r, 'the text is in the column beside the title');
+  assert.ok(Math.abs(p.l - tb.l) < 2, 'aligned with the title block');
+  assert.ok(p.t > tb.b && p.t - tb.b < 64, `right under the title block (gap ${Math.round(p.t - tb.b)}px)`);
+  assert.ok(p.t < h1.t + 400, 'it starts up beside the title, not a screen further down');
+  await context.close();
+});
+
+test('a post\'s title block gives its reading time and, where it has one, its project', async () => {
+  const rows = async page => page.locator('.titleblock tr').evaluateAll(trs => trs.map(tr => [tr.querySelector('th').innerText.trim(), tr.querySelector('td').innerText.trim()]));
+  let { context, page } = await open('/blog/henk-exactly-once');
+  const henk = Object.fromEntries(await rows(page));
+  assert.match(henk.READING, /^\d+ min$/);
+  assert.equal(await page.locator('.titleblock a[href="/projects/Henk"]').count(), 1, 'links its project');
+  assert.ok(henk.PROJECT, 'names its project');
+  await context.close();
+  ({ context, page } = await open('/blog/spec-factory'));
+  const spec = Object.fromEntries(await rows(page));
+  assert.match(spec.READING, /^\d+ min$/);
+  assert.equal(spec.PROJECT, undefined, 'no project row when the post names none');
+  await context.close();
+});
+
+test('on a phone a post reads in order: title, title block, text', async () => {
+  const { context, page } = await open('/blog/henk-exactly-once', { width: 390, height: 844 });
+  const [h1, tb, p] = await Promise.all([box(page, 'main h1'), box(page, '.titleblock'), box(page, '.post-intro p')]);
+  assert.ok(h1.b <= tb.t && tb.b <= p.t);
+  await context.close();
+});
+
+test('every heading of a post still hangs in the left column after the intro', async () => {
+  const { context, page } = await open('/blog/henk-exactly-once');
+  const [h1, h2s] = await Promise.all([box(page, 'main h1'), page.locator('.prose > h2').evaluateAll(hs => hs.map(h => h.getBoundingClientRect().left))]);
+  assert.ok(h2s.length > 0);
+  for (const l of h2s) assert.ok(Math.abs(l - h1.l) < 2);
+  await context.close();
+});

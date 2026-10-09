@@ -495,6 +495,8 @@ kbd { font: inherit; color: var(--red); }
 .prose th, .prose td { border: .75px solid var(--ink); padding: 6px 10px; text-align: left; }
 .prose .dims-strip { grid-template-columns: repeat(3, minmax(0, auto)); gap: 18px 28px; margin: 0 0 2em; }
 .post .prose > * { max-width: 36em; }
+/* a post's opening runs under its title block, in the title block's column */
+.post-intro { display: block; }
 
 /* the blog index: the diary, with room for each post's description */
 .diary-full li { grid-template-columns: 140px minmax(0, 20em) minmax(0, 1fr); padding: 18px 0; }

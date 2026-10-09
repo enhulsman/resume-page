@@ -1,11 +1,22 @@
 ---
-// A post in the site diary, drawn as a sheet: its date in a title block, then the post at a
-// readable measure, headings hung in the left column like a drawing's notes.
+// A post in the site diary, drawn as a sheet: the title on the left; on the right its title
+// block (date, reading time, the project it belongs to) and the post's opening, so the text
+// starts beside the title. From the first heading on, headings hang in the left column like
+// a drawing's notes.
 import OverzichtLayout from "./OverzichtLayout.astro";
 import site from "../config/site";
+import { readingMinutes, splitIntro, relatedProject } from "../lib/post";
 
 const { frontmatter } = Astro.props;
 const { title, description = "", date, updated = "" } = frontmatter;
+
+const html = await Astro.slots.render("default");
+const { intro, rest } = splitIntro(html);
+const minutes = readingMinutes(html);
+const project = relatedProject(
+  frontmatter.project,
+  import.meta.glob("../pages/projects/*.mdx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>,
+);
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -20,12 +31,13 @@ const iso = (d: string) => new Date(d).toISOString().slice(0, 10);
         <table class="titleblock">
           {date && <tr><th scope="row">Date</th><td><time datetime={iso(date)}>{fmt(date)}</time></td></tr>}
           {updated && <tr><th scope="row">Updated</th><td><time datetime={iso(updated)}>{fmt(updated)}</time></td></tr>}
+          <tr><th scope="row">Reading</th><td>{minutes} min</td></tr>
+          {project && <tr><th scope="row">Project</th><td><a href={project.href}>{project.title}</a></td></tr>}
         </table>
+        {intro && <div class="prose post-intro" set:html={intro} />}
       </div>
     </header>
 
-    <div class="prose">
-      <slot />
-    </div>
+    {rest && <div class="prose" set:html={rest} />}
   </article>
 </OverzichtLayout>
