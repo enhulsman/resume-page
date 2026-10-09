@@ -151,7 +151,13 @@ main { padding: 0 calc(var(--frame) + 6px); }
 .pencil-mark {
   position: absolute; left: 0; top: 0; width: 26px; height: 26px; z-index: 48; pointer-events: none; overflow: visible;
   fill: none; stroke: var(--red); stroke-width: 1.4; stroke-linecap: round;
-  animation: mark-fade .8s ease 1.4s forwards;
+  animation: mark-fade .8s ease 7.2s forwards;
+}
+/* a freehand line, in page coordinates; it fades with the marks */
+.pencil-line {
+  position: absolute; left: 0; top: 0; width: 1px; height: 1px; z-index: 48; pointer-events: none; overflow: visible;
+  fill: none; stroke: var(--red); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+  animation: mark-fade .8s ease 7.2s forwards;
 }
 .pencil-mark * { stroke-dasharray: 1; stroke-dashoffset: 1; animation: mark-plot .35s cubic-bezier(.4,0,.2,1) forwards; }
 .pencil-mark path { animation-delay: .2s; }
@@ -685,7 +691,7 @@ kbd { font: inherit; color: var(--red); }
     --sheet: #fff; --ink: #000; --ink-2: #222; --label: #444; --faint: #777; --hair: #bbb; --red: #B8301A; color-scheme: light;
   }
   body { background: #fff; color: #000; font-size: 11pt; transition: none; }
-  body::before, body::after, .bar, .frame, .foot, .skip, .cloud-hl, .replay, .turn, .xhair, .pencil-mark { display: none !important; }
+  body::before, body::after, .bar, .frame, .foot, .skip, .dim-hl, .replay, .turn, .xhair, .pencil-mark, .pencil-line { display: none !important; }
   main { padding: 0; }
   .sheet { padding: 18px 0 0; border-top: 0; min-height: 0; }
   .sheet-first { padding-top: 0; }

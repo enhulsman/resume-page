@@ -151,21 +151,68 @@ document.addEventListener('pointermove', e => {
 addEventListener('scroll', xdraw, { passive: true });
 document.documentElement.addEventListener('pointerleave', () => { xat = null; xhair.classList.remove('on'); });
 
-// A click on the paper leaves a red pencil mark that fades; links, controls and the
-// terminal are not paper. Reduced motion gets none: the mark is all motion.
+// The paper takes a red pencil: a click leaves a mark, a mouse drag on blank paper draws a
+// line. Both last about 8 s, then fade (CSS); Escape clears them. Links, controls and the
+// terminal are not paper, and a drag that starts on text selects it as usual. Reduced
+// motion gets none: the marks are all motion.
+const SVG = 'http://www.w3.org/2000/svg';
+const LAST = 8000;
 const notPaper = 'a, button, input, textarea, select, label, summary, [contenteditable], [role="application"], .stage, .term, .bar, .dwg-scroll, .site-photo';
-document.addEventListener('click', e => {
-  if (reduced || e.button !== 0 || e.target.closest(notPaper) || String(getSelection())) return;
-  const marks = document.querySelectorAll('.pencil-mark');
-  if (marks.length > 5) marks[0].remove();
-  const m = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  m.setAttribute('class', 'pencil-mark');
-  m.setAttribute('viewBox', '-13 -13 26 26');
+function pencil(cls, max) {
+  const old = document.querySelectorAll(`.${cls}`);
+  if (old.length >= max) old[0].remove();
+  const m = document.createElementNS(SVG, 'svg');
+  m.setAttribute('class', cls);
   m.setAttribute('aria-hidden', 'true');
+  document.body.append(m);
+  setTimeout(() => m.remove(), LAST + 200);
+  return m;
+}
+// whether a point is on a line of text, not the paper round it
+function onText(x, y) {
+  const at = document.caretPositionFromPoint?.(x, y);
+  const node = at ? at.offsetNode : document.caretRangeFromPoint?.(x, y)?.startContainer;
+  if (!node || node.nodeType !== Node.TEXT_NODE || !node.textContent.trim()) return false;
+  const r = document.createRange();
+  r.selectNodeContents(node);
+  return [...r.getClientRects()].some(b => x >= b.left - 2 && x <= b.right + 2 && y >= b.top - 2 && y <= b.bottom + 2);
+}
+let stroke = null, drew = false;
+document.addEventListener('mousedown', e => {
+  if (reduced || e.button !== 0 || !fine.matches || e.target.closest(notPaper) || onText(e.clientX, e.clientY)) return;
+  // hold back the text selection a drag on paper would start; the page still loses focus as usual
+  e.preventDefault();
+  getSelection().removeAllRanges();
+  if (document.activeElement !== document.body) document.activeElement?.blur?.();
+  stroke = { pts: [[e.pageX, e.pageY]], line: null };
+});
+document.addEventListener('mousemove', e => {
+  if (!stroke) return;
+  const [px, py] = stroke.pts.at(-1);
+  if (Math.hypot(e.pageX - px, e.pageY - py) < 2) return;
+  stroke.pts.push([e.pageX, e.pageY]);
+  if (!stroke.line) {
+    const [sx, sy] = stroke.pts[0];
+    if (Math.hypot(e.pageX - sx, e.pageY - sy) < 5) return;
+    stroke.line = pencil('pencil-line', 12);
+    stroke.line.innerHTML = '<path/>';
+  }
+  stroke.line.firstChild.setAttribute('d', 'M' + stroke.pts.map(([x, y]) => `${x} ${y}`).join('L'));
+});
+document.addEventListener('mouseup', () => {
+  if (stroke) drew = !!stroke.line;
+  stroke = null;
+});
+document.addEventListener('click', e => {
+  if (drew) return void (drew = false);
+  if (reduced || e.button !== 0 || e.target.closest(notPaper) || String(getSelection())) return;
+  const m = pencil('pencil-mark', 6);
+  m.setAttribute('viewBox', '-13 -13 26 26');
   m.innerHTML = '<circle r="7" pathLength="1"/><path d="M-11 0H11M0-11V11" pathLength="1"/>';
   m.style.transform = `translate(${e.pageX - 13}px, ${e.pageY - 13}px)`;
-  document.body.append(m);
-  setTimeout(() => m.remove(), 2300);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') for (const m of document.querySelectorAll('.pencil-mark, .pencil-line')) m.remove();
 });
 
 // Pointing at a project draws registration marks round it (CSS) and replots its redline.

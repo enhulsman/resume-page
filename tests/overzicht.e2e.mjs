@@ -628,7 +628,10 @@ test('a click on the paper leaves a red pencil mark that fades; links and reduce
   assert.equal(await page.locator('.pencil-mark').count(), 1, 'a mark where the paper was clicked');
   const m = await page.locator('.pencil-mark').boundingBox();
   assert.ok(Math.abs(m.x + m.width / 2 - (r.x + r.width + 40)) <= 3, 'centred on the click');
-  await page.waitForTimeout(2600);
+  // it stays long enough to point at something, about 8 s, then fades
+  await page.waitForTimeout(4000);
+  assert.equal(await page.locator('.pencil-mark').evaluate(m => getComputedStyle(m).opacity), '1', 'still there after 4 s');
+  await page.waitForTimeout(5200);
   assert.equal(await page.locator('.pencil-mark').count(), 0, 'gone again');
   // a link is a link, not paper: a real click on one leaves no mark (the navigation itself is held back)
   await page.evaluate(() => document.addEventListener('click', e => { if (e.target.closest('a')) e.preventDefault(); }));
@@ -644,6 +647,61 @@ test('a click on the paper leaves a red pencil mark that fades; links and reduce
   await reduced.page.mouse.click(r2.x + r2.width + 40, r2.y + r2.height / 2);
   await reduced.page.waitForTimeout(150);
   assert.equal(await reduced.page.locator('.pencil-mark').count(), 0);
+  await reduced.context.close();
+});
+
+// a mouse drag across blank paper beside the general notes' head
+async function dragOnPaper(page, { from, dx = 160, dy = 40 } = {}) {
+  const head = page.locator('#notes .sheet-head p');
+  await head.scrollIntoViewIfNeeded();
+  const r = await head.boundingBox();
+  const [x, y] = from || [r.x + r.width + 40, r.y + r.height / 2];
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (let i = 1; i <= 12; i++) await page.mouse.move(x + dx * i / 12, y + dy * Math.sin(i / 2));
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+  return [x, y];
+}
+
+test('a mouse drag on blank paper draws a pencil line; it lasts a while, and Escape clears it', async () => {
+  const { context, page } = await open('/');
+  const [x] = await dragOnPaper(page);
+  assert.equal(await page.locator('.pencil-line').count(), 1, 'a line where the mouse went');
+  const b = await page.locator('.pencil-line path').boundingBox();
+  assert.ok(b.width > 140 && Math.abs(b.x - x) <= 4, `the line follows the drag: ${Math.round(b.x)} +${Math.round(b.width)}`);
+  assert.equal(await page.locator('.pencil-mark').count(), 0, 'a drag is a line, not a mark');
+  assert.equal(await page.evaluate(() => String(getSelection())), '', 'and selects no text');
+  await page.waitForTimeout(4000);
+  assert.equal(await page.locator('.pencil-line').count(), 1, 'still there after 4 s');
+  await page.mouse.click(x, (await page.locator('#notes .sheet-head p').boundingBox()).y + 4);
+  assert.ok(await page.locator('.pencil-mark, .pencil-line').count() >= 2);
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.pencil-mark, .pencil-line').count(), 0, 'Escape clears the paper');
+  // and the line fades by itself after about 8 s
+  await dragOnPaper(page);
+  await page.waitForTimeout(9200);
+  assert.equal(await page.locator('.pencil-line').count(), 0, 'gone again');
+  await context.close();
+});
+
+test('a drag that starts on text still selects it; reduced motion draws no line', async () => {
+  const { context, page } = await open('/');
+  const li = page.locator('#notes ol.notes > li').first();
+  await li.scrollIntoViewIfNeeded();
+  // start on the first word, not the list item's padding
+  const r = await li.evaluate(l => { const g = document.createRange(); g.selectNodeContents(l.firstChild); return g.getClientRects()[0].toJSON(); });
+  await page.mouse.move(r.x + 10, r.y + r.height / 2);
+  await page.mouse.down();
+  for (let i = 1; i <= 8; i++) await page.mouse.move(r.x + 10 + 30 * i, r.y + r.height / 2);
+  await page.mouse.up();
+  assert.ok((await page.evaluate(() => String(getSelection()))).length > 5, 'text is selected');
+  assert.equal(await page.locator('.pencil-line').count(), 0);
+  await context.close();
+
+  const reduced = await open('/', { reducedMotion: 'reduce' });
+  await dragOnPaper(reduced.page);
+  assert.equal(await reduced.page.locator('.pencil-line, .pencil-mark').count(), 0);
   await reduced.context.close();
 });
 
