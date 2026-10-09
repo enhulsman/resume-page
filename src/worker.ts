@@ -313,6 +313,11 @@ export default {
       return new Response('ASSETS binding is not configured. Ensure [assets] binding = "ASSETS" in wrangler.toml', { status: 500 });
     }
 
+    // Henk's page lives on its own subdomain
+    if (url.pathname === '/henk' || url.pathname.startsWith('/henk/')) {
+      return Response.redirect('https://henk.hulsman.dev/', 301);
+    }
+
     // Try to serve a static asset first
     let res = await env.ASSETS.fetch(request);
     if (res.status !== 404) return res;
