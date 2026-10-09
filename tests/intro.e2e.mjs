@@ -1,6 +1,6 @@
-// The homepage's arrival: walking up to the table. On a first visit the sheet settles in as
-// its ink develops, the name is lettered between guide lines, and a dimension line gives the
-// name's real width. It never plays twice in a session, never on reduced motion, never on an
+// The homepage's arrival: walking up to the table. On a first visit the sheet lies tilted on
+// the table and squares up as its ink develops, the name is lettered between guide lines, and
+// a dimension line gives the name's real width. Any key, wheel or tap hurries it along. It never plays twice in a session, never on reduced motion, never on an
 // inner page, and never hides content without JS. Needs a running site:
 //
 //   BASE=http://localhost:4321 node --test tests/intro.e2e.mjs
@@ -55,8 +55,10 @@ test('a first visit plays the arrival once, then leaves the page as it always is
   const l = await log(page);
   assert.ok(l.arrived != null, 'the intro class is removed once it is over');
   assert.ok(l.arrived - l.intro < 2400, `over in under 2.4 s (${Math.round(l.arrived - l.intro)} ms)`);
-  // nothing is left transformed, clipped or faded
+  // nothing is left transformed, clipped or faded, and the page scrolls again
   assert.equal(await page.locator('main').evaluate(m => getComputedStyle(m).transform), 'none');
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).transform), 'none');
+  assert.ok(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight * 2), 'the page is long again');
   for (const c of await page.locator('.name span').evaluateAll(ss => ss.map(s => getComputedStyle(s).clipPath))) assert.equal(c, 'none');
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).color), 'rgb(43, 39, 102)', 'full ink');
   assert.equal(await page.locator('.name-guides').count(), 0, 'the guide lines are erased');
@@ -68,10 +70,86 @@ test('a first visit plays the arrival once, then leaves the page as it always is
 test('the arrival develops the ink and letters the name, without hiding the page', async () => {
   const { context, page } = await open('/');
   const anims = await page.evaluate(() => document.getAnimations().map(a => a.animationName).filter(Boolean));
-  for (const name of ['develop', 'approach', 'ink']) assert.ok(anims.includes(name), `${name} runs (got ${anims.join(', ')})`);
+  for (const name of ['develop', 'tilt', 'ink']) assert.ok(anims.includes(name), `${name} runs (got ${anims.join(', ')})`);
   // develop fades ink, never opacity: the page reads from the first frame
   assert.equal(await page.locator('main').evaluate(m => getComputedStyle(m).opacity), '1');
   assert.equal(await page.locator('.lede').evaluate(m => getComputedStyle(m).opacity), '1');
+  await context.close();
+});
+
+// the first keyframe of the sheet's tilt, as the browser computed it
+const tiltFrom = page => page.evaluate(() => {
+  const a = document.body.getAnimations().find(x => x.animationName === 'tilt');
+  return a && a.effect.getKeyframes()[0].transform;
+});
+const angle = m => {
+  // matrix3d(a1, b1, c1, d1, a2, b2, c2, d2, ...): rotateX(t) puts cos t in b2 and sin t in c2
+  const v = m.match(/matrix3d\((.*)\)/)[1].split(',').map(Number);
+  return Math.round(Math.atan2(v[6], v[5]) * 180 / Math.PI);
+};
+
+test('the sheet starts tilted on the table and squares up', async () => {
+  const { context, page } = await open('/');
+  const from = await tiltFrom(page);
+  assert.ok(from, 'the body has a tilt animation');
+  const m = await page.evaluate(f => { const d = document.createElement('div'); d.style.transform = f; document.body.append(d); const t = getComputedStyle(d).transform; d.remove(); return t; }, from);
+  assert.equal(angle(m), 22, `tilted 22 degrees on a desktop (${from})`);
+  assert.ok(await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).perspective) > 0), 'seen in perspective');
+  // the table shows around the sheet while it lies there, and the sheet is one screen tall
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor), 'rgb(201, 209, 198)');
+  assert.ok(await page.evaluate(() => document.body.getBoundingClientRect().height <= innerHeight + 1), 'one screen while it tilts');
+  await page.waitForTimeout(SETTLED);
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).transform), 'none');
+  await context.close();
+});
+
+test('on a phone the sheet tilts less', async () => {
+  const { context, page } = await open('/', { width: 390, height: 844, hasTouch: true, isMobile: true });
+  const from = await tiltFrom(page);
+  const m = await page.evaluate(f => { const d = document.createElement('div'); d.style.transform = f; document.body.append(d); const t = getComputedStyle(d).transform; d.remove(); return t; }, from);
+  assert.equal(angle(m), 14, from);
+  await context.close();
+});
+
+test('the table is drafting-board green around every sheet, and stays dark by night', async () => {
+  for (const [opts, table] of [[{}, 'rgb(201, 209, 198)'], [{ colorScheme: 'dark' }, 'rgb(14, 13, 19)'], [{ theme: 'dark' }, 'rgb(14, 13, 19)']]) {
+    const { context, page } = await open('/projects', opts);
+    assert.match(await page.locator('.frame').evaluate(f => getComputedStyle(f).boxShadow), new RegExp(table.replace(/[()]/g, '\\$&')), JSON.stringify(opts));
+    await context.close();
+  }
+});
+
+test('any key, wheel or tap hurries the arrival along', async () => {
+  const { context, page } = await open('/');
+  await page.keyboard.press('Shift');
+  await page.waitForFunction(() => window.__log.arrived != null, null, { timeout: 4000 });
+  const l = await log(page);
+  // left alone it takes about 1.6 s
+  assert.ok(l.arrived - l.intro < 1200, `over ${Math.round(l.arrived - l.intro)} ms after it began`);
+  // hurried, not cut: the dimension still ends up there, with the name's width
+  await page.waitForTimeout(600);
+  assert.equal((await page.locator('.name-dim text').textContent()).trim(), String(Math.round(await nameWidth(page))));
+  await context.close();
+});
+
+test('a wheel turned while the sheet squares up is not lost: it scrolls once it has', async () => {
+  const { context, page } = await open('/');
+  await page.mouse.move(700, 450);
+  await page.mouse.wheel(0, 700);
+  await page.waitForFunction(() => window.__log.arrived != null, null, { timeout: 4000 });
+  await page.waitForTimeout(800);
+  assert.ok(await page.evaluate(() => scrollY) > 300, `scrolled to ${await page.evaluate(() => scrollY)}`);
+  await context.close();
+});
+
+test('if the arrival script never runs, the page settles by itself', async () => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await context.route(/intro\.js/, r => r.abort());
+  const page = await context.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'load' });
+  await page.waitForFunction(() => !document.documentElement.classList.contains('intro'), null, { timeout: 5000 });
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).transform), 'none');
+  assert.ok(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight * 2), 'and scrolls');
   await context.close();
 });
 

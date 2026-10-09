@@ -414,8 +414,10 @@ test('the light table has depth: darker round the sheet, panels a hair lighter, 
   assert.notEqual(dark.detail, 'rgba(0, 0, 0, 0)', 'drawn panels are lifted');
   assert.notEqual(dark.card, 'rgba(0, 0, 0, 0)', 'cards are lifted');
   assert.ok(dark.grain > 0.035, `grain ${dark.grain}`);
+  // by day the sheet lies on a drafting board's green cover; on the whiteprint itself nothing
+  // is lifted
   const light = await read('light');
-  assert.equal(light.table, light.sheet);
+  assert.ok(light.table < light.sheet - 15, `table ${light.table} under sheet ${light.sheet}`);
   assert.equal(light.detail, 'rgba(0, 0, 0, 0)');
 });
 

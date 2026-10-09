@@ -6,7 +6,6 @@
 @property --label { syntax: "<color>"; inherits: true; initial-value: #67639A; }
 @property --faint { syntax: "<color>"; inherits: true; initial-value: #8A86AE; }
 @property --sheet { syntax: "<color>"; inherits: true; initial-value: #EFEDF3; }
-@property --approach { syntax: "<length>"; inherits: true; initial-value: 0px; }
 
 @font-face { font-family: "Archivo"; src: url(/fonts/Archivo.woff2) format("woff2-variations"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
 @font-face { font-family: "B612 Mono"; src: url(/fonts/B612Mono.woff2) format("woff2"); font-weight: 400; font-display: swap; }
@@ -22,8 +21,9 @@
   --label: #67639A;
   --grain-blend: multiply;
   --grain-a: 0.055;
-  /* round the sheet, and under a drawn panel or card: flat on the whiteprint */
-  --table: var(--sheet);
+  /* the drafting board the sheet lies on: its green vinyl cover. Under a drawn panel or
+     card the whiteprint stays flat */
+  --table: #C9D1C6;
   --panel: transparent;
   --gutter: clamp(16px, 3.2vw, 44px);
   --frame: clamp(8px, 1.1vw, 14px);
@@ -70,9 +70,9 @@ body::before {
 body::after {
   /* the paper past the bar and the frame's lines: scrolled content never shows there */
   content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 49;
-  border: calc(var(--frame) + 6px + var(--approach)) solid var(--sheet); transition: border-color .5s ease;
+  border: calc(var(--frame) + 6px) solid var(--sheet); transition: border-color .5s ease;
   /* 1px under the bar, so at fractional pixel ratios no seam of page shows between the two */
-  border-top-width: calc(var(--frame) + 7px + var(--approach));
+  border-top-width: calc(var(--frame) + 7px);
 }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .2em; }
 a:hover { color: var(--red); }
@@ -83,14 +83,16 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 
 /* ---------- the arrival: walking up to the table ----------
    First visit to the homepage only (the class is set in the layout's head, before first
-   paint). Every animation fills backwards only, so when it ends, or if the script that clears
-   the class never runs, the page is exactly as it always is. Nothing is hidden: the ink
-   develops from the hairline grey, and only the name is lettered in. */
-html.intro { animation: develop 1s cubic-bezier(.5, 0, .3, 1) backwards, approach .8s cubic-bezier(.2, .7, .2, 1) backwards; }
+   paint, and cleared by intro.js when it is over, or by the head's backstop). Every animation
+   fills backwards only, so once the class is gone the page is exactly as it always is.
+   The sheet lies on the table, seen at an angle as you come up to it, and squares up. While
+   it does, the body is one screen tall: the frame and bar are fixed, and inside a transformed
+   body fixed means fixed to the body, so the body has to be the screen. */
+html.intro { perspective: 1600px; background: var(--table); animation: develop 1s cubic-bezier(.5, 0, .3, 1) backwards; }
+html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; transform-origin: 50% 62%; animation: tilt .9s cubic-bezier(.3, .55, .15, 1) backwards; }
+@media (max-width: 860px) { html.intro body { --tilt: 14deg; } }
+@keyframes tilt { from { transform: rotateX(var(--tilt)) scale(.94); } }
 @keyframes develop { from { --ink: var(--hair); --ink-2: var(--hair); --label: var(--hair); --faint: var(--hair); } }
-@keyframes approach { from { --approach: 3.2vmin; } }
-html.intro main { transform-origin: 50% 0; animation: lean .8s cubic-bezier(.2, .7, .2, 1) backwards; }
-@keyframes lean { from { transform: scale(.965); } }
 /* the name is lettered in the settled ink, line by line, while the rest develops */
 html.intro .name { color: var(--ink-0); }
 html.intro .name span { animation: ink .5s cubic-bezier(.6, 0, .25, 1) .4s backwards; }
@@ -98,9 +100,9 @@ html.intro .name span + span { animation-delay: .62s; }
 @keyframes ink { from { clip-path: inset(-30% 100% -30% -6%); } to { clip-path: inset(-30% -6% -30% -6%); } }
 /* by night the light table switches on first: two short flickers, then steady */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]).intro { animation: develop 1s cubic-bezier(.5, 0, .3, 1) .2s backwards, approach .8s cubic-bezier(.2, .7, .2, 1) backwards, lamp .45s steps(1, end) backwards; }
+  :root:not([data-theme="light"]).intro { animation: develop 1s cubic-bezier(.5, 0, .3, 1) .2s backwards, lamp .45s steps(1, end) backwards; }
 }
-:root[data-theme="dark"].intro { animation: develop 1s cubic-bezier(.5, 0, .3, 1) .2s backwards, approach .8s cubic-bezier(.2, .7, .2, 1) backwards, lamp .45s steps(1, end) backwards; }
+:root[data-theme="dark"].intro { animation: develop 1s cubic-bezier(.5, 0, .3, 1) .2s backwards, lamp .45s steps(1, end) backwards; }
 @keyframes lamp { 0% { --sheet: #08070B; } 22% { --sheet: #16141D; } 38% { --sheet: #08070B; } 52% { --sheet: #16141D; } }
 
 /* lettering guides: cap line and baseline, ruled before the name is inked, erased after */
@@ -120,7 +122,7 @@ html.intro .name span + span { animation-delay: .62s; }
 
 /* ---------- the sheet frame ---------- */
 .frame {
-  position: fixed; inset: calc(var(--frame) + var(--approach)); border: 1.5px solid var(--ink); pointer-events: none; z-index: 50;
+  position: fixed; inset: var(--frame); border: 1.5px solid var(--ink); pointer-events: none; z-index: 50;
   /* the light table the sheet lies on, past the frame's outer line */
   box-shadow: 0 0 0 100vmax var(--table); transition: box-shadow .5s ease;
 }
@@ -129,7 +131,7 @@ html.intro .name span + span { animation-delay: .62s; }
 .frame-refs span { font: 400 9px/1 var(--mono); color: var(--label); padding-top: 2px; }
 
 .bar {
-  position: fixed; z-index: 55; top: calc(var(--frame) + 6px + var(--approach)); left: calc(var(--frame) + 6px + var(--approach)); right: calc(var(--frame) + 6px + var(--approach));
+  position: fixed; z-index: 55; top: calc(var(--frame) + 6px); left: calc(var(--frame) + 6px); right: calc(var(--frame) + 6px);
   height: var(--bar); display: flex; align-items: center; gap: 24px; padding: 0 calc(var(--gutter) - 6px + var(--wide));
   border-bottom: .75px solid var(--hair);
   background: var(--sheet);

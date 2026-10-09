@@ -144,8 +144,9 @@ const xdraw = () => {
   });
 };
 // The homepage's arrival sends it from the sheet's corner to the name (intro.js); the first
-// real mouse move takes it back.
+// real mouse move takes it back, and hurrying the arrival sends it home.
 let trip = 0;
+document.addEventListener('ovz:xhair-home', () => { trip++; xat = null; xhair.classList.remove('on'); });
 document.addEventListener('ovz:xhair-trip', e => {
   if (!fine.matches) return;
   const { from, to, delay, dur } = e.detail;
