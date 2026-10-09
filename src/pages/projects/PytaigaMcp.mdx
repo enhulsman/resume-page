@@ -1,13 +1,13 @@
 ---
 title: "pytaiga-mcp"
-description: "Merged PR adding security hardening, centralized error handling (14% code reduction), and the project's first test suite to a Taiga MCP server"
+description: "Merged PR adding security hardening, centralized error handling, and the project's first test suite to a Taiga MCP server"
 date: 2026-01-12
 github: "https://github.com/talhaorak/pytaiga-mcp"
 tech: ["Python", "MCP", "Pydantic", "pytest", "CI/CD", "Ruff"]
 layout: "../../layouts/ProjectLayout.astro"
 showcase: false
 dateLabel: "Merged"
-hook: "A merged pull request to pytaiga-mcp, an MCP server that integrates Taiga project management with AI assistants. The contribution addressed three areas (security, AI context efficiency, and code quality), reducing server code by 14% and adding the project's first test suite."
+hook: "A merged pull request to pytaiga-mcp, an MCP server that integrates Taiga project management with AI assistants. The contribution addressed three areas (security, AI context efficiency, and code quality), and added the project's first test suite."
 ---
 
 ## Security Hardening
@@ -29,7 +29,7 @@ This reduces token usage: a user story list response goes from ~50 fields to 5 i
 
 ## Code Quality
 
-- **Centralized Error Handling**: Refactored with a `_execute_taiga_operation()` helper that eliminated duplicated try/catch blocks across every endpoint, reducing `server.py` by ~207 lines (14%)
+- **Centralized Error Handling**: Refactored with a `_execute_taiga_operation()` helper that eliminated duplicated try/catch blocks across every endpoint
 - **Dependency Cleanup**: Removed 3 unused dependencies (fastapi, uvicorn, httpx) and consolidated 3 linting tools (black, isort, flake8) down to 1 (ruff)
 - **Testing & CI**: Added the project's first test suite (11 unit tests with pytest) plus a CI pipeline with matrix testing across Python 3.10–3.12
 

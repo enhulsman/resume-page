@@ -103,6 +103,7 @@ export const experience: Experience[] = [
     role: 'DevOps Engineer',
     client: 'European staffing company',
     startDate: '2023',
+    endDate: '2024',
     summary: 'Solo-built a Java/Playwright automation that replaced a daily 10–15 minute manual health report across ~50 VMs, with CI/CD-triggered email delivery, Teams alerts, and an issue-annotation page. Created a Bash maintenance toolbox of scheduled scripts to prevent storage exhaustion and piped PDC notifications into Teams channels. Still on call for occasional work.',
     homeSummary: 'Replaced a daily 10 to 15 minute manual health report across about 50 VMs with a Java and Playwright automation, delivered by CI/CD with Teams alerts. A Bash toolbox of scheduled scripts keeps storage from running out. Still on call for occasional work.',
     group: 'consulting',

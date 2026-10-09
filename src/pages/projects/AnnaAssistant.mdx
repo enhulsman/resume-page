@@ -13,11 +13,11 @@ hook: "An AI assistant that lives inside Microsoft Teams, the tool people alread
 
 ANNA is Anamata's AI assistant in Microsoft Teams. The idea is simple: the repetitive parts of the working day, like requesting leave, logging hours or finding the right policy document, shouldn't need a separate app each. People message ANNA in Teams, and it routes the request to the right system through Claude and MCP. I own it end to end, from the first commit to production, and work out the direction together with the rest of the team.
 
-It's about 32,000 lines of Python, organised into a service layer, a command registry and two Claude backends.
+It's about 37,000 lines of Python, organised into a service layer, a command registry and two Claude backends.
 
 **Message flow** starts at the Microsoft Bot Framework SDK. When someone messages ANNA, the bot resolves their identity through Entra ID, loads their profile, conversation history and memories, and builds a system prompt for their role and the active persona. Personas are markdown files that shape Claude's behaviour: a default generalist, a developer mode and a support mode for non-technical users.
 
-**Everything is per user.** Memory, uploaded documents and connector access are all scoped to the person asking. Connector secrets are stored encrypted, and connectors that need a login go through an OAuth flow where ANNA keeps the token, not the user's chat. In group chats ANNA needs an @mention and leaves personal memory and history out of the context, and the six personal commands only work in a direct message.
+**Everything is per user.** Memory, uploaded documents and connector access are all scoped to the person asking. Connector secrets are stored encrypted, and connectors that need a login go through an OAuth flow where ANNA keeps the token, not the user's chat. In group chats ANNA needs an @mention and leaves personal memory and history out of the context, and the personal commands only work in a direct message.
 
 **Claude integration** runs behind a common interface with two backends. The CLI backend runs Claude Code as a subprocess with streaming output, passing the user's identity to the MCP layer so every tool call is scoped to that user. The API backend calls the Anthropic SDK directly. A streaming orchestrator turns Claude's chunked output into a single Teams message that updates as the answer is written.
 
@@ -37,6 +37,6 @@ It's about 32,000 lines of Python, organised into a service layer, a command reg
 
 ## Outcome
 
-ANNA runs in production, and it runs at Anamata first, so new features are tried on our own work before a customer sees them. It's on v1.18 after 52 releases, with about 2,000 tests behind it, and Prometheus metrics feed a Grafana dashboard for response times, token usage, active users and errors.
+ANNA runs in production, and it runs at Anamata first, so new features are tried on our own work before a customer sees them. It's on v1.24 after 55 releases, with about 2,500 tests behind it, and Prometheus metrics feed a Grafana dashboard for response times, token usage, active users and errors.
 
 Source code is not public: the repository is company-internal.

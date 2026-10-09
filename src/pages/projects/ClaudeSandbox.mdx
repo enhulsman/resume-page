@@ -22,7 +22,7 @@ import SandboxArchitecture from "../../components/diagrams/SandboxArchitecture.a
 
 On Linux, bubblewrap bind mounts control exactly what the agent can see. Sensitive paths (`~/.ssh`, `~/.aws`, `~/.gnupg`, browser session data, git credential stores, 13+ categories total) are mounted to `/dev/null` or empty tmpfs. System directories are read-only. Claude Code's own `settings.json` is bind-mounted read-only inside the sandbox to prevent prompt injection from disabling deny rules. On macOS, dynamically generated Seatbelt profiles enforce equivalent restrictions at the kernel level.
 
-Writable paths go through a TOCTOU mitigation: each path is canonicalized before mounting, then re-resolved immediately before `exec`. If a symlink target changed between those two checks (indicating a possible race attack swapping a writable path to point at a blocked one), the sandbox aborts. A separate verification suite (308 lines) tests this against direct symlinks, path traversal, multi-hop chains, and circular symlinks.
+Writable paths go through a TOCTOU mitigation: each path is canonicalized before mounting, then re-resolved immediately before `exec`. If a symlink target changed between those two checks (indicating a possible race attack swapping a writable path to point at a blocked one), the sandbox aborts. A separate verification suite tests this against direct symlinks, path traversal, multi-hop chains, and circular symlinks.
 
 ### Network Isolation
 
@@ -40,7 +40,7 @@ An honest limitation: HTTPS CONNECT tunneling means the proxy sees `CONNECT gith
 
 Four built-in profiles in `config.toml` define isolation levels for different trust contexts:
 
-- **dev**: Writable workspace, ~45 allowed domains (npm, PyPI, crates.io, GitHub, docs)
+- **dev**: Writable workspace, ~50 allowed domains (npm, PyPI, crates.io, GitHub, docs)
 - **strict**: Workspace-only writes, API-only networking (3 domains)
 - **nixos-admin / macos-admin**: Read-only system config access for diagnosis tasks
 

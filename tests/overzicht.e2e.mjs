@@ -59,6 +59,8 @@ async function activeTerminal(page) {
 
 async function run(page, cmd) {
   await page.click('#terminal-body');
+  // the "real shell" hint leaves the body 1.5s after activation; read past it, or the slice is off
+  await page.locator('#terminal-body .terminal-hint').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
   const before = await page.locator('#terminal-body').innerText();
   await page.locator('#terminal-input').fill(cmd);
   await page.locator('#terminal-input').press('Enter');
@@ -79,6 +81,14 @@ const RETIRED = new Set([
   'The rest of the set: smaller builds, each with its own sheet.',
   '0', 'mutating tools shipped', '13+', 'kinds of sensitive path hidden', '14', 'alert rules', '14%', 'less server code',
   'PROJECT WHAT IT IS STATUS', // the register is a list now, not a table with a header row
+  // corrected after the 2026-10-09 fact-check against the repos, the homelab docs and the owner
+  '233', '6', '−207 lines',
+  "About 32,000 lines of Python: a service layer, a command registry and two Claude backends. Every connected system is an MCP server, so adding one means registering a connector and granting access, not changing ANNA's core.",
+  'Encrypted Chat TUI Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL Started Aug 2025',
+  'This site Static-first Astro portfolio on Cloudflare Workers Launched Mar 2026',
+  'Replaced a daily 10 to 15 minute manual health report across about 50 VMs with a Java and Playwright automation, delivered by CI/CD with Teams alerts. A Bash toolbox of scheduled scripts keeps storage from running out.',
+  "Pega platform and DevOps engineering for Anamata's clients, alongside the Forward Deployed Engineer role. Pega Certified System Architect and Business Architect, 2023.",
+  'Replaced plaintext passwords in documentation with a Python one-time-pad encryption system on a secure remote VPS. Looked after client Synology NAS infrastructure.',
 ]);
 // the drawn projects the homepage leaves out are drawn on /projects, so their copy counts from there
 test('every line of the prototype\'s copy is still on the homepage or /projects', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {

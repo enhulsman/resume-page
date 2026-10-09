@@ -80,7 +80,7 @@ const site = {
     },
     {
       title: 'pytaiga-mcp',
-      description: 'Merged PR adding security hardening, centralized error handling (14% code reduction), and the project\'s first test suite to a Taiga MCP server.',
+      description: 'Merged PR adding security hardening, centralized error handling, and the project\'s first test suite to a Taiga MCP server.',
       tech: ['Python', 'MCP', 'pytest', 'CI/CD'],
       github: 'https://github.com/talhaorak/pytaiga-mcp',
       link: '/projects/PytaigaMcp',
@@ -89,7 +89,7 @@ const site = {
     {
       title: 'Encrypted Chat TUI',
       description: 'Self-hosted terminal chat system built as a Cargo workspace with Tokio async networking, a typed ndjson protocol, and compile-time checked PostgreSQL queries.',
-      tech: ['Rust', 'Tokio', 'PostgreSQL', 'Docker'],
+      tech: ['Rust', 'Tokio', 'PostgreSQL'],
       github: 'https://github.com/enhulsman',
       link: '/projects/EncryptedChatTUI',
       featured: false,

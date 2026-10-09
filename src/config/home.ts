@@ -43,8 +43,7 @@ export const details: Detail[] = [
     text: 'A security-first agent on the Claude Agent SDK that turns infrastructure alerts into Signal conversations. Its default-deny toolset refused a live prompt-injection payload, and it replays events exactly once across hard container kills.',
     dims: [
       { value: '4', label: 'egress ports, zero inbound' },
-      { value: '233', label: 'tests, SDK mocked out' },
-      { value: '0', label: 'mutating tools shipped' },
+      { value: '3,660', label: 'tests, SDK mocked out' },
     ],
     what: 'Security-first homelab agent on the Claude Agent SDK, talking over Signal',
     status: 'Running since Jul 2026',
@@ -71,8 +70,8 @@ export const details: Detail[] = [
     text: 'Three devices on a Tailscale mesh, fronted by Cloudflare tunnels, so no home device has a public port. Prometheus watches all of them, DNS resolves recursively with DNSSEC on every box, and backups cross devices every night.',
     dims: [
       { value: '3', label: 'devices, one mesh' },
-      { value: '6', label: 'scrape targets' },
-      { value: '14', label: 'alert rules' },
+      { value: '7', label: 'scrape targets' },
+      { value: '19', label: 'alert rules, in Grafana' },
     ],
     what: 'Three devices on a Tailscale mesh behind Cloudflare tunnels, with Prometheus, recursive DNS and nightly cross-device backups',
     status: 'Operating since Jun 2025',
@@ -85,7 +84,7 @@ export const details: Detail[] = [
     dims: [
       { value: '11', label: 'tests, the first' },
       { value: '3', label: 'Python versions in CI' },
-      { value: '14%', label: 'less server code' },
+      { value: '50 → 5', label: 'fields per story in a list' },
     ],
     what: 'A merged pull request to an open-source MCP server for Taiga',
     status: 'Merged Jan 2026',
@@ -97,8 +96,8 @@ export const details: Detail[] = [
 /** "Also in the set": the smaller builds, each with a project page. */
 export const register = [
   { title: 'Finance Bot', href: '/projects/FinanceBot', what: 'Discord bot that turns bank exports into a categorized budget, with Claude for the hard cases', status: 'Running since Jul 2025' },
-  { title: 'Encrypted Chat TUI', href: '/projects/EncryptedChatTUI', what: 'Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL', status: 'Started Aug 2025' },
-  { title: 'This site', href: '/projects/ResumePage', what: 'Static-first Astro portfolio on Cloudflare Workers', status: 'Launched Mar 2026' },
+  { title: 'Encrypted Chat TUI', href: '/projects/EncryptedChatTUI', what: 'Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL', status: 'Started Aug 2024' },
+  { title: 'This site', href: '/projects/ResumePage', what: 'Static-first Astro portfolio on Cloudflare Workers', status: 'Online since Aug 2025' },
 ];
 
 /** The skills, as a drawing's materials schedule. */
