@@ -1,0 +1,71 @@
+---
+title: "Is he asleep?"
+description: "Henk, my homelab agent, says nothing when nothing is wrong. How I tell a quiet homelab from a watcher who nodded off: a pulse every 45 seconds, and one line an hour."
+date: 2026-10-09
+layout: "../../layouts/BlogLayout.astro"
+---
+
+On [his own page](https://henk.hulsman.dev), Henk sits by the window. He's painted in Delft
+blue, an old man in a flat cap on a kitchen chair, coffee in hand, clock on the wall, keeping
+an eye on the street. When something happens out there, he tells you. When nothing happens,
+he says nothing at all, which from across the street looks exactly like a man who's nodded off.
+
+The real Henk runs on a Raspberry Pi 5 in my homelab. He listens to the alerts my monitoring
+sends, works out which ones matter, and messages me on Signal when one does, with what broke,
+what he already checked and how to pick it up. Most weeks that's one or two messages, plus
+the odd reminder I asked him for. I don't talk to him much otherwise, which is pretty much
+the point.
+
+Most of my homelab got built that way: long sessions with Claude, everything checked properly,
+and then I stop looking at it. I'd argue that's the only sane way to run a homelab on evenings
+and weekends, you put the effort in once so you don't have to babysit it after. It does mean a
+quiet system has to be able to show it's alive, because I'm not going to notice when it isn't.
+
+A watcher who says nothing is the hardest case of all.
+
+For Henk, nodding off has a specific shape. He listens to my ntfy server over one long-lived connection,
+and if the network path dies without either end hearing about it, his side just keeps waiting,
+politely, for a message that's never coming. No error, no log line, nothing. That's the problem
+I promised to write about at the end of [the last Henk post](/blog/henk-exactly-once).
+
+The answer was already on the wire. ntfy sends a small keepalive frame down the connection every
+45 seconds, whether anything is happening or not, so Henk now treats those as a pulse. If 135
+seconds pass without one, three missed beats, he drops the connection and reconnects from the
+last message he saw, so nothing gets lost on the way.
+
+## Freezing the network
+
+On 6 August I tested it the mean way. Henk reaches the outside world through a small tailscale
+container next to him, and I froze that container for 170 seconds. Freezing is nastier than
+stopping it, nothing gets closed, the connection just goes quiet, which is exactly the case
+the pulse is for.
+
+The last keepalive arrived at 13:07:46. At 13:10:01, 135 seconds later to the second, Henk gave
+up on the connection and started reconnecting, waiting a little longer between tries while the
+network stayed frozen. A bit over a minute later he was back, picking up from the same message
+as before.
+
+## 80 an hour
+
+Once an hour he writes one line to his log:
+
+```
+intake liveness: still delivering; 80 proof-of-life frames in the last 3600s;
+last proof-of-life 2026-10-09T07:24:40 (0s ago), last reconnect never, penalty 0
+```
+
+80 is the number that matters. 80 times 45 seconds is an hour, so 80 means every beat arrived
+and the street was quiet. His current container has written 282 of these lines since
+27 September, and 280 of them say 80. The other two say 82, both hours when something did
+happen: rp2's node_exporter falling over for the third time in a day and a half, and a DNS
+check on my VPS that blipped for about a minute. "Last reconnect never" on every one of them,
+so one unbroken connection for eleven days.
+
+I don't read that line day to day, and I don't need to, the reconnecting happens without me.
+The pulse keeps Henk listening, it doesn't tell me anything. For the case where Henk himself is
+gone, his container crashed or the Pi did, a Grafana rule now watches his three containers and
+pings me on Discord within about ten minutes. It deliberately goes around him, he shouldn't be
+the one triaging his own death. If the containers are up but he keeps failing to reconnect,
+that still only shows in the log.
+
+Most hours there's nothing to report, though. He writes 80 and goes back to his coffee.
