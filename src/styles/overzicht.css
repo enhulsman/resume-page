@@ -179,6 +179,8 @@ main { padding: 0 calc(var(--frame) + 6px); }
   transition: opacity .2s ease, background-size .35s cubic-bezier(.4,0,.2,1);
 }
 @media (hover: hover) and (pointer: fine) {
+  /* a drawn project shades like a card when pointed at */
+  .detail:hover { background: color-mix(in srgb, var(--ink) 4%, var(--panel)); }
   .detail:hover::before, .register .card:hover::before {
     opacity: 1;
     background-size: 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px;
@@ -328,7 +330,7 @@ main { padding: 0 calc(var(--frame) + 6px); }
 
 .side { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: .75px solid var(--ink); }
 .side li { padding: 14px 18px 18px 0; display: grid; gap: 6px; }
-.side a { font: 400 13px/1.2 var(--mono); }
+.side a { font: 400 13px/1.2 var(--mono); justify-self: start; }
 .side span { font-size: 14px; color: var(--ink-2); line-height: 1.4; }
 
 .revs { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--ink); }
@@ -379,7 +381,7 @@ kbd { font: inherit; color: var(--red); }
 .diary { list-style: none; margin: 0; padding: 0; border-top: .75px solid var(--ink); }
 .diary li { display: grid; grid-template-columns: 120px minmax(0, 22em) minmax(0, 1fr); gap: 4px 22px; padding: 14px 0; border-bottom: .75px solid var(--hair); align-items: baseline; }
 .diary time { font: 400 11.5px/1 var(--mono); color: var(--ink-2); }
-.diary a { font-weight: 650; text-decoration: none; }
+.diary a { font-weight: 650; text-decoration: none; justify-self: start; }
 .diary span { color: var(--ink-2); font-size: 14.5px; }
 
 .sheet-contact { min-height: 80svh; display: flex; flex-direction: column; justify-content: center; padding-bottom: 80px; }

@@ -586,6 +586,30 @@ test('pointing at a link draws a dimension line under it, over the bar too; no r
   await context.close();
 });
 
+test('a link in a list is only as wide as its words, so its dimension line is too', async () => {
+  const { context, page } = await open('/');
+  const widths = await page.locator('.side a, .diary a').evaluateAll(as => as.map(a => {
+    const r = document.createRange(); r.selectNodeContents(a);
+    return [a.textContent, Math.round(a.getBoundingClientRect().width - r.getBoundingClientRect().width)];
+  }));
+  // a wrapped title keeps the space at its break, a few px
+  for (const [t, extra] of widths) assert.ok(extra <= 6, `"${t}" is ${extra}px wider than its words`);
+  await context.close();
+});
+
+test('pointing at a drawn project shades it, the way a card is shaded', async () => {
+  const { context, page } = await open('/');
+  const card = page.locator('#henk');
+  await card.scrollIntoViewIfNeeded();
+  const bg = () => card.evaluate(c => getComputedStyle(c).backgroundColor);
+  const rest = await bg();
+  const b = await card.locator('p').first().boundingBox();
+  await page.mouse.move(b.x + 5, b.y + 5);
+  await page.waitForTimeout(400);
+  assert.notEqual(await bg(), rest, 'shaded on hover');
+  await context.close();
+});
+
 test('pointing at a project card draws registration marks round it, not a dimension line', async () => {
   const { context, page } = await open('/');
   const card = page.locator('#register .card').first();

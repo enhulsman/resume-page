@@ -157,7 +157,7 @@ document.documentElement.addEventListener('pointerleave', () => { xat = null; xh
 // motion gets none: the marks are all motion.
 const SVG = 'http://www.w3.org/2000/svg';
 const LAST = 8000;
-const notPaper = 'a, button, input, textarea, select, label, summary, [contenteditable], [role="application"], .stage, .term, .bar, .dwg-scroll, .site-photo';
+const notPaper = 'a, button, input, textarea, select, label, summary, [contenteditable], [role="application"], .stage, .plate-stage, .term, .bar, .dwg-scroll, .site-photo';
 function pencil(cls, max) {
   const old = document.querySelectorAll(`.${cls}`);
   if (old.length >= max) old[0].remove();

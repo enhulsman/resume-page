@@ -173,6 +173,21 @@ test('the ANNA plate turns by hand and by its buttons', async () => {
   await context.close();
 });
 
+test('turning the ANNA plate by hand draws no pencil line on the page', async () => {
+  const { context, page } = await open('/projects/AnnaAssistant');
+  const stage = page.locator('.plate-stage');
+  await stage.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1500);
+  const b = await stage.boundingBox();
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+  await page.mouse.down();
+  for (let i = 1; i <= 10; i++) await page.mouse.move(b.x + b.width / 2 + 12 * i, b.y + b.height / 2);
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+  assert.equal(await page.locator('.pencil-line, .pencil-mark').count(), 0);
+  await context.close();
+});
+
 test('reduced motion: every plate arrives drawn', async () => {
   const { context, page } = await open('/projects', { reducedMotion: 'reduce' });
   await page.waitForTimeout(400);
