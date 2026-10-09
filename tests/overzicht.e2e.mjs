@@ -101,6 +101,9 @@ const RETIRED = new Set([
   "I came to AI coding agents as a sceptic. Now they write a lot of my code, and I still build like one: tests first, a spec for anything bigger, and nothing ships that I can't explain.",
   'In my free time I work on personal projects like a self-hosted chat TUI in Rust, and contribute to open source when I can.',
   "I'm a big Formula 1 fan. There's something satisfying about both well-tuned race cars and well-optimized code.",
+  // 2026-10-09: ANNA is read one level per step; the drawing labels the levels by name, −4 is Operations
+  'Exploded view', 'What holds it up', '−4 RUNNING IT',
+  "Memory, documents and connector access are scoped to the person asking. Connector secrets are stored encrypted, and when a login is needed, ANNA keeps the token, not the user's chat.",
 ]);
 // the drawn projects the homepage leaves out are drawn on /projects, so their copy counts from there
 test('every line of the prototype\'s copy is still on the homepage or /projects', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {
@@ -234,6 +237,52 @@ test('the ANNA drawing plots, with native scroll and no errors', async () => {
   await page.waitForTimeout(600);
   assert.equal(await page.locator('.stage.turnable').count(), 1);
   assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('ANNA is read level by level: one step per level, the drawing labelled with names only', async () => {
+  const { context, page } = await open('/', { js: false });
+  const levels = await page.locator('.stage .levels li').evaluateAll(ls => ls.map(l => l.dataset.level));
+  assert.deepEqual(levels, ['identity', 'claude', 'connectors', 'ops']);
+  // after the request, one step per level, top to bottom, each clouding its own level
+  const steps = await page.locator('.scrolly .step').evaluateAll(ss => ss.map(s => s.dataset.request !== undefined ? 'request' : s.dataset.cloud));
+  assert.deepEqual(steps, ['request', ...levels]);
+  assert.deepEqual(await page.locator('.stage .levels li').allTextContents(), ['−1 Identity', '−2 Claude', '−3 MCP connectors', '−4 Operations']);
+  await context.close();
+});
+
+test('side by side, the drawing explodes once, on a timer, when the first level is read to; the scroll never holds it half open', async () => {
+  const { context, page } = await open('/?review');
+  await page.locator('[data-request] h2').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(3000);
+  const q = () => page.evaluate(() => window.__scene.state.q);
+  assert.equal(await q(), 0);
+  // halfway between the request and the first level, the old scrub would sit half open
+  const mid = await page.evaluate(() => {
+    const a = document.querySelector('[data-request]').getBoundingClientRect(), b = document.querySelector('[data-cloud="identity"]').getBoundingClientRect();
+    return scrollY + (a.top + a.height / 2 + b.top + b.height / 2) / 2 - innerHeight / 2;
+  });
+  for (const y of [mid - 200, mid, mid + 200]) {
+    await page.evaluate(y => scrollTo(0, y), y);
+    await page.waitForTimeout(1300);
+    const v = await q();
+    assert.ok(v === 0 || v === 1, `settled at ${v} at scroll ${Math.round(y)}`);
+  }
+  await page.evaluate(() => scrollTo(0, 0));
+  await page.locator('[data-request] h2').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1300);
+  await page.locator('[data-cloud="identity"] h2').evaluate(h => h.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(200);
+  const during = await q();
+  assert.ok(during > 0 && during < 1, `a transition, not a jump: ${during}`);
+  await page.waitForTimeout(1200);
+  assert.equal(await q(), 1);
+  assert.equal(await page.evaluate(() => window.__scene.state.cloud), 'identity');
+  // the later levels keep it open and cloud their own plate
+  await page.locator('[data-cloud="ops"] h2').evaluate(h => h.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(300);
+  assert.equal(await q(), 1);
+  assert.equal(await page.evaluate(() => window.__scene.state.cloud), 'ops');
   await context.close();
 });
 

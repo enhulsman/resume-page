@@ -1,7 +1,8 @@
 ---
 import { annaLevels } from "../../config/home";
 
-// Sheet 1: ANNA drawn as section A–A that turns into an exploded view.
+// Sheet 1: ANNA drawn as section A–A that turns into an exploded view, then read one level
+// per step; the stage labels each level by name.
 // The canvas and the leaders are driven by src/scripts/overzicht/main.js.
 ---
 <section class="scrolly" id="anna" aria-label="ANNA, drawn as a section">
@@ -20,11 +21,24 @@ import { annaLevels } from "../../config/home";
       <button class="replay" type="button">Replay the request</button>
     </div>
 
+    <div class="step" data-q="1" data-cloud="identity">
+      <p class="tag">Exploded view · Level −1</p>
+      <h2>Everything is per user</h2>
+      <p>ANNA works out who's asking through Entra ID, then loads their profile, history and memories. Memory, documents and connector access are scoped to that person.</p>
+      <p>Connector secrets are stored encrypted, and when a login is needed, ANNA keeps the token, not the user's chat.</p>
+    </div>
+
+    <div class="step" data-q="1" data-cloud="claude">
+      <p class="tag">Level −2</p>
+      <h2>Two backends, one interface</h2>
+      <p>About 37,000 lines of Python: a service layer, a command registry and two Claude backends. One runs Claude Code as a subprocess and streams its output; the other calls the Anthropic API directly.</p>
+      <p>Teams is where people use ANNA. Slack is also being supported, with a working beta version currently under development.</p>
+    </div>
+
     <div class="step" data-q="1" data-cloud="connectors">
-      <p class="tag">Exploded view</p>
-      <h2>What holds it up</h2>
-      <p>About 37,000 lines of Python: a service layer, a command registry and two Claude backends. Every connected system is an MCP server, so adding one means registering a connector and granting access, not changing ANNA's core.</p>
-      <p>Memory, documents and connector access are scoped to the person asking. Connector secrets are stored encrypted, and when a login is needed, ANNA keeps the token, not the user's chat.</p>
+      <p class="tag">Level −3</p>
+      <h2>Every system is an MCP server</h2>
+      <p>Loket for leave, ClockWise for hours, plus ANNA's own tools for memory, reminders and documents. Adding a system means registering a connector and granting access, not changing ANNA's core.</p>
     </div>
 
     <div class="step" data-q="1" data-cloud="ops">
@@ -41,7 +55,7 @@ import { annaLevels } from "../../config/home";
     <div class="turn" role="group" aria-label="Turn the model"><button type="button" data-turn="-1" aria-label="Turn left">&larr;</button><button type="button" data-turn="1" aria-label="Turn right">&rarr;</button><span>Drag, or use these, to turn the model</span></div>
     <svg class="leaders" aria-hidden="true"></svg>
     <ol class="levels" aria-label="ANNA, level by level">
-      {annaLevels.map(l => <li data-level={l.id}><b>{l.name}</b><span>{l.text}</span></li>)}
+      {annaLevels.map(l => <li data-level={l.id}><b>{l.name}</b></li>)}
     </ol>
     <figure class="callout" aria-label="The conversation on the screen">
       <figcaption>Detail: the screen</figcaption>

@@ -66,7 +66,7 @@ export const LEVELS = [
   { id: 'identity', name: 'Identity', items: ['Entra ID', 'profile', 'history', 'memories'] },
   { id: 'claude', name: 'Claude', items: ['CLI backend', 'API backend'] },
   { id: 'connectors', name: 'MCP connectors', items: ['memory', 'reminders', 'documents', 'profiles', 'Loket', 'ClockWise'] },
-  { id: 'ops', name: 'Running it', items: ['health checks', 'log analyser', 'token expiry', 'admin portal'] },
+  { id: 'ops', name: 'Operations', items: ['health checks', 'log analyser', 'token expiry', 'admin portal'] },
 ];
 
 const SHAFT = { x: 0.62, z: -0.3 };      // where the request drops through the floor
@@ -654,7 +654,7 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
   const api = {
     start() { if (state.plotStart != null) return; readColors(); resize(); state.plotStart = performance.now(); kick(); },
     started() { return state.plotStart != null; },
-    setQ(q) { if (Math.abs(q - state.q) > 1e-4) { state.q = q; kick(); } },
+    setQ(q) { if (q !== state.q) { state.q = q; kick(); } },
     setFrame(f) { state.frame = f; fits = null; kick(); },
     request() { state.req = performance.now(); state.answer = 0; kick(); },
     requestAge() { return state.req < 0 ? Infinity : (performance.now() - state.req) / 1000; },

@@ -30,7 +30,7 @@ export const annaLevels = [
   { id: 'identity', name: '−1 Identity', text: 'Entra ID, profile, history, memories. Everything is per user.' },
   { id: 'claude', name: '−2 Claude', text: 'Two backends behind one interface: Claude Code streaming as a subprocess, or the Anthropic API.' },
   { id: 'connectors', name: '−3 MCP connectors', text: 'Loket for leave, ClockWise for hours, plus ANNA\'s own tools for memory, reminders and documents.' },
-  { id: 'ops', name: '−4 Running it', text: 'Health checks, a log analyser, alerts before tokens expire, an admin portal.' },
+  { id: 'ops', name: '−4 Operations', text: 'Health checks, a log analyser, alerts before tokens expire, an admin portal.' },
 ];
 
 /** ANNA on /projects, where it leads the set; its drawing is the homepage's section, turned. */

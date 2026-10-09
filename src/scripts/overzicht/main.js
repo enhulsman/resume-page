@@ -131,10 +131,12 @@ function layoutFrame() {
 }
 new ResizeObserver(() => { scene.resize(); layoutFrame(); }).observe(stage);
 
-// scroll position → q (0 section, 1 exploded), read from where each step sits. Side by side,
-// the scroll scrubs it between the steps. On a portrait phone the drawing sits above the text,
-// so it holds each step's view while that step is read, and turns to the next view once the
-// next step's text reaches the middle of the reading window below the drawing.
+// The step being read sets the view: the request is the section (q 0), each level the
+// exploded view (q 1), clouding its own plate. The scroll only picks the step; the drawing
+// turns between views on its own timer (goTo), so it never sits half open. Side by side, a
+// step is read once its text reaches the lower part of the screen; on a portrait phone the
+// drawing sits above the text, so a step is read once it reaches the middle of the reading
+// window below the drawing.
 const steps = [...document.querySelectorAll('.scrolly .step')];
 let hoverCloud = null, lastActive = 0, scrollQueued = false, tween = null;
 function goTo(q) {
@@ -150,31 +152,18 @@ function goTo(q) {
   tween = { to: q, raf: requestAnimationFrame(tick) };
 }
 function readScroll() {
-  let q, active = 0;
+  let active = 0;
   if (phone.matches) {
     const below = Math.max(0, stage.getBoundingClientRect().bottom);
     const line = below + (innerHeight - below) * 0.5;
     steps.forEach((s, i) => { if (s.getBoundingClientRect().top < line) active = i; });
-    q = +steps[active].dataset.q;
-    goTo(q);
   } else {
-    const probe = window.scrollY + innerHeight * 0.5;
-    const ys = steps.map(s => { const r = s.getBoundingClientRect(); return r.top + window.scrollY + r.height / 2; });
-    const qs = steps.map(s => +s.dataset.q);
-    q = qs[0];
-    if (probe <= ys[0]) q = qs[0];
-    else if (probe >= ys.at(-1)) { q = qs.at(-1); active = steps.length - 1; }
-    else for (let i = 0; i < ys.length - 1; i++) {
-      if (probe >= ys[i] && probe < ys[i + 1]) {
-        const t = (probe - ys[i]) / (ys[i + 1] - ys[i]);
-        q = qs[i] + (qs[i + 1] - qs[i]) * t;
-        active = t < 0.5 ? i : i + 1;
-        break;
-      }
-    }
-    if (tween) { cancelAnimationFrame(tween.raf); tween = null; }
-    scene.setQ(reduced ? Math.round(q) : q);
+    // a step fills a screen with its text centred; read from where the text starts
+    const line = innerHeight * 0.62;
+    steps.forEach((s, i) => { if (s.firstElementChild.getBoundingClientRect().top < line) active = i; });
   }
+  const q = +steps[active].dataset.q;
+  goTo(q);
   const s = steps[active];
   if (!hoverCloud) scene.setCloud(s.dataset.cloud || null);
   stage.classList.toggle('turnable', q > 0.6);
