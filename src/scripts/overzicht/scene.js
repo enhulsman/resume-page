@@ -1,6 +1,7 @@
 // The ANNA section: a small orthographic renderer for lines and planes on a 2D canvas.
 // World units are metres. Every projection is parallel (no perspective, by constraint),
 // so a plane's content can be drawn with one affine canvas transform.
+import { paintOrder } from './depth.js';
 
 const TAU = Math.PI * 2;
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -28,13 +29,19 @@ function box(x0, y0, z0, x1, y1, z1, o = {}) {
     { k: 'right', n: v3(1, 0, 0), pts: [P(x1, y0, z1), P(x1, y0, z0), P(x1, y1, z0), P(x1, y1, z1)],
       o: P(x1, y1, z1), u: v3(0, 0, -1), v: v3(0, -1, 0) },
   ];
-  return faces.map(f => ({ ...f, ...o, ...(o[f.k] || {}), kind: 'face', size: [x1 - x0, y1 - y0, z1 - z0] }));
+  // the six faces share one solid, which the painting order works on (depth.js)
+  const solid = { min: v3(x0, y0, z0), max: v3(x1, y1, z1) };
+  return faces.map(f => ({ ...f, ...o, ...(o[f.k] || {}), kind: 'face', solid, size: [x1 - x0, y1 - y0, z1 - z0] }));
 }
 
 // A flat cut-out (an architect's model figure, or a pane): a plane with a Path2D outline
 // in local units. u runs right, v runs down, both in metres.
-function cutout(origin, u, v, path, o = {}) {
-  return { kind: 'cutout', o: origin, u, v, path, n: null, ...o };
+// ext is the outline's extent in those units, [u0, v0, u1, v1], for the painting order.
+function cutout(origin, u, v, path, ext, o = {}) {
+  const at = (a, b) => add(origin, add(mul(u, a), mul(v, b)));
+  const p0 = at(ext[0], ext[1]), p1 = at(ext[2], ext[3]);
+  const solid = { min: v3(Math.min(p0.x, p1.x), Math.min(p0.y, p1.y), Math.min(p0.z, p1.z)), max: v3(Math.max(p0.x, p1.x), Math.max(p0.y, p1.y), Math.max(p0.z, p1.z)) };
+  return { kind: 'cutout', o: origin, u, v, path, n: null, solid, ...o };
 }
 
 // ---------- the figures, in centimetres, top of head at y = 0 ----------
@@ -114,8 +121,8 @@ function buildScene(T) {
 
   // figures, as cut-outs standing in the room
   const cm = 0.01;
-  push(cutout(v3(1.62, 1.31, -0.27), v3(cm, 0, 0), v3(0, -cm, 0), [SITTER, SITTER_ARM], { t0: 1.3, dur: 0.6, lw: 'vis', id: 'sitter' }), R);
-  push(cutout(v3(-1.45, 2.0, 0.55), v3(cm, 0, 0), v3(0, -cm, 0), [EZRA, EZRA_ARM], { t0: 1.45, dur: 0.7, lw: 'vis', id: 'ezra' }), R);
+  push(cutout(v3(1.62, 1.31, -0.27), v3(cm, 0, 0), v3(0, -cm, 0), [SITTER, SITTER_ARM], [-50, 0, 16, 131], { t0: 1.3, dur: 0.6, lw: 'vis', id: 'sitter' }), R);
+  push(cutout(v3(-1.45, 2.0, 0.55), v3(cm, 0, 0), v3(0, -cm, 0), [EZRA, EZRA_ARM], [-14, 0, 18, 200], { t0: 1.45, dur: 0.7, lw: 'vis', id: 'ezra' }), R);
 
   // --- plates below the slab ---
   LEVELS.forEach((L, i) => {
@@ -459,8 +466,19 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
     // px() inside plane drawings: convert screen pixels to metres at the current scale
     st.px = n => (n * dpr) / (fit.s * dpr);
 
-    // collect visible faces and cut-outs
-    const list = [];
+    // collect visible faces and cut-outs, by the solid they belong to
+    const solids = new Map();
+    const into = (it, sh, entry, pts) => {
+      let g = solids.get(it.solid);
+      if (!g) {
+        const lo = sh(it.solid.min), hi = sh(it.solid.max);
+        g = { min: lo, max: hi, rect: { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }, d: 0, n: 0, parts: [] };
+        solids.set(it.solid, g);
+      }
+      for (const q of pts) { g.rect.x0 = Math.min(g.rect.x0, q.x); g.rect.y0 = Math.min(g.rect.y0, q.y); g.rect.x1 = Math.max(g.rect.x1, q.x); g.rect.y1 = Math.max(g.rect.y1, q.y); }
+      g.d += entry.d; g.n++;
+      g.parts.push(entry);
+    };
     for (const it of items) {
       const sh = placed(it, cam.e);
       let a = 1;
@@ -474,13 +492,19 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
         if (rotN(cam, it.n) <= 1e-4) continue;
         const pts = it.pts.map(q => S(sh(q)));
         const d = pts.reduce((s, q) => s + q.d, 0) / pts.length;
-        list.push({ it, pts, d, a, p, sh });
+        into(it, sh, { it, pts, d, a, p, sh }, pts);
       } else {
         const o = S(sh(it.o));
-        list.push({ it, o, d: o.d + 0.6, a, p, sh });
+        const { min, max } = it.solid;
+        const corners = [min, max, v3(min.x, max.y, min.z), v3(max.x, min.y, max.z)].map(q => S(sh(q)));
+        into(it, sh, { it, o, d: o.d + 0.6, a, p, sh }, corners);
       }
     }
-    list.sort((A, B) => A.d - B.d);
+    // whole solids, far side first (depth.js); a solid's own visible faces never overlap
+    const groups = [...solids.values()];
+    for (const g of groups) g.d /= g.n;
+    const toward = { x: rotN(cam, v3(1, 0, 0)), y: rotN(cam, v3(0, 1, 0)), z: rotN(cam, v3(0, 0, 1)) };
+    const list = paintOrder(groups, toward).flatMap(i => groups[i].parts);
 
     for (const L of list) {
       const { it, a, p } = L;
