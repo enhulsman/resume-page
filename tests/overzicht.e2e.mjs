@@ -93,6 +93,14 @@ const RETIRED = new Set([
   'Replaced a daily 10 to 15 minute manual health report across about 50 VMs with a Java and Playwright automation, delivered by CI/CD with Teams alerts. A Bash toolbox of scheduled scripts keeps storage from running out.',
   "Pega platform and DevOps engineering for Anamata's clients, alongside the Forward Deployed Engineer role. Pega Certified System Architect and Business Architect, 2023.",
   'Replaced plaintext passwords in documentation with a Python one-time-pad encryption system on a secure remote VPS. Looked after client Synology NAS infrastructure.',
+  // 2026-10-09: experience is headed Experience; the notes and the scale note are in the third person
+  'Revisions', 'Experience, newest first, the way a drawing records its changes.',
+  'At 2 meters tall, I have a good overview of both the codebase and the room it gets deployed in.',
+  "I'm a Forward Deployed Engineer at Anamata, where I own ANNA, our AI assistant in Microsoft Teams, and much of what we build around it.",
+  'Most of that work is Python: connecting ANNA to the tools teams already use, and keeping it secure and reliable in production.',
+  "I came to AI coding agents as a sceptic. Now they write a lot of my code, and I still build like one: tests first, a spec for anything bigger, and nothing ships that I can't explain.",
+  'In my free time I work on personal projects like a self-hosted chat TUI in Rust, and contribute to open source when I can.',
+  "I'm a big Formula 1 fan. There's something satisfying about both well-tuned race cars and well-optimized code.",
 ]);
 // the drawn projects the homepage leaves out are drawn on /projects, so their copy counts from there
 test('every line of the prototype\'s copy is still on the homepage or /projects', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {
@@ -509,6 +517,22 @@ test('the terminal greets from the first sheet, and the general notes keep their
   // it types its intro without any scrolling, since it is on the first screen
   await page.waitForSelector('.terminal-input-line', { timeout: 30000 });
   assert.match(await page.locator('#terminal-body').innerText(), /whoami/);
+  await context.close();
+});
+
+test('experience is headed Experience, and the notes and the scale note read as approved', async () => {
+  const { context, page } = await open('/', { js: false });
+  assert.equal(await page.locator('#rev-h').textContent(), 'Experience');
+  assert.equal(await page.locator('#revisions .sheet-head p').textContent(), 'Newest first, the way a drawing records its revisions.');
+  assert.deepEqual(await page.locator('#notes ol.notes > li').allTextContents(), [
+    'Forward Deployed Engineer at Anamata. Owns ANNA, its AI assistant in Microsoft Teams, and much of what\'s built around it.',
+    'At 2 meters tall, has a good overview of both the codebase and the room it\'s deployed in.',
+    'Works mostly in Python, connecting ANNA to the tools teams already use and keeping it secure and reliable in production.',
+    'Came to AI coding agents as a sceptic. They now write much of the code; it\'s still built tests first, with a spec for anything bigger, and nothing ships that can\'t be explained.',
+    'Builds side projects in spare time, like Henk, a homelab agent, and a terminal Bible reader in Rust, and contributes to open source.',
+    'Formula 1 fan: well-tuned race cars and well-optimized code are satisfying in the same way.',
+  ]);
+  assert.equal(await page.locator('.scale-tip').textContent(), 'E. Hulsman, 2 m. Tall enough to oversee both the codebase and the room it\'s deployed in.');
   await context.close();
 });
 

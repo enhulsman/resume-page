@@ -165,10 +165,10 @@ export const specification: [string, string][] = [
 
 /** About, as the drawing's general notes. The terminal sits on the first sheet, beside the photo. */
 export const notes = [
-  'I\'m a Forward Deployed Engineer at Anamata, where I own ANNA, our AI assistant in Microsoft Teams, and much of what we build around it.',
-  'At 2 meters tall, I have a good overview of both the codebase and the room it gets deployed in.',
-  'Most of that work is Python: connecting ANNA to the tools teams already use, and keeping it secure and reliable in production.',
-  'I came to AI coding agents as a sceptic. Now they write a lot of my code, and I still build like one: tests first, a spec for anything bigger, and nothing ships that I can\'t explain.',
-  'In my free time I work on personal projects like a self-hosted chat TUI in Rust, and contribute to open source when I can.',
-  'I\'m a big Formula 1 fan. There\'s something satisfying about both well-tuned race cars and well-optimized code.',
+  'Forward Deployed Engineer at Anamata. Owns ANNA, its AI assistant in Microsoft Teams, and much of what\'s built around it.',
+  'At 2 meters tall, has a good overview of both the codebase and the room it\'s deployed in.',
+  'Works mostly in Python, connecting ANNA to the tools teams already use and keeping it secure and reliable in production.',
+  'Came to AI coding agents as a sceptic. They now write much of the code; it\'s still built tests first, with a spec for anything bigger, and nothing ships that can\'t be explained.',
+  'Builds side projects in spare time, like Henk, a homelab agent, and a terminal Bible reader in Rust, and contributes to open source.',
+  'Formula 1 fan: well-tuned race cars and well-optimized code are satisfying in the same way.',
 ];
