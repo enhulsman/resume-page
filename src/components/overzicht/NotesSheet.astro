@@ -1,6 +1,5 @@
 ---
 import { notes } from "../../config/home";
-import Terminal from "./Terminal.astro";
 import { diaryEntries } from "../../lib/frontmatter";
 
 // The site diary: every published post, newest first, with the short `diary` line from its
@@ -12,12 +11,9 @@ const posts = diaryEntries(import.meta.glob("../../pages/blog/*.mdx", { eager: t
     <h2 id="notes-h">General notes</h2>
     <p>The part of a drawing you read before building anything.</p>
   </header>
-  <div class="notes-grid">
-    <ol class="notes">
-      {notes.map(n => <li>{n}</li>)}
-    </ol>
-    <Terminal />
-  </div>
+  <ol class="notes">
+    {notes.map(n => <li>{n}</li>)}
+  </ol>
 
   <h3 class="sub">Site diary</h3>
   <ul class="diary">

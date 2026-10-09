@@ -101,7 +101,7 @@ export const specification: [string, string][] = [
   ['Speaks', 'Dutch (native), English (fluent)'],
 ];
 
-/** About, as the drawing's general notes. Note 7 is the terminal. */
+/** About, as the drawing's general notes. The terminal sits on the first sheet, beside the photo. */
 export const notes = [
   'I\'m a Forward Deployed Engineer at Anamata, where I own ANNA, our AI assistant in Microsoft Teams, and much of what we build around it.',
   'At 2 meters tall, I have a good overview of both the codebase and the room it gets deployed in.',

@@ -1,5 +1,6 @@
 ---
 import OverzichtLayout from "../layouts/OverzichtLayout.astro";
+import YouSheet from "../components/overzicht/YouSheet.astro";
 import AnnaSection from "../components/overzicht/AnnaSection.astro";
 import DetailsSheet from "../components/overzicht/DetailsSheet.astro";
 import RegisterSheet from "../components/overzicht/RegisterSheet.astro";
@@ -17,6 +18,7 @@ const description = `${site.name} is a ${site.role} at ${site.company}, building
   description={description}
   keywords={`${site.seo.keywords}, resume, portfolio, Utrecht, ${site.company}`}
 >
+  <YouSheet />
   <AnnaSection />
   <DetailsSheet />
   <RegisterSheet />

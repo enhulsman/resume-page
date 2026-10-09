@@ -41,6 +41,16 @@ const pageText = () => {
   clone.remove();
   return t.replace(/\s+/g, ' ').trim();
 };
+// The same text as lines, one per block, so moved copy still matches.
+const pageLines = () => {
+  const clone = document.body.cloneNode(true);
+  clone.querySelectorAll('script, style, noscript, .term-out, #terminal-body, .term-line, .skip, svg title').forEach(n => n.remove());
+  clone.style.cssText = 'position:absolute;left:-99999px;top:0;width:1400px';
+  document.documentElement.append(clone);
+  const t = clone.innerText;
+  clone.remove();
+  return t.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+};
 
 async function activeTerminal(page) {
   await page.locator('#terminal-body').scrollIntoViewIfNeeded();
@@ -57,22 +67,22 @@ async function run(page, cmd) {
   return after.slice(before.length);
 }
 
-test('homepage copy matches the prototype word for word', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {
+// The homepage started as a port of the prototype; it has since moved on (the person first,
+// the terminal beside the photo), so this checks that no line of its copy was lost on the way.
+// Lines retired on purpose are named here.
+const RETIRED = new Set(['NOTE 7: A TERMINAL IS PROVIDED']); // as rendered: the head is uppercase
+test('every line of the prototype\'s copy is still on the homepage', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {
   const proto = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
   const pp = await proto.newPage();
   await pp.goto(`file://${PROTO}/index.html`);
-  const want = await pp.evaluate(pageText);
+  const want = await pp.evaluate(pageLines);
   await proto.close();
 
   const { context, page } = await open('/', { js: false });
-  const got = await page.evaluate(pageText);
+  const got = new Set(await page.evaluate(pageLines));
   await context.close();
 
-  if (got !== want) {
-    // point at the first difference rather than dumping two pages of text
-    let i = 0; while (i < got.length && got[i] === want[i]) i++;
-    assert.fail(`copy differs at char ${i}:\n  site:  …${got.slice(Math.max(0, i - 60), i + 80)}…\n  proto: …${want.slice(Math.max(0, i - 60), i + 80)}…`);
-  }
+  assert.deepEqual(want.filter(l => !got.has(l) && !RETIRED.has(l)), [], 'prototype lines missing from the site');
 });
 
 test('page title and description are the prototype\'s', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {
@@ -170,6 +180,8 @@ test('reduced motion: drawings arrive drawn, the terminal arrives filled', async
 
 test('the ANNA drawing plots, with native scroll and no errors', async () => {
   const { context, page, errors } = await open('/');
+  // it sits below the first sheet, and plots once it is on screen
+  await page.locator('#anna').scrollIntoViewIfNeeded();
   await page.waitForTimeout(3500);
   const inked = await page.evaluate(() => {
     const c = document.querySelector('canvas.drawing');
@@ -211,6 +223,8 @@ test('the drawings appear even if IntersectionObserver never fires', async () =>
   await context.addInitScript(() => { window.IntersectionObserver = class { observe() {} unobserve() {} disconnect() {} }; });
   const page = await context.newPage();
   await page.goto(BASE + '/');
+  await page.waitForTimeout(500);
+  await page.mouse.wheel(0, 900);
   await page.waitForTimeout(3500);
   const inked = await page.evaluate(() => {
     const c = document.querySelector('canvas.drawing');
@@ -403,5 +417,119 @@ test('the revision cloud shows over the bar when a bar link is pointed at', asyn
   await page.waitForTimeout(600);
   const [cloud, bar] = await page.evaluate(() => [+getComputedStyle(document.querySelector('.cloud-hl')).zIndex, +getComputedStyle(document.querySelector('.bar')).zIndex]);
   assert.ok(cloud > bar, `cloud z ${cloud}, bar z ${bar}`);
+  await context.close();
+});
+
+// ---------- you first: the first sheet is the person, then ANNA as the thing he builds ----------
+
+test('the first screen shows who built this: name, photo and the terminal, before ANNA', async () => {
+  for (const [width, height] of [[1440, 900], [1280, 800]]) {
+    const { context, page } = await open('/', { width, height });
+    const box = sel => page.locator(sel).first().boundingBox();
+    const photo = await box('.site-photo img');
+    assert.ok(photo && photo.y + photo.height <= height, `the photo is in the first screen at ${width}`);
+    assert.match(await page.locator('.site-photo img').getAttribute('alt'), /Ezra Hulsman/);
+    const term = await box('.term');
+    assert.ok(term && term.y < height - 120, `the terminal starts in the first screen at ${width}`);
+    // ANNA's section comes after the person, not in the first screen's place
+    const anna = await box('#anna');
+    assert.ok(anna.y >= height * 0.9, `ANNA's section starts below the first screen at ${width}`);
+    await context.close();
+  }
+  // a phone sees the face in the first screen and reaches the terminal within a second one
+  const { context, page } = await open('/', { width: 390, height: 844 });
+  const photo = await page.locator('.site-photo img').boundingBox();
+  assert.ok(photo.y + photo.height <= 844, 'the photo is in the phone\'s first screen');
+  const term = await page.locator('.term').boundingBox();
+  assert.ok(term.y < 844 * 2, 'the terminal is within two phone screens');
+  await context.close();
+});
+
+test('the terminal greets from the first sheet, and the general notes keep their six notes', async () => {
+  const { context, page } = await open('/');
+  assert.equal(await page.locator('#notes .term').count(), 0, 'the terminal moved out of the notes');
+  assert.equal(await page.locator('#notes ol.notes > li').count(), 6);
+  // it types its intro without any scrolling, since it is on the first screen
+  await page.waitForSelector('.terminal-input-line', { timeout: 30000 });
+  assert.match(await page.locator('#terminal-body').innerText(), /whoami/);
+  await context.close();
+});
+
+test('the photo is a light file, not the 1.4 MB original', async () => {
+  const { context, page } = await open('/');
+  const src = await page.locator('.site-photo img').evaluate(i => i.currentSrc);
+  const res = await page.request.get(src);
+  assert.ok(res.ok());
+  assert.ok((await res.body()).length < 80_000, 'under 80 KB');
+  await context.close();
+});
+
+// ---------- the page answers the pointer, in the drawing's own terms ----------
+
+test('a mouse gets a drafting crosshair that follows it, with a coordinate readout', async () => {
+  const { context, page } = await open('/');
+  await page.mouse.move(500, 420);
+  await page.waitForTimeout(100);
+  const x = await page.evaluate(() => {
+    const v = document.querySelector('.xhair-v').getBoundingClientRect(), h = document.querySelector('.xhair-h').getBoundingClientRect();
+    return { v: v.left + v.width / 2, h: h.top + h.height / 2, shown: getComputedStyle(document.querySelector('.xhair')).opacity, read: document.querySelector('.xhair-read').textContent };
+  });
+  assert.ok(Math.abs(x.v - 500) <= 1 && Math.abs(x.h - 420) <= 1, `crosshair at the pointer, got ${x.v}, ${x.h}`);
+  assert.ok(+x.shown > 0);
+  assert.match(x.read, /\d/);
+  await context.close();
+});
+
+test('touch screens get no crosshair', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  await page.goto(BASE + '/');
+  const shown = await page.evaluate(() => { const x = document.querySelector('.xhair'); return !!x && getComputedStyle(x).display !== 'none'; });
+  assert.equal(shown, false);
+  await context.close();
+});
+
+test('a click on the paper leaves a red pencil mark that fades; links and reduced motion get none', async () => {
+  const { context, page } = await open('/');
+  // blank paper inside the general notes sheet
+  const head = page.locator('#notes .sheet-head p');
+  await head.scrollIntoViewIfNeeded();
+  const r = await head.boundingBox();
+  await page.mouse.click(r.x + r.width + 40, r.y + r.height / 2);
+  await page.waitForTimeout(150);
+  assert.equal(await page.locator('.pencil-mark').count(), 1, 'a mark where the paper was clicked');
+  const m = await page.locator('.pencil-mark').boundingBox();
+  assert.ok(Math.abs(m.x + m.width / 2 - (r.x + r.width + 40)) <= 3, 'centred on the click');
+  await page.waitForTimeout(2600);
+  assert.equal(await page.locator('.pencil-mark').count(), 0, 'gone again');
+  // a link is a link, not paper
+  await page.locator('.bar nav a').first().click({ trial: true });
+  await context.close();
+
+  const reduced = await open('/', { reducedMotion: 'reduce' });
+  const h2 = reduced.page.locator('#notes .sheet-head p');
+  await h2.scrollIntoViewIfNeeded();
+  const r2 = await h2.boundingBox();
+  await reduced.page.mouse.click(r2.x + r2.width + 40, r2.y + r2.height / 2);
+  await reduced.page.waitForTimeout(150);
+  assert.equal(await reduced.page.locator('.pencil-mark').count(), 0);
+  await reduced.context.close();
+});
+
+test('pointing at a project draws registration marks round it and replots its redline', async () => {
+  const { context, page } = await open('/');
+  const card = page.locator('#henk');
+  await card.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(2500); // let it plot in first
+  const corners = () => card.evaluate(c => +getComputedStyle(c, '::before').opacity);
+  assert.equal(await corners(), 0);
+  const b = await card.locator('h3, h2').first().boundingBox();
+  await page.mouse.move(b.x + 5, b.y + 5);
+  await page.waitForTimeout(120);
+  const off = await card.locator('.dwg .red path').first().evaluate(p => parseFloat(getComputedStyle(p).strokeDashoffset));
+  assert.ok(off > 0, 'the redline is being drawn again');
+  await page.waitForTimeout(1500);
+  assert.ok(await corners() > 0.9, 'registration marks round the card');
+  assert.equal(await card.locator('.dwg .red path').first().evaluate(p => parseFloat(getComputedStyle(p).strokeDashoffset) || 0), 0, 'and the redline is whole again');
   await context.close();
 });

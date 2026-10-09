@@ -128,3 +128,69 @@ addEventListener('scroll', () => {
   queued = true;
   requestAnimationFrame(() => { queued = false; for (const d of dwgs) if (!d.classList.contains('drawn') && shown(d, 0.35)) plotIn(d); });
 }, { passive: true });
+
+// ---------- the page answers the pointer, in the drawing's own terms ----------
+const fine = matchMedia('(hover: hover) and (pointer: fine)');
+
+// A drafting crosshair follows a mouse, with the sheet coordinates it points at.
+// Touch screens have no pointer to follow, so they never get it.
+const xhair = document.createElement('div');
+xhair.className = 'xhair';
+xhair.setAttribute('aria-hidden', 'true');
+xhair.innerHTML = '<i class="xhair-v"></i><i class="xhair-h"></i><span class="xhair-read"></span>';
+document.body.append(xhair);
+const [xv, xh, xread] = xhair.children;
+let xq = null;
+document.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse' || !fine.matches) return;
+  const { clientX: x, clientY: y } = e;
+  if (xq) return void (xq = [x, y]);
+  xq = [x, y];
+  requestAnimationFrame(() => {
+    const [cx, cy] = xq; xq = null;
+    xv.style.transform = `translateX(${cx}px)`;
+    xh.style.transform = `translateY(${cy}px)`;
+    xread.style.transform = `translate(${cx + 10}px, ${cy + 10}px)`;
+    xread.textContent = `x ${Math.round(cx + scrollX)}  y ${Math.round(cy + scrollY)}`;
+    xhair.classList.add('on');
+  });
+}, { passive: true });
+document.documentElement.addEventListener('pointerleave', () => xhair.classList.remove('on'));
+
+// A click on the paper leaves a red pencil mark that fades; links, controls and the
+// terminal are not paper. Reduced motion gets none: the mark is all motion.
+const notPaper = 'a, button, input, textarea, select, label, summary, [contenteditable], [role="application"], .stage, .term, .bar, .dwg-scroll, .site-photo';
+document.addEventListener('click', e => {
+  if (reduced || e.button !== 0 || e.target.closest(notPaper) || String(getSelection())) return;
+  const marks = document.querySelectorAll('.pencil-mark');
+  if (marks.length > 5) marks[0].remove();
+  const m = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  m.setAttribute('class', 'pencil-mark');
+  m.setAttribute('viewBox', '-13 -13 26 26');
+  m.setAttribute('aria-hidden', 'true');
+  m.innerHTML = '<circle r="7" pathLength="1"/><path d="M-11 0H11M0-11V11" pathLength="1"/>';
+  m.style.transform = `translate(${e.pageX - 13}px, ${e.pageY - 13}px)`;
+  document.body.append(m);
+  setTimeout(() => m.remove(), 2300);
+});
+
+// Pointing at a project draws registration marks round it (CSS) and replots its redline.
+function replot(svg) {
+  if (reduced || !svg.classList.contains('drawn')) return;
+  for (const p of svg.querySelectorAll('.red path')) {
+    if (p.dataset.replot) continue;
+    const L = +p.dataset.len;
+    p.dataset.replot = '1';
+    p.style.transition = 'none';
+    p.style.strokeDasharray = `${L} ${L}`;
+    p.style.strokeDashoffset = L;
+    p.getBoundingClientRect();
+    p.style.transition = 'stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)';
+    p.style.strokeDashoffset = 0;
+    // then hand the line back to its own dash pattern, as after the first plot
+    setTimeout(() => { p.style.transition = 'none'; p.style.strokeDasharray = ''; p.style.strokeDashoffset = ''; delete p.dataset.replot; }, 850);
+  }
+}
+for (const card of document.querySelectorAll('.detail')) {
+  card.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { const d = card.querySelector('.dwg'); d && replot(d); } });
+}

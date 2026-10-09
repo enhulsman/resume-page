@@ -1,31 +1,11 @@
 ---
-import site from "../../config/site";
 import { annaLevels } from "../../config/home";
 
-// Sheet 1: the hero, then ANNA drawn as section A–A that turns into an exploded view.
+// Sheet 1: ANNA drawn as section A–A that turns into an exploded view.
 // The canvas and the leaders are driven by src/scripts/overzicht/main.js.
-const [first, ...rest] = site.name.split(" ");
 ---
 <section class="scrolly" id="anna" aria-label="ANNA, drawn as a section">
   <div class="copy">
-
-    <div class="step step-hero" id="top" data-q="0">
-      <h1 class="name"><span>{first}</span> <span>{rest.join(" ")}</span></h1>
-      <p class="role">{site.role} at <a href={site.social.employer}>{site.company}</a></p>
-      <p class="lede">I build ANNA, an AI assistant in Microsoft Teams, and make it work for the people who use it. Python, AI agents and MCP, on a Linux and DevOps foundation.</p>
-      <p class="status"><span class="status-mark" aria-hidden="true"></span>{site.employment.message[site.employment.status]}</p>
-      <p class="actions">
-        <a class="act act-main" href="#contact">Get in touch</a>
-        <a class="act" href="/resume">Résumé</a>
-        <a class="act" href={site.social.GitHub}>GitHub</a>
-        <a class="act" href={site.social.LinkedIn}>LinkedIn</a>
-      </p>
-      <table class="titleblock" aria-label="Title block">
-        <tr><th>Drawn by</th><td>E. Hulsman</td><th>Location</th><td>Utrecht, NL</td></tr>
-        <tr><th>Project</th><td>ANNA, Anamata</td><th>Since</th><td>2025-12-18</td></tr>
-        <tr><th>Drawing</th><td colspan="3">Section A–A through one request</td></tr>
-      </table>
-    </div>
 
     <div class="step" data-q="0" data-request>
       <p class="tag">Section A–A</p>

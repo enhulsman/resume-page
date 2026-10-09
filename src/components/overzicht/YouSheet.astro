@@ -1,0 +1,35 @@
+---
+import site from "../../config/site";
+import Terminal from "./Terminal.astro";
+
+// Sheet 0: the person first. Name, role and the title block, with his photo clipped to the
+// sheet like a site photo and the terminal beside it; ANNA's section follows as what he builds.
+const [first, ...rest] = site.name.split(" ");
+---
+<section class="sheet-you" id="top" aria-label={site.name}>
+  <div class="you-text">
+    <h1 class="name"><span>{first}</span> <span>{rest.join(" ")}</span></h1>
+    <p class="role">{site.role} at <a href={site.social.employer}>{site.company}</a></p>
+    <p class="lede">I build ANNA, an AI assistant in Microsoft Teams, and make it work for the people who use it. Python, AI agents and MCP, on a Linux and DevOps foundation.</p>
+    <p class="status"><span class="status-mark" aria-hidden="true"></span>{site.employment.message[site.employment.status]}</p>
+    <p class="actions">
+      <a class="act act-main" href="#contact">Get in touch</a>
+      <a class="act" href="/resume">Résumé</a>
+      <a class="act" href={site.social.GitHub}>GitHub</a>
+      <a class="act" href={site.social.LinkedIn}>LinkedIn</a>
+    </p>
+    <table class="titleblock" aria-label="Title block">
+      <tr><th>Drawn by</th><td>E. Hulsman</td><th>Location</th><td>Utrecht, NL</td></tr>
+      <tr><th>Project</th><td>ANNA, Anamata</td><th>Since</th><td>2025-12-18</td></tr>
+      <tr><th>Drawing</th><td colspan="3">Section A–A through one request</td></tr>
+    </table>
+  </div>
+  <div class="you-side">
+    <figure class="site-photo">
+      <svg class="clip" viewBox="0 0 22 58" aria-hidden="true"><path d="M7 40V9a4 4 0 0 1 8 0v35a7 7 0 0 1-14 0V12" /></svg>
+      <div class="photo"><img src="/images/ezra-site-photo.webp" width="280" height="280" alt={`${site.name}, photographed from below`} decoding="async" /></div>
+      <figcaption>Site photo: the scale figure, in person</figcaption>
+    </figure>
+    <Terminal />
+  </div>
+</section>
