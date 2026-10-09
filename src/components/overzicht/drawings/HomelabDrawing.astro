@@ -2,7 +2,7 @@
 // Detail drawing, hand-placed: re-check label overlaps after any text change.
 ---
 <svg class="dwg" viewBox="0 0 520 300" role="img" aria-labelledby="hl-t">
-        <title id="hl-t">The homelab drawn as a site plan: two plots, home with a Raspberry Pi 5 and a Raspberry Pi 2, and a Hetzner VPS, joined by a Tailscale mesh, with nightly backups crossing both ways and Cloudflare tunnels to the road.</title>
+        <title id="hl-t">The homelab drawn as a site plan: two plots, home with a Raspberry Pi 5, a Raspberry Pi 2 and the workstation, and a Hetzner VPS, joined by a Tailscale mesh, with nightly backups crossing both ways and Cloudflare tunnels to the road.</title>
         <g class="fill">
           <path class="hatch" d="M150 70 H200 V120 H150 Z M150 196 H186 V232 H150 Z M344 92 H394 V150 H344 Z"/>
         </g>
@@ -11,6 +11,8 @@
           <path d="M150 70 H200 V120 H150 Z M150 196 H186 V232 H150 Z M344 92 H394 V150 H344 Z" class="cut"/>
           <path d="M200 100 C260 100 290 118 344 121" class="mesh"/>
           <path d="M172 120 V196" class="mesh"/>
+          <path d="M168 232 V240" class="mesh"/>
+          <path d="M150 240 H186 V262 H150 Z"/>
           <path d="M186 214 C260 214 340 190 360 150" class="mesh"/>
           <path d="M200 80 C250 72 300 84 344 100" class="dash arrow"/>
           <path d="M344 140 C300 140 250 128 204 112" class="dash arrow"/>
@@ -27,6 +29,8 @@
           <text x="40" y="122" class="sm">exit node</text>
           <text x="80" y="210">rp2</text>
           <text x="80" y="224" class="sm">1 GB RAM</text>
+          <text x="40" y="250">w11</text>
+          <text x="40" y="262" class="sm">workstation, WSL2</text>
           <text x="402" y="106">vps</text>
           <text x="402" y="120" class="sm">Prometheus,</text>
           <text x="402" y="132" class="sm">Grafana, Taiga</text>

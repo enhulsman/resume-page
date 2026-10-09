@@ -127,26 +127,34 @@ test('keyboard focus is visible on the inner pages', async () => {
 
 // ---------- /projects: the lead drawings, then the register ----------
 
-test('/projects leads with ANNA, then the four drawn projects, then the register', async () => {
+const DRAWN = ['henk', 'finance', 'homelab', 'bible', 'pytaiga', 'sandbox'];
+
+test('/projects leads with ANNA, then every project under its status: running, paused, done', async () => {
   const { context, page } = await open('/projects');
-  assert.deepEqual(await page.locator('.detail').evaluateAll(els => els.map(e => e.id)), ['anna', 'henk', 'sandbox', 'homelab', 'pytaiga']);
+  assert.deepEqual(await page.locator('.detail').evaluateAll(els => els.map(e => e.id)), ['anna', ...DRAWN]);
   // ANNA's plate is the real section drawing; the others are their detail drawings
   assert.equal(await page.locator('#anna canvas.drawing').count(), 1);
-  assert.equal(await page.locator('.detail .dwg').count(), 4);
+  assert.equal(await page.locator('.detail .dwg').count(), DRAWN.length);
   // every drawn project links to its case study, and every case study exists
   const cases = await page.locator('.detail .links a', { hasText: 'Case study' }).evaluateAll(as => as.map(a => a.getAttribute('href')));
-  assert.equal(cases.length, 5);
+  assert.equal(cases.length, DRAWN.length + 1);
   // each drawn project carries its two strongest dimensions, not a row of three
-  for (const id of ['henk', 'sandbox', 'homelab', 'pytaiga']) assert.equal(await page.locator(`#${id} .dims > div`).count(), 2, `${id} dims`);
-  // the register holds the rest; together they cover every project page exactly once
+  for (const id of DRAWN) assert.equal(await page.locator(`#${id} .dims > div`).count(), 2, `${id} dims`);
+  // the undrawn ones are cards; together they cover every project page exactly once
   const reg = await page.locator('.register .reg-title a').evaluateAll(as => as.map(a => a.getAttribute('href')));
   const all = [...cases, ...reg].map(h => h.replace('/projects/', '')).sort();
   assert.deepEqual(all, [...PROJECTS].sort());
-  // and it continues the same sheet, not a second sheet under its own big title
-  assert.equal(await page.locator('section:has(#projects-h) .register').count(), 1);
+  // grouped by status, so a lighter treatment reads as paused, not as less
+  assert.deepEqual(await page.locator('section:has(#projects-h) h2.group').allInnerTexts(), ['Running', 'Paused', 'Done']);
+  const groupOf = async sel => page.locator(sel).evaluate(el => el.closest('.status-group')?.dataset.group);
+  for (const [sel, g] of [['#henk', 'running'], ['#finance', 'running'], ['#homelab', 'running'], ['a[href="/projects/ResumePage"]', 'running'],
+    ['#bible', 'paused'], ['a[href="/projects/EncryptedChatTUI"]', 'paused'], ['#pytaiga', 'done'], ['#sandbox', 'done']]) {
+    assert.equal(await groupOf(sel), g, `${sel} is ${g}`);
+  }
   assert.equal(await page.locator('#register-h').count(), 0);
-  // the fun side pieces are in the set too
-  assert.ok(await page.locator('.side li').count() >= 4);
+  // the fun side pieces are in the set too; bible-tui has its own project now
+  assert.ok(await page.locator('.side li').count() >= 3);
+  assert.equal(await page.locator('.side a[href="https://bible.hulsman.dev"]').count(), 0);
   await page.locator('#anna').scrollIntoViewIfNeeded();
   await page.waitForTimeout(3000);
   assert.ok(await inked(page) > 500, 'the ANNA plate plotted');
@@ -204,7 +212,7 @@ test('ANNA\'s case study carries the section drawing; a project without a drawin
   assert.ok(await inked(page) > 500);
   await context.close();
 
-  ({ context, page } = await open('/projects/FinanceBot'));
+  ({ context, page } = await open('/projects/EncryptedChatTUI'));
   assert.equal(await page.locator('.plate').count(), 0);
   assert.equal(await page.locator('.titleblock th', { hasText: 'Preview' }).count(), 0, 'no empty rows');
   await context.close();
@@ -396,7 +404,7 @@ test('clicking a project\'s drawing opens its case study, on /projects and on th
 
 test('on a phone a project\'s drawing fits the screen whole', async () => {
   const { context, page } = await open('/projects', { width: 390, height: 844 });
-  for (const id of ['henk', 'sandbox', 'homelab', 'pytaiga']) {
+  for (const id of DRAWN) {
     const r = await page.locator(`#${id} .dwg`).evaluate(d => ({ right: d.getBoundingClientRect().right, left: d.getBoundingClientRect().left }));
     assert.ok(r.left >= 0 && r.right <= 390, `${id}: drawing spans ${Math.round(r.left)}..${Math.round(r.right)}`);
   }
@@ -408,12 +416,12 @@ test('/projects on a wide screen: the text sits beside each drawing, and ANNA is
   // ANNA's name and line are on the first screen, not under a screen of drawing
   const lead = await page.locator('#anna .detail-text p').first().evaluate(p => p.getBoundingClientRect().bottom);
   assert.ok(lead < 900, `ANNA's line ends at ${Math.round(lead)}px`);
-  for (const id of ['anna', 'henk', 'sandbox', 'homelab', 'pytaiga']) {
+  for (const id of ['anna', ...DRAWN]) {
     const [art, text] = await page.locator(`#${id}`).evaluate(a => [a.querySelector('.dwg-wrap, .anna-plate').getBoundingClientRect().right, a.querySelector('.detail-text').getBoundingClientRect().left]);
     assert.ok(text >= art, `${id}: text starts at ${Math.round(text)}, drawing ends at ${Math.round(art)}`);
   }
   // each project gets room to breathe before the next one starts
-  for (const id of ['henk', 'sandbox', 'homelab', 'pytaiga']) {
+  for (const id of DRAWN) {
     const pad = await page.locator(`#${id}`).evaluate(a => parseFloat(getComputedStyle(a).paddingTop));
     assert.ok(pad >= 56, `${id}: ${pad}px above it`);
   }
@@ -468,4 +476,35 @@ test('no project drawing scrolls sideways at any width, and none says it does', 
     }
     await context.close();
   }
+});
+
+// ---------- the 2026-10-09 additions: the workstation, Finance Bot and bible-tui drawn ----------
+
+test('the homelab counts the workstation: in the drawing, the figure and the write-up', async () => {
+  const { context, page } = await open('/projects');
+  assert.match(await page.locator('#homelab .dwg').textContent(), /w11/);
+  assert.match(await page.locator('#homelab .dwg title').textContent(), /workstation/);
+  assert.deepEqual(await page.locator('#homelab .dims dt').allInnerTexts(), ['4', '7']);
+  await page.goto(BASE + '/projects/HomelabInfrastructure');
+  assert.match(await page.locator('main').innerText(), /is the fourth machine on the mesh/);
+  await context.close();
+});
+
+test('bible-tui has its own sheet, linked to the live reader, the code and the blog post', async () => {
+  const { context, page, errors, res } = await open('/projects/BibleTui');
+  assert.equal(res.status(), 200);
+  assert.match(await page.locator('h1').innerText(), /bible-tui/i);
+  for (const href of ['https://bible.hulsman.dev', 'https://github.com/enhulsman/bible-tui', '/blog/bible-tui']) {
+    assert.ok(await page.locator(`a[href="${href}"]`).count() >= 1, `links ${href}`);
+  }
+  assert.deepEqual(ours(errors), []);
+  await context.close();
+});
+
+test('the sandbox says it is retired, not that it runs daily', async () => {
+  const { context, page } = await open('/projects/ClaudeSandbox');
+  const text = await page.locator('main').innerText();
+  assert.doesNotMatch(text, /runs daily/);
+  assert.match(text, /auto mode covered what I needed/);
+  await context.close();
 });

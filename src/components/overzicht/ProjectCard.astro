@@ -1,0 +1,12 @@
+---
+// One project as a card: name, one line, status. The name's link covers the card.
+import type { Card } from "../../config/home";
+
+interface Props { card: Card; heading?: "h2" | "h3"; }
+const { card: c, heading: H = "h3" } = Astro.props;
+---
+<li class="card">
+  <H class="reg-title"><a class="card-link" href={c.href}>{c.title}</a></H>
+  <p class="reg-what">{c.what}</p>
+  <p class="reg-status">{c.status}</p>
+</li>

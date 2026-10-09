@@ -1,39 +1,25 @@
 ---
-// The register: every project that is not drawn in full, at reading size, then the side pieces.
-// On the homepage it is its own sheet and takes in the drawn projects the homepage leaves out;
-// on /projects it continues the projects sheet, so the smaller builds sit in the same list.
+// The homepage's other projects as cards: every one the homepage does not draw in full,
+// except this site (you are on it), then a last card that goes to all of them.
 import site from "../../config/site";
-import { details, homeDrawn, register } from "../../config/home";
+import { asCards, details, homeDrawn } from "../../config/home";
+import ProjectCard from "./ProjectCard.astro";
 
-interface Props { inline?: boolean; }
-const { inline = false } = Astro.props;
-const H = inline ? "h2" : "h3";
-const entries = [
-  ...(inline ? [] : details.filter(d => !homeDrawn.includes(d.id)).map(d => ({ title: d.title, href: d.caseStudy, what: d.what, status: d.status }))),
-  ...register,
-];
-const Wrap = inline ? "div" : "section";
+const drawnHere = details.filter(d => homeDrawn.includes(d.id)).map(d => d.caseStudy);
+const cards = asCards().filter(c => !drawnHere.includes(c.href) && c.href !== "/projects/ResumePage");
 ---
-<Wrap class:list={[inline ? "register-inline" : "sheet"]} id="register" aria-labelledby={inline ? undefined : "register-h"}>
-  {!inline && (
-    <header class="sheet-head">
-      <h2 id="register-h">Also in the set</h2>
-      <p>The rest of the set, each with its own sheet.</p>
-    </header>
-  )}
+<section class="sheet" id="register" aria-labelledby="register-h">
+  <header class="sheet-head">
+    <h2 id="register-h">More projects</h2>
+    <p>Smaller builds and side projects, each with a write-up.</p>
+  </header>
   <ol class="register">
-    {entries.map(r => (
-      <li>
-        <H class="reg-title"><a href={r.href}>{r.title}</a></H>
-        <p class="reg-what">{r.what}</p>
-        <p class="reg-status">{r.status}</p>
-      </li>
-    ))}
+    {cards.map(c => <ProjectCard card={c} />)}
+    <li class="card card-all"><a class="all-projects" href="/projects">All projects <span aria-hidden="true">→</span></a></li>
   </ol>
-  {!inline && <p class="links all-link"><a class="all-projects" href="/projects">All projects</a></p>}
 
-  <H class="sub" id="side">Other sheets, drawn for fun</H>
+  <h3 class="sub" id="side">Other sheets, drawn for fun</h3>
   <ul class="side">
     {site.sidePieces.map(p => <li><a href={p.url}>{p.url.replace("https://", "")}</a><span>{p.line}</span></li>)}
   </ul>
-</Wrap>
+</section>

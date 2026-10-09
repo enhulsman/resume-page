@@ -1,0 +1,44 @@
+---
+// Detail drawing, hand-placed: re-check label overlaps after any text change.
+---
+<svg class="dwg" viewBox="0 0 520 300" role="img" aria-labelledby="fin-t">
+        <title id="fin-t">The Finance Bot drawn as a sorting line: a bank export goes through about 40 rules, the rest goes to Claude in batches of 40, and a gate at 0.75 confidence sends each row into the month's sheet, the unsure ones written and marked in red.</title>
+        <g class="fill">
+          <path class="hatch" d="M240 130 H322 V138 H240 Z M240 192 H322 V200 H240 Z"/>
+        </g>
+        <g class="ln">
+          <path d="M24 112 H66 L80 126 V188 H24 Z M66 112 V126 H80"/>
+          <path d="M32 140 H72 M32 152 H72 M32 164 H64 M32 176 H70" class="thin"/>
+          <path d="M80 150 H108" class="arrow"/>
+          <path d="M112 110 H200 V190 H112 Z" class="cut"/>
+          <path d="M156 110 V64 H408" class="arrow"/>
+          <path d="M200 165 H236" class="arrow"/>
+          <path d="M240 130 H322 V200 H240 Z" class="cut"/>
+          <path d="M322 165 H352"/>
+          <path d="M352 155 L372 175 V155 L352 175 Z"/>
+          <path d="M372 165 H408" class="arrow"/>
+          <path d="M412 40 H500 V262 H412 Z" class="cut"/>
+          <path d="M412 64 H500 M412 88 H500 M412 112 H500 M412 136 H500 M412 160 H500 M412 184 H500 M412 208 H500 M412 232 H500 M436 40 V262" class="thin"/>
+          <path d="M0 286 H520" class="thin"/>
+        </g>
+        <g class="red">
+          <path d="M362 175 V220 H408" class="dash"/>
+          <path d="M413 209 H499 V231 H413 Z"/>
+        </g>
+        <g class="lbl">
+          <text x="24" y="102" class="sm">/upload</text>
+          <text x="24" y="204" class="sm">bank export</text>
+          <text x="156" y="146" class="room" text-anchor="middle">RULES</text>
+          <text x="156" y="162" class="sm" text-anchor="middle">~40 patterns</text>
+          <text x="282" y="56" class="sm" text-anchor="middle">matched, 100%</text>
+          <text x="204" y="157" class="sm">rest</text>
+          <text x="281" y="162" class="room" text-anchor="middle">CLAUDE</text>
+          <text x="281" y="178" class="sm" text-anchor="middle">batches of 40</text>
+          <text x="362" y="148" class="sm" text-anchor="middle">0.75</text>
+          <text x="456" y="30" class="room" text-anchor="middle">MONTH SHEET</text>
+          <text x="456" y="278" class="sm" text-anchor="middle">one per month</text>
+          <text x="424" y="224" class="red-t">!</text>
+          <text x="354" y="240" class="red-t sm" text-anchor="end">below it: written,</text>
+          <text x="354" y="252" class="red-t sm" text-anchor="end">flagged, never guessed</text>
+        </g>
+      </svg>

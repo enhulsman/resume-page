@@ -83,6 +83,9 @@ const RETIRED = new Set([
   'PROJECT WHAT IT IS STATUS', // the register is a list now, not a table with a header row
   // corrected after the 2026-10-09 fact-check against the repos, the homelab docs and the owner
   '233', '6', '−207 lines',
+  'devices, one mesh', 'Also in the set', // the workstation makes four machines; the cards are "More projects"
+  'Finance Bot Discord bot that turns bank exports into a categorized budget, with Claude for the hard cases Running since Jul 2025', // drawn now
+  'A terminal Bible reader in Rust, running in the browser', // bible-tui has its own project now, not a side piece
   "About 32,000 lines of Python: a service layer, a command registry and two Claude backends. Every connected system is an MCP server, so adding one means registering a connector and granting access, not changing ANNA's core.",
   'Encrypted Chat TUI Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL Started Aug 2025',
   'This site Static-first Astro portfolio on Cloudflare Workers Launched Mar 2026',
@@ -257,7 +260,7 @@ test('the drawings appear even if IntersectionObserver never fires', async () =>
     return n;
   });
   assert.ok(inked > 500, 'the ANNA drawing plotted');
-  for (const id of ['henk', 'pytaiga']) {
+  for (const id of ['henk', 'finance']) {
     await page.locator(`#${id}`).scrollIntoViewIfNeeded();
     await page.waitForTimeout(200);
   }
@@ -333,23 +336,34 @@ test('phones reach every section through the menu button', async () => {
   await context.close();
 });
 
-test('the homepage draws two projects in full and lists the rest at reading size, with a way to all of them', async () => {
+test('the homepage draws two projects in full and shows the rest as cards, ending on a way to all of them', async () => {
   const { context, page } = await open('/');
-  assert.deepEqual(await page.locator('#details .detail').evaluateAll(els => els.map(e => e.id)), ['henk', 'pytaiga']);
-  for (const id of ['henk', 'pytaiga']) assert.equal(await page.locator(`#${id} .dims > div`).count(), 1, `${id}: one dimension`);
+  assert.deepEqual(await page.locator('#details .detail').evaluateAll(els => els.map(e => e.id)), ['henk', 'finance']);
+  for (const id of ['henk', 'finance']) assert.equal(await page.locator(`#${id} .dims > div`).count(), 1, `${id}: one dimension`);
   assert.match(await page.locator('#details .sheet-head p').innerText(), /^Two more things I built/);
   // the drawn ones a row each, with room round them
-  for (const id of ['henk', 'pytaiga']) {
+  for (const id of ['henk', 'finance']) {
     const [art, text, pad] = await page.locator(`#${id}`).evaluate(a => [a.querySelector('.dwg-wrap').getBoundingClientRect().right, a.querySelector('.detail-text').getBoundingClientRect().left, parseFloat(getComputedStyle(a).paddingTop)]);
     assert.ok(text >= art, `${id}: text beside the drawing`);
     assert.ok(pad >= 56, `${id}: ${pad}px above it`);
   }
-  // the rest, Sandbox and Homelab included, each once
+  // the rest as cards, each once; this site is the page you are on, so it waits on /projects
+  assert.equal(await page.locator('#register-h').innerText(), 'More projects');
   const reg = await page.locator('#register .reg-title a').evaluateAll(as => as.map(a => a.getAttribute('href')));
-  assert.deepEqual(reg, ['/projects/ClaudeSandbox', '/projects/HomelabInfrastructure', '/projects/FinanceBot', '/projects/EncryptedChatTUI', '/projects/ResumePage']);
+  assert.deepEqual(reg, ['/projects/HomelabInfrastructure', '/projects/BibleTui', '/projects/EncryptedChatTUI', '/projects/PytaigaMcp', '/projects/ClaudeSandbox']);
   const size = await page.locator('#register .reg-title').first().evaluate(t => parseFloat(getComputedStyle(t).fontSize));
-  assert.ok(size >= 18, `register titles are ${size}px`);
-  assert.equal(await page.locator('#register a.all-projects').getAttribute('href'), '/projects');
+  assert.ok(size >= 18, `card titles are ${size}px`);
+  // cards: framed like the drawn ones (the list draws top and left, each card its right and bottom), side by side
+  const cards = page.locator('#register .register > li');
+  assert.ok(await page.locator('#register .register').evaluate(l => parseFloat(getComputedStyle(l).borderTopWidth) > 0 && parseFloat(getComputedStyle(l).borderLeftWidth) > 0));
+  for (const c of await cards.all()) assert.ok(await c.evaluate(li => parseFloat(getComputedStyle(li).borderRightWidth) > 0 && parseFloat(getComputedStyle(li).borderBottomWidth) > 0), 'a card has a frame');
+  const xs = new Set(await cards.evaluateAll(lis => lis.map(li => Math.round(li.getBoundingClientRect().left))));
+  assert.ok(xs.size >= 3, `cards in ${xs.size} columns`);
+  // the last card is the way to all of them, and a whole card is the link
+  const all = cards.last().locator('a.all-projects');
+  assert.equal(await all.getAttribute('href'), '/projects');
+  const [card, link] = await Promise.all([cards.last().boundingBox(), all.boundingBox()]);
+  assert.ok(link.width >= card.width - 2 && link.height >= card.height - 2, 'the All projects link fills its card');
   await context.close();
 });
 

@@ -108,11 +108,25 @@ const site = {
       link: '/projects/HomelabInfrastructure',
       featured: true,
     },
+    {
+      title: 'Finance Bot',
+      description: 'Discord bot that turns bank exports into a monthly household budget: about 40 rules first, Claude for the rest, and anything below 0.75 confidence written flagged instead of guessed.',
+      tech: ['Python', 'discord.py', 'Claude', 'Google Sheets API'],
+      link: '/projects/FinanceBot',
+      featured: true,
+    },
+    {
+      title: 'bible-tui',
+      description: 'Terminal Bible reader in Rust whose UI code also runs in the browser: a 102-line web port on ratzilla, three translations bundled in the WASM.',
+      tech: ['Rust', 'ratatui', 'WebAssembly'],
+      github: 'https://github.com/enhulsman/bible-tui',
+      link: '/projects/BibleTui',
+      featured: false,
+    },
   ],
 
   // Side pieces made for fun: the homepage's "Other sheets, drawn for fun"
   sidePieces: [
-    { url: 'https://bible.hulsman.dev', line: 'A terminal Bible reader in Rust, running in the browser' },
     { url: 'https://flag.hulsman.dev', line: '781 one-minute chess games, drawn as time' },
     { url: 'https://sleep.hulsman.dev', line: 'One night of sleep, drawn' },
     { url: 'https://wordle.hulsman.dev', line: 'A word game' },
