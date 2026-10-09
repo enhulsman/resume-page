@@ -199,3 +199,19 @@ test('Resend failure surfaces as 500 after successful verification', async () =>
   assert.equal(res.status, 500);
   assert.equal(siteverifyCalls().length, 1);
 });
+
+// /henk moved to its own subdomain; the old path must send visitors there.
+const notFoundAssets = () => makeEnv({ ASSETS: { fetch: async () => new Response('nope', { status: 404 }) } });
+
+for (const path of ['/henk', '/henk/', '/henk/index.html']) {
+  test(`${path} redirects permanently to henk.hulsman.dev`, async () => {
+    const res = await worker.fetch(new Request(`https://hulsman.dev${path}`), notFoundAssets());
+    assert.equal(res.status, 301);
+    assert.equal(res.headers.get('Location'), 'https://henk.hulsman.dev/');
+  });
+}
+
+test('a path that only starts with "henk" is not redirected', async () => {
+  const res = await worker.fetch(new Request('https://hulsman.dev/henkie'), makeEnv());
+  assert.notEqual(res.status, 301);
+});
