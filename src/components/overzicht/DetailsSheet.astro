@@ -1,14 +1,14 @@
 ---
-import { details } from "../../config/home";
+import { details, homeDrawn } from "../../config/home";
 import DetailCard from "./DetailCard.astro";
 ---
 <section class="sheet" id="details" aria-labelledby="details-h">
   <header class="sheet-head">
     <h2 id="details-h">Details</h2>
-    <p>Four more things I built, each drawn at the point where it gets interesting. Not to scale.</p>
+    <p>Two more things I built, each drawn at the point where it gets interesting. Not to scale.</p>
   </header>
 
-  <div class="details">
-    {details.map(d => <DetailCard detail={d} />)}
+  <div class="details details-rows">
+    {details.filter(d => homeDrawn.includes(d.id)).map(d => <DetailCard detail={d} dims={1} />)}
   </div>
 </section>

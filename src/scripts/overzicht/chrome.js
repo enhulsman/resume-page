@@ -20,7 +20,7 @@ function paintThemeButton() {
 themeBtn.addEventListener('click', () => setTheme(isDark() ? 'light' : 'dark'));
 paintThemeButton();
 
-// ---------- the phone menu: the bar's section links, folded away below 860px ----------
+// ---------- the phone menu: the bar's page links, folded away below 860px ----------
 const bar = document.querySelector('.bar');
 const menuBtn = bar.querySelector('.menu-btn');
 function setMenu(open, { focus = false } = {}) {
@@ -114,7 +114,7 @@ function hideCloud(el) {
   cloud.classList.remove('on');
   cloudPath.setAttribute('d', '');
 }
-const cloudables = 'a.act, .card-link, .links a, .register td:first-child a, .side a, .diary a, .more, .replay, .theme, .bar nav a';
+const cloudables = 'a.act, .card-link, .links a, .register .reg-title a, .side a, .diary a, .more, .replay, .theme, .bar nav a';
 document.addEventListener('pointerover', e => { const el = e.target.closest(cloudables); if (el) showCloud(el); });
 document.addEventListener('pointerout', e => { const el = e.target.closest(cloudables); if (el && !el.contains(e.relatedTarget)) hideCloud(el); });
 document.addEventListener('focusin', e => { const el = e.target.closest(cloudables); if (el && el.matches(':focus-visible')) showCloud(el); });

@@ -1,6 +1,6 @@
 ---
 // /projects: the set's drawing register. ANNA leads with its section drawing, the drawn
-// projects follow with their details, and the register lists the rest.
+// projects follow with their details, and the register continues the same list with the rest.
 import OverzichtLayout from "../../layouts/OverzichtLayout.astro";
 import DetailCard from "../../components/overzicht/DetailCard.astro";
 import AnnaPlate from "../../components/overzicht/AnnaPlate.astro";
@@ -41,7 +41,6 @@ const projectsKeywords = `${site.seo.keywords}, projects, portfolio, case studie
       </article>
       {details.map(d => <DetailCard detail={d} heading="h2" />)}
     </div>
+    <RegisterSheet inline />
   </section>
-
-  <RegisterSheet />
 </OverzichtLayout>

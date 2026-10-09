@@ -70,16 +70,16 @@ for (const path of INNER) {
   });
 }
 
-test('the inner bar: E. Hulsman, Projects, Blog, Résumé, Contact, and the theme button', async () => {
-  for (const [path, current] of [['/projects', 'PROJECTS'], ['/projects/Henk', 'PROJECTS'], ['/blog', 'BLOG'], [`/blog/${POSTS[0]}`, 'BLOG'], ['/resume', 'RÉSUMÉ'], ['/contact', 'CONTACT']]) {
+test('one bar on every page, homepage included: E. Hulsman, Projects, Blog, Résumé, Contact, and the theme button', async () => {
+  for (const [path, current] of [['/', null], ['/projects', 'PROJECTS'], ['/projects/Henk', 'PROJECTS'], ['/blog', 'BLOG'], [`/blog/${POSTS[0]}`, 'BLOG'], ['/resume', 'RÉSUMÉ'], ['/contact', 'CONTACT']]) {
     const { context, page } = await open(path);
     assert.equal((await page.locator('.bar-name').innerText()).trim(), 'E. HULSMAN');
-    assert.equal(await page.locator('.bar-name').getAttribute('href'), '/');
+    assert.equal(await page.locator('.bar-name').getAttribute('href'), path === '/' ? '#top' : '/');
     assert.deepEqual(await page.locator('.bar nav a').allInnerTexts(), ['PROJECTS', 'BLOG', 'RÉSUMÉ', 'CONTACT']);
     assert.deepEqual(await page.locator('.bar nav a').evaluateAll(as => as.map(a => a.getAttribute('href'))), ['/projects', '/blog', '/resume', '/contact']);
     assert.equal(await page.locator('.bar nav').getAttribute('aria-label'), 'Site');
     // the page you are on is marked, for eyes and for screen readers
-    assert.deepEqual(await page.locator('.bar nav a[aria-current="page"]').allInnerTexts(), [current], `${path} marks ${current}`);
+    assert.deepEqual(await page.locator('.bar nav a[aria-current="page"]').allInnerTexts(), current ? [current] : [], `${path} marks ${current}`);
     assert.equal(await page.locator('.theme').isVisible(), true);
     await context.close();
   }
@@ -136,10 +136,15 @@ test('/projects leads with ANNA, then the four drawn projects, then the register
   // every drawn project links to its case study, and every case study exists
   const cases = await page.locator('.detail .links a', { hasText: 'Case study' }).evaluateAll(as => as.map(a => a.getAttribute('href')));
   assert.equal(cases.length, 5);
+  // each drawn project carries its two strongest dimensions, not a row of three
+  for (const id of ['henk', 'sandbox', 'homelab', 'pytaiga']) assert.equal(await page.locator(`#${id} .dims > div`).count(), 2, `${id} dims`);
   // the register holds the rest; together they cover every project page exactly once
-  const reg = await page.locator('.register td:first-child a').evaluateAll(as => as.map(a => a.getAttribute('href')));
+  const reg = await page.locator('.register .reg-title a').evaluateAll(as => as.map(a => a.getAttribute('href')));
   const all = [...cases, ...reg].map(h => h.replace('/projects/', '')).sort();
   assert.deepEqual(all, [...PROJECTS].sort());
+  // and it continues the same sheet, not a second sheet under its own big title
+  assert.equal(await page.locator('section:has(#projects-h) .register').count(), 1);
+  assert.equal(await page.locator('#register-h').count(), 0);
   // the fun side pieces are in the set too
   assert.ok(await page.locator('.side li').count() >= 4);
   await page.locator('#anna').scrollIntoViewIfNeeded();
@@ -407,6 +412,14 @@ test('/projects on a wide screen: the text sits beside each drawing, and ANNA is
     const [art, text] = await page.locator(`#${id}`).evaluate(a => [a.querySelector('.dwg-wrap, .anna-plate').getBoundingClientRect().right, a.querySelector('.detail-text').getBoundingClientRect().left]);
     assert.ok(text >= art, `${id}: text starts at ${Math.round(text)}, drawing ends at ${Math.round(art)}`);
   }
+  // each project gets room to breathe before the next one starts
+  for (const id of ['henk', 'sandbox', 'homelab', 'pytaiga']) {
+    const pad = await page.locator(`#${id}`).evaluate(a => parseFloat(getComputedStyle(a).paddingTop));
+    assert.ok(pad >= 56, `${id}: ${pad}px above it`);
+  }
+  // the smaller projects read at body size, not as a footnote
+  const size = await page.locator('.register .reg-title').first().evaluate(t => parseFloat(getComputedStyle(t).fontSize));
+  assert.ok(size >= 18, `register titles are ${size}px`);
   await context.close();
 });
 

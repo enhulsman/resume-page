@@ -1,21 +1,39 @@
 ---
+// The register: every project that is not drawn in full, at reading size, then the side pieces.
+// On the homepage it is its own sheet and takes in the drawn projects the homepage leaves out;
+// on /projects it continues the projects sheet, so the smaller builds sit in the same list.
 import site from "../../config/site";
-import { register } from "../../config/home";
----
-<section class="sheet" id="register" aria-labelledby="register-h">
-  <header class="sheet-head">
-    <h2 id="register-h">Also in the set</h2>
-    <p>The rest of the set: smaller builds, each with its own sheet.</p>
-  </header>
-  <table class="register">
-    <thead><tr><th scope="col">Project</th><th scope="col">What it is</th><th scope="col">Status</th></tr></thead>
-    <tbody>
-      {register.map(r => <tr><td><a href={r.href}>{r.title}</a></td><td>{r.what}</td><td>{r.status}</td></tr>)}
-    </tbody>
-  </table>
+import { details, homeDrawn, register } from "../../config/home";
 
-  <h3 class="sub" id="side">Other sheets, drawn for fun</h3>
+interface Props { inline?: boolean; }
+const { inline = false } = Astro.props;
+const H = inline ? "h2" : "h3";
+const entries = [
+  ...(inline ? [] : details.filter(d => !homeDrawn.includes(d.id)).map(d => ({ title: d.title, href: d.caseStudy, what: d.what, status: d.status }))),
+  ...register,
+];
+const Wrap = inline ? "div" : "section";
+---
+<Wrap class:list={[inline ? "register-inline" : "sheet"]} id="register" aria-labelledby={inline ? undefined : "register-h"}>
+  {!inline && (
+    <header class="sheet-head">
+      <h2 id="register-h">Also in the set</h2>
+      <p>The rest of the set, each with its own sheet.</p>
+    </header>
+  )}
+  <ol class="register">
+    {entries.map(r => (
+      <li>
+        <H class="reg-title"><a href={r.href}>{r.title}</a></H>
+        <p class="reg-what">{r.what}</p>
+        <p class="reg-status">{r.status}</p>
+      </li>
+    ))}
+  </ol>
+  {!inline && <p class="links all-link"><a class="all-projects" href="/projects">All projects</a></p>}
+
+  <H class="sub" id="side">Other sheets, drawn for fun</H>
   <ul class="side">
     {site.sidePieces.map(p => <li><a href={p.url}>{p.url.replace("https://", "")}</a><span>{p.line}</span></li>)}
   </ul>
-</section>
+</Wrap>

@@ -70,8 +70,18 @@ async function run(page, cmd) {
 // The homepage started as a port of the prototype; it has since moved on (the person first,
 // the terminal beside the photo), so this checks that no line of its copy was lost on the way.
 // Lines retired on purpose are named here.
-const RETIRED = new Set(['NOTE 7: A TERMINAL IS PROVIDED']); // as rendered: the head is uppercase
-test('every line of the prototype\'s copy is still on the homepage', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {
+const RETIRED = new Set([
+  'NOTE 7: A TERMINAL IS PROVIDED', // as rendered: the head is uppercase
+  // the bar links to the pages now, the same on every sheet
+  'ANNA', 'WORK', 'EXPERIENCE', 'ABOUT',
+  // the homepage draws two projects; each drawn project keeps its two strongest dimensions
+  'Four more things I built, each drawn at the point where it gets interesting. Not to scale.',
+  'The rest of the set: smaller builds, each with its own sheet.',
+  '0', 'mutating tools shipped', '13+', 'kinds of sensitive path hidden', '14', 'alert rules', '14%', 'less server code',
+  'PROJECT WHAT IT IS STATUS', // the register is a list now, not a table with a header row
+]);
+// the drawn projects the homepage leaves out are drawn on /projects, so their copy counts from there
+test('every line of the prototype\'s copy is still on the homepage or /projects', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {
   const proto = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
   const pp = await proto.newPage();
   await pp.goto(`file://${PROTO}/index.html`);
@@ -80,6 +90,10 @@ test('every line of the prototype\'s copy is still on the homepage', { skip: !ex
 
   const { context, page } = await open('/', { js: false });
   const got = new Set(await page.evaluate(pageLines));
+  // a register row read as one line, the way the prototype's table row reads
+  for (const l of await page.locator('.register li').evaluateAll(lis => lis.map(li => [...li.children].map(c => c.textContent.trim()).join(' ')))) got.add(l);
+  await page.goto(BASE + '/projects');
+  for (const l of await page.evaluate(pageLines)) got.add(l);
   await context.close();
 
   assert.deepEqual(want.filter(l => !got.has(l) && !RETIRED.has(l)), [], 'prototype lines missing from the site');
@@ -233,11 +247,11 @@ test('the drawings appear even if IntersectionObserver never fires', async () =>
     return n;
   });
   assert.ok(inked > 500, 'the ANNA drawing plotted');
-  for (const id of ['henk', 'sandbox', 'homelab', 'pytaiga']) {
+  for (const id of ['henk', 'pytaiga']) {
     await page.locator(`#${id}`).scrollIntoViewIfNeeded();
     await page.waitForTimeout(200);
   }
-  assert.equal(await page.locator('.dwg.drawn').count(), 4);
+  assert.equal(await page.locator('.dwg.drawn').count(), 2);
   await context.close();
 });
 
@@ -289,17 +303,9 @@ test('phones reach every section through the menu button', async () => {
 
   await btn.click();
   assert.equal(await btn.getAttribute('aria-expanded'), 'true');
-  assert.deepEqual(await links.allInnerTexts(), ['ANNA', 'WORK', 'EXPERIENCE', 'ABOUT', 'CONTACT']);
-
-  // a link takes you there and closes the menu
-  await links.filter({ hasText: 'Experience' }).click();
-  await page.waitForTimeout(600);
-  assert.equal(await btn.getAttribute('aria-expanded'), 'false');
-  const top = await page.locator('#revisions').evaluate(el => el.getBoundingClientRect().top);
-  assert.ok(Math.abs(top) < 120, `#revisions is at the top (${top})`);
+  assert.deepEqual(await links.allInnerTexts(), ['PROJECTS', 'BLOG', 'RÉSUMÉ', 'CONTACT']);
 
   // Escape closes it and gives focus back to the button
-  await btn.click();
   await page.keyboard.press('Escape');
   assert.equal(await btn.getAttribute('aria-expanded'), 'false');
   assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('menu-btn')), true);
@@ -308,6 +314,32 @@ test('phones reach every section through the menu button', async () => {
   await btn.click();
   await page.mouse.click(200, 600);
   assert.equal(await btn.getAttribute('aria-expanded'), 'false');
+
+  // the links go to the pages, the same as on every other sheet
+  await btn.click();
+  await page.waitForTimeout(700);
+  await links.filter({ hasText: 'Résumé' }).click();
+  await page.waitForURL(/\/resume$/);
+  await context.close();
+});
+
+test('the homepage draws two projects in full and lists the rest at reading size, with a way to all of them', async () => {
+  const { context, page } = await open('/');
+  assert.deepEqual(await page.locator('#details .detail').evaluateAll(els => els.map(e => e.id)), ['henk', 'pytaiga']);
+  for (const id of ['henk', 'pytaiga']) assert.equal(await page.locator(`#${id} .dims > div`).count(), 1, `${id}: one dimension`);
+  assert.match(await page.locator('#details .sheet-head p').innerText(), /^Two more things I built/);
+  // the drawn ones a row each, with room round them
+  for (const id of ['henk', 'pytaiga']) {
+    const [art, text, pad] = await page.locator(`#${id}`).evaluate(a => [a.querySelector('.dwg-wrap').getBoundingClientRect().right, a.querySelector('.detail-text').getBoundingClientRect().left, parseFloat(getComputedStyle(a).paddingTop)]);
+    assert.ok(text >= art, `${id}: text beside the drawing`);
+    assert.ok(pad >= 56, `${id}: ${pad}px above it`);
+  }
+  // the rest, Sandbox and Homelab included, each once
+  const reg = await page.locator('#register .reg-title a').evaluateAll(as => as.map(a => a.getAttribute('href')));
+  assert.deepEqual(reg, ['/projects/ClaudeSandbox', '/projects/HomelabInfrastructure', '/projects/FinanceBot', '/projects/EncryptedChatTUI', '/projects/ResumePage']);
+  const size = await page.locator('#register .reg-title').first().evaluate(t => parseFloat(getComputedStyle(t).fontSize));
+  assert.ok(size >= 18, `register titles are ${size}px`);
+  assert.equal(await page.locator('#register a.all-projects').getAttribute('href'), '/projects');
   await context.close();
 });
 

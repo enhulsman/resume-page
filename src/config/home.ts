@@ -7,7 +7,11 @@ export interface Detail {
   id: 'henk' | 'sandbox' | 'homelab' | 'pytaiga';
   title: string;
   text: string;
+  /** Strongest first: the homepage shows the first, /projects the first two. */
   dims: { value: string; label: string }[];
+  /** Its one line and status, for where it is listed rather than drawn. */
+  what: string;
+  status: string;
   caseStudy: string;
   code?: string;
 }
@@ -29,16 +33,21 @@ export const annaLead = {
   caseStudy: '/projects/AnnaAssistant',
 };
 
+/** The two drawn in full on the homepage; the others join its register. */
+export const homeDrawn: Detail['id'][] = ['henk', 'pytaiga'];
+
 export const details: Detail[] = [
   {
     id: 'henk',
     title: 'Henk, homelab agent',
     text: 'A security-first agent on the Claude Agent SDK that turns infrastructure alerts into Signal conversations. Its default-deny toolset refused a live prompt-injection payload, and it replays events exactly once across hard container kills.',
     dims: [
+      { value: '4', label: 'egress ports, zero inbound' },
       { value: '233', label: 'tests, SDK mocked out' },
       { value: '0', label: 'mutating tools shipped' },
-      { value: '4', label: 'egress ports, zero inbound' },
     ],
+    what: 'Security-first homelab agent on the Claude Agent SDK, talking over Signal',
+    status: 'Running since Jul 2026',
     caseStudy: '/projects/Henk',
     code: 'https://github.com/enhulsman/henk',
   },
@@ -48,9 +57,11 @@ export const details: Detail[] = [
     text: 'An OS-level sandbox around Claude Code, independent of its built-in protections: kernel isolation, a filtering egress proxy, and an analysis of every session afterwards. Pure stdlib Python and awk, packaged with Nix for Linux and macOS.',
     dims: [
       { value: '3,700', label: 'lines of shell and Python' },
-      { value: '13+', label: 'kinds of sensitive path hidden' },
       { value: '0–100', label: 'risk score per session' },
+      { value: '13+', label: 'kinds of sensitive path hidden' },
     ],
+    what: 'An OS-level sandbox around Claude Code: kernel isolation, a filtering egress proxy and a risk score per session',
+    status: 'Released Feb 2026',
     caseStudy: '/projects/ClaudeSandbox',
     code: 'https://github.com/enhulsman/claude-sandbox',
   },
@@ -60,9 +71,11 @@ export const details: Detail[] = [
     text: 'Three devices on a Tailscale mesh, fronted by Cloudflare tunnels, so no home device has a public port. Prometheus watches all of them, DNS resolves recursively with DNSSEC on every box, and backups cross devices every night.',
     dims: [
       { value: '3', label: 'devices, one mesh' },
-      { value: '14', label: 'alert rules' },
       { value: '6', label: 'scrape targets' },
+      { value: '14', label: 'alert rules' },
     ],
+    what: 'Three devices on a Tailscale mesh behind Cloudflare tunnels, with Prometheus, recursive DNS and nightly cross-device backups',
+    status: 'Operating since Jun 2025',
     caseStudy: '/projects/HomelabInfrastructure',
   },
   {
@@ -70,10 +83,12 @@ export const details: Detail[] = [
     title: 'pytaiga-mcp',
     text: 'A merged pull request to an open-source MCP server for Taiga: credentials masked everywhere with SecretStr, one helper in place of duplicated error handling, response filtering that takes a story list from about 50 fields to 5, and the project\'s first test suite.',
     dims: [
-      { value: '14%', label: 'less server code' },
       { value: '11', label: 'tests, the first' },
       { value: '3', label: 'Python versions in CI' },
+      { value: '14%', label: 'less server code' },
     ],
+    what: 'A merged pull request to an open-source MCP server for Taiga',
+    status: 'Merged Jan 2026',
     caseStudy: '/projects/PytaigaMcp',
     code: 'https://github.com/talhaorak/pytaiga-mcp',
   },
