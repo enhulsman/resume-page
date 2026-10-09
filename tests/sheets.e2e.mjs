@@ -555,3 +555,17 @@ test('the sitemap the pages advertise exists and lists every page', async () => 
   }
   await context.close();
 });
+
+// ---------- round 3: favicon, mail line, the post head ----------
+
+test('the favicon is the H in a double frame, with its own light and dark', async () => {
+  const { context, page } = await open('/');
+  const href = await page.locator('link[rel="icon"]').getAttribute('href');
+  const res = await page.request.get(BASE + href);
+  assert.equal(res.status(), 200);
+  const svg = await res.text();
+  assert.match(svg, /prefers-color-scheme:\s*dark/);
+  assert.equal((svg.match(/<rect[^>]*fill="none"/g) || []).length, 2, 'two frames');
+  assert.doesNotMatch(svg, /Gradient|filter|#c9942b/i, 'none of the old amber glow');
+  await context.close();
+});
