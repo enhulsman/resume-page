@@ -341,6 +341,37 @@ test('reduced motion on a dark phone: the drawing is never inked in black', asyn
   await context.close();
 });
 
+test('the light table has depth: darker round the sheet, panels a hair lighter, more grain; the whiteprint stays flat', async () => {
+  const read = async scheme => {
+    const { context, page } = await open('/', { storage: { theme: scheme } });
+    const r = await page.evaluate(() => {
+      // relative luminance of an rgb() string, alpha folded onto the sheet
+      const lum = c => { const [r, g, b] = c.match(/[\d.]+/g).slice(0, 3).map(Number); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+      const css = getComputedStyle(document.documentElement);
+      const probe = v => { const d = document.createElement('div'); d.style.color = `var(${v})`; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; };
+      return {
+        sheet: lum(getComputedStyle(document.body).backgroundColor),
+        table: lum(probe('--table')),
+        panel: lum(probe('--panel')),
+        detail: getComputedStyle(document.querySelector('.detail')).backgroundColor,
+        card: getComputedStyle(document.querySelector('#register .card')).backgroundColor,
+        grain: +css.getPropertyValue('--grain-a'),
+      };
+    });
+    await context.close();
+    return r;
+  };
+  const dark = await read('dark');
+  assert.ok(dark.table < dark.sheet - 3, `table ${dark.table} under sheet ${dark.sheet}`);
+  assert.ok(dark.panel > dark.sheet && dark.panel < dark.sheet + 12, `panel ${dark.panel} a hair over sheet ${dark.sheet}`);
+  assert.notEqual(dark.detail, 'rgba(0, 0, 0, 0)', 'drawn panels are lifted');
+  assert.notEqual(dark.card, 'rgba(0, 0, 0, 0)', 'cards are lifted');
+  assert.ok(dark.grain > 0.035, `grain ${dark.grain}`);
+  const light = await read('light');
+  assert.equal(light.table, light.sheet);
+  assert.equal(light.detail, 'rgba(0, 0, 0, 0)');
+});
+
 test('the browser bar colour follows the chosen theme', async () => {
   const context = await browser.newContext({ colorScheme: 'light' });
   await context.addInitScript(() => { if (!localStorage.getItem('theme')) localStorage.setItem('theme', 'dark'); });
