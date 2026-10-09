@@ -278,3 +278,6 @@ function revealInView() {
 }
 
 if (review) window.__scene = scene;
+
+// the arrival develops the ink from grey (intro.js); the drawing takes it once it has settled
+document.addEventListener('ovz:arrived', () => scene.theme());

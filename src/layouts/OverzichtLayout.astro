@@ -21,6 +21,19 @@ const { current, ...meta } = Astro.props;
     <script is:inline>
       // theme before first paint: the stored choice, else the system's
       try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+      // the homepage's arrival (scripts/overzicht/intro.js), decided before first paint so the
+      // sheet never shows settled and then jumps back: once a session, never on reduced motion
+      // or a link into the page. ?intro=1 replays it, ?intro=0 skips it.
+      try {
+        const q = new URLSearchParams(location.search).get('intro');
+        const seen = sessionStorage.getItem('ovz-arrived');
+        if (location.pathname === '/') {
+          if (!location.hash && q !== '0' && (q === '1' || !seen) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.documentElement.classList.add('intro');
+          }
+          sessionStorage.setItem('ovz-arrived', '1');
+        }
+      } catch (e) {}
     </script>
     <noscript><style>
       /* without JS nothing draws the ANNA stage or folds the links into a menu: the stage's

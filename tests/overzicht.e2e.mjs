@@ -20,6 +20,8 @@ after(async () => { await browser?.close(); });
 
 async function open(path = '/', { width = 1440, height = 900, reducedMotion = 'no-preference', js = true, storage } = {}) {
   const context = await browser.newContext({ viewport: { width, height }, reducedMotion, javaScriptEnabled: js });
+  // the homepage's arrival is tested on its own (tests/intro.e2e.mjs); here the page is as it settles
+  await context.addInitScript(() => { try { sessionStorage.setItem('ovz-arrived', '1'); } catch {} });
   if (storage) await context.addInitScript(s => { for (const [k, v] of Object.entries(s)) if (localStorage.getItem(k) === null) localStorage.setItem(k, v); }, storage);
   const page = await context.newPage();
   const errors = [];
@@ -187,6 +189,8 @@ test('the theme toggle, the terminal and the inner pages share one stored theme'
 test('dark chosen on a light system stays dark', async () => {
   const context = await browser.newContext({ colorScheme: 'light' });
   await context.addInitScript(() => localStorage.setItem('theme', 'dark'));
+  // settled, not mid-arrival (the light table flickers on first; tests/intro.e2e.mjs)
+  await context.addInitScript(() => sessionStorage.setItem('ovz-arrived', '1'));
   const page = await context.newPage();
   await page.goto(BASE + '/');
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);

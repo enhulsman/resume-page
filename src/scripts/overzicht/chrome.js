@@ -143,8 +143,30 @@ const xdraw = () => {
     xhair.classList.add('on');
   });
 };
+// The homepage's arrival sends it from the sheet's corner to the name (intro.js); the first
+// real mouse move takes it back.
+let trip = 0;
+document.addEventListener('ovz:xhair-trip', e => {
+  if (!fine.matches) return;
+  const { from, to, delay, dur } = e.detail;
+  const id = ++trip;
+  const ease = k => 1 - Math.pow(1 - k, 3);
+  setTimeout(() => {
+    const t0 = performance.now();
+    const step = now => {
+      if (id !== trip) return;
+      const k = Math.min(1, (now - t0) / dur), q = ease(k), [tx, ty] = to();
+      xat = [from[0] + (tx - from[0]) * q, from[1] + (ty - from[1]) * q];
+      xdraw();
+      if (k < 1) requestAnimationFrame(step);
+      else setTimeout(() => { if (id === trip) { xat = null; xhair.classList.remove('on'); } }, 900);
+    };
+    requestAnimationFrame(step);
+  }, delay);
+});
 document.addEventListener('pointermove', e => {
   if (e.pointerType !== 'mouse' || !fine.matches) return;
+  trip++;
   xat = [e.clientX, e.clientY];
   xdraw();
 }, { passive: true });
