@@ -11,6 +11,14 @@ dateLabel: "Online since"
 hook: "A static-first portfolio at hulsman.dev, built with Astro and drawn as a technical drawing set, with a fully interactive terminal on the homepage."
 ---
 
+## The Idea
+
+Most résumé sites look like résumé sites: a photo, a headline, a grid of skills. I wanted this one to stray from that and still hold everything a résumé should, so it's drawn as a set of technical drawings. Every page is a sheet in the set, with a frame, a title block and a foot, and the content takes the place a real drawing set already has for it. Experience is the revision table, skills are the materials schedule, the about section is the general notes. ANNA gets the biggest drawing: the room she works in, drawn without perspective, coming apart floor by floor. The other projects are drawn as details, each at the point where it gets interesting.
+
+## Built Like It Matters
+
+A drawing only works if it's exact, so the site is tested like something in production. Over a hundred browser tests check what a visitor would notice: that every drawing stays at a legible scale at every width, that nothing scrolls sideways on a phone, that the résumé still prints on white when you're reading it in the dark theme.
+
 ## Stack Choices
 
 Astro over Next or Remix because this site has no client-side app state: pages are static HTML with small scripts where interactivity demands it. The drawings are hand-written, ANNA's section is an orthographic canvas renderer of about 670 lines and the project details are inline SVG that plot themselves in, so the site ships no animation library and no CSS framework (about 87 KB of JavaScript in total). Every drawing has a still version for `prefers-reduced-motion`. The contact form runs server-side on Cloudflare Workers with the Resend API: no separate backend, no CORS proxy, just an edge function co-deployed with the static assets.
@@ -18,3 +26,9 @@ Astro over Next or Remix because this site has no client-side app state: pages a
 ## The Terminal
 
 On the homepage's first sheet, beside the photo, a terminal plays a typing animation as the page opens. After the animation finishes, the blinking cursor is real, and you can type into it. It implements 42 commands in vanilla TypeScript: filesystem navigation over a virtual filesystem (`ls`, `cd`, `cat resume`), unix staples (`grep`, `head`, `tail`, `wc`, `sort`, `env`), fun stuff (`cowsay`, `sl`, `matrix`, `neofetch`), and routing commands that actually navigate the site. Pipes work end-to-end (`cat resume | grep TypeScript | wc -l`), alongside tab completion, command history, and aliases. Mobile input uses a transparent overlay with touch gesture detection to separate taps from scrolls. Reliably opening the software keyboard across Android and iOS was the hardest part of the build.
+
+## Two Things You Might Have Missed
+
+In ANNA's room I'm standing beside the desk, for scale. There's exactly one dimension in the whole room, and it's mine: 2,00.
+
+Through the room's window, drawn faint, is the Dom tower. The room is in Utrecht, and so am I.

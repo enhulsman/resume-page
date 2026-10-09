@@ -623,3 +623,13 @@ test('every heading of a post still hangs in the left column after the intro', a
   for (const l of h2s) assert.ok(Math.abs(l - h1.l) < 2);
   await context.close();
 });
+
+test('the site\'s own case study says what it is, how it is checked, and the two jokes worth pointing at', async () => {
+  const { context, page } = await open('/projects/ResumePage');
+  assert.deepEqual(await page.locator('.prose > h2').allInnerTexts(), ['The Idea', 'Built Like It Matters', 'Stack Choices', 'The Terminal', 'Two Things You Might Have Missed']);
+  const text = await page.locator('.prose').innerText();
+  assert.match(text, /it['’]s mine: 2,00\./);
+  assert.match(text, /Dom tower/);
+  assert.doesNotMatch(text, /Claude|prompt/i, 'the page leaves Claude out');
+  await context.close();
+});
