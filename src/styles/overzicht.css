@@ -157,7 +157,7 @@ main { padding: 0 calc(var(--frame) + 6px); }
 .pencil-mark path { animation-delay: .2s; }
 @keyframes mark-plot { to { stroke-dashoffset: 0; } }
 @keyframes mark-fade { to { opacity: 0; } }
-.detail::before {
+.detail::before, .register .card::before {
   content: ""; position: absolute; inset: 7px; pointer-events: none; opacity: 0;
   --rm: linear-gradient(var(--red), var(--red));
   background: var(--rm) left top / 0 1.5px, var(--rm) left top / 1.5px 0, var(--rm) right top / 0 1.5px, var(--rm) right top / 1.5px 0,
@@ -166,10 +166,15 @@ main { padding: 0 calc(var(--frame) + 6px); }
   transition: opacity .2s ease, background-size .35s cubic-bezier(.4,0,.2,1);
 }
 @media (hover: hover) and (pointer: fine) {
-  .detail:hover::before {
+  .detail:hover::before, .register .card:hover::before {
     opacity: 1;
     background-size: 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px;
   }
+}
+/* a card reached by keyboard is marked the same way */
+.detail:has(.card-link:focus-visible)::before, .register .card:has(a:focus-visible)::before {
+  opacity: 1;
+  background-size: 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px;
 }
 
 /* ---------- sheet 1: the scrolly section ---------- */
@@ -378,11 +383,14 @@ kbd { font: inherit; color: var(--red); }
 .foot { padding: 28px calc(var(--frame) + 6px + var(--gutter) + var(--wide)) calc(var(--frame) + 40px); display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font: 400 11.5px/1.5 var(--mono); color: var(--ink-2); border-top: .75px solid var(--hair); margin: 0 calc(var(--frame) + 6px); }
 .foot p { margin: 0; }
 
-/* the revision cloud that follows hover and focus */
-.cloud-hl { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; z-index: 40; }
-.cloud-hl path { fill: none; stroke: var(--red); stroke-width: 1.4; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
-.cloud-hl.in-bar { z-index: 56; }
-.cloud-hl.on path { transition: stroke-dashoffset .45s cubic-bezier(.4,0,.2,1); stroke-dashoffset: 0; }
+/* the dimension line under a pointed-at or focused link: it draws out from its middle, then the ticks */
+.dim-hl { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; z-index: 40; }
+.dim-hl path { fill: none; stroke: var(--red); stroke-width: 1; stroke-linecap: round; }
+.dim-hl.in-bar { z-index: 56; }
+.dim-line { transform-box: fill-box; transform-origin: center; transform: scaleX(0); }
+.dim-tick { opacity: 0; }
+.dim-hl.on .dim-line { transform: none; transition: transform .35s cubic-bezier(.4,0,.2,1); }
+.dim-hl.on .dim-tick { opacity: 1; transition: opacity .15s ease .25s; }
 
 
 /* ---------- the inner sheets: /projects, the case studies, the blog, the CV, contact ---------- */

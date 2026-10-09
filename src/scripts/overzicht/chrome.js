@@ -1,5 +1,6 @@
 // The sheet's chrome, on every page: the theme button, the phone menu, the detail drawings
-// plotting in, and the revision cloud. The homepage's ANNA section adds main.js on top.
+// plotting in, the dimension line under a pointed-at link, the crosshair and the pencil.
+// The homepage's ANNA section adds main.js on top.
 import { getCurrentTheme, setTheme } from '../../lib/theme';
 
 document.documentElement.classList.add('js');
@@ -72,54 +73,40 @@ else {
   dwgs.forEach(d => io.observe(d));
 }
 
-// ---------- the revision cloud: a reviewer's mark around whatever you point at ----------
-const cloud = document.querySelector('.cloud-hl');
-const cloudPath = cloud.querySelector('path');
-function cloudD(w, h, r) {
-  const segs = [];
-  const side = (ax, ay, bx, by) => {
-    const len = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.round(len / (r * 1.7)));
-    for (let k = 0; k < n; k++) segs.push([ax + (bx - ax) * k / n, ay + (by - ay) * k / n, ax + (bx - ax) * (k + 1) / n, ay + (by - ay) * (k + 1) / n]);
-  };
-  side(0, 0, w, 0); side(w, 0, w, h); side(w, h, 0, h); side(0, h, 0, 0);
-  let d = 'M0 0';
-  for (const [ax, ay, bx, by] of segs) {
-    const mx = (ax + bx) / 2, my = (ay + by) / 2, dx = bx - ax, dy = by - ay;
-    const nx = dy, ny = -dx; // outward for a clockwise loop
-    d += ` Q${(mx + nx * 0.6).toFixed(1)} ${(my + ny * 0.6).toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`;
-  }
-  return d;
+// ---------- a dimension line under whatever link or button you point at ----------
+// Cards get registration marks instead (CSS); the revision cloud stays inside the drawings.
+const dim = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+dim.setAttribute('class', 'dim-hl');
+dim.setAttribute('aria-hidden', 'true');
+dim.innerHTML = '<path class="dim-line"/><path class="dim-tick"/><path class="dim-tick"/>';
+document.body.append(dim);
+const [dimLine, ...dimTicks] = dim.children;
+let dimTarget = null;
+function showDim(el) {
+  if (reduced || !el || dimTarget === el) return;
+  dimTarget = el;
+  // the bar is fixed above the page, so a line under one of its links is drawn above it
+  dim.classList.toggle('in-bar', !!el.closest('.bar'));
+  const r = el.getBoundingClientRect(), w = r.width;
+  dim.style.transform = `translate(${r.left + scrollX}px, ${r.bottom + scrollY + 4}px)`;
+  dim.classList.remove('on');
+  dimLine.setAttribute('d', `M0 0H${w.toFixed(1)}`);
+  // architectural ticks: short obliques through each end
+  dimTicks.forEach((t, i) => { const x = i * w; t.setAttribute('d', `M${(x - 3).toFixed(1)} 3L${(x + 3).toFixed(1)} -3`); });
+  void dim.getBoundingClientRect();
+  dim.classList.add('on');
 }
-let cloudTarget = null;
-function showCloud(el) {
-  if (reduced || !el || cloudTarget === el) return;
-  cloudTarget = el;
-  // the bar is fixed above the page, so a cloud around one of its links is drawn above it
-  cloud.classList.toggle('in-bar', !!el.closest('.bar'));
-  const r = el.getBoundingClientRect();
-  const pad = 7, w = r.width + pad * 2, h = r.height + pad * 2;
-  cloud.style.transform = `translate(${r.left + scrollX - pad}px, ${r.top + scrollY - pad}px)`;
-  cloud.classList.remove('on');
-  cloudPath.setAttribute('d', cloudD(w, h, Math.min(9, Math.max(6, h / 4))));
-  const L = cloudPath.getTotalLength();
-  cloudPath.style.strokeDasharray = `${L} ${L}`;
-  cloudPath.style.strokeDashoffset = L;
-  void cloudPath.getBoundingClientRect();
-  cloud.classList.add('on');
-  cloudPath.style.strokeDashoffset = 0;
+function hideDim(el) {
+  if (dimTarget !== el) return;
+  dimTarget = null;
+  dim.classList.remove('on');
 }
-function hideCloud(el) {
-  if (cloudTarget !== el) return;
-  cloudTarget = null;
-  cloud.classList.remove('on');
-  cloudPath.setAttribute('d', '');
-}
-const cloudables = 'a.act, .card-link, .links a, .register .reg-title a, .side a, .diary a, .more, .replay, .theme, .bar nav a';
-document.addEventListener('pointerover', e => { const el = e.target.closest(cloudables); if (el) showCloud(el); });
-document.addEventListener('pointerout', e => { const el = e.target.closest(cloudables); if (el && !el.contains(e.relatedTarget)) hideCloud(el); });
-document.addEventListener('focusin', e => { const el = e.target.closest(cloudables); if (el && el.matches(':focus-visible')) showCloud(el); });
-document.addEventListener('focusout', e => { const el = e.target.closest(cloudables); if (el) hideCloud(el); });
-addEventListener('scroll', () => cloudTarget && cloudTarget.closest('.bar') && hideCloud(cloudTarget), { passive: true });
+const dimmed = 'a.act, .links a, .side a, .diary a, .more, .replay, .theme, .bar nav a';
+document.addEventListener('pointerover', e => { const el = e.target.closest(dimmed); if (el) showDim(el); });
+document.addEventListener('pointerout', e => { const el = e.target.closest(dimmed); if (el && !el.contains(e.relatedTarget)) hideDim(el); });
+document.addEventListener('focusin', e => { const el = e.target.closest(dimmed); if (el && el.matches(':focus-visible')) showDim(el); });
+document.addEventListener('focusout', e => { const el = e.target.closest(dimmed); if (el) hideDim(el); });
+addEventListener('scroll', () => dimTarget && dimTarget.closest('.bar') && hideDim(dimTarget), { passive: true });
 
 // The observer does the work; this is the backstop, run on scroll, so the drawings never
 // stay hidden where an IntersectionObserver does not fire.

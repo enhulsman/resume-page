@@ -476,12 +476,47 @@ test('a landscape phone keeps the turn hint off the drawing', async () => {
   await context.close();
 });
 
-test('the revision cloud shows over the bar when a bar link is pointed at', async () => {
+// A link or button gets a dimension line drawn in under it: its own width, ticked at both ends.
+const dimUnder = (page, sel) => page.evaluate(sel => {
+  const el = document.querySelector(sel), dim = document.querySelector('.dim-hl');
+  if (!dim || !dim.classList.contains('on')) return null;
+  const r = el.getBoundingClientRect(), line = dim.querySelector('.dim-line').getBoundingClientRect();
+  return { left: line.left - r.left, right: line.right - r.right, below: line.top - r.bottom, ticks: dim.querySelectorAll('.dim-tick').length,
+    z: +getComputedStyle(dim).zIndex, bar: +getComputedStyle(document.querySelector('.bar')).zIndex };
+}, sel);
+
+test('pointing at a link draws a dimension line under it, over the bar too; no revision cloud is left', async () => {
   const { context, page } = await open('/');
+  assert.equal(await page.locator('.cloud-hl').count(), 0, 'the cloud stays inside the drawings');
   await page.locator('.bar nav a').nth(1).hover();
   await page.waitForTimeout(600);
-  const [cloud, bar] = await page.evaluate(() => [+getComputedStyle(document.querySelector('.cloud-hl')).zIndex, +getComputedStyle(document.querySelector('.bar')).zIndex]);
-  assert.ok(cloud > bar, `cloud z ${cloud}, bar z ${bar}`);
+  const d = await dimUnder(page, '.bar nav a:nth-child(2)');
+  assert.ok(d, 'a dimension line is shown');
+  assert.ok(Math.abs(d.left) <= 1.5 && Math.abs(d.right) <= 1.5, `spans the link: ${d.left}, ${d.right}`);
+  assert.ok(d.below >= 0 && d.below <= 10, `just under it: ${d.below}px`);
+  assert.equal(d.ticks, 2);
+  assert.ok(d.z > d.bar, `line z ${d.z}, bar z ${d.bar}`);
+  // a button on the paper gets one too, and it goes again when the pointer leaves
+  await page.locator('.actions .act').nth(1).hover();
+  await page.waitForTimeout(600);
+  assert.ok(await dimUnder(page, '.actions .act:nth-child(2)'), 'under a button-like link');
+  await page.mouse.move(5, 500);
+  await page.waitForTimeout(300);
+  assert.equal(await dimUnder(page, '.actions .act:nth-child(2)'), null);
+  await context.close();
+});
+
+test('pointing at a project card draws registration marks round it, not a dimension line', async () => {
+  const { context, page } = await open('/');
+  const card = page.locator('#register .card').first();
+  await card.scrollIntoViewIfNeeded();
+  const corners = () => card.evaluate(c => +getComputedStyle(c, '::before').opacity);
+  assert.equal(await corners(), 0);
+  const b = await card.boundingBox();
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+  await page.waitForTimeout(500);
+  assert.ok(await corners() > 0.9, 'registration marks round the card');
+  assert.equal(await page.locator('.dim-hl.on').count(), 0, 'no dimension line on a card');
   await context.close();
 });
 
