@@ -335,6 +335,9 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
     req: -1,         // request animation start, -1 = not yet
     answer: 0,
     cloud: null, cloudSince: 0,
+    focus: null,     // the level being read: it slides out of the stack, the others step back
+    pull: Object.fromEntries(LEVELS.map(L => [L.id, 0])), // how far each level is out, 0..1
+    pullAt: 0,
     hover: null,
     w: 0, h: 0, dpr: 1, spin: 0,
     frame: { x: 0, y: 0, w: 1, h: 1 }, // where on the canvas the drawing must fit
@@ -342,6 +345,7 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
   let colors = {};
   let raf = 0, dirty = true;
   const anchors = {}; // projected points the HTML labels follow
+  const plates = new Map(); // each level plate's top, in CSS pixels, as last drawn
 
   function readColors() {
     const cs = getComputedStyle(canvas);
@@ -393,9 +397,13 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
     return levelY(group, e);
   }
 
-  function placed(it, e) {
-    const dy = offsetFor(it.group, e);
-    const sh = p => v3(p.x, p.y + dy, p.z);
+  // pulled: the level being read slides out along +x, like a drawer (exploded view only;
+  // left out of the fit, so the zoom holds still while it moves)
+  const SLIDE = 0.6;
+  const pullOf = (group, q) => (typeof group === 'number' ? state.pull[LEVELS[group].id] * smooth(clamp((q - 0.6) / 0.4)) : 0);
+  function placed(it, e, q = null) {
+    const dy = offsetFor(it.group, e), dx = q == null ? 0 : SLIDE * pullOf(it.group, q);
+    const sh = p => v3(p.x + dx, p.y + dy, p.z);
     return sh;
   }
 
@@ -462,6 +470,17 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
     if (reduced && state.req >= 0) state.answer = 1;
     const cloudP = clamp((now - state.cloudSince) / 700);
     if (cloudP < 1) animating = true;
+    // ease each level toward in or out, about a third of a second
+    const dt = Math.min(0.1, (now - (state.pullAt || now)) / 1000);
+    state.pullAt = now;
+    let anyPull = 0;
+    for (const L of LEVELS) {
+      const want = state.focus === L.id ? 1 : 0, f = state.pull[L.id];
+      state.pull[L.id] = reduced ? want : Math.abs(want - f) < 0.002 ? want : f + (want - f) * (1 - Math.exp(-dt / 0.12));
+      if (state.pull[L.id] !== want) animating = true;
+      anyPull = Math.max(anyPull, state.pull[L.id]);
+    }
+    const back = anyPull * smooth(clamp((state.q - 0.6) / 0.4)); // how far the other levels step back
     const st = { ink: colors.ink, faint: colors.faint, red: colors.red, px: n => n * dpr / Math.max(0.0001, fit.s * dpr) * 1, answer: state.answer, cloud: state.cloud, cloudP: reduced ? 1 : cloudP };
     // px() inside plane drawings: convert screen pixels to metres at the current scale
     st.px = n => (n * dpr) / (fit.s * dpr);
@@ -479,11 +498,13 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
       g.d += entry.d; g.n++;
       g.parts.push(entry);
     };
+    plates.clear();
     for (const it of items) {
-      const sh = placed(it, cam.e);
+      const sh = placed(it, cam.e, state.q);
       let a = 1;
       if (it.fade === 'ceiling') a = ceilingA;
       if (it.fade === 'axo') a = axoA;
+      if (typeof it.group === 'number') a *= 1 - 0.6 * back * (1 - state.pull[LEVELS[it.group].id]);
       if (a <= 0.01) continue;
       const p = reduced ? 1 : clamp((T - it.t0) / it.dur);
       if (p <= 0) { animating = true; continue; }
@@ -493,6 +514,8 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
         const pts = it.pts.map(q => S(sh(q)));
         const d = pts.reduce((s, q) => s + q.d, 0) / pts.length;
         into(it, sh, { it, pts, d, a, p, sh }, pts);
+        // a plate's top, in CSS pixels, for pointing at it
+        if (it.k === 'top' && typeof it.group === 'number') plates.set(LEVELS[it.group].id, pts.map(q => ({ x: q.x / dpr, y: q.y / dpr })));
       } else {
         const o = S(sh(it.o));
         const { min, max } = it.solid;
@@ -586,7 +609,7 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
     ctx.globalAlpha = 1;
 
     // anchors for HTML labels: the front-right corner of each plate and the laptop
-    LEVELS.forEach((L, i) => { anchors[L.id] = S(v3(PW, levelY(i, cam.e) - 0.035, -PD)); });
+    LEVELS.forEach((L, i) => { anchors[L.id] = S(v3(PW + SLIDE * pullOf(i, state.q), levelY(i, cam.e) - 0.035, -PD)); });
     anchors.laptop = S(v3(0.34, 0.95 + roomDy, -0.3));
     anchors.room = S(v3(2.42, 3.02 + roomDy, 1.9));
     anchors.fit = fit;
@@ -684,6 +707,25 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
     requestAge() { return state.req < 0 ? Infinity : (performance.now() - state.req) / 1000; },
     setCloud(id) { if (state.cloud !== id) { state.cloud = id; state.cloudSince = performance.now(); kick(); } },
     setHover(id) { if (state.hover !== id) { state.hover = id; kick(); } },
+    setFocus(id) { if (state.focus !== id) { state.focus = id; kick(); } },
+    // which level's plate is under a point (CSS pixels on the canvas), the top one first
+    levelAt(x, y) {
+      for (const L of LEVELS) {
+        const poly = plates.get(L.id);
+        if (!poly) continue;
+        let inside = false;
+        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+          const a = poly[i], b = poly[j];
+          if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+        }
+        if (inside) return L.id;
+      }
+      return null;
+    },
+    plateCenter(id) {
+      const poly = plates.get(id);
+      return poly && { x: poly.reduce((s, q) => s + q.x, 0) / poly.length, y: poly.reduce((s, q) => s + q.y, 0) / poly.length };
+    },
     setSpin(v) { state.spin = Math.max(-0.7, Math.min(0.6, v)); kick(); },
     theme() { readColors(); kick(); },
     resize,

@@ -286,6 +286,49 @@ test('side by side, the drawing explodes once, on a timer, when the first level 
   await context.close();
 });
 
+// the step a level's text is read in sits on screen, roughly in the middle
+const readingStep = (page, id) => page.locator(`[data-cloud="${id}"] h2`).evaluate(h => { const r = h.getBoundingClientRect(); return r.top > 0 && r.bottom < innerHeight; });
+
+test('a level\'s label, or its plate, takes you to its text', async () => {
+  const { context, page } = await open('/?review');
+  await page.locator('[data-cloud="identity"] h2').evaluate(h => h.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(1800);
+  // the label is a link to the level's step
+  await page.locator('.stage .levels li[data-level="ops"] a').click();
+  await page.waitForTimeout(1200);
+  assert.ok(await readingStep(page, 'ops'), 'the label scrolled to Operations');
+  await page.waitForTimeout(600);
+  // and the plate itself, clicked on the drawing
+  const at = await page.evaluate(() => { const s = document.querySelector('.stage').getBoundingClientRect(), c = window.__scene.plateCenter('connectors'); return { x: s.left + c.x, y: s.top + c.y }; });
+  assert.equal(await page.evaluate(([x, y]) => window.__scene.levelAt(x - document.querySelector('.stage').getBoundingClientRect().left, y - document.querySelector('.stage').getBoundingClientRect().top), [at.x, at.y]), 'connectors');
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(1200);
+  assert.ok(await readingStep(page, 'connectors'), 'the plate scrolled to MCP connectors');
+  await context.close();
+});
+
+test('the level being read slides out of the stack, and the others step back', async () => {
+  const { context, page } = await open('/?review');
+  await page.locator('[data-request] h2').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(3000);
+  const dim = () => page.locator('.stage .levels li').evaluateAll(ls => Object.fromEntries(ls.map(l => [l.dataset.level, l.classList.contains('dim')])));
+  assert.deepEqual(Object.values(await dim()), [false, false, false, false], 'nothing stepped back in section');
+  await page.locator('[data-cloud="claude"] h2').evaluate(h => h.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(1600);
+  const out = await page.evaluate(() => window.__scene.plateCenter('claude'));
+  const still = await page.evaluate(() => window.__scene.plateCenter('identity'));
+  assert.equal(await page.evaluate(() => window.__scene.state.focus), 'claude');
+  assert.deepEqual(await dim(), { identity: true, claude: false, connectors: true, ops: true });
+  // the next level takes over: Claude slides back in, MCP connectors out
+  await page.locator('[data-cloud="connectors"] h2').evaluate(h => h.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(1200);
+  const back = await page.evaluate(() => window.__scene.plateCenter('claude'));
+  assert.ok(out.x - back.x > 12, `Claude slid out by ${Math.round(out.x - back.x)}px and back`);
+  const idNow = await page.evaluate(() => window.__scene.plateCenter('identity'));
+  assert.ok(Math.abs(idNow.x - still.x) < 2, 'a level that is not read stays put');
+  await context.close();
+});
+
 test('the employment status line is shown', async () => {
   const { context, page } = await open('/', { js: false });
   assert.equal((await page.locator('.status').innerText()).trim(), 'Currently employed • Open to connect');

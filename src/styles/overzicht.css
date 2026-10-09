@@ -237,6 +237,11 @@ main { padding: 0 calc(var(--frame) + 6px); }
 .levels b { display: block; font: 700 12px/1.2 var(--sans); font-stretch: 80%; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; }
 .levels span { color: var(--ink-2); display: block; }
 .levels li.hot b { color: var(--red); }
+/* a label is a link to its level's text; the level being read stands out, the others step back */
+.levels a { color: inherit; text-decoration: none; }
+.levels b { transition: color .3s, opacity .3s; }
+.levels li.dim b { opacity: .4; }
+.stage.over-level { cursor: pointer; }
 
 .callout {
   position: absolute; left: 0; top: 0; margin: 0; width: 250px; padding: 12px 14px 14px;

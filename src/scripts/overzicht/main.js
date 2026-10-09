@@ -55,6 +55,8 @@ const scene = createScene(canvas, {
       dot.setAttribute('cx', a.x + 6); dot.setAttribute('cy', a.y);
       g.style.opacity = o;
       el.classList.toggle('hot', st.cloud === L.id || (st.lit || []).includes(L.id));
+      // the level being read stands out; the others step back with their plates
+      el.classList.toggle('dim', !!st.focus && st.focus !== L.id && st.q > 0.6);
     });
 
     // the screen callout, only while the drawing is in section
@@ -166,6 +168,7 @@ function readScroll() {
   goTo(q);
   const s = steps[active];
   if (!hoverCloud) scene.setCloud(s.dataset.cloud || null);
+  scene.setFocus(s.dataset.cloud || null);
   stage.classList.toggle('turnable', q > 0.6);
   if (s.hasAttribute('data-request') && lastActive !== active && scene.started() && scene.requestAge() > 6) scene.request();
   lastActive = active;
@@ -177,18 +180,52 @@ addEventListener('resize', readScroll);
 document.querySelector('.replay').addEventListener('click', () => (scene.started() ? scene.request() : startStage()));
 
 // in the exploded view the model can be turned by hand, about its vertical axis only
-let drag = null;
+let drag = null, turned = false;
 stage.addEventListener('pointerdown', e => {
   if (scene.state.q < 0.6 || e.button !== 0 || e.target.closest('button, a')) return;
   drag = { x: e.clientX, spin: scene.state.spin, id: e.pointerId };
+  turned = false;
   stage.setPointerCapture(e.pointerId);
   stage.classList.add('turning');
 });
-stage.addEventListener('pointermove', e => { if (drag && e.pointerId === drag.id) scene.setSpin(drag.spin + (e.clientX - drag.x) / 260); });
+stage.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  if (Math.abs(e.clientX - drag.x) > 4) turned = true;
+  scene.setSpin(drag.spin + (e.clientX - drag.x) / 260);
+});
 const endDrag = e => { if (drag && e.pointerId === drag.id) { drag = null; stage.classList.remove('turning'); } };
 stage.addEventListener('pointerup', endDrag);
 stage.addEventListener('pointercancel', endDrag);
 for (const b of stage.querySelectorAll('[data-turn]')) b.addEventListener('click', () => scene.setSpin(scene.state.spin + 0.18 * +b.dataset.turn));
+
+// a level's label, or its plate on the drawing, takes you to its step
+function readLevel(id) {
+  const step = document.getElementById(`anna-${id}`);
+  if (!step) return;
+  const behavior = reduced ? 'auto' : 'smooth';
+  if (phone.matches) {
+    // the drawing sits over the top of the screen; put the step just below it
+    const top = step.getBoundingClientRect().top + scrollY - stage.getBoundingClientRect().height - 8;
+    scrollTo({ top, behavior });
+  } else step.firstElementChild.scrollIntoView({ block: 'center', behavior });
+}
+for (const a of stage.querySelectorAll('.levels a')) a.addEventListener('click', e => { e.preventDefault(); readLevel(a.closest('li').dataset.level); });
+let overPlate = null;
+stage.addEventListener('pointermove', e => {
+  if (drag || scene.state.q < 0.6 || e.target.closest('button, a, .levels, .callout')) return;
+  const r = stage.getBoundingClientRect(), id = scene.levelAt(e.clientX - r.left, e.clientY - r.top);
+  if (id === overPlate) return;
+  overPlate = id;
+  stage.classList.toggle('over-level', !!id);
+  if (id) { hoverCloud = id; scene.setCloud(id); } else { hoverCloud = null; readScroll(); }
+});
+stage.addEventListener('pointerleave', () => { if (overPlate) { overPlate = null; stage.classList.remove('over-level'); hoverCloud = null; readScroll(); } });
+stage.addEventListener('click', e => {
+  // a press held on the stage while turning sends the click to the stage itself
+  if (turned || scene.state.q < 0.6 || e.target.closest('button, a, .levels, .callout')) return;
+  const r = stage.getBoundingClientRect(), id = scene.levelAt(e.clientX - r.left, e.clientY - r.top);
+  if (id) readLevel(id);
+});
 
 // pointing at a level's label clouds its plate
 for (const li of Object.values(levelEls)) {
