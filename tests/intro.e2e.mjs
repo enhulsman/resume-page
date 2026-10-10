@@ -224,6 +224,30 @@ test('a wheel turned while the sheet squares up is not lost: it scrolls once it 
   await context.close();
 });
 
+test('a wheel turned before the arrival script has loaded still hurries it and still scrolls', async () => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await context.route(PAGE_SCRIPT, async r => { await new Promise(res => setTimeout(res, 900)); await r.continue(); });
+  const page = await context.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'commit' });
+  await page.waitForFunction(() => document.documentElement.classList.contains('intro'));
+  await page.mouse.move(700, 450);
+  await page.mouse.wheel(0, 700);
+  await page.waitForFunction(() => !document.documentElement.classList.contains('intro'), null, { timeout: 5000 });
+  await page.waitForTimeout(900);
+  assert.ok(await page.evaluate(() => scrollY) > 300, `scrolled to ${await page.evaluate(() => scrollY)}`);
+  await context.close();
+});
+
+test('printed mid-arrival, the page prints whole', async () => {
+  const { context, page } = await open('/');
+  await page.emulateMedia({ media: 'print' });
+  // printing stops the animations, which ends the arrival soon after; the print itself may be
+  // laid out before that, with the class still on
+  const body = await page.evaluate(() => (document.documentElement.classList.add('intro'), { overflow: getComputedStyle(document.body).overflowY, long: document.documentElement.scrollHeight > innerHeight * 2, transform: getComputedStyle(document.body).transform }));
+  assert.deepEqual(body, { overflow: 'visible', long: true, transform: 'none' });
+  await context.close();
+});
+
 test('a font that arrives late leaves nothing half-drawn behind', async () => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   await context.route(/Archivo\.woff2/, async r => { await new Promise(res => setTimeout(res, 3000)); await r.continue(); });
@@ -250,11 +274,16 @@ test('resizing the window mid-arrival hurries it to the end, rather than misdraw
   await context.close();
 });
 
+// the homepage's script: intro.js on its own in dev, bundled into the page's script in a build
+const PAGE_SCRIPT = /intro\.js|index\.astro.*type=script|index\.astro_astro_type_script/;
+
 test('if the arrival script never runs, the page settles by itself', async () => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  await context.route(/intro\.js/, r => r.abort());
+  let blocked = 0;
+  await context.route(PAGE_SCRIPT, r => { blocked++; return r.abort(); });
   const page = await context.newPage();
   await page.goto(BASE + '/', { waitUntil: 'load' });
+  assert.ok(blocked > 0, 'the script really was kept out');
   await page.waitForFunction(() => !document.documentElement.classList.contains('intro'), null, { timeout: 5000 });
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).transform), 'none');
   assert.ok(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight * 2), 'and scrolls');

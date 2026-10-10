@@ -135,6 +135,8 @@ const xdraw = () => {
   xq = true;
   requestAnimationFrame(() => {
     xq = false;
+    // sent home (or off the page) since this frame was asked for
+    if (!xat) return;
     const [cx, cy] = xat;
     xv.style.transform = `translateX(${cx}px)`;
     xh.style.transform = `translateY(${cy}px)`;

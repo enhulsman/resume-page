@@ -25,19 +25,32 @@ const { current, ...meta } = Astro.props;
       // sheet never shows settled and then jumps back: once a session, never on reduced motion
       // or a link into the page. ?intro=1 replays it, ?intro=0 skips it. intro.js clears the
       // class when it is over; if that script never runs, the backstop here does, so the sheet
-      // never stays one tilted screen.
+      // never stays one tilted screen. Input before intro.js has loaded is kept for it (it
+      // hurries the arrival, a wheel still scrolls); if it is slow to come, input ends it here.
       try {
         const q = new URLSearchParams(location.search).get('intro');
         const seen = sessionStorage.getItem('ovz-arrived');
         if (location.pathname === '/') {
           if (!location.hash && q !== '0' && (q === '1' || !seen) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
             document.documentElement.classList.add('intro');
-            setTimeout(() => {
+            const early = window.ovzEarly = { wheel: 0, asked: false, taken: false };
+            const end = () => {
               const h = document.documentElement;
               if (!h.classList.contains('intro')) return;
               h.classList.remove('intro');
               document.dispatchEvent(new CustomEvent('ovz:arrived'));
-            }, 4000);
+              if (early.wheel) scrollBy({ top: early.wheel, behavior: 'smooth' });
+            };
+            const ask = e => {
+              if (e.type === 'wheel') early.wheel += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+              if (early.asked) return;
+              early.asked = true;
+              setTimeout(() => early.taken || end(), 700);
+            };
+            const inputs = ['keydown', 'wheel', 'pointerdown', 'touchstart'];
+            inputs.forEach(t => addEventListener(t, ask, { capture: true, passive: true }));
+            early.off = () => inputs.forEach(t => removeEventListener(t, ask, true));
+            setTimeout(end, 4000);
           }
           sessionStorage.setItem('ovz-arrived', '1');
         }

@@ -271,8 +271,10 @@ function arrive() {
   html.classList.remove('intro');
   document.querySelectorAll('.glyphs, .pens').forEach(s => s.remove());
   document.dispatchEvent(new CustomEvent('ovz:arrived'));
-  // the sheet was one screen while it squared up: a wheel turned meanwhile scrolls now
+  // the sheet was one screen while it squared up: a wheel turned meanwhile scrolls now, and
+  // a link tabbed to meanwhile is brought into view
   if (wheeled) scrollBy({ top: wheeled, behavior: 'smooth' });
+  else if (document.activeElement && document.activeElement !== document.body) document.activeElement.scrollIntoView({ block: 'nearest' });
 }
 
 // Hurried, not cut: everything still plays to its end, six times as fast, and the crosshair
@@ -339,5 +341,13 @@ if (playing) {
     .then(arrive, arrive);
   INPUTS.forEach(t => addEventListener(t, hurry, { capture: true, passive: true }));
   addEventListener('resize', resized);
+  // what the visitor did before this script had loaded (the layout's head kept it)
+  const early = window.ovzEarly;
+  if (early) {
+    early.taken = true;
+    early.off();
+    wheeled += early.wheel;
+    if (early.asked) hurry({ type: 'early' });
+  }
 }
 start();

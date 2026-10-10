@@ -812,6 +812,9 @@ kbd { font: inherit; color: var(--red); }
     --sheet: #fff; --ink: #000; --ink-2: #222; --label: #444; --faint: #777; --hair: #bbb; --red: #B8301A; color-scheme: light;
   }
   body { background: #fff; color: #000; font-size: 11pt; transition: none; }
+  /* printed mid-arrival: the whole sheet, square, not the one tilted screen */
+  html.intro { perspective: none; background: none; }
+  html.intro body { height: auto; overflow: visible; transform: none; }
   body::before, body::after, .bar, .frame, .foot, .skip, .dim-hl, .replay, .turn, .xhair, .pencil-mark, .pencil-line { display: none !important; }
   main { padding: 0; }
   .sheet { padding: 18px 0 0; border-top: 0; min-height: 0; }
