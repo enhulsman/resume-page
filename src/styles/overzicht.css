@@ -1,8 +1,5 @@
 /* Overzicht: hulsman.dev as a drawing set. Tokens and rationale: resume-lab/design/DESIGN.md. */
 
-/* registered so the dark arrival's lamp can flicker it; initial value is the light theme's */
-@property --sheet { syntax: "<color>"; inherits: true; initial-value: #EFEDF3; }
-
 @font-face { font-family: "Archivo"; src: url(/fonts/Archivo.woff2) format("woff2-variations"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
 @font-face { font-family: "B612 Mono"; src: url(/fonts/B612Mono.woff2) format("woff2"); font-weight: 400; font-display: swap; }
 
@@ -84,12 +81,9 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
    it does, the body is one screen tall: the frame and bar are fixed, and inside a transformed
    body fixed means fixed to the body, so the body has to be the screen. */
 html.intro { perspective: 1600px; background: var(--table); }
-html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; transform-origin: 50% 62%; animation: tilt .9s cubic-bezier(.3, .55, .15, 1) backwards; }
+html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; transform-origin: 50% 62%; animation: tilt 1.2s cubic-bezier(.5, 0, .25, 1) backwards; }
 @media (max-width: 860px) { html.intro body { --tilt: 14deg; } }
 @keyframes tilt { from { transform: rotateX(var(--tilt)) scale(.94); } }
-/* to compare (?walk=slow, set in the head): a slower walk-up that eases in as well, so the
-   sheet lies on the table a moment before it squares up. Keep one once chosen. */
-html.intro[data-walk="slow"] body { animation-duration: 1.2s; animation-timing-function: cubic-bezier(.5, 0, .25, 1); }
 /* The name is drawn letter by letter (intro.js, from the font's own outlines): sketch lines
    round each letter, its outline traced, then filled in the settled ink. The real text waits
    underneath, invisible, until the last letter is done; it shows then even if the drawing
@@ -104,20 +98,9 @@ html.intro .name span { animation: letters 1.95s steps(1, end) backwards; }
 @keyframes g-draw { from { stroke-dashoffset: 1; } }
 @keyframes g-box { from { opacity: 1; } }
 @keyframes g-fill { from { fill-opacity: 0; } }
-/* by night the light table switches on first, like a tube: off (darker than the table), two
-   bright flickers, then on, a touch bright, settling in steps (steps, not a fade: an animated
-   colour on the root restyles the whole page every frame) */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]).intro { animation: lamp .85s steps(1, end) backwards; }
-}
-:root[data-theme="dark"].intro { animation: lamp .85s steps(1, end) backwards; }
-/* the theme's colour transitions would lag behind the flicker, and the paper covering the
-   text (below) does not: they wait until the sheet is lit */
+/* the theme's colour transitions wait until the arrival is over: the paper covering the text
+   (below) does not transition, and would show as blocks while they caught up */
 html.intro body, html.intro body::after, html.intro .frame { transition: none; }
-@keyframes lamp {
-  0% { --sheet: #060509; } 12% { --sheet: #3A3550; } 18% { --sheet: #060509; } 34% { --sheet: #2C283C; }
-  40% { --sheet: #0A090E; } 52% { --sheet: #25212F; } 70% { --sheet: #1D1A26; } 86% { --sheet: #19171F; }
-}
 
 /* The rest of the first sheet is drawn in around the name, from a blank sheet: only the frame
    and the bar are pre-printed. Text is ruled, then a cover of paper is swept off it (a

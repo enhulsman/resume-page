@@ -33,8 +33,6 @@ const { current, ...meta } = Astro.props;
         if (location.pathname === '/') {
           if (!location.hash && q !== '0' && (q === '1' || !seen) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
             document.documentElement.classList.add('intro');
-            // to compare walk-up speeds (overzicht.css); goes once one is chosen
-            if (new URLSearchParams(location.search).get('walk') === 'slow') document.documentElement.dataset.walk = 'slow';
             const early = window.ovzEarly = { wheel: 0, asked: false, taken: false };
             const end = () => {
               const h = document.documentElement;

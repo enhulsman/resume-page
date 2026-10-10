@@ -155,8 +155,7 @@ test('the arrival never repaints the whole page frame by frame', async () => {
       html: document.documentElement.getAnimations({ subtree: false }).map(a => a.animationName),
       body: document.body.getAnimations({ subtree: false }).map(a => a.animationName),
     }));
-    // the lamp's flicker is four steps, not a frame-by-frame fade
-    assert.ok(on.html.every(n => n === 'lamp'), `on the root: ${on.html.join(', ')}`);
+    assert.deepEqual(on.html, []);
     assert.deepEqual(on.body, ['tilt']);
     await context.close();
   }
@@ -195,20 +194,15 @@ test('the sheet starts tilted on the table and squares up', async () => {
   await context.close();
 });
 
-test('?walk=slow walks up slower and gentler, to compare; the default is unchanged', async () => {
-  const timing = async path => {
-    const { context, page } = await open(path);
-    const t = await page.evaluate(() => {
-      const a = document.body.getAnimations().find(a => a.animationName === 'tilt');
-      return { d: a.effect.getComputedTiming().duration, e: getComputedStyle(document.body).animationTimingFunction };
-    });
-    await context.close();
-    return t;
-  };
-  const fast = await timing('/'), slow = await timing('/?walk=slow');
-  assert.equal(fast.d, 900);
-  assert.equal(slow.d, 1200);
-  assert.notEqual(slow.e, fast.e, 'eased in as well as out');
+test('the sheet walks up in 1.2 s, easing in as well as out, so the table registers first', async () => {
+  const { context, page } = await open('/');
+  const t = await page.evaluate(() => ({
+    d: document.body.getAnimations().find(a => a.animationName === 'tilt').effect.getComputedTiming().duration,
+    e: getComputedStyle(document.body).animationTimingFunction,
+  }));
+  assert.equal(t.d, 1200);
+  assert.equal(t.e, 'cubic-bezier(0.5, 0, 0.25, 1)');
+  await context.close();
 });
 
 test('on a phone the sheet tilts less', async () => {
@@ -573,34 +567,17 @@ test('on a phone it plays without the crosshair, and the dimension fits the scre
   await context.close();
 });
 
-test('in the dark theme the light table switches on, and ends on the dark sheet', async () => {
+test('in the dark theme the sheet is simply dark from the start: no flicker, no lagging colours', async () => {
   const { context, page } = await open('/', { colorScheme: 'dark' });
+  // a flickering lamp read as the page failing to render (Ezra, 2026-10-10)
   const anims = await page.evaluate(() => document.getAnimations().map(a => a.animationName));
-  assert.ok(anims.includes('lamp'), `the lamp flickers on (got ${anims.join(', ')})`);
-  // the sheet's colour transitions would lag behind the flicker while the paper covering the
-  // text keeps up: blocks of lighter paper on a dark sheet
+  assert.ok(!anims.includes('lamp'), `no lamp (got ${anims.join(', ')})`);
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(22, 20, 29)');
+  // the sheet's colour transitions would lag while the paper covering the text does not:
+  // blocks of other paper on a dark sheet
   assert.deepEqual(await page.evaluate(() => [document.body, document.querySelector('.frame')].map(e => getComputedStyle(e).transitionDuration)), ['0s', '0s']);
   await settle(page);
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(22, 20, 29)');
-  await context.close();
-});
-
-test('by night the lamp flickers on visibly: off below the table, a bright flash above the lit sheet', async () => {
-  const { context, page } = await open('/', { colorScheme: 'dark' });
-  const k = await page.evaluate(() => {
-    const a = document.documentElement.getAnimations({ subtree: false }).find(a => a.animationName === 'lamp');
-    const lum = c => { const d = document.createElement('i'); d.style.color = c; document.body.append(d);
-      const [r, g, b] = getComputedStyle(d).color.match(/\d+/g).map(Number); d.remove(); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
-    // the keyframes do not list custom properties: sample the paused flicker instead
-    const d = a.effect.getComputedTiming().duration, sheets = [];
-    a.pause();
-    for (let t = 0; t < d; t += 10) { a.currentTime = t; sheets.push(lum(getComputedStyle(document.documentElement).getPropertyValue('--sheet'))); }
-    a.play();
-    return { d: a.effect.getComputedTiming().duration, max: Math.max(...sheets), min: Math.min(...sheets), lit: lum('#16141D'), table: lum('#0E0D13') };
-  });
-  assert.ok(k.min < k.table, `off is darker than the table ${JSON.stringify(k)}`);
-  assert.ok(k.max - k.lit >= 20, `the flash is clearly brighter than the lit sheet ${JSON.stringify(k)}`);
-  assert.ok(k.d >= 700 && k.d <= 1000, `long enough to see, short enough not to wait on (${k.d} ms)`);
   await context.close();
 });
 
