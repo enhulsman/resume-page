@@ -1033,3 +1033,22 @@ test('code blocks wrap rather than scroll sideways, a wrapped line indented unde
     await context.close();
   }
 });
+
+for (const [w, h] of [[1440, 900], [1920, 1080], [1280, 720]]) test(`on a ${w}x${h} desktop the next level's heading shows below the one being read`, async () => {
+  // a screen of blank paper per level hid that there was more: the next one peeks in, as on a phone
+  const { context, page } = await open('/', { width: w, height: h });
+  const ids = await page.locator('.scrolly .step[data-cloud]').evaluateAll(ss => ss.map(s => s.dataset.cloud));
+  for (const [a, b] of ids.slice(0, -1).map((id, i) => [id, ids[i + 1]])) {
+    await page.locator(`[data-cloud="${a}"]`).evaluate(s => s.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(150);
+    const r = await page.evaluate(([a, b]) => {
+      const box = s => document.querySelector(`[data-cloud="${s}"] h2`).getBoundingClientRect();
+      return { a: box(a), b: box(b), vh: innerHeight };
+    }, [a, b]);
+    assert.ok(r.a.top > 0, `${a} on screen`);
+    assert.ok(r.b.bottom < r.vh - 24, `${b}'s heading shows under ${a} (top ${Math.round(r.b.top)} of ${r.vh})`);
+    // but it is not crowded: a clear gap between the two
+    assert.ok(r.b.top - r.a.bottom > r.vh * 0.2, `${a} and ${b} keep apart`);
+  }
+  await context.close();
+});
