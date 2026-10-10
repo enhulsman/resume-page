@@ -195,6 +195,22 @@ test('the sheet starts tilted on the table and squares up', async () => {
   await context.close();
 });
 
+test('?walk=slow walks up slower and gentler, to compare; the default is unchanged', async () => {
+  const timing = async path => {
+    const { context, page } = await open(path);
+    const t = await page.evaluate(() => {
+      const a = document.body.getAnimations().find(a => a.animationName === 'tilt');
+      return { d: a.effect.getComputedTiming().duration, e: getComputedStyle(document.body).animationTimingFunction };
+    });
+    await context.close();
+    return t;
+  };
+  const fast = await timing('/'), slow = await timing('/?walk=slow');
+  assert.equal(fast.d, 900);
+  assert.equal(slow.d, 1200);
+  assert.notEqual(slow.e, fast.e, 'eased in as well as out');
+});
+
 test('on a phone the sheet tilts less', async () => {
   const { context, page } = await open('/', { width: 390, height: 844, hasTouch: true, isMobile: true });
   const from = await tiltFrom(page);
@@ -566,6 +582,25 @@ test('in the dark theme the light table switches on, and ends on the dark sheet'
   assert.deepEqual(await page.evaluate(() => [document.body, document.querySelector('.frame')].map(e => getComputedStyle(e).transitionDuration)), ['0s', '0s']);
   await settle(page);
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(22, 20, 29)');
+  await context.close();
+});
+
+test('by night the lamp flickers on visibly: off below the table, a bright flash above the lit sheet', async () => {
+  const { context, page } = await open('/', { colorScheme: 'dark' });
+  const k = await page.evaluate(() => {
+    const a = document.documentElement.getAnimations({ subtree: false }).find(a => a.animationName === 'lamp');
+    const lum = c => { const d = document.createElement('i'); d.style.color = c; document.body.append(d);
+      const [r, g, b] = getComputedStyle(d).color.match(/\d+/g).map(Number); d.remove(); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    // the keyframes do not list custom properties: sample the paused flicker instead
+    const d = a.effect.getComputedTiming().duration, sheets = [];
+    a.pause();
+    for (let t = 0; t < d; t += 10) { a.currentTime = t; sheets.push(lum(getComputedStyle(document.documentElement).getPropertyValue('--sheet'))); }
+    a.play();
+    return { d: a.effect.getComputedTiming().duration, max: Math.max(...sheets), min: Math.min(...sheets), lit: lum('#16141D'), table: lum('#0E0D13') };
+  });
+  assert.ok(k.min < k.table, `off is darker than the table ${JSON.stringify(k)}`);
+  assert.ok(k.max - k.lit >= 20, `the flash is clearly brighter than the lit sheet ${JSON.stringify(k)}`);
+  assert.ok(k.d >= 700 && k.d <= 1000, `long enough to see, short enough not to wait on (${k.d} ms)`);
   await context.close();
 });
 

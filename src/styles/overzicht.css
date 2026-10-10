@@ -87,6 +87,9 @@ html.intro { perspective: 1600px; background: var(--table); }
 html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; transform-origin: 50% 62%; animation: tilt .9s cubic-bezier(.3, .55, .15, 1) backwards; }
 @media (max-width: 860px) { html.intro body { --tilt: 14deg; } }
 @keyframes tilt { from { transform: rotateX(var(--tilt)) scale(.94); } }
+/* to compare (?walk=slow, set in the head): a slower walk-up that eases in as well, so the
+   sheet lies on the table a moment before it squares up. Keep one once chosen. */
+html.intro[data-walk="slow"] body { animation-duration: 1.2s; animation-timing-function: cubic-bezier(.5, 0, .25, 1); }
 /* The name is drawn letter by letter (intro.js, from the font's own outlines): sketch lines
    round each letter, its outline traced, then filled in the settled ink. The real text waits
    underneath, invisible, until the last letter is done; it shows then even if the drawing
@@ -101,15 +104,20 @@ html.intro .name span { animation: letters 1.95s steps(1, end) backwards; }
 @keyframes g-draw { from { stroke-dashoffset: 1; } }
 @keyframes g-box { from { opacity: 1; } }
 @keyframes g-fill { from { fill-opacity: 0; } }
-/* by night the light table switches on first: two short flickers, then steady */
+/* by night the light table switches on first, like a tube: off (darker than the table), two
+   bright flickers, then on, a touch bright, settling in steps (steps, not a fade: an animated
+   colour on the root restyles the whole page every frame) */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]).intro { animation: lamp .45s steps(1, end) backwards; }
+  :root:not([data-theme="light"]).intro { animation: lamp .85s steps(1, end) backwards; }
 }
-:root[data-theme="dark"].intro { animation: lamp .45s steps(1, end) backwards; }
+:root[data-theme="dark"].intro { animation: lamp .85s steps(1, end) backwards; }
 /* the theme's colour transitions would lag behind the flicker, and the paper covering the
    text (below) does not: they wait until the sheet is lit */
 html.intro body, html.intro body::after, html.intro .frame { transition: none; }
-@keyframes lamp { 0% { --sheet: #08070B; } 22% { --sheet: #16141D; } 38% { --sheet: #08070B; } 52% { --sheet: #16141D; } }
+@keyframes lamp {
+  0% { --sheet: #060509; } 12% { --sheet: #3A3550; } 18% { --sheet: #060509; } 34% { --sheet: #2C283C; }
+  40% { --sheet: #0A090E; } 52% { --sheet: #25212F; } 70% { --sheet: #1D1A26; } 86% { --sheet: #19171F; }
+}
 
 /* The rest of the first sheet is drawn in around the name, from a blank sheet: only the frame
    and the bar are pre-printed. Text is ruled, then a cover of paper is swept off it (a
