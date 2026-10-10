@@ -125,7 +125,7 @@ test('phones reach every page through the drawn menu', async () => {
   await page.waitForTimeout(700);
   assert.deepEqual(await links.allInnerTexts(), ['PROJECTS', 'BLOG', 'RÉSUMÉ', 'CONTACT']);
   await links.filter({ hasText: 'Blog' }).click();
-  await page.waitForURL(/\/blog$/);
+  await page.waitForURL(/\/blog\/?$/); // the live site adds a trailing slash
   await context.close();
 });
 
@@ -426,7 +426,7 @@ test('clicking a project\'s drawing opens its case study, on /projects and on th
     await page.waitForTimeout(300);
     const r = await dwg.boundingBox();
     await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
-    await page.waitForURL('**/projects/Henk');
+    await page.waitForURL(/\/projects\/Henk\/?$/); // the live site adds a trailing slash
     await context.close();
   }
   // the numbers are part of the card too

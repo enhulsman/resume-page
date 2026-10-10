@@ -389,7 +389,7 @@ test('phones reach every section through the menu button', async () => {
   await btn.click();
   await page.waitForTimeout(700);
   await links.filter({ hasText: 'Résumé' }).click();
-  await page.waitForURL(/\/resume$/);
+  await page.waitForURL(/\/resume\/?$/); // the live site adds a trailing slash
   await context.close();
 });
 
