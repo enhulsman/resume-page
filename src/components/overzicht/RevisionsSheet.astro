@@ -3,20 +3,32 @@ import { experience } from "../../config/resume";
 import { materials, specification } from "../../config/home";
 
 // Experience as a drawing's revision table: newest first, lettered from A (oldest).
-const revs = experience.map((e, i) => ({
-  ...e,
-  letter: String.fromCharCode(65 + experience.length - 1 - i),
-  when: e.endDate ? `${e.startDate} – ${e.endDate}` : `${e.startDate} –`,
-}));
+// On a wide screen each revision also gets a bar on one axis of years, a programme chart: the
+// dates are years only, so a bar runs from the middle of its first year to the middle of its
+// last, and an open role to the day the site was built.
+const built = new Date();
+const now = built.getFullYear() + (built.getMonth() + built.getDate() / 31) / 12;
+const from = Math.min(...experience.map(e => +e.startDate));
+const years = Array.from({ length: Math.ceil(now) - from }, (_, i) => from + i);
+const pct = (y: number) => `${(((y - from) / years.length) * 100).toFixed(2)}%`;
+const revs = experience.map((e, i) => {
+  const s = +e.startDate + 0.5, end = e.endDate ? +e.endDate + 0.5 : now;
+  return {
+    ...e,
+    letter: String.fromCharCode(65 + experience.length - 1 - i),
+    when: e.endDate ? `${e.startDate} – ${e.endDate}` : `${e.startDate} –`,
+    bar: `--l:${pct(s)};--w:${(((end - s) / years.length) * 100).toFixed(2)}%`,
+  };
+});
 ---
 <section class="sheet" id="revisions" aria-labelledby="rev-h">
   <header class="sheet-head">
     <h2 id="rev-h">Experience</h2>
     <p>Newest first, the way a drawing records its revisions.</p>
   </header>
-  <ol class="revs" reversed>
-    {revs.map(r => (
-      <li><span class="rev">{r.letter}</span><span class="when">{r.when}</span><div><h3>{r.homeRole ?? r.role} <i>{r.client}</i></h3><p>{r.homeSummary}</p></div>{r.stack && <ul class="stack" aria-label="Stack">{r.stack.map(t => <li>{t}</li>)}</ul>}</li>
+  <ol class="revs" reversed style={`--n:${years.length};--now:${pct(now)}`}>
+    {revs.map((r, i) => (
+      <li><span class="rev">{r.letter}</span><span class="when">{r.when}</span><div><h3>{r.homeRole ?? r.role} <i>{r.client}</i></h3><p>{r.homeSummary}</p></div>{r.stack ? <ul class="stack" aria-label="Stack">{r.stack.map(t => <li>{t}</li>)}</ul> : <span />}<div class="span" aria-hidden="true">{i === 0 && <div class="revs-axis">{years.map(y => <span style={`--x:${pct(y)}`}>{y}</span>)}</div>}<i class="span-bar" style={r.bar} /></div></li>
     ))}
   </ol>
 

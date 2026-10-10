@@ -442,6 +442,19 @@ main { padding: 0 calc(var(--frame) + 6px); }
 /* the stack column: the role's main tools, one per line, ruled off from the summary */
 .revs .stack { list-style: none; margin: 0; padding: 2px 0 0 18px; border-left: .75px solid var(--hair); font: 400 12px/1.75 var(--mono); color: var(--ink-2); }
 .revs .stack li { display: block; padding: 0; border: 0; }
+/* the programme chart: on a wide screen, each revision's span on one axis of years, the year
+   lines running unbroken down the table, a red line at now (RevisionsSheet.astro) */
+.revs .span, .revs-axis { display: none; }
+@media (min-width: 1800px) {
+  .revs > li { grid-template-columns: 56px 120px minmax(0, 46em) minmax(150px, 210px) minmax(0, 1fr); }
+  .revs .span { display: block; position: relative; margin: -18px 0; min-height: calc(100% + 36px);
+    background: repeating-linear-gradient(90deg, var(--hair) 0 .75px, transparent .75px calc(100% / var(--n))); }
+  .revs .span::after { content: ""; position: absolute; top: 0; bottom: -1px; left: var(--now); border-left: .75px dashed var(--red); }
+  .revs .span-bar { position: absolute; left: var(--l); width: var(--w); top: 25px; height: 6px; background: var(--ink); }
+  .revs > li:first-child .span-bar { background: var(--red); }
+  .revs-axis { display: block; position: absolute; left: 0; right: 0; top: -22px; height: 12px; }
+  .revs-axis span { position: absolute; left: var(--x); padding-left: 4px; font: 400 10px/1 var(--mono); color: var(--label); }
+}
 .rev { font: 700 11.5px/1 var(--sans); width: 34px; height: 30px; display: grid; place-items: center; position: relative; }
 .rev { padding-top: 7px; }
 .rev::before {
@@ -834,6 +847,7 @@ kbd { font: inherit; color: var(--red); }
   .sheet-head { margin-bottom: 18px; }
   .sheet-head h1, .sheet-head h2 { font-size: 26pt; }
   .revs li, .schedule tr, .detail { break-inside: avoid; }
+  .revs .span { display: none !important; }
   .actions .act { border: 0; padding: 0; background: none; color: #000; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

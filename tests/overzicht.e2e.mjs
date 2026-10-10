@@ -1085,3 +1085,34 @@ test('each revision names its stack in a column of its own, under the summary on
     await context.close();
   }
 });
+
+test('on a wide screen each revision gets a bar on one axis of years; narrower, none', async () => {
+  for (const width of [2000, 1800]) {
+    const { context, page } = await open('/', { width, height: 1000 });
+    const t = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll('.revs > li')].map(li => {
+        const b = li.querySelector('.span-bar').getBoundingClientRect(), when = li.querySelector('.when').textContent;
+        return { rev: li.querySelector('.rev').textContent, when, left: b.left, right: b.right, open: /–\s*$/.test(when) };
+      });
+      const years = [...document.querySelectorAll('.revs-axis span')].map(s => [s.textContent, s.getBoundingClientRect().left]);
+      return { rows, years, over: document.documentElement.scrollWidth - innerWidth };
+    });
+    const by = Object.fromEntries(t.rows.map(r => [r.rev, r]));
+    assert.ok(t.rows.every(r => r.right - r.left > 4), `${width}: a bar on every row`);
+    // oldest furthest left, the axis labelled year by year from the first
+    assert.ok(by.A.left < by.B.left && by.B.left < by.C.left && by.C.left <= by.E.left, `${width}: in order of their start`);
+    assert.equal(t.years[0][0], '2019');
+    assert.ok(t.years.every(([, x], i) => i === 0 || x > t.years[i - 1][1]), `${width}: years run left to right`);
+    // the placements through Anamata sit inside its own bar, and the open roles run to the same now
+    for (const k of ['D', 'E', 'F']) assert.ok(by[k].left >= by.C.left && by[k].right <= by.C.right + 0.5, `${width}: ${k} inside C`);
+    const ends = t.rows.filter(r => r.open).map(r => Math.round(r.right));
+    assert.ok(ends.length >= 3 && ends.every(e => Math.abs(e - ends[0]) <= 1), `${width}: open roles end at now ${ends}`);
+    assert.ok(t.over <= 0, `${width}: no sideways scroll`);
+    await context.close();
+  }
+  // narrower, the years would crowd: none
+  const { context, page } = await open('/', { width: 1700, height: 900 });
+  assert.equal(await page.locator('.revs .span').first().evaluate(e => getComputedStyle(e).display), 'none', 'none at 1700');
+  assert.equal(await page.locator('.revs-axis').evaluate(e => getComputedStyle(e).display), 'none');
+  await context.close();
+});
