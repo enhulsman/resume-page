@@ -1052,3 +1052,16 @@ for (const [w, h] of [[1440, 900], [1920, 1080], [1280, 720]]) test(`on a ${w}x$
   }
   await context.close();
 });
+
+for (const [w, h] of [[1440, 900], [1920, 1080], [1280, 720]]) test(`on a ${w}x${h} desktop the last level ends the section without a screen of blank paper, the drawing beside it while read`, async () => {
+  const { context, page } = await open('/', { width: w, height: h });
+  // read: its heading at the upper reading line, the drawing still pinned beside it
+  await page.locator('[data-cloud="ops"] h2').evaluate(e => scrollBy(0, e.getBoundingClientRect().top - innerHeight * 0.3));
+  await page.waitForTimeout(150);
+  assert.ok(Math.abs(await page.locator('.scrolly .stage').evaluate(s => s.getBoundingClientRect().top)) <= 1, 'the drawing is pinned');
+  // and after its last line, about half a screen of paper before the next sheet, not most of
+  // one (keeping the drawing pinned while the level is read sets the floor)
+  const gap = await page.evaluate(() => document.querySelector('.scrolly').nextElementSibling.getBoundingClientRect().top - document.querySelector('[data-cloud="ops"]').lastElementChild.getBoundingClientRect().bottom);
+  assert.ok(gap < h * 0.55, `${Math.round(gap)}px of paper under the last level`);
+  await context.close();
+});

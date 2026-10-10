@@ -289,11 +289,11 @@ main { padding: 0 calc(var(--frame) + 6px); }
 .copy { padding: 0 var(--gutter); position: relative; z-index: 2; }
 .step { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: calc(var(--bar) + 40px) 0 60px; max-width: 34em; }
 /* the levels sit closer, so the next one's heading shows under the one being read; the request
-   keeps a screen of its own while the drawing plots, and the last level a screen's length below
-   it, so the drawing stays pinned beside it while it is read */
-.step[data-cloud] { min-height: 0; padding: 7svh 0; }
-@media (max-height: 800px) { .step[data-cloud] { padding: 5svh 0; } }
-.step:last-child { min-height: 100svh; justify-content: flex-start; }
+   keeps a screen of its own while the drawing plots, and the last level just enough below it
+   that the drawing stays pinned beside it until it is read */
+.step[data-cloud] { min-height: 0; padding: 8.5svh 0; }
+@media (max-height: 800px) { .step[data-cloud] { padding: 5.5svh 0; } }
+.step:last-child { min-height: calc(78svh + 3rem); justify-content: flex-start; }
 .step h2 { font-size: clamp(26px, 2.4vw, 36px); line-height: 1.08; font-stretch: 88%; letter-spacing: -.01em; margin-bottom: .7em; }
 .step p { margin: 0 0 1em; color: var(--ink); }
 .tag { font: 400 12px/1 var(--mono) !important; letter-spacing: .06em; color: var(--red) !important; margin-bottom: 1.1em !important; }
