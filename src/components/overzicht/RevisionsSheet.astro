@@ -16,7 +16,7 @@ const revs = experience.map((e, i) => ({
   </header>
   <ol class="revs" reversed>
     {revs.map(r => (
-      <li><span class="rev">{r.letter}</span><span class="when">{r.when}</span><div><h3>{r.homeRole ?? r.role} <i>{r.client}</i></h3><p>{r.homeSummary}</p></div></li>
+      <li><span class="rev">{r.letter}</span><span class="when">{r.when}</span><div><h3>{r.homeRole ?? r.role} <i>{r.client}</i></h3><p>{r.homeSummary}</p></div>{r.stack && <ul class="stack" aria-label="Stack">{r.stack.map(t => <li>{t}</li>)}</ul>}</li>
     ))}
   </ol>
 

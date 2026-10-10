@@ -1065,3 +1065,23 @@ for (const [w, h] of [[1440, 900], [1920, 1080], [1280, 720]]) test(`on a ${w}x$
   assert.ok(gap < h * 0.55, `${Math.round(gap)}px of paper under the last level`);
   await context.close();
 });
+
+test('each revision names its stack in a column of its own, under the summary on a phone', async () => {
+  for (const width of [1440, 1024, 390]) {
+    const { context, page } = await open('/', { width, height: 900 });
+    const rows = await page.locator('.revs > li').evaluateAll(lis => lis.map(li => {
+      const p = li.querySelector('p').getBoundingClientRect(), s = li.querySelector('.stack');
+      const r = s?.getBoundingClientRect();
+      return { items: s ? s.querySelectorAll('li').length : 0, p: { left: p.left, right: p.right, bottom: p.bottom }, s: r && { left: r.left, right: r.right, top: r.top }, li: li.getBoundingClientRect().right };
+    }));
+    // every role but the tutoring
+    assert.equal(rows.filter(r => r.items > 0).length, rows.length - 1, `${width}: a stack on every role`);
+    for (const r of rows.filter(r => r.s)) {
+      if (width > 860) assert.ok(r.s.left >= r.p.right + 12, `${width}: beside the summary ${JSON.stringify(r)}`);
+      else assert.ok(r.s.top >= r.p.bottom, `${width}: under the summary ${JSON.stringify(r)}`);
+      assert.ok(r.s.right <= r.li + 0.5, `${width}: inside the table`);
+    }
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}: no sideways scroll`);
+    await context.close();
+  }
+});

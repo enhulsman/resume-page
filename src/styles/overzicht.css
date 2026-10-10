@@ -438,7 +438,10 @@ main { padding: 0 calc(var(--frame) + 6px); }
 .side span { font-size: 14px; color: var(--ink-2); line-height: 1.4; }
 
 .revs { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--ink); }
-.revs li { display: grid; grid-template-columns: 56px 120px minmax(0, 1fr); gap: 0 18px; padding: 18px 0; border-bottom: .75px solid var(--hair); }
+.revs li { display: grid; grid-template-columns: 56px 120px minmax(0, 46em) minmax(150px, 1fr); gap: 0 18px; padding: 18px 0; border-bottom: .75px solid var(--hair); }
+/* the stack column: the role's main tools, one per line, ruled off from the summary */
+.revs .stack { list-style: none; margin: 0; padding: 2px 0 0 18px; border-left: .75px solid var(--hair); font: 400 12px/1.75 var(--mono); color: var(--ink-2); }
+.revs .stack li { display: block; padding: 0; border: 0; }
 .rev { font: 700 11.5px/1 var(--sans); width: 34px; height: 30px; display: grid; place-items: center; position: relative; }
 .rev { padding-top: 7px; }
 .rev::before {
@@ -722,6 +725,8 @@ kbd { font: inherit; color: var(--red); }
   .revs li { grid-template-columns: 40px minmax(0, 1fr); }
   .revs .when { grid-column: 2; }
   .revs li > div { grid-column: 2; }
+  .revs .stack { grid-column: 2; display: flex; flex-wrap: wrap; gap: 0 7px; margin-top: 8px; padding: 0; border: 0; }
+  .revs .stack li:not(:last-child)::after { content: "·"; margin-left: 7px; }
   .revs h3 i { display: block; margin: 2px 0 0; }
   .schedules { grid-template-columns: 1fr; }
   .diary li { grid-template-columns: 1fr; }
