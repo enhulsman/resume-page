@@ -20,19 +20,21 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)');
 const playing = html.classList.contains('intro');
 // the arrival is every finite animation running from first paint (the endless ones, a
-// blinking cursor, are the page's own); a hurry speeds up those and whatever joins them later
+// blinking cursor, are the page's own), and the drawn parts added to it below
 const finite = a => a.animationName && a.effect?.getComputedTiming().iterations !== Infinity;
 // in the arrival's own clock (ms), keep in step with overzicht.css
 // (the last letter starts at LETTERS_AT + 10 STAGGER and takes 800 ms: the 1.95 s of 'letters')
 const GUIDES_END = 1800, LETTERS_AT = 550, STAGGER = 60, TRIP_FROM = 1000, DIM_AT = 1950;
 
-// the arrival's CSS animations all started on first paint; read their clock
-const started = () => {
-  const a = document.body.getAnimations().find(x => x.animationName === 'tilt');
-  return a?.startTime ?? document.timeline.currentTime;
-};
-const t0 = playing ? started() : 0;
+// The arrival's clock: the tilt's start, its first frame (read in start(), once the tilt has
+// really started). Every drawn part added later is put on this clock (lock), with delays
+// in it, so a slow phone delays nothing relative to the CSS.
+let t0 = document.timeline.currentTime;
 const since = () => document.timeline.currentTime - t0;
+const drawnParts = [];
+function lock(el) {
+  for (const a of el.getAnimations({ subtree: true })) { a.startTime = t0; drawnParts.push(a.finished); }
+}
 
 // The sheet may still lie tilted while we measure, and boxes on screen are the tilted ones.
 // Measure it square: for one synchronous moment the tilt is put at its end (nothing paints in
@@ -87,10 +89,8 @@ function rule() {
       svg.append(ln);
     }
   }
-  // join the CSS clock: the guides' animation runs from the arrival's start, not from now
-  svg.style.animationDelay = `${-at}ms`;
   name.append(svg);
-  setTimeout(() => svg.remove(), Math.max(0, 2300 - at) + 50);
+  lock(svg);
 }
 
 // ---------- the letters, drawn ----------
@@ -148,11 +148,12 @@ function draw(data) {
       const gl = document.createElementNS(SVGNS, 'g');
       gl.setAttribute('class', 'glyph');
       gl.setAttribute('transform', `translate(${x} 0)`);
-      gl.style.setProperty('--d', `${LETTERS_AT + i++ * STAGGER - at}ms`);
+      gl.style.setProperty('--d', `${LETTERS_AT + i++ * STAGGER}ms`);
       gl.innerHTML = `<path class="g-box" pathLength="1" d="M${x0 - OVER} ${y0}H${x1 + OVER}M${x1} ${y0 - OVER}V${y1 + OVER}M${x1 + OVER} ${y1}H${x0 - OVER}M${x0} ${y1 + OVER}V${y0 - OVER}"/><path class="g-line" pathLength="1" d="${g.d}"/>`;
       svg.append(gl);
     });
     name.append(svg);
+    lock(svg);
   });
 }
 
@@ -207,11 +208,12 @@ function box() {
     p.setAttribute('pathLength', 1);
     p.setAttribute('stroke-width', w);
     if (sel) p.dataset.for = sel;
-    p.style.setProperty('--at', `${start - at}ms`);
+    p.style.setProperty('--at', `${start}ms`);
     p.style.setProperty('--for', `${dur}ms`);
     svg.append(p);
   }
   sheet.append(svg);
+  lock(svg);
 }
 
 // ---------- the dimension ----------
@@ -223,14 +225,17 @@ const [dimEnd, dimRun, dimText] = dim.children;
 const GAP = 16; // from the top of the letters to the dimension line
 
 function measure() {
-  const ls = lines();
+  const ls = lines(), cap = capHeight();
   const widest = ls.reduce((a, b) => (b.width > a.width ? b : a));
   const x = Math.min(...ls.map(l => l.left));
-  return { x, w: widest.width, y: ls[0].base - capHeight() - GAP };
+  const y = ls[0].base - cap - GAP;
+  // extension lines stop just short of what they measure: the left one at the first line,
+  // the right one down past a shorter first line to the widest line's cap height
+  return { x, w: widest.width, y, left: GAP - 3, right: widest.base - cap - y - 3 };
 }
 
 function drawDim() {
-  const { x, w, y } = measure();
+  const { x, w, y, left, right } = measure();
   // the svg's own origin sits on the dimension line's left end
   dim.style.left = `${x}px`;
   dim.style.top = `${y}px`;
@@ -238,7 +243,7 @@ function drawDim() {
   dim.setAttribute('height', 1);
   const W = w.toFixed(1);
   // extension lines down towards the name, architectural ticks through both ends
-  dimEnd.setAttribute('d', `M0 -5V10M${W} -5V10M-4 4L4 -4M${(w - 4).toFixed(1)} 4L${(w + 4).toFixed(1)} -4`);
+  dimEnd.setAttribute('d', `M0 -5V${left}M${W} -5V${right.toFixed(1)}M-4 4L4 -4M${(w - 4).toFixed(1)} 4L${(w + 4).toFixed(1)} -4`);
   dimRun.setAttribute('d', `M0 0H${W}`);
   dimText.setAttribute('x', (w / 2).toFixed(1));
   dimText.setAttribute('y', -6);
@@ -259,21 +264,26 @@ function trip(target) {
     // the foot of the dimension's first extension line, parked there it leaves the dimension
     // line itself clear; read live, in case the page moves under it
     to: () => { const hb = square(() => holder.getBoundingClientRect()); return [hb.left + target.x, hb.top + target.y + 10]; },
+    // the reading goes above it, clear of the name
+    readout: 'above',
     delay: Math.max(0, TRIP_FROM - at),
     dur: Math.max(200, DIM_AT - Math.max(TRIP_FROM, at)),
   } }));
 }
 
+// the drawing goes, whoever ended the arrival (this script, or the layout head's backstop)
+const clear = () => document.querySelectorAll('.glyphs, .pens, .name-guides').forEach(s => s.remove());
+
 function arrive() {
   INPUTS.forEach(t => removeEventListener(t, hurry, true));
   removeEventListener('resize', resized);
+  clear();
   if (!html.classList.contains('intro')) return;
   html.classList.remove('intro');
-  document.querySelectorAll('.glyphs, .pens').forEach(s => s.remove());
   document.dispatchEvent(new CustomEvent('ovz:arrived'));
   // the sheet was one screen while it squared up: a wheel turned meanwhile scrolls now, and
   // a link tabbed to meanwhile is brought into view
-  if (wheeled) scrollBy({ top: wheeled, behavior: 'smooth' });
+  if (wheeled) scrollBy({ top: Math.max(-innerHeight, Math.min(innerHeight, wheeled)), behavior: 'smooth' });
   else if (document.activeElement && document.activeElement !== document.body) document.activeElement.scrollIntoView({ block: 'nearest' });
 }
 
@@ -296,7 +306,7 @@ function hurry(e) {
 const width0 = innerWidth;
 function resized(e) {
   if (innerWidth === width0) return;
-  document.querySelectorAll('.glyphs, .pens, .name-guides').forEach(x => x.remove());
+  clear();
   hurry(e);
 }
 
@@ -306,7 +316,8 @@ async function start() {
   await document.fonts.ready;
   // the crosshair's listener is in chrome.js, which has run by DOMContentLoaded
   if (document.readyState === 'loading') await new Promise(r => document.addEventListener('DOMContentLoaded', r, { once: true }));
-  if (getComputedStyle(holder).position === 'static') holder.style.position = 'relative';
+  const tilt = document.body.getAnimations().find(a => a.animationName === 'tilt');
+  if (tilt) { await tilt.ready; t0 = tilt.startTime ?? t0; }
 
   if (playing) {
     box();
@@ -336,9 +347,11 @@ async function start() {
 }
 
 if (playing) {
-  // over when every part of it is (the head's backstop is never the clock)
-  Promise.all(document.getAnimations().filter(finite).map(a => a.finished))
-    .then(arrive, arrive);
+  // over when every part of it is, the drawn parts included (the head's backstop is never
+  // the clock)
+  const css = Promise.all(document.getAnimations().filter(finite).map(a => a.finished));
+  css.then(() => Promise.all(drawnParts)).then(arrive, arrive);
+  document.addEventListener('ovz:arrived', clear);
   INPUTS.forEach(t => addEventListener(t, hurry, { capture: true, passive: true }));
   addEventListener('resize', resized);
   // what the visitor did before this script had loaded (the layout's head kept it)

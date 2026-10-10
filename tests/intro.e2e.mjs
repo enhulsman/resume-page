@@ -9,7 +9,10 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
-const SETTLED = 3200; // the whole arrival is about 2 s, the dimension .55 s more; margin for a slow box
+import { readFileSync } from 'node:fs';
+// the name as the site carries it, split as the homepage sets it: one line per part
+const SITE_NAME = readFileSync(new URL('../src/config/site.ts', import.meta.url), 'utf8').match(/^\s*name:\s*'([^']+)'/m)[1];
+const NAME_LINES = (([first, ...rest]) => [first, rest.join('')])(SITE_NAME.split(' '));
 
 let browser;
 before(async () => { browser = await chromium.launch(); });
@@ -44,6 +47,13 @@ async function open(path = '/', { width = 1440, height = 900, reducedMotion = 'n
 }
 
 const log = page => page.evaluate(() => window.__log);
+// over, and the dimension drawn after it (a wait on the page, not on the clock)
+const settle = async page => {
+  await page.waitForFunction(() => window.__log.arrived != null, null, { timeout: 8000 });
+  await page.waitForTimeout(700);
+};
+// a bounding box overlap
+const overlaps = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 const nameWidth = page => page.evaluate(() => Math.max(...[...document.querySelectorAll('.name span')].map(s => {
   const r = document.createRange(); r.selectNodeContents(s); return r.getBoundingClientRect().width;
 })));
@@ -51,7 +61,7 @@ const nameWidth = page => page.evaluate(() => Math.max(...[...document.querySele
 test('a first visit plays the arrival once, then leaves the page as it always is', async () => {
   const { context, page, errors } = await open('/');
   assert.ok((await log(page)).intro != null, 'the intro class was set before the page settled');
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   const l = await log(page);
   assert.ok(l.arrived != null, 'the intro class is removed once it is over');
   assert.ok(l.arrived - l.intro < 2800, `over in under 2.8 s (${Math.round(l.arrived - l.intro)} ms)`);
@@ -120,7 +130,7 @@ test('boxes are drawn by a pen going round them, on their own borders', async ()
 
 test('once arrived, no cover, pen line or hidden border is left', async () => {
   const { context, page } = await open('/');
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   const after = await page.evaluate(() => ({
     pens: document.querySelectorAll('.pens').length,
     // the page's own drawings are left alone
@@ -180,7 +190,7 @@ test('the sheet starts tilted on the table and squares up', async () => {
   // the table shows around the sheet while it lies there, and the sheet is one screen tall
   assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor), 'rgb(201, 209, 198)');
   assert.ok(await page.evaluate(() => document.body.getBoundingClientRect().height <= innerHeight + 1), 'one screen while it tilts');
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).transform), 'none');
   await context.close();
 });
@@ -277,6 +287,44 @@ test('resizing the window mid-arrival hurries it to the end, rather than misdraw
 // the homepage's script: intro.js on its own in dev, bundled into the page's script in a build
 const PAGE_SCRIPT = /intro\.js|index\.astro.*type=script|index\.astro_astro_type_script/;
 
+test('ended by anyone else (the head\'s backstop), the arrival still leaves no drawing behind', async () => {
+  const { context, page } = await open('/');
+  await page.waitForSelector('.sheet-you > .pens', { state: 'attached', timeout: 3000 });
+  await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
+  await page.evaluate(() => { document.documentElement.classList.remove('intro'); document.dispatchEvent(new CustomEvent('ovz:arrived')); });
+  await page.waitForTimeout(100);
+  assert.equal(await page.locator('.glyphs, .pens, .name-guides').count(), 0);
+  await context.close();
+});
+
+test('the crosshair parks with its reading clear of the name', async () => {
+  const { context, page } = await open('/');
+  await page.waitForFunction(() => performance.now() - window.__log.intro > 2250, null, { timeout: 6000 });
+  const [read, name] = await page.evaluate(() => [document.querySelector('.xhair-read'), document.querySelector('.name')].map(e => e.getBoundingClientRect().toJSON()));
+  assert.ok(await page.locator('.xhair').evaluate(x => x.classList.contains('on')), 'still parked');
+  assert.ok(!overlaps(read, name), `reading ${JSON.stringify(read)} clear of the name ${JSON.stringify(name)}`);
+  await context.close();
+});
+
+test('the drawn parts keep the arrival\'s own clock, even on a slow phone', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await page.goto(BASE + '/', { waitUntil: 'load' });
+  await page.waitForSelector('.sheet-you > .pens', { state: 'attached', timeout: 4000 });
+  await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 4000 });
+  // when each one's drawing begins, in the tilt's clock (ms)
+  const at = await page.evaluate(() => {
+    const t0 = document.body.getAnimations().find(a => a.animationName === 'tilt').startTime;
+    const begins = el => { const a = el.getAnimations()[0]; return Math.round(a.startTime + a.effect.getTiming().delay - t0); };
+    return { letter: begins(document.querySelector('.glyph .g-line')), term: begins(document.querySelector('.pens [data-for=".term"]')) };
+  });
+  assert.ok(Math.abs(at.letter - 670) <= 5, `first letter traced at ${at.letter} ms`);
+  assert.ok(Math.abs(at.term - 700) <= 5, `terminal drawn from ${at.term} ms`);
+  await context.close();
+});
+
 test('if the arrival script never runs, the page settles by itself', async () => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   let blocked = 0;
@@ -306,8 +354,7 @@ test('each letter of the name is drawn from construction lines, then inked', asy
     outlines: [...s.querySelectorAll('.glyph .g-line')].filter(p => p.getAttribute('pathLength') === '1').length,
   })));
   assert.deepEqual(lines, [
-    { hidden: 'true', letters: 4, boxes: 4, outlines: 4 },
-    { hidden: 'true', letters: 7, boxes: 7, outlines: 7 },
+    ...NAME_LINES.map(l => ({ hidden: 'true', letters: l.length, boxes: l.length, outlines: l.length })),
   ]);
   // the letters come one after another, not all at once
   const delays = await page.locator('.name .glyph .g-line').evaluateAll(ps => ps.map(p => p.getAnimations()[0]?.effect.getComputedTiming().delay));
@@ -349,7 +396,7 @@ test('the drawn letters lie exactly on the real ones', async () => {
 
 test('once arrived the drawing is gone and the name is plain text again', async () => {
   const { context, page } = await open('/');
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   assert.equal(await page.locator('.name .glyphs').count(), 0);
   assert.equal(await page.locator('.name').evaluate(n => getComputedStyle(n.querySelector('span')).color), 'rgb(43, 39, 102)');
   assert.equal((await page.locator('h1.name').textContent()).replace(/\s+/g, ' ').trim(), 'Ezra Hulsman');
@@ -371,7 +418,7 @@ test('a second visit, reduced motion and no JS never draw the letters', async ()
 
 test('the name gets a dimension line with its real width', async () => {
   const { context, page } = await open('/');
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   const dim = page.locator('.name-dim');
   assert.equal(await dim.count(), 1);
   const w = await nameWidth(page);
@@ -383,9 +430,25 @@ test('the name gets a dimension line with its real width', async () => {
   await context.close();
 });
 
+test('the dimension\'s extension lines reach the line it measures', async () => {
+  const { context, page } = await open('/');
+  await settle(page);
+  // the right one runs down past the shorter first line to the widest line's cap height
+  const [ext, widest] = await page.evaluate(() => {
+    const d = document.querySelector('.name-dim');
+    const right = d.querySelector('.dim-end').getBBox();
+    const top = d.getBoundingClientRect().top;
+    const spans = [...document.querySelectorAll('.name > span')].map(s => { const r = document.createRange(); r.selectNodeContents(s); return r.getBoundingClientRect(); });
+    const w = spans.reduce((a, b) => (b.width > a.width ? b : a));
+    return [top + right.y + right.height, w.top];
+  });
+  assert.ok(ext > widest, `extension line reaches down to ${Math.round(ext)}, the widest line's box starts at ${Math.round(widest)}`);
+  await context.close();
+});
+
 test('the dimension follows the name when the window changes size', async () => {
   const { context, page } = await open('/');
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   await page.setViewportSize({ width: 1100, height: 900 });
   await page.waitForTimeout(300);
   assert.equal((await page.locator('.name-dim text').textContent()).trim(), String(Math.round(await nameWidth(page))));
@@ -402,7 +465,7 @@ test('the terminal waits for the arrival before it types', async () => {
 
 test('the canvas takes its ink after the arrival, not the developing grey', async () => {
   const { context, page } = await open('/');
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   await page.locator('#anna').scrollIntoViewIfNeeded().catch(() => {});
   await page.waitForTimeout(2500);
   // the darkest stroke on the canvas is full ink, not the hairline grey it started from
@@ -427,7 +490,7 @@ test('on a desktop the crosshair travels to the name by itself', async () => {
 
 test('a second visit in the same session skips straight to the dimension', async () => {
   const { context, page } = await open('/');
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   await page.reload({ waitUntil: 'load' });
   assert.equal((await log(page)).intro, null, 'no intro on the second visit');
   await page.waitForTimeout(800);
@@ -437,7 +500,7 @@ test('a second visit in the same session skips straight to the dimension', async
 
 test('?intro=1 replays it, ?intro=0 skips it', async () => {
   const { context, page } = await open('/');
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   await page.goto(BASE + '/?intro=1', { waitUntil: 'load' });
   assert.ok((await log(page)).intro != null, 'replayed');
   await context.close();
@@ -472,7 +535,7 @@ test('inner pages and links into the page never play it', async () => {
 test('on a phone it plays without the crosshair, and the dimension fits the screen', async () => {
   const { context, page, errors } = await open('/', { width: 390, height: 844, hasTouch: true, isMobile: true });
   assert.ok((await log(page)).intro != null);
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   assert.equal(await page.locator('.xhair').evaluate(x => getComputedStyle(x).display), 'none');
   const d = await page.locator('.name-dim').boundingBox();
   assert.ok(d.x >= 0 && d.x + d.width <= 390);
@@ -487,7 +550,7 @@ test('in the dark theme the light table switches on, and ends on the dark sheet'
   // the sheet's colour transitions would lag behind the flicker while the paper covering the
   // text keeps up: blocks of lighter paper on a dark sheet
   assert.deepEqual(await page.evaluate(() => [document.body, document.querySelector('.frame')].map(e => getComputedStyle(e).transitionDuration)), ['0s', '0s']);
-  await page.waitForTimeout(SETTLED);
+  await settle(page);
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(22, 20, 29)');
   await context.close();
 });

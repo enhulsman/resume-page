@@ -50,7 +50,8 @@ const { current, ...meta } = Astro.props;
             const inputs = ['keydown', 'wheel', 'pointerdown', 'touchstart'];
             inputs.forEach(t => addEventListener(t, ask, { capture: true, passive: true }));
             early.off = () => inputs.forEach(t => removeEventListener(t, ask, true));
-            setTimeout(end, 4000);
+            // from the first frame: a tab opened in the background has not started yet
+            requestAnimationFrame(() => setTimeout(end, 4000));
           }
           sessionStorage.setItem('ovz-arrived', '1');
         }

@@ -159,6 +159,7 @@ html.intro main > section:not(.sheet-you) { animation: later .4s ease 1.9s backw
 
 /* lettering guides: cap line and baseline, ruled before the name is inked, erased after */
 .name-guides { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; animation: guides 2.3s linear backwards; opacity: 0; }
+/* (on the arrival's clock: intro.js sets these animations' start to the tilt's) */
 .name-guides line { stroke: var(--faint); stroke-width: .75; }
 @keyframes guides { 0%, 14% { opacity: 0; } 21%, 86% { opacity: .9; } 100% { opacity: 0; } }
 
