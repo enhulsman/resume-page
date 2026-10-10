@@ -583,6 +583,14 @@ kbd { font: inherit; color: var(--red); }
 .prose blockquote { margin: 0 0 1em; padding: 2px 0 2px 18px; border-left: 1.5px solid var(--red); }
 .prose code { font: 400 .86em var(--mono); color: var(--ink); }
 .prose pre { font: 400 13px/1.55 var(--mono); border: 1.5px solid var(--ink); padding: 12px 14px; overflow-x: auto; }
+/* long lines wrap rather than scroll sideways; a wrapped line hangs 2ch in under its start, so
+   it never reads as a line of its own (each source line is a .line from the highlighter) */
+.prose pre code { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+.prose pre .line { display: inline-block; width: 100%; padding-left: 2ch; text-indent: -2ch; }
+/* highlighted code (astro.config.mjs) in the theme's colours, on the sheet */
+.prose pre, .prose pre * { color: var(--shiki-light, var(--ink)); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .prose :is(pre, pre *) { color: var(--shiki-dark, var(--ink)); } }
+:root[data-theme="dark"] .prose :is(pre, pre *) { color: var(--shiki-dark, var(--ink)); }
 .prose img { max-width: 100%; height: auto; border: .75px solid var(--ink); }
 .prose table { border-collapse: collapse; font-size: 15px; }
 .prose th, .prose td { border: .75px solid var(--ink); padding: 6px 10px; text-align: left; }

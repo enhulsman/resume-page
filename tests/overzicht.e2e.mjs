@@ -982,3 +982,54 @@ test('the terminal on the first sheet lists the projects that lead the set, ANNA
   assert.deepEqual(after, ['anna', 'henk-homelab-agent', 'finance-bot', 'homelab-infrastructure']);
   await context.close();
 });
+
+test('code blocks in a post read clearly in either theme', async () => {
+  // highlighted for a dark ground only, light mode put ink-dark text on a dark block
+  for (const theme of ['light', 'dark']) {
+    const { context, page } = await open('/blog/henk-watchdog', { storage: { theme } });
+    const worst = await page.evaluate(() => {
+      const rgb = c => c.match(/[\d.]+/g).slice(0, 4).map(Number);
+      const lum = c => { const [r, g, b] = rgb(c).slice(0, 3).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * r + .7152 * g + .0722 * b; };
+      const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); };
+      // the ground: the first element up from the text with a background that is not transparent
+      const ground = el => { for (; el; el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; const a = rgb(c)[3]; if (a === undefined || a > 0) return c; } return 'rgb(255, 255, 255)'; };
+      const pres = [...document.querySelectorAll('.prose pre')];
+      let worst = Infinity, what = '';
+      for (const pre of pres) {
+        const walk = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT);
+        for (let n; (n = walk.nextNode());) {
+          if (!n.data.trim()) continue;
+          const el = n.parentElement, r = ratio(getComputedStyle(el).color, ground(el));
+          if (r < worst) { worst = r; what = `${n.data.trim().slice(0, 20)}: ${getComputedStyle(el).color} on ${ground(el)}`; }
+        }
+      }
+      return { n: pres.length, worst, what };
+    });
+    assert.ok(worst.n > 0, 'the post has a code block');
+    assert.ok(worst.worst >= 4.5, `${theme}: contrast ${worst.worst.toFixed(2)} (${worst.what})`);
+    await context.close();
+  }
+});
+
+test('code blocks wrap rather than scroll sideways, a wrapped line indented under its start', async () => {
+  for (const width of [1440, 390]) {
+    const { context, page } = await open('/blog/henk-watchdog', { width, height: 900 });
+    const r = await page.evaluate(() => {
+      const pre = document.querySelector('.prose pre');
+      // a logical line that wraps: its first and last fragments on screen
+      const wrapped = [...pre.querySelectorAll('.line')].map(l => {
+        const range = document.createRange(); range.selectNodeContents(l);
+        const rows = [...range.getClientRects()].filter(q => q.width > 0);
+        return { first: rows[0].left, rest: rows.at(-1).left, tops: new Set(rows.map(q => Math.round(q.top))).size };
+      }).filter(l => l.tops > 1);
+      const lh = parseFloat(getComputedStyle(pre).lineHeight);
+      return { over: pre.scrollWidth - pre.clientWidth, wrapped, rows: Math.round((pre.clientHeight - parseFloat(getComputedStyle(pre).paddingTop) * 2) / lh),
+        visual: [...pre.querySelectorAll('.line')].reduce((n, l) => { const range = document.createRange(); range.selectNodeContents(l); return n + new Set([...range.getClientRects()].filter(q => q.width > 0).map(q => Math.round(q.top))).size; }, 0) };
+    });
+    assert.ok(r.over <= 0, `${width}: no sideways scroll (${r.over}px over)`);
+    assert.ok(r.wrapped.length > 0, `${width}: the long log line wraps`);
+    for (const l of r.wrapped) assert.ok(l.rest > l.first + 4, `${width}: continuation indented ${JSON.stringify(l)}`);
+    assert.equal(r.rows, r.visual, `${width}: no blank rows between lines`);
+    await context.close();
+  }
+});
