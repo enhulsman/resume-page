@@ -1,10 +1,6 @@
 /* Overzicht: hulsman.dev as a drawing set. Tokens and rationale: resume-lab/design/DESIGN.md. */
 
-/* registered so the homepage's arrival can animate them; initial values are the light theme's */
-@property --ink { syntax: "<color>"; inherits: true; initial-value: #2B2766; }
-@property --ink-2 { syntax: "<color>"; inherits: true; initial-value: #57528C; }
-@property --label { syntax: "<color>"; inherits: true; initial-value: #67639A; }
-@property --faint { syntax: "<color>"; inherits: true; initial-value: #8A86AE; }
+/* registered so the dark arrival's lamp can flicker it; initial value is the light theme's */
 @property --sheet { syntax: "<color>"; inherits: true; initial-value: #EFEDF3; }
 
 @font-face { font-family: "Archivo"; src: url(/fonts/Archivo.woff2) format("woff2-variations"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
@@ -13,7 +9,6 @@
 :root {
   --sheet: #EFEDF3;
   --ink: #2B2766;
-  --ink-0: #2B2766;
   --ink-2: #57528C;
   --faint: #8A86AE;
   --hair: #C9C5DA;
@@ -37,14 +32,14 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --sheet: #16141D; --ink: #D8D4F0; --ink-0: #D8D4F0; --ink-2: #A9A4CC; --faint: #6E6992; --hair: #34304A; --red: #FF6247; --label: #8A85B0;
+    --sheet: #16141D; --ink: #D8D4F0; --ink-2: #A9A4CC; --faint: #6E6992; --hair: #34304A; --red: #FF6247; --label: #8A85B0;
     --grain-blend: screen; --grain-a: 0.05; color-scheme: dark;
     --table: #0E0D13; --panel: #1B1923;
     --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg stroke='%23D8D4F0' stroke-width='1.4' stroke-linejoin='round' fill='none'%3E%3Cpath d='M2 30 5 22 24 3 29 8 10 27Z' fill='%2316141D'/%3E%3Cpath d='M5 22l5 5M21 6l5 5'/%3E%3C/g%3E%3Cpath d='M2 30 3.5 25.8 6.2 28.5Z' fill='%23D8D4F0'/%3E%3C/svg%3E") 2 30, crosshair;
   }
 }
 :root[data-theme="dark"] {
-  --sheet: #16141D; --ink: #D8D4F0; --ink-0: #D8D4F0; --ink-2: #A9A4CC; --faint: #6E6992; --hair: #34304A; --red: #FF6247; --label: #8A85B0;
+  --sheet: #16141D; --ink: #D8D4F0; --ink-2: #A9A4CC; --faint: #6E6992; --hair: #34304A; --red: #FF6247; --label: #8A85B0;
   --grain-blend: screen; --grain-a: 0.05; color-scheme: dark;
   --table: #0E0D13; --panel: #1B1923;
   --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg stroke='%23D8D4F0' stroke-width='1.4' stroke-linejoin='round' fill='none'%3E%3Cpath d='M2 30 5 22 24 3 29 8 10 27Z' fill='%2316141D'/%3E%3Cpath d='M5 22l5 5M21 6l5 5'/%3E%3C/g%3E%3Cpath d='M2 30 3.5 25.8 6.2 28.5Z' fill='%23D8D4F0'/%3E%3C/svg%3E") 2 30, crosshair;
@@ -88,32 +83,79 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
    The sheet lies on the table, seen at an angle as you come up to it, and squares up. While
    it does, the body is one screen tall: the frame and bar are fixed, and inside a transformed
    body fixed means fixed to the body, so the body has to be the screen. */
-html.intro { perspective: 1600px; background: var(--table); animation: develop 1s cubic-bezier(.5, 0, .3, 1) backwards; }
+html.intro { perspective: 1600px; background: var(--table); }
 html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; transform-origin: 50% 62%; animation: tilt .9s cubic-bezier(.3, .55, .15, 1) backwards; }
 @media (max-width: 860px) { html.intro body { --tilt: 14deg; } }
 @keyframes tilt { from { transform: rotateX(var(--tilt)) scale(.94); } }
-@keyframes develop { from { --ink: var(--hair); --ink-2: var(--hair); --label: var(--hair); --faint: var(--hair); } }
 /* The name is drawn letter by letter (intro.js, from the font's own outlines): sketch lines
    round each letter, its outline traced, then filled in the settled ink. The real text waits
    underneath, invisible, until the last letter is done; it shows then even if the drawing
    never came (no glyph data, a late font). Keep the 1.95 s in step with intro.js. */
-html.intro .name { color: var(--ink-0); }
 html.intro .name span { animation: letters 1.95s steps(1, end) backwards; }
 @keyframes letters { from { color: transparent; } }
 .glyphs { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 .glyphs .g-box { fill: none; stroke: var(--faint); stroke-width: calc(var(--sw) * .7); stroke-dasharray: 1; opacity: 0;
   animation: g-draw .24s cubic-bezier(.4, 0, .2, 1) var(--d) backwards, g-box .24s ease calc(var(--d) + .5s) backwards; }
-.glyphs .g-line { fill: var(--ink-0); stroke: var(--ink-0); stroke-width: var(--sw); stroke-dasharray: 1; stroke-linejoin: round;
+.glyphs .g-line { fill: var(--ink); stroke: var(--ink); stroke-width: var(--sw); stroke-dasharray: 1; stroke-linejoin: round;
   animation: g-draw .5s cubic-bezier(.45, 0, .25, 1) calc(var(--d) + .12s) backwards, g-fill .26s ease calc(var(--d) + .5s) backwards; }
 @keyframes g-draw { from { stroke-dashoffset: 1; } }
 @keyframes g-box { from { opacity: 1; } }
 @keyframes g-fill { from { fill-opacity: 0; } }
 /* by night the light table switches on first: two short flickers, then steady */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]).intro { animation: develop 1s cubic-bezier(.5, 0, .3, 1) .2s backwards, lamp .45s steps(1, end) backwards; }
+  :root:not([data-theme="light"]).intro { animation: lamp .45s steps(1, end) backwards; }
 }
-:root[data-theme="dark"].intro { animation: develop 1s cubic-bezier(.5, 0, .3, 1) .2s backwards, lamp .45s steps(1, end) backwards; }
+:root[data-theme="dark"].intro { animation: lamp .45s steps(1, end) backwards; }
+/* the theme's colour transitions would lag behind the flicker, and the paper covering the
+   text (below) does not: they wait until the sheet is lit */
+html.intro body, html.intro body::after, html.intro .frame { transition: none; }
 @keyframes lamp { 0% { --sheet: #08070B; } 22% { --sheet: #16141D; } 38% { --sheet: #08070B; } 52% { --sheet: #16141D; } }
+
+/* The rest of the first sheet is drawn in around the name, from a blank sheet: only the frame
+   and the bar are pre-printed. Text is ruled, then a cover of paper is swept off it (a
+   transform, so the phone's compositor does the work); boxes are drawn by a pen going round
+   them (intro.js lays its lines on their borders, which stay hidden until 2.2 s); fills and
+   the photo come after their outlines. Nothing here animates a colour the whole page
+   inherits: that restyles every element on every frame. Times are the arrival's clock. */
+html.intro :is(.role, .lede, .status, .site-photo figcaption, .actions .act:not(.act-main), .titleblock th, .titleblock td) { position: relative; }
+html.intro :is(.role, .lede, .status, .site-photo figcaption, .actions .act:not(.act-main), .titleblock th, .titleblock td)::after {
+  content: ""; position: absolute; inset: -3px -4px; z-index: 1; pointer-events: none;
+  background: var(--sheet); transform: scaleX(0); transform-origin: right;
+  animation: sweep var(--sweep-for, .45s) cubic-bezier(.55, 0, .25, 1) var(--sweep-at, 1.4s) backwards;
+}
+html.intro .titleblock :is(th, td)::after { inset: 0; --sweep-for: .25s; }
+@keyframes sweep { from { transform: none; } }
+/* ruled lines under each line of text, a moment before it is uncovered */
+html.intro :is(.role, .lede, .status, .site-photo figcaption)::before {
+  content: ""; position: absolute; inset: 0 -4px; z-index: 2; pointer-events: none; opacity: 0;
+  background: repeating-linear-gradient(to bottom, transparent 0 calc(1lh - 1px), var(--faint) calc(1lh - 1px) 1lh);
+  transform-origin: left; animation: ruled 1s linear var(--rule-at, 1.3s) backwards;
+}
+@keyframes ruled { 0% { opacity: .7; transform: scaleX(0); } 22%, 70% { opacity: .7; transform: none; } 100% { opacity: 0; transform: none; } }
+html.intro .role { --rule-at: .85s; --sweep-at: 1s; }
+html.intro .lede { --rule-at: .95s; --sweep-at: 1.15s; --sweep-for: .6s; }
+html.intro .status { --rule-at: 1.3s; --sweep-at: 1.4s; }
+html.intro .site-photo figcaption { --rule-at: 1.45s; --sweep-at: 1.6s; }
+html.intro .actions .act:not(.act-main) { --sweep-at: 1.6s; --sweep-for: .3s; }
+html.intro .actions .act:not(.act-main) + .act { --sweep-at: 1.68s; }
+html.intro .actions .act:not(.act-main) + .act + .act { --sweep-at: 1.76s; }
+/* boxes: the real borders wait for the pen; then the fills */
+html.intro :is(.titleblock, .titleblock th, .titleblock td, .status-mark) { animation: borders 2.2s steps(1, end) backwards; }
+html.intro .term { animation: borders 2.2s steps(1, end) backwards, fill .3s ease 1.05s backwards; }
+html.intro .term-head { animation: borders 2.2s steps(1, end) backwards, wipe .4s cubic-bezier(.55, 0, .25, 1) 1.25s backwards; }
+html.intro .act-main { animation: borders 2.2s steps(1, end) backwards, fill .25s ease 1.72s backwards; }
+html.intro .site-photo .photo { animation: borders 2.2s steps(1, end) backwards, photo .7s ease 1.15s backwards; }
+html.intro .site-photo .clip path { stroke-dasharray: 1; animation: pen .35s cubic-bezier(.45, 0, .25, 1) .9s backwards; }
+@keyframes borders { from { border-color: transparent; } }
+@keyframes fill { from { background-color: transparent; } }
+@keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes photo { from { opacity: 0; } }
+@keyframes pen { from { stroke-dashoffset: 1; } }
+.pens { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 3; }
+.pens path { fill: none; stroke: var(--ink); stroke-dasharray: 1; animation: pen var(--for) cubic-bezier(.45, 0, .25, 1) var(--at) backwards; }
+/* whatever of the next sheets shows on a tall screen comes in once this one is drawn */
+html.intro main > section:not(.sheet-you) { animation: later .4s ease 1.9s backwards; }
+@keyframes later { from { opacity: 0; } }
 
 /* lettering guides: cap line and baseline, ruled before the name is inked, erased after */
 .name-guides { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; animation: guides 2.3s linear backwards; opacity: 0; }

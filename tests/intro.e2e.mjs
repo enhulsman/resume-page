@@ -67,13 +67,95 @@ test('a first visit plays the arrival once, then leaves the page as it always is
   await context.close();
 });
 
-test('the arrival develops the ink and letters the name, without hiding the page', async () => {
+test('the sheet starts blank but for its frame and bar, and is drawn in', async () => {
   const { context, page } = await open('/');
-  const anims = await page.evaluate(() => document.getAnimations().map(a => a.animationName).filter(Boolean));
-  for (const name of ['develop', 'tilt', 'letters']) assert.ok(anims.includes(name), `${name} runs (got ${anims.join(', ')})`);
-  // develop fades ink, never opacity: the page reads from the first frame
-  assert.equal(await page.locator('main').evaluate(m => getComputedStyle(m).opacity), '1');
-  assert.equal(await page.locator('.lede').evaluate(m => getComputedStyle(m).opacity), '1');
+  await page.waitForSelector('.sheet-you > .pens', { state: 'attached', timeout: 3000 });
+  await seek(page, 0);
+  const at0 = await page.evaluate(() => {
+    const cover = s => getComputedStyle(document.querySelector(s), '::after');
+    return {
+      // every line of text lies under a cover of paper, not yet swept off
+      covered: ['.role', '.lede', '.status', '.site-photo figcaption', '.titleblock td'].map(s => cover(s).transform),
+      // the terminal's head is wiped in with its box
+      head: getComputedStyle(document.querySelector('.term-head')).clipPath,
+      borders: ['.term', '.titleblock', '.act-main', '.site-photo .photo'].map(s => getComputedStyle(document.querySelector(s)).borderTopColor),
+      photo: getComputedStyle(document.querySelector('.site-photo .photo')).opacity,
+      bar: getComputedStyle(document.querySelector('.bar')).opacity,
+      frame: getComputedStyle(document.querySelector('.frame')).borderTopColor,
+    };
+  });
+  // full width: no transform yet, however the browser writes that
+  for (const t of at0.covered) assert.match(t, /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/, 'text covered at the start');
+  assert.match(at0.head, /inset\(0px 100%/);
+  for (const b of at0.borders) assert.equal(b, 'rgba(0, 0, 0, 0)', 'boxes not yet drawn');
+  assert.equal(at0.photo, '0');
+  assert.equal(at0.bar, '1', 'the bar is pre-printed');
+  assert.equal(at0.frame, 'rgb(43, 39, 102)', 'the frame is pre-printed');
+  await context.close();
+});
+
+test('boxes are drawn by a pen going round them, on their own borders', async () => {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844, hasTouch: true, isMobile: true }]) {
+    const { context, page } = await open('/', viewport);
+    await page.waitForSelector('.sheet-you > .pens', { state: 'attached', timeout: 3000 });
+    const pens = await page.locator('.sheet-you > .pens').evaluate(svg => ({
+      hidden: svg.getAttribute('aria-hidden'),
+      n: svg.querySelectorAll('path[pathLength="1"]').length,
+    }));
+    assert.equal(pens.hidden, 'true');
+    // the terminal and its head, the photo, the main button, the status mark, the title block and its cells
+    assert.ok(pens.n >= 15, `${pens.n} pen lines`);
+    await seek(page, 2050);
+    const off = await page.evaluate(() => {
+      const svg = document.querySelector('.sheet-you > .pens');
+      return ['.term', '.titleblock', '.act-main', '.site-photo .photo'].map(s => {
+        const p = svg.querySelector(`[data-for="${s}"]`).getBoundingClientRect(), r = document.querySelector(s).getBoundingClientRect();
+        return Math.max(Math.abs(p.left - r.left), Math.abs(p.top - r.top), Math.abs(p.right - r.right), Math.abs(p.bottom - r.bottom));
+      });
+    });
+    assert.ok(off.every(d => d < 1.5), `drawn on the real borders at ${viewport.width} (${off.map(d => d.toFixed(2)).join(', ')})`);
+    await context.close();
+  }
+});
+
+test('once arrived, no cover, pen line or hidden border is left', async () => {
+  const { context, page } = await open('/');
+  await page.waitForTimeout(SETTLED);
+  const after = await page.evaluate(() => ({
+    pens: document.querySelectorAll('.pens').length,
+    // the page's own drawings are left alone
+    dwgs: document.querySelectorAll('svg.dwg').length,
+    covers: ['.role', '.lede', '.status', '.term-head'].map(s => getComputedStyle(document.querySelector(s), '::after').content),
+    borders: ['.term', '.titleblock', '.act-main'].map(s => getComputedStyle(document.querySelector(s)).borderTopColor),
+    photo: getComputedStyle(document.querySelector('.site-photo .photo')).opacity,
+  }));
+  assert.equal(after.pens, 0);
+  assert.ok(after.dwgs >= 2, `${after.dwgs} drawings on the page`);
+  for (const c of after.covers) assert.equal(c, 'none');
+  for (const b of after.borders) assert.equal(b, 'rgb(43, 39, 102)');
+  assert.equal(after.photo, '1');
+  await context.close();
+});
+
+test('the arrival never repaints the whole page frame by frame', async () => {
+  // a colour animated on the root restyles every element on every frame: phones stutter
+  for (const opts of [{}, { colorScheme: 'dark' }]) {
+    const { context, page } = await open('/', opts);
+    const on = await page.evaluate(() => ({
+      html: document.documentElement.getAnimations({ subtree: false }).map(a => a.animationName),
+      body: document.body.getAnimations({ subtree: false }).map(a => a.animationName),
+    }));
+    // the lamp's flicker is four steps, not a frame-by-frame fade
+    assert.ok(on.html.every(n => n === 'lamp'), `on the root: ${on.html.join(', ')}`);
+    assert.deepEqual(on.body, ['tilt']);
+    await context.close();
+  }
+});
+
+test('what lies below the first sheet comes in at the end', async () => {
+  const { context, page } = await open('/');
+  const later = await page.locator('main > section:not(.sheet-you)').evaluateAll(ss => ss.map(s => s.getAnimations({ subtree: false }).map(a => a.animationName)));
+  assert.ok(later.length > 0 && later.every(a => a.includes('later')), JSON.stringify(later));
   await context.close();
 });
 
@@ -347,6 +429,9 @@ test('in the dark theme the light table switches on, and ends on the dark sheet'
   const { context, page } = await open('/', { colorScheme: 'dark' });
   const anims = await page.evaluate(() => document.getAnimations().map(a => a.animationName));
   assert.ok(anims.includes('lamp'), `the lamp flickers on (got ${anims.join(', ')})`);
+  // the sheet's colour transitions would lag behind the flicker while the paper covering the
+  // text keeps up: blocks of lighter paper on a dark sheet
+  assert.deepEqual(await page.evaluate(() => [document.body, document.querySelector('.frame')].map(e => getComputedStyle(e).transitionDuration)), ['0s', '0s']);
   await page.waitForTimeout(SETTLED);
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(22, 20, 29)');
   await context.close();

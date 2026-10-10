@@ -1,7 +1,8 @@
 // The homepage's arrival, the part CSS cannot do alone (the rest is "the arrival" in
 // overzicht.css; whether it plays is decided in the layout's head, before first paint).
 // It rules the lettering guides under the name, draws each letter of the name from sketch
-// lines (outlines from src/data/name-glyphs.json, see scripts/name-glyphs.mjs), sends the
+// lines (outlines from src/data/name-glyphs.json, see scripts/name-glyphs.mjs), draws the
+// first sheet's boxes with a pen going round their borders, sends the
 // crosshair from the sheet's corner to the name, and ends with the name's dimension: its real
 // width, in the sheet's own units.
 // When it is over it clears the class and says so ('ovz:arrived'), so the terminal can start
@@ -18,9 +19,9 @@ const holder = name?.closest('.sheet-you');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)');
 const playing = html.classList.contains('intro');
-const ARRIVAL = ['develop', 'tilt', 'letters', 'lamp'];
-// and what a hurry speeds up besides: the guides, the drawn letters and the dimension
-const HURRIES = [...ARRIVAL, 'guides', 'g-draw', 'g-box', 'g-fill', 'dim-run', 'dim-end'];
+// the arrival is every finite animation running from first paint (the endless ones, a
+// blinking cursor, are the page's own); a hurry speeds up those and whatever joins them later
+const finite = a => a.animationName && a.effect?.getComputedTiming().iterations !== Infinity;
 // in the arrival's own clock (ms), keep in step with overzicht.css
 // (the last letter starts at LETTERS_AT + 10 STAGGER and takes 800 ms: the 1.95 s of 'letters')
 const GUIDES_END = 1800, LETTERS_AT = 550, STAGGER = 60, TRIP_FROM = 1000, DIM_AT = 1950;
@@ -155,6 +156,63 @@ function draw(data) {
   });
 }
 
+// ---------- the boxes, drawn ----------
+// One svg over the first sheet: for each box a pen line on its borders, the sides it has, in
+// the order a hand goes round (top, right, bottom, left). The real borders show at 2.2 s,
+// under the finished lines. [selector, start, duration] in the arrival's clock (ms).
+const PENS = [
+  ['.term', 700, 450], ['.term-head', 1000, 250], ['.site-photo .photo', 950, 400],
+  ['.status-mark', 1350, 200], ['.act-main', 1450, 300], ['.titleblock', 1450, 400],
+];
+const CELLS_AT = 1600, CELL_STAGGER = 30, CELL_FOR = 200;
+
+function pen(r, cs) {
+  const w = ['Top', 'Right', 'Bottom', 'Left'].map(s => parseFloat(cs[`border${s}Width`]) || 0);
+  const [t, rt, b, l] = [r.top + w[0] / 2, r.right - w[1] / 2, r.bottom - w[2] / 2, r.left + w[3] / 2];
+  const f = n => n.toFixed(2);
+  const d = w.every(Boolean) ? `M${f(l)} ${f(t)}H${f(rt)}V${f(b)}H${f(l)}Z`
+    : [w[0] && `M${f(r.left)} ${f(t)}H${f(r.right)}`, w[1] && `M${f(rt)} ${f(r.top)}V${f(r.bottom)}`,
+       w[2] && `M${f(r.right)} ${f(b)}H${f(r.left)}`, w[3] && `M${f(l)} ${f(r.bottom)}V${f(r.top)}`].filter(Boolean).join('');
+  return d && { d, w: Math.max(...w) };
+}
+
+function box() {
+  const at = since();
+  const sheet = document.querySelector('.sheet-you');
+  if (!sheet || hurried) return;
+  const cells = [...sheet.querySelectorAll('.titleblock :is(th, td)')];
+  // the cells' text sweeps were timed at first paint; only their moment changes
+  cells.forEach((c, i) => c.style.setProperty('--sweep-at', `${CELLS_AT + 50 + i * CELL_STAGGER}ms`));
+  const jobs = [
+    ...PENS.flatMap(([sel, start, dur]) => [...sheet.querySelectorAll(sel)].map(el => [sel, el, start, dur])),
+    ...cells.map((el, i) => [null, el, CELLS_AT + i * CELL_STAGGER, CELL_FOR]),
+  ];
+  const lines = square(() => {
+    const sb = sheet.getBoundingClientRect();
+    return jobs.map(([sel, el, start, dur]) => {
+      const r = el.getBoundingClientRect();
+      const p = pen({ top: r.top - sb.top, right: r.right - sb.left, bottom: r.bottom - sb.top, left: r.left - sb.left }, getComputedStyle(el));
+      return p && { ...p, sel, start, dur };
+    }).filter(Boolean);
+  });
+  const svg = document.createElementNS(SVGNS, 'svg');
+  svg.setAttribute('class', 'pens');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('width', sheet.offsetWidth);
+  svg.setAttribute('height', sheet.offsetHeight);
+  for (const { d, w, sel, start, dur } of lines) {
+    const p = document.createElementNS(SVGNS, 'path');
+    p.setAttribute('d', d);
+    p.setAttribute('pathLength', 1);
+    p.setAttribute('stroke-width', w);
+    if (sel) p.dataset.for = sel;
+    p.style.setProperty('--at', `${start - at}ms`);
+    p.style.setProperty('--for', `${dur}ms`);
+    svg.append(p);
+  }
+  sheet.append(svg);
+}
+
 // ---------- the dimension ----------
 const dim = document.createElementNS(SVGNS, 'svg');
 dim.setAttribute('class', 'name-dim');
@@ -209,7 +267,7 @@ function arrive() {
   INPUTS.forEach(t => removeEventListener(t, hurry, true));
   if (!html.classList.contains('intro')) return;
   html.classList.remove('intro');
-  name?.querySelectorAll('.glyphs').forEach(s => s.remove());
+  document.querySelectorAll('.glyphs, .pens').forEach(s => s.remove());
   document.dispatchEvent(new CustomEvent('ovz:arrived'));
   // the sheet was one screen while it squared up: a wheel turned meanwhile scrolls now
   if (wheeled) scrollBy({ top: wheeled, behavior: 'smooth' });
@@ -224,7 +282,7 @@ function hurry(e) {
   if (e.type === 'wheel') wheeled += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
   if (hurried) return;
   hurried = true;
-  for (const a of document.getAnimations()) if (HURRIES.includes(a.animationName)) a.playbackRate = RUSH;
+  for (const a of document.getAnimations()) if (finite(a)) a.playbackRate = RUSH;
   document.dispatchEvent(new CustomEvent('ovz:xhair-home'));
 }
 
@@ -240,6 +298,7 @@ async function start() {
     // only fetched for the arrival; a first visit is the only time it is needed
     const { default: data } = await import('../../data/name-glyphs.json');
     draw(data);
+    box();
     rule();
   }
   const target = drawDim();
@@ -264,7 +323,7 @@ async function start() {
 
 if (playing) {
   // over when every part of it is (the head's backstop is never the clock)
-  Promise.all(document.getAnimations().filter(a => ARRIVAL.includes(a.animationName)).map(a => a.finished))
+  Promise.all(document.getAnimations().filter(finite).map(a => a.finished))
     .then(arrive, arrive);
   INPUTS.forEach(t => addEventListener(t, hurry, { capture: true, passive: true }));
 }
