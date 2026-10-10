@@ -12,7 +12,7 @@ if (plate) {
   window.__plate = scene;
 
   const layout = () => {
-    const r = stage.getBoundingClientRect();
+    const r = { width: stage.offsetWidth, height: stage.offsetHeight };
     const pad = Math.max(14, Math.min(40, r.width * 0.05));
     scene.setFrame({ x: pad, y: pad, w: r.width - pad * 2, h: r.height - pad * 2 - 34 });
   };

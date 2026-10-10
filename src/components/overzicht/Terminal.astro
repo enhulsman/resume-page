@@ -103,6 +103,12 @@ const terminalData = {
     const dataEl = document.getElementById('terminal-data');
     const terminal = new InteractiveTerminal(body, dataEl ? JSON.parse(dataEl.textContent || '{}') : {});
     body.addEventListener('terminal-animation-complete', () => terminal.activate(), { once: true });
-    initTerminalAnimation(body);
+    // on the homepage's arrival it waits its turn (intro.js), so two things never talk at once
+    let typing = false;
+    const type = () => { if (!typing) { typing = true; initTerminalAnimation(body); } };
+    if (document.documentElement.classList.contains('intro')) {
+      document.addEventListener('ovz:arrived', type, { once: true });
+      setTimeout(type, 3500);
+    } else type();
   }
 </script>

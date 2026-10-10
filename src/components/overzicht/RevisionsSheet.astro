@@ -1,12 +1,18 @@
 ---
 import { experience } from "../../config/resume";
 import { materials, specification } from "../../config/home";
+import { chart, yearOf } from "../../scripts/overzicht/span.js";
 
-// Experience as a drawing's revision table: newest first, lettered from A (oldest).
+// Experience as a drawing's revision table: newest first, lettered from A (oldest). On a wide
+// screen each revision also gets a bar on one axis of years (scripts/overzicht/span.js): laid
+// out here for a page without JS, and again in the browser so open roles run to today.
+const spans = experience.map(e => ({ start: +e.startDate, end: e.endDate ? +e.endDate : null }));
+const c = chart(spans, yearOf(new Date()));
 const revs = experience.map((e, i) => ({
   ...e,
   letter: String.fromCharCode(65 + experience.length - 1 - i),
   when: e.endDate ? `${e.startDate} – ${e.endDate}` : `${e.startDate} –`,
+  bar: `--l:${c.bars[i].l};--w:${c.bars[i].w}`,
 }));
 ---
 <section class="sheet" id="revisions" aria-labelledby="rev-h">
@@ -14,9 +20,9 @@ const revs = experience.map((e, i) => ({
     <h2 id="rev-h">Experience</h2>
     <p>Newest first, the way a drawing records its revisions.</p>
   </header>
-  <ol class="revs" reversed>
-    {revs.map(r => (
-      <li><span class="rev">{r.letter}</span><span class="when">{r.when}</span><div><h3>{r.homeRole ?? r.role} <i>{r.client}</i></h3><p>{r.homeSummary}</p></div></li>
+  <ol class="revs" reversed style={`--n:${c.n};--now:${c.now}`}>
+    {revs.map((r, i) => (
+      <li data-start={r.startDate} data-end={r.endDate}><span class="rev">{r.letter}</span><span class="when">{r.when}</span><div><h3>{r.homeRole ?? r.role} <i>{r.client}</i></h3><p>{r.homeSummary}</p></div>{r.stack ? <ul class="stack" aria-label="Stack">{r.stack.map(t => <li>{t}</li>)}</ul> : <span />}<div class="span" aria-hidden="true">{i === 0 && <div class="revs-axis">{c.years.map(y => <span style={`--x:${y.x}`}>{y.year}</span>)}</div>}<i class="span-bar" style={r.bar} /></div></li>
     ))}
   </ol>
 
@@ -31,3 +37,26 @@ const revs = experience.map((e, i) => ({
     </table>
   </div>
 </section>
+
+<script>
+  // the same chart for today, whenever the page is read
+  import { chart, yearOf } from '../../scripts/overzicht/span.js';
+  const ol = document.querySelector<HTMLElement>('.revs');
+  if (ol) {
+    const rows = [...ol.children] as HTMLElement[];
+    const c = chart(rows.map(li => ({ start: +li.dataset.start!, end: li.dataset.end ? +li.dataset.end : null })), yearOf(new Date()));
+    ol.style.setProperty('--n', String(c.n));
+    ol.style.setProperty('--now', c.now);
+    rows.forEach((li, i) => {
+      const bar = li.querySelector<HTMLElement>('.span-bar');
+      bar?.style.setProperty('--l', c.bars[i].l);
+      bar?.style.setProperty('--w', c.bars[i].w);
+    });
+    ol.querySelector('.revs-axis')?.replaceChildren(...c.years.map(y => {
+      const s = document.createElement('span');
+      s.textContent = String(y.year);
+      s.style.setProperty('--x', y.x);
+      return s;
+    }));
+  }
+</script>

@@ -20,6 +20,8 @@ after(async () => { await browser?.close(); });
 
 async function open(path = '/', { width = 1440, height = 900, reducedMotion = 'no-preference', js = true, storage } = {}) {
   const context = await browser.newContext({ viewport: { width, height }, reducedMotion, javaScriptEnabled: js });
+  // the homepage's arrival is tested on its own (tests/intro.e2e.mjs); here the page is as it settles
+  await context.addInitScript(() => { try { sessionStorage.setItem('ovz-arrived', '1'); } catch {} });
   if (storage) await context.addInitScript(s => { for (const [k, v] of Object.entries(s)) if (localStorage.getItem(k) === null) localStorage.setItem(k, v); }, storage);
   const page = await context.newPage();
   const errors = [];
@@ -104,6 +106,8 @@ const RETIRED = new Set([
   // 2026-10-09: ANNA is read one level per step; the drawing labels the levels by name, −4 is Operations
   'Exploded view', 'What holds it up', '−4 RUNNING IT',
   "Memory, documents and connector access are scoped to the person asking. Connector secrets are stored encrypted, and when a login is needed, ANNA keeps the token, not the user's chat.",
+  // 2026-10-10: the bar signs "EH." and gives the name in full
+  'E. HULSMAN',
 ]);
 // the drawn projects the homepage leaves out are drawn on /projects, so their copy counts from there
 test('every line of the prototype\'s copy is still on the homepage or /projects', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {
@@ -187,6 +191,8 @@ test('the theme toggle, the terminal and the inner pages share one stored theme'
 test('dark chosen on a light system stays dark', async () => {
   const context = await browser.newContext({ colorScheme: 'light' });
   await context.addInitScript(() => localStorage.setItem('theme', 'dark'));
+  // settled, not mid-arrival (the light table flickers on first; tests/intro.e2e.mjs)
+  await context.addInitScript(() => sessionStorage.setItem('ovz-arrived', '1'));
   const page = await context.newPage();
   await page.goto(BASE + '/');
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -410,8 +416,10 @@ test('the light table has depth: darker round the sheet, panels a hair lighter, 
   assert.notEqual(dark.detail, 'rgba(0, 0, 0, 0)', 'drawn panels are lifted');
   assert.notEqual(dark.card, 'rgba(0, 0, 0, 0)', 'cards are lifted');
   assert.ok(dark.grain > 0.035, `grain ${dark.grain}`);
+  // by day the sheet lies on a drafting board's green cover; on the whiteprint itself nothing
+  // is lifted
   const light = await read('light');
-  assert.equal(light.table, light.sheet);
+  assert.ok(light.table < light.sheet - 15, `table ${light.table} under sheet ${light.sheet}`);
   assert.equal(light.detail, 'rgba(0, 0, 0, 0)');
 });
 
@@ -974,5 +982,161 @@ test('the terminal on the first sheet lists the projects that lead the set, ANNA
   const text = await page.locator('#terminal-body').innerText();
   const after = text.split('ls projects/')[1].split('\n').map(l => l.trim()).filter(Boolean).slice(0, 4);
   assert.deepEqual(after, ['anna', 'henk-homelab-agent', 'finance-bot', 'homelab-infrastructure']);
+  await context.close();
+});
+
+test('code blocks in a post read clearly in either theme', async () => {
+  // highlighted for a dark ground only, light mode put ink-dark text on a dark block
+  for (const theme of ['light', 'dark']) {
+    const { context, page } = await open('/blog/henk-watchdog', { storage: { theme } });
+    const worst = await page.evaluate(() => {
+      const rgb = c => c.match(/[\d.]+/g).slice(0, 4).map(Number);
+      const lum = c => { const [r, g, b] = rgb(c).slice(0, 3).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * r + .7152 * g + .0722 * b; };
+      const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); };
+      // the ground: the first element up from the text with a background that is not transparent
+      const ground = el => { for (; el; el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; const a = rgb(c)[3]; if (a === undefined || a > 0) return c; } return 'rgb(255, 255, 255)'; };
+      const pres = [...document.querySelectorAll('.prose pre')];
+      let worst = Infinity, what = '';
+      for (const pre of pres) {
+        const walk = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT);
+        for (let n; (n = walk.nextNode());) {
+          if (!n.data.trim()) continue;
+          const el = n.parentElement, r = ratio(getComputedStyle(el).color, ground(el));
+          if (r < worst) { worst = r; what = `${n.data.trim().slice(0, 20)}: ${getComputedStyle(el).color} on ${ground(el)}`; }
+        }
+      }
+      return { n: pres.length, worst, what };
+    });
+    assert.ok(worst.n > 0, 'the post has a code block');
+    assert.ok(worst.worst >= 4.5, `${theme}: contrast ${worst.worst.toFixed(2)} (${worst.what})`);
+    await context.close();
+  }
+});
+
+test('code blocks wrap rather than scroll sideways, a wrapped line indented under its start', async () => {
+  for (const width of [1440, 390]) {
+    const { context, page } = await open('/blog/henk-watchdog', { width, height: 900 });
+    const r = await page.evaluate(() => {
+      const pre = document.querySelector('.prose pre');
+      // a logical line that wraps: its first and last fragments on screen
+      const wrapped = [...pre.querySelectorAll('.line')].map(l => {
+        const range = document.createRange(); range.selectNodeContents(l);
+        const rows = [...range.getClientRects()].filter(q => q.width > 0);
+        return { first: rows[0].left, rest: rows.at(-1).left, tops: new Set(rows.map(q => Math.round(q.top))).size };
+      }).filter(l => l.tops > 1);
+      const lh = parseFloat(getComputedStyle(pre).lineHeight);
+      return { over: pre.scrollWidth - pre.clientWidth, wrapped, rows: Math.round((pre.clientHeight - parseFloat(getComputedStyle(pre).paddingTop) * 2) / lh),
+        visual: [...pre.querySelectorAll('.line')].reduce((n, l) => { const range = document.createRange(); range.selectNodeContents(l); return n + new Set([...range.getClientRects()].filter(q => q.width > 0).map(q => Math.round(q.top))).size; }, 0) };
+    });
+    assert.ok(r.over <= 0, `${width}: no sideways scroll (${r.over}px over)`);
+    assert.ok(r.wrapped.length > 0, `${width}: the long log line wraps`);
+    for (const l of r.wrapped) assert.ok(l.rest > l.first + 4, `${width}: continuation indented ${JSON.stringify(l)}`);
+    assert.equal(r.rows, r.visual, `${width}: no blank rows between lines`);
+    await context.close();
+  }
+});
+
+for (const [w, h] of [[1440, 900], [1920, 1080], [1280, 720]]) test(`on a ${w}x${h} desktop the next level's heading shows below the one being read`, async () => {
+  // a screen of blank paper per level hid that there was more: the next one peeks in, as on a phone
+  const { context, page } = await open('/', { width: w, height: h });
+  const ids = await page.locator('.scrolly .step[data-cloud]').evaluateAll(ss => ss.map(s => s.dataset.cloud));
+  for (const [a, b] of ids.slice(0, -1).map((id, i) => [id, ids[i + 1]])) {
+    await page.locator(`[data-cloud="${a}"]`).evaluate(s => s.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(150);
+    const r = await page.evaluate(([a, b]) => {
+      const box = s => document.querySelector(`[data-cloud="${s}"] h2`).getBoundingClientRect();
+      return { a: box(a), b: box(b), vh: innerHeight };
+    }, [a, b]);
+    assert.ok(r.a.top > 0, `${a} on screen`);
+    assert.ok(r.b.bottom < r.vh - 24, `${b}'s heading shows under ${a} (top ${Math.round(r.b.top)} of ${r.vh})`);
+    // but it is not crowded: a clear gap between the two
+    assert.ok(r.b.top - r.a.bottom > r.vh * 0.2, `${a} and ${b} keep apart`);
+  }
+  await context.close();
+});
+
+for (const [w, h] of [[1440, 900], [1920, 1080], [1280, 720]]) test(`on a ${w}x${h} desktop the last level ends the section without a screen of blank paper, the drawing beside it while read`, async () => {
+  const { context, page } = await open('/', { width: w, height: h });
+  // read: its heading at the upper reading line, the drawing still pinned beside it
+  await page.locator('[data-cloud="ops"] h2').evaluate(e => scrollBy(0, e.getBoundingClientRect().top - innerHeight * 0.3));
+  await page.waitForTimeout(150);
+  assert.ok(Math.abs(await page.locator('.scrolly .stage').evaluate(s => s.getBoundingClientRect().top)) <= 1, 'the drawing is pinned');
+  // and after its last line, about half a screen of paper before the next sheet, not most of
+  // one (keeping the drawing pinned while the level is read sets the floor)
+  const gap = await page.evaluate(() => document.querySelector('.scrolly').nextElementSibling.getBoundingClientRect().top - document.querySelector('[data-cloud="ops"]').lastElementChild.getBoundingClientRect().bottom);
+  assert.ok(gap < h * 0.55, `${Math.round(gap)}px of paper under the last level`);
+  await context.close();
+});
+
+test('each revision names its stack in a column of its own, under the summary on a phone', async () => {
+  for (const width of [1440, 1024, 390]) {
+    const { context, page } = await open('/', { width, height: 900 });
+    const rows = await page.locator('.revs > li').evaluateAll(lis => lis.map(li => {
+      const p = li.querySelector('p').getBoundingClientRect(), s = li.querySelector('.stack');
+      const r = s?.getBoundingClientRect();
+      return { items: s ? s.querySelectorAll('li').length : 0, p: { left: p.left, right: p.right, bottom: p.bottom }, s: r && { left: r.left, right: r.right, top: r.top }, li: li.getBoundingClientRect().right };
+    }));
+    // every role but the tutoring
+    assert.equal(rows.filter(r => r.items > 0).length, rows.length - 1, `${width}: a stack on every role`);
+    for (const r of rows.filter(r => r.s)) {
+      if (width > 860) assert.ok(r.s.left >= r.p.right + 12, `${width}: beside the summary ${JSON.stringify(r)}`);
+      else assert.ok(r.s.top >= r.p.bottom, `${width}: under the summary ${JSON.stringify(r)}`);
+      assert.ok(r.s.right <= r.li + 0.5, `${width}: inside the table`);
+    }
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}: no sideways scroll`);
+    await context.close();
+  }
+});
+
+test('on a wide screen each revision gets a bar on one axis of years; narrower, none', async () => {
+  for (const width of [2000, 1800]) {
+    const { context, page } = await open('/', { width, height: 1000 });
+    const t = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll('.revs > li')].map(li => {
+        const b = li.querySelector('.span-bar').getBoundingClientRect(), when = li.querySelector('.when').textContent;
+        return { rev: li.querySelector('.rev').textContent, when, left: b.left, right: b.right, open: /–\s*$/.test(when) };
+      });
+      const years = [...document.querySelectorAll('.revs-axis span')].map(s => [s.textContent, s.getBoundingClientRect().left]);
+      return { rows, years, over: document.documentElement.scrollWidth - innerWidth };
+    });
+    const by = Object.fromEntries(t.rows.map(r => [r.rev, r]));
+    assert.ok(t.rows.every(r => r.right - r.left > 4), `${width}: a bar on every row`);
+    // oldest furthest left, the axis labelled year by year from the first
+    assert.ok(by.A.left < by.B.left && by.B.left < by.C.left && by.C.left <= by.E.left, `${width}: in order of their start`);
+    assert.equal(t.years[0][0], '2019');
+    assert.ok(t.years.every(([, x], i) => i === 0 || x > t.years[i - 1][1]), `${width}: years run left to right`);
+    // the placements through Anamata sit inside its own bar, and the open roles run to the same now
+    for (const k of ['D', 'E', 'F']) assert.ok(by[k].left >= by.C.left && by[k].right <= by.C.right + 0.5, `${width}: ${k} inside C`);
+    const ends = t.rows.filter(r => r.open).map(r => Math.round(r.right));
+    assert.ok(ends.length >= 3 && ends.every(e => Math.abs(e - ends[0]) <= 1), `${width}: open roles end at now ${ends}`);
+    assert.ok(t.over <= 0, `${width}: no sideways scroll`);
+    await context.close();
+  }
+  // narrower, the years would crowd: none
+  const { context, page } = await open('/', { width: 1700, height: 900 });
+  assert.equal(await page.locator('.revs .span').first().evaluate(e => getComputedStyle(e).display), 'none', 'none at 1700');
+  assert.equal(await page.locator('.revs-axis').evaluate(e => getComputedStyle(e).display), 'none');
+  await context.close();
+});
+
+test('the open roles run to today, not to the day the site was built, even into a new year', async () => {
+  const context = await browser.newContext({ viewport: { width: 2000, height: 1100 } });
+  await context.addInitScript(() => { try { sessionStorage.setItem('ovz-arrived', '1'); } catch {} });
+  const page = await context.newPage();
+  // well past any build: the axis grows a year, the open bars and the now line follow
+  await page.clock.setFixedTime(new Date('2028-03-01T12:00:00'));
+  await page.goto(BASE + '/', { waitUntil: 'load' });
+  const t = await page.evaluate(() => {
+    const years = [...document.querySelectorAll('.revs-axis span')].map(s => [s.textContent, s.getBoundingClientRect().left]);
+    const span = document.querySelector('.revs .span'), now = getComputedStyle(span, '::after').left;
+    const bars = [...document.querySelectorAll('.revs > li')].map(li => ({ open: /–\s*$/.test(li.querySelector('.when').textContent), right: li.querySelector('.span-bar').getBoundingClientRect().right }));
+    return { years, now: span.getBoundingClientRect().left + parseFloat(now), bars, right: span.getBoundingClientRect().right };
+  });
+  assert.equal(t.years.at(-1)[0], '2028', 'the axis reaches this year');
+  const y2028 = t.years.at(-1)[1];
+  assert.ok(t.now > y2028 && t.now < t.right, `now sits in 2028 (${t.now} vs ${y2028}..${t.right})`);
+  for (const b of t.bars.filter(b => b.open)) assert.ok(Math.abs(b.right - t.now) <= 1.5, `an open bar ends at now (${b.right} vs ${t.now})`);
+  // a closed role keeps its end
+  assert.ok(t.bars.filter(b => !b.open).every(b => b.right < y2028));
   await context.close();
 });

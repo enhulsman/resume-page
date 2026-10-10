@@ -1,6 +1,6 @@
 ---
-// The sheet's top bar: the same page links on every sheet, homepage included, with the one you
-// are on marked. The theme button and the phone menu are driven by src/scripts/overzicht/chrome.js;
+// The sheet's top bar: the signature (the favicon's "EH.", in the hero's letters) and the name,
+// then the same page links on every sheet, homepage included, with the one you are on marked. The theme button and the phone menu are driven by src/scripts/overzicht/chrome.js;
 // at 860px and below the links fold into the menu. The menu button comes before the links so they
 // follow it in keyboard order; CSS draws it last.
 interface Props {
@@ -11,7 +11,7 @@ const { current } = Astro.props;
 const links = [["projects", "/projects", "Projects"], ["blog", "/blog", "Blog"], ["resume", "/resume", "Résumé"], ["contact", "/contact", "Contact"]];
 ---
 <header class="bar">
-  <a class="bar-name" href={current ? "/" : "#top"}>E. Hulsman</a>
+  <a class="bar-name" href={current ? "/" : "#top"}><span class="sig" aria-hidden="true">EH<span class="sig-dot">.</span></span>Ezra Hulsman</a>
   <button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="bar-nav">
     <svg class="menu-lines" viewBox="0 0 18 14" aria-hidden="true">
       <path pathLength="1" class="ml" d="M1 2 H17"/><path pathLength="1" class="ml" d="M1 7 H17"/><path pathLength="1" class="ml" d="M1 12 H17"/>

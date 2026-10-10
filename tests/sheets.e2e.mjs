@@ -20,6 +20,8 @@ after(async () => { await browser?.close(); });
 
 async function open(path, { width = 1440, height = 900, scale = 1, reducedMotion = 'no-preference', colorScheme = 'light', storage } = {}) {
   const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: scale, reducedMotion, colorScheme });
+  // the homepage's arrival is tested on its own (tests/intro.e2e.mjs); here the page is as it settles
+  await context.addInitScript(() => { try { sessionStorage.setItem('ovz-arrived', '1'); } catch {} });
   if (storage) await context.addInitScript(s => { for (const [k, v] of Object.entries(s)) if (localStorage.getItem(k) === null) localStorage.setItem(k, v); }, storage);
   const page = await context.newPage();
   const errors = [];
@@ -70,10 +72,21 @@ for (const path of INNER) {
   });
 }
 
-test('one bar on every page, homepage included: E. Hulsman, Projects, Blog, Résumé, Contact, and the theme button', async () => {
+test('one bar on every page, homepage included: EH. | Ezra Hulsman, Projects, Blog, Résumé, Contact, and the theme button', async () => {
   for (const [path, current] of [['/', null], ['/projects', 'PROJECTS'], ['/projects/Henk', 'PROJECTS'], ['/blog', 'BLOG'], [`/blog/${POSTS[0]}`, 'BLOG'], ['/resume', 'RÉSUMÉ'], ['/contact', 'CONTACT']]) {
     const { context, page } = await open(path);
-    assert.equal((await page.locator('.bar-name').innerText()).trim(), 'E. HULSMAN');
+    // the signature from the old site, then the name in full; read out as the name alone
+    assert.equal((await page.locator('.bar-name').innerText()).replace(/\s+/g, ' ').trim(), 'EH. EZRA HULSMAN');
+    assert.equal(await page.locator('.bar-name .sig').getAttribute('aria-hidden'), 'true');
+    const [dot, red] = await page.locator('.bar-name .sig-dot').evaluate(e => {
+      const i = document.body.appendChild(document.createElement('i'));
+      i.style.color = 'var(--red)';
+      const c = getComputedStyle(i).color;
+      i.remove();
+      return [getComputedStyle(e).color, c];
+    });
+    assert.equal(dot, red, 'the full stop in red');
+    assert.equal(await page.getByRole('link', { name: 'Ezra Hulsman', exact: true }).count(), 1);
     assert.equal(await page.locator('.bar-name').getAttribute('href'), path === '/' ? '#top' : '/');
     assert.deepEqual(await page.locator('.bar nav a').allInnerTexts(), ['PROJECTS', 'BLOG', 'RÉSUMÉ', 'CONTACT']);
     assert.deepEqual(await page.locator('.bar nav a').evaluateAll(as => as.map(a => a.getAttribute('href'))), ['/projects', '/blog', '/resume', '/contact']);
@@ -558,14 +571,17 @@ test('the sitemap the pages advertise exists and lists every page', async () => 
 
 // ---------- round 3: favicon, mail line, the post head ----------
 
-test('the favicon is the H in a double frame, with its own light and dark', async () => {
+test('the favicon is the EH. signature in one frame, its full stop red, with its own light and dark', async () => {
   const { context, page } = await open('/');
   const href = await page.locator('link[rel="icon"]').getAttribute('href');
   const res = await page.request.get(BASE + href);
   assert.equal(res.status(), 200);
   const svg = await res.text();
   assert.match(svg, /prefers-color-scheme:\s*dark/);
-  assert.equal((svg.match(/<rect[^>]*fill="none"/g) || []).length, 2, 'two frames');
+  assert.equal((svg.match(/<rect[^>]*fill="none"/g) || []).length, 1, 'one frame');
+  // the H alone in a square read as a hospital sign: the initials, signed off in red
+  assert.match(svg, /class="r"/, 'a red full stop');
+  assert.match(svg, /\.r\{fill:#B8301A\}/);
   assert.doesNotMatch(svg, /Gradient|filter|#c9942b/i, 'none of the old amber glow');
   await context.close();
 });
@@ -655,4 +671,19 @@ test('the site\'s own case study says what it is, how it is checked, and the two
   assert.match(text, /Dom tower/);
   assert.doesNotMatch(text, /Claude|prompt/i, 'the page leaves Claude out');
   await context.close();
+});
+
+test('the bar keeps the signature and the full name on one line on small phones, the menu in reach', async () => {
+  for (const width of [320, 390]) {
+    const { context, page } = await open('/blog', { width, height: 800 });
+    const r = await page.evaluate(() => {
+      const box = s => document.querySelector(s).getBoundingClientRect();
+      const name = box('.bar-name'), menu = box('.menu-btn');
+      return { nameH: name.height, nameRight: name.right, menuLeft: menu.left, menuRight: menu.right, over: document.documentElement.scrollWidth - innerWidth };
+    });
+    assert.ok(r.nameH < 24, `${width}: one line (${r.nameH}px)`);
+    assert.ok(r.nameRight <= r.menuLeft - 8, `${width}: clear of the menu`);
+    assert.ok(r.menuRight <= width && r.over <= 0, `${width}: nothing off the screen`);
+    await context.close();
+  }
 });

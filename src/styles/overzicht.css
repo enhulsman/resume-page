@@ -13,8 +13,9 @@
   --label: #67639A;
   --grain-blend: multiply;
   --grain-a: 0.055;
-  /* round the sheet, and under a drawn panel or card: flat on the whiteprint */
-  --table: var(--sheet);
+  /* the drafting board the sheet lies on: its green vinyl cover. Under a drawn panel or
+     card the whiteprint stays flat */
+  --table: #C9D1C6;
   --panel: transparent;
   --gutter: clamp(16px, 3.2vw, 44px);
   --frame: clamp(8px, 1.1vw, 14px);
@@ -72,6 +73,97 @@ a:hover { color: var(--red); }
 .skip:focus { left: 16px; }
 h1, h2, h3 { margin: 0; font-weight: 700; }
 
+/* ---------- the arrival: walking up to the table ----------
+   First visit to the homepage only (the class is set in the layout's head, before first
+   paint, and cleared by intro.js when it is over, or by the head's backstop). Every animation
+   fills backwards only, so once the class is gone the page is exactly as it always is.
+   The sheet lies on the table, seen at an angle as you come up to it, and squares up. While
+   it does, the body is one screen tall: the frame and bar are fixed, and inside a transformed
+   body fixed means fixed to the body, so the body has to be the screen. */
+html.intro { perspective: 1600px; background: var(--table); }
+html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; transform-origin: 50% 62%; animation: tilt 1.2s cubic-bezier(.5, 0, .25, 1) backwards; }
+@media (max-width: 860px) { html.intro body { --tilt: 14deg; } }
+@keyframes tilt { from { transform: rotateX(var(--tilt)) scale(.94); } }
+/* The name is drawn letter by letter (intro.js, from the font's own outlines): sketch lines
+   round each letter, its outline traced, then filled in the settled ink. The real text waits
+   underneath, invisible, until the last letter is done; it shows then even if the drawing
+   never came (no glyph data, a late font). Keep the 1.95 s in step with intro.js. */
+html.intro .name span { animation: letters 1.95s steps(1, end) backwards; }
+@keyframes letters { from { color: transparent; } }
+.glyphs { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.glyphs .g-box { fill: none; stroke: var(--faint); stroke-width: calc(var(--sw) * .7); stroke-dasharray: 1; opacity: 0;
+  animation: g-draw .24s cubic-bezier(.4, 0, .2, 1) var(--d) backwards, g-box .24s ease calc(var(--d) + .5s) backwards; }
+.glyphs .g-line { fill: var(--ink); stroke: var(--ink); stroke-width: var(--sw); stroke-dasharray: 1; stroke-linejoin: round;
+  animation: g-draw .5s cubic-bezier(.45, 0, .25, 1) calc(var(--d) + .12s) backwards, g-fill .26s ease calc(var(--d) + .5s) backwards; }
+@keyframes g-draw { from { stroke-dashoffset: 1; } }
+@keyframes g-box { from { opacity: 1; } }
+@keyframes g-fill { from { fill-opacity: 0; } }
+/* the theme's colour transitions wait until the arrival is over: the paper covering the text
+   (below) does not transition, and would show as blocks while they caught up */
+html.intro body, html.intro body::after, html.intro .frame { transition: none; }
+
+/* The rest of the first sheet is drawn in around the name, from a blank sheet: only the frame
+   and the bar are pre-printed. Text is ruled, then a cover of paper is swept off it (a
+   transform, so the phone's compositor does the work); boxes are drawn by a pen going round
+   them (intro.js lays its lines on their borders, which stay hidden until 2.2 s); fills and
+   the photo come after their outlines. Nothing here animates a colour the whole page
+   inherits: that restyles every element on every frame. Times are the arrival's clock. */
+html.intro :is(.role, .lede, .status, .site-photo figcaption, .actions .act:not(.act-main), .titleblock th, .titleblock td) { position: relative; }
+html.intro :is(.role, .lede, .status, .site-photo figcaption, .actions .act:not(.act-main), .titleblock th, .titleblock td)::after {
+  content: ""; position: absolute; inset: -3px -4px; z-index: 1; pointer-events: none;
+  background: var(--sheet); transform: scaleX(0); transform-origin: right;
+  animation: sweep var(--sweep-for, .45s) cubic-bezier(.55, 0, .25, 1) var(--sweep-at, 1.4s) backwards;
+}
+html.intro .titleblock :is(th, td)::after { inset: 0; --sweep-for: .25s; }
+@keyframes sweep { from { transform: none; } }
+/* ruled lines under each line of text, a moment before it is uncovered */
+html.intro :is(.role, .lede, .status, .site-photo figcaption)::before {
+  content: ""; position: absolute; inset: 0 -4px; z-index: 2; pointer-events: none; opacity: 0;
+  background: repeating-linear-gradient(to bottom, transparent 0 calc(1lh - 1px), var(--faint) calc(1lh - 1px) 1lh);
+  transform-origin: left; animation: ruled 1s linear var(--rule-at, 1.3s) backwards;
+}
+@keyframes ruled { 0% { opacity: .7; transform: scaleX(0); } 22%, 70% { opacity: .7; transform: none; } 100% { opacity: 0; transform: none; } }
+html.intro .role { --rule-at: .85s; --sweep-at: 1s; }
+html.intro .lede { --rule-at: .95s; --sweep-at: 1.15s; --sweep-for: .6s; }
+html.intro .status { --rule-at: 1.3s; --sweep-at: 1.4s; }
+html.intro .site-photo figcaption { --rule-at: 1.45s; --sweep-at: 1.6s; }
+html.intro .actions .act:not(.act-main) { --sweep-at: 1.6s; --sweep-for: .3s; }
+html.intro .actions .act:not(.act-main) + .act { --sweep-at: 1.68s; }
+html.intro .actions .act:not(.act-main) + .act + .act { --sweep-at: 1.76s; }
+/* boxes: the real borders wait for the pen; then the fills */
+html.intro :is(.titleblock, .titleblock th, .titleblock td, .status-mark) { animation: borders 2.2s steps(1, end) backwards; }
+html.intro .term { animation: borders 2.2s steps(1, end) backwards, fill .3s ease 1.05s backwards; }
+html.intro .term-head { animation: borders 2.2s steps(1, end) backwards, wipe .4s cubic-bezier(.55, 0, .25, 1) 1.25s backwards; }
+html.intro .act-main { animation: borders 2.2s steps(1, end) backwards, fill .25s ease 1.72s backwards; }
+html.intro .site-photo .photo { animation: borders 2.2s steps(1, end) backwards, photo .7s ease 1.15s backwards; }
+html.intro .site-photo .clip path { stroke-dasharray: 1; animation: pen .35s cubic-bezier(.45, 0, .25, 1) .9s backwards; }
+@keyframes borders { from { border-color: transparent; } }
+@keyframes fill { from { background-color: transparent; } }
+@keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes photo { from { opacity: 0; } }
+@keyframes pen { from { stroke-dashoffset: 1; } }
+.pens { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 3; }
+.pens path { fill: none; stroke: var(--ink); stroke-dasharray: 1; animation: pen var(--for) cubic-bezier(.45, 0, .25, 1) var(--at) backwards; }
+/* whatever of the next sheets shows on a tall screen comes in once this one is drawn */
+html.intro main > section:not(.sheet-you) { animation: later .4s ease 1.9s backwards; }
+@keyframes later { from { opacity: 0; } }
+
+/* lettering guides: cap line and baseline, ruled before the name is inked, erased after */
+.name-guides { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; animation: guides 2.3s linear backwards; opacity: 0; }
+/* (on the arrival's clock: intro.js sets these animations' start to the tilt's) */
+.name-guides line { stroke: var(--faint); stroke-width: .75; }
+@keyframes guides { 0%, 14% { opacity: 0; } 21%, 86% { opacity: .9; } 100% { opacity: 0; } }
+
+/* the name's dimension: its real width, in the sheet's own units (the crosshair's) */
+.name-dim { position: absolute; left: 0; overflow: visible; pointer-events: none; }
+.name-dim path { fill: none; stroke: var(--ink); stroke-width: .8; }
+.name-dim text { font: 400 11px var(--mono); fill: var(--ink); letter-spacing: .02em; }
+.js .name-dim .dim-run { transform-box: fill-box; transform-origin: left; }
+.name-dim.plot .dim-run { animation: dim-run .4s cubic-bezier(.4, 0, .2, 1) var(--at, 0s) backwards; }
+.name-dim.plot .dim-end, .name-dim.plot text { animation: dim-end .25s ease calc(var(--at, 0s) + .3s) backwards; }
+@keyframes dim-run { from { transform: scaleX(0); } }
+@keyframes dim-end { from { opacity: 0; } }
+
 /* ---------- the sheet frame ---------- */
 .frame {
   position: fixed; inset: var(--frame); border: 1.5px solid var(--ink); pointer-events: none; z-index: 50;
@@ -91,7 +183,15 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
   transition: background-color .5s ease;
 }
 .bar a { text-decoration: none; }
-.bar-name { font-stretch: 100%; letter-spacing: .04em; margin-right: auto; }
+.bar-name { font-stretch: 100%; letter-spacing: .04em; margin-right: auto; display: inline-flex; align-items: center; white-space: nowrap; }
+.sig { font: 820 15px/1 var(--sans); font-stretch: 125%; letter-spacing: -.02em; }
+.sig-dot { color: var(--red); }
+.sig::after { content: ""; display: inline-block; width: .75px; height: 14px; background: var(--hair); margin: 0 12px; vertical-align: -2px; }
+/* on the smallest phones the signature and the full name keep their line: the lamp button
+   shows its lamp alone (its label stays for screen readers) */
+@media (max-width: 360px) {
+  .theme-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
 .bar nav { display: flex; gap: 22px; }
 .theme {
   appearance: none; border: .75px solid var(--ink); background: none; color: inherit; cursor: pointer;
@@ -196,6 +296,12 @@ main { padding: 0 calc(var(--frame) + 6px); }
 .scrolly { display: grid; grid-template-columns: minmax(340px, 38fr) 62fr; position: relative; padding-inline: var(--wide); }
 .copy { padding: 0 var(--gutter); position: relative; z-index: 2; }
 .step { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: calc(var(--bar) + 40px) 0 60px; max-width: 34em; }
+/* the levels sit closer, so the next one's heading shows under the one being read; the request
+   keeps a screen of its own while the drawing plots, and the last level just enough below it
+   that the drawing stays pinned beside it until it is read */
+.step[data-cloud] { min-height: 0; padding: 8.5svh 0; }
+@media (max-height: 800px) { .step[data-cloud] { padding: 5.5svh 0; } }
+.step:last-child { min-height: calc(78svh + 3rem); justify-content: flex-start; }
 .step h2 { font-size: clamp(26px, 2.4vw, 36px); line-height: 1.08; font-stretch: 88%; letter-spacing: -.01em; margin-bottom: .7em; }
 .step p { margin: 0 0 1em; color: var(--ink); }
 .tag { font: 400 12px/1 var(--mono) !important; letter-spacing: .06em; color: var(--red) !important; margin-bottom: 1.1em !important; }
@@ -204,7 +310,8 @@ main { padding: 0 calc(var(--frame) + 6px); }
   font-size: clamp(54px, 6.2vw, 112px); line-height: .84; font-weight: 820; font-stretch: 125%;
   letter-spacing: -.035em; margin: 0 0 .32em -.04em;
 }
-.name span { display: block; }
+.name { position: relative; }
+.name span { display: block; width: fit-content; }
 .role { font-size: clamp(19px, 1.6vw, 24px); font-weight: 600; font-stretch: 92%; margin: 0 0 .7em !important; }
 .role a { text-decoration-color: var(--faint); }
 .lede { font-size: clamp(17px, 1.25vw, 19px); max-width: 30em; color: var(--ink-2) !important; }
@@ -339,7 +446,23 @@ main { padding: 0 calc(var(--frame) + 6px); }
 .side span { font-size: 14px; color: var(--ink-2); line-height: 1.4; }
 
 .revs { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--ink); }
-.revs li { display: grid; grid-template-columns: 56px 120px minmax(0, 1fr); gap: 0 18px; padding: 18px 0; border-bottom: .75px solid var(--hair); }
+.revs li { display: grid; grid-template-columns: 56px 120px minmax(0, 46em) minmax(150px, 1fr); gap: 0 18px; padding: 18px 0; border-bottom: .75px solid var(--hair); }
+/* the stack column: the role's main tools, one per line, ruled off from the summary */
+.revs .stack { list-style: none; margin: 0; padding: 2px 0 0 18px; border-left: .75px solid var(--hair); font: 400 12px/1.75 var(--mono); color: var(--ink-2); }
+.revs .stack li { display: block; padding: 0; border: 0; }
+/* the programme chart: on a wide screen, each revision's span on one axis of years, the year
+   lines running unbroken down the table, a red line at now (RevisionsSheet.astro) */
+.revs .span, .revs-axis { display: none; }
+@media (min-width: 1800px) {
+  .revs > li { grid-template-columns: 56px 120px minmax(0, 46em) minmax(150px, 210px) minmax(0, 1fr); }
+  .revs .span { display: block; position: relative; margin: -18px 0; min-height: calc(100% + 36px);
+    background: repeating-linear-gradient(90deg, var(--hair) 0 .75px, transparent .75px calc(100% / var(--n))); }
+  .revs .span::after { content: ""; position: absolute; top: 0; bottom: -1px; left: var(--now); border-left: .75px dashed var(--red); }
+  .revs .span-bar { position: absolute; left: var(--l); width: var(--w); top: 25px; height: 6px; background: var(--ink); }
+  .revs > li:first-child .span-bar { background: var(--red); }
+  .revs-axis { display: block; position: absolute; left: 0; right: 0; top: -22px; height: 12px; }
+  .revs-axis span { position: absolute; left: var(--x); padding-left: 4px; font: 400 10px/1 var(--mono); color: var(--label); }
+}
 .rev { font: 700 11.5px/1 var(--sans); width: 34px; height: 30px; display: grid; place-items: center; position: relative; }
 .rev { padding-top: 7px; }
 .rev::before {
@@ -490,6 +613,14 @@ kbd { font: inherit; color: var(--red); }
 .prose blockquote { margin: 0 0 1em; padding: 2px 0 2px 18px; border-left: 1.5px solid var(--red); }
 .prose code { font: 400 .86em var(--mono); color: var(--ink); }
 .prose pre { font: 400 13px/1.55 var(--mono); border: 1.5px solid var(--ink); padding: 12px 14px; overflow-x: auto; }
+/* long lines wrap rather than scroll sideways; a wrapped line hangs 2ch in under its start, so
+   it never reads as a line of its own (each source line is a .line from the highlighter) */
+.prose pre code { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+.prose pre .line { display: inline-block; width: 100%; padding-left: 2ch; text-indent: -2ch; }
+/* highlighted code (astro.config.mjs) in the theme's colours, on the sheet */
+.prose pre, .prose pre * { color: var(--shiki-light, var(--ink)); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .prose :is(pre, pre *) { color: var(--shiki-dark, var(--ink)); } }
+:root[data-theme="dark"] .prose :is(pre, pre *) { color: var(--shiki-dark, var(--ink)); }
 .prose img { max-width: 100%; height: auto; border: .75px solid var(--ink); }
 .prose table { border-collapse: collapse; font-size: 15px; }
 .prose th, .prose td { border: .75px solid var(--ink); padding: 6px 10px; text-align: left; }
@@ -615,6 +746,8 @@ kbd { font: inherit; color: var(--red); }
   .revs li { grid-template-columns: 40px minmax(0, 1fr); }
   .revs .when { grid-column: 2; }
   .revs li > div { grid-column: 2; }
+  .revs .stack { grid-column: 2; display: flex; flex-wrap: wrap; gap: 0 7px; margin-top: 8px; padding: 0; border: 0; }
+  .revs .stack li:not(:last-child)::after { content: "·"; margin-left: 7px; }
   .revs h3 i { display: block; margin: 2px 0 0; }
   .schedules { grid-template-columns: 1fr; }
   .diary li { grid-template-columns: 1fr; }
@@ -660,6 +793,7 @@ kbd { font: inherit; color: var(--red); }
   /* the text scrolling under the drawing fades out instead of meeting a hard cut */
   .stage::after { content: ""; position: absolute; left: 0; right: 0; top: calc(100% + 1.5px); height: 20px; background: linear-gradient(var(--sheet), transparent); pointer-events: none; }
   .step:first-of-type { margin-top: 0; }
+  .step:last-child, .step[data-cloud] { min-height: 0; padding: 28px var(--gutter) 44px; }
   .step::before { content: ""; position: absolute; left: var(--gutter); right: var(--gutter); top: 0; border-top: .75px solid var(--ink); }
   .scale-tip { width: 190px; }
   .turn { left: 12px; bottom: 8px; }
@@ -711,6 +845,9 @@ kbd { font: inherit; color: var(--red); }
     --sheet: #fff; --ink: #000; --ink-2: #222; --label: #444; --faint: #777; --hair: #bbb; --red: #B8301A; color-scheme: light;
   }
   body { background: #fff; color: #000; font-size: 11pt; transition: none; }
+  /* printed mid-arrival: the whole sheet, square, not the one tilted screen */
+  html.intro { perspective: none; background: none; }
+  html.intro body { height: auto; overflow: visible; transform: none; }
   body::before, body::after, .bar, .frame, .foot, .skip, .dim-hl, .replay, .turn, .xhair, .pencil-mark, .pencil-line { display: none !important; }
   main { padding: 0; }
   .sheet { padding: 18px 0 0; border-top: 0; min-height: 0; }
@@ -718,6 +855,7 @@ kbd { font: inherit; color: var(--red); }
   .sheet-head { margin-bottom: 18px; }
   .sheet-head h1, .sheet-head h2 { font-size: 26pt; }
   .revs li, .schedule tr, .detail { break-inside: avoid; }
+  .revs .span { display: none !important; }
   .actions .act { border: 0; padding: 0; background: none; color: #000; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

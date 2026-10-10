@@ -21,6 +21,47 @@ const { current, ...meta } = Astro.props;
     <script is:inline>
       // theme before first paint: the stored choice, else the system's
       try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+      // the homepage's arrival (scripts/overzicht/intro.js), decided before first paint so the
+      // sheet never shows settled and then jumps back: once a session, never on reduced motion
+      // or a link into the page. A reload replays it, if the page was left at the top (further
+      // down, the browser puts the reader back where they were). ?intro=1 replays it, ?intro=0
+      // skips it. intro.js clears the
+      // class when it is over; if that script never runs, the backstop here does, so the sheet
+      // never stays one tilted screen. Input before intro.js has loaded is kept for it (it
+      // hurries the arrival, a wheel still scrolls); if it is slow to come, input ends it here.
+      try {
+        const q = new URLSearchParams(location.search).get('intro');
+        const seen = sessionStorage.getItem('ovz-arrived');
+        if (location.pathname === '/') {
+          const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+          const left = sessionStorage.getItem('ovz-y');
+          const again = nav && nav.type === 'reload' && left !== null && +left < 2;
+          addEventListener('pagehide', () => { try { sessionStorage.setItem('ovz-y', String(scrollY)); } catch (e) {} });
+          if (!location.hash && q !== '0' && (q === '1' || !seen || again) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.documentElement.classList.add('intro');
+            const early = window.ovzEarly = { wheel: 0, asked: false, taken: false };
+            const end = () => {
+              const h = document.documentElement;
+              if (!h.classList.contains('intro')) return;
+              h.classList.remove('intro');
+              document.dispatchEvent(new CustomEvent('ovz:arrived'));
+              if (early.wheel) scrollBy({ top: early.wheel, behavior: 'smooth' });
+            };
+            const ask = e => {
+              if (e.type === 'wheel') early.wheel += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+              if (early.asked) return;
+              early.asked = true;
+              setTimeout(() => early.taken || end(), 700);
+            };
+            const inputs = ['keydown', 'wheel', 'pointerdown', 'touchstart'];
+            inputs.forEach(t => addEventListener(t, ask, { capture: true, passive: true }));
+            early.off = () => inputs.forEach(t => removeEventListener(t, ask, true));
+            // from the first frame: a tab opened in the background has not started yet
+            requestAnimationFrame(() => setTimeout(end, 4000));
+          }
+          sessionStorage.setItem('ovz-arrived', '1');
+        }
+      } catch (e) {}
     </script>
     <noscript><style>
       /* without JS nothing draws the ANNA stage or folds the links into a menu: the stage's

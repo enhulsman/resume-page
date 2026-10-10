@@ -129,22 +129,49 @@ xhair.innerHTML = '<i class="xhair-v"></i><i class="xhair-h"></i><span class="xh
 document.body.append(xhair);
 const [xv, xh, xread] = xhair.children;
 // the last mouse position on screen; a scroll moves the sheet under it, so it re-reads too
-let xat = null, xq = false;
+let xat = null, xq = false, xup = false;
 const xdraw = () => {
   if (xq || !xat) return;
   xq = true;
   requestAnimationFrame(() => {
     xq = false;
+    // sent home (or off the page) since this frame was asked for
+    if (!xat) return;
     const [cx, cy] = xat;
     xv.style.transform = `translateX(${cx}px)`;
     xh.style.transform = `translateY(${cy}px)`;
-    xread.style.transform = `translate(${cx + 10}px, ${cy + 10}px)`;
+    xread.style.transform = `translate(${cx + 10}px, ${cy + (xup ? -26 : 10)}px)`;
     xread.textContent = `x ${Math.round(cx + scrollX)}  y ${Math.round(cy + scrollY)}`;
     xhair.classList.add('on');
   });
 };
+// The homepage's arrival sends it from the sheet's corner to the name (intro.js); the first
+// real mouse move takes it back, and hurrying the arrival sends it home.
+let trip = 0;
+document.addEventListener('ovz:xhair-home', () => { trip++; xat = null; xup = false; xhair.classList.remove('on'); });
+document.addEventListener('ovz:xhair-trip', e => {
+  if (!fine.matches) return;
+  const { from, to, delay, dur, readout } = e.detail;
+  const id = ++trip;
+  const ease = k => 1 - Math.pow(1 - k, 3);
+  setTimeout(() => {
+    const t0 = performance.now();
+    const step = now => {
+      if (id !== trip) return;
+      xup = readout === 'above';
+      const k = Math.min(1, (now - t0) / dur), q = ease(k), [tx, ty] = to();
+      xat = [from[0] + (tx - from[0]) * q, from[1] + (ty - from[1]) * q];
+      xdraw();
+      if (k < 1) requestAnimationFrame(step);
+      else setTimeout(() => { if (id === trip) { xat = null; xup = false; xhair.classList.remove('on'); } }, 900);
+    };
+    requestAnimationFrame(step);
+  }, delay);
+});
 document.addEventListener('pointermove', e => {
   if (e.pointerType !== 'mouse' || !fine.matches) return;
+  trip++;
+  xup = false;
   xat = [e.clientX, e.clientY];
   xdraw();
 }, { passive: true });

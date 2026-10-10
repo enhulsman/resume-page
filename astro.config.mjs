@@ -7,8 +7,11 @@ export default defineConfig({
     mdx({
       // Apply ProjectLayout to all MDX files in projects directory
       grayMatter: false,
+      // both themes as CSS variables, no colour of their own: overzicht.css picks one with the
+      // page's theme, on the sheet's own paper
       shikiConfig: {
-        theme: 'github-dark'
+        themes: { light: 'github-light', dark: 'github-dark' },
+        defaultColor: false,
       }
     }),
   ],
