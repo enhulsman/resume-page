@@ -72,7 +72,7 @@ function capHeight() {
 // ---------- the lettering guides ----------
 function rule() {
   const at = since();
-  if (hurried || at > GUIDES_END) return;
+  if (!live() || at > GUIDES_END) return;
   const svg = document.createElementNS(SVGNS, 'svg');
   svg.setAttribute('class', 'name-guides');
   svg.setAttribute('aria-hidden', 'true');
@@ -104,7 +104,7 @@ const PX = 1.1; // outline width on screen
 
 function draw(data) {
   const at = since();
-  if (hurried || at > LETTERS_AT + 200) return;
+  if (!live() || at > LETTERS_AT + 200) return;
   const scale = parseFloat(getComputedStyle(name).fontSize) / data.upm;
   const ls = square(() => {
     const nb = name.getBoundingClientRect();
@@ -164,7 +164,7 @@ const PENS = [
   ['.term', 700, 450], ['.term-head', 1000, 250], ['.site-photo .photo', 950, 400],
   ['.status-mark', 1350, 200], ['.act-main', 1450, 300], ['.titleblock', 1450, 400],
 ];
-const CELLS_AT = 1600, CELL_STAGGER = 30, CELL_FOR = 200;
+const CELLS_AT = 1600, CELL_STAGGER = 30, CELL_FOR = 200, PENS_LATEST = 1200;
 
 function pen(r, cs) {
   const w = ['Top', 'Right', 'Bottom', 'Left'].map(s => parseFloat(cs[`border${s}Width`]) || 0);
@@ -179,7 +179,8 @@ function pen(r, cs) {
 function box() {
   const at = since();
   const sheet = document.querySelector('.sheet-you');
-  if (!sheet || hurried) return;
+  // too late for the pen (a slow font): the borders simply show at their time
+  if (!sheet || !live() || at > PENS_LATEST) return;
   const cells = [...sheet.querySelectorAll('.titleblock :is(th, td)')];
   // the cells' text sweeps were timed at first paint; only their moment changes
   cells.forEach((c, i) => c.style.setProperty('--sweep-at', `${CELLS_AT + 50 + i * CELL_STAGGER}ms`));
@@ -251,7 +252,7 @@ function drawDim() {
 function trip(target) {
   if (!fine.matches) return;
   const at = since();
-  if (hurried || at > DIM_AT) return;
+  if (!live() || at > DIM_AT) return;
   const f = square(() => document.querySelector('.frame').getBoundingClientRect());
   document.dispatchEvent(new CustomEvent('ovz:xhair-trip', { detail: {
     from: [f.left + 6, f.top + 6],
@@ -265,6 +266,7 @@ function trip(target) {
 
 function arrive() {
   INPUTS.forEach(t => removeEventListener(t, hurry, true));
+  removeEventListener('resize', resized);
   if (!html.classList.contains('intro')) return;
   html.classList.remove('intro');
   document.querySelectorAll('.glyphs, .pens').forEach(s => s.remove());
@@ -278,12 +280,22 @@ function arrive() {
 const INPUTS = ['keydown', 'wheel', 'pointerdown', 'touchstart'];
 const RUSH = 6;
 let hurried = false, wheeled = 0;
+// still playing, and at its own pace: anything drawn late or hurried would be drawn wrong
+const live = () => html.classList.contains('intro') && !hurried;
 function hurry(e) {
   if (e.type === 'wheel') wheeled += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
   if (hurried) return;
   hurried = true;
   for (const a of document.getAnimations()) if (finite(a)) a.playbackRate = RUSH;
   document.dispatchEvent(new CustomEvent('ovz:xhair-home'));
+}
+// a new width moves everything the overlays were laid on: drop them and hurry to the end
+// (only the width: a phone's toolbar changes the height on its own)
+const width0 = innerWidth;
+function resized(e) {
+  if (innerWidth === width0) return;
+  document.querySelectorAll('.glyphs, .pens, .name-guides').forEach(x => x.remove());
+  hurry(e);
 }
 
 async function start() {
@@ -294,16 +306,16 @@ async function start() {
   if (document.readyState === 'loading') await new Promise(r => document.addEventListener('DOMContentLoaded', r, { once: true }));
   if (getComputedStyle(holder).position === 'static') holder.style.position = 'relative';
 
-  if (playing && !hurried) {
-    // only fetched for the arrival; a first visit is the only time it is needed
-    const { default: data } = await import('../../data/name-glyphs.json');
-    draw(data);
+  if (playing) {
     box();
     rule();
+    // only fetched for the arrival; a first visit is the only time it is needed. Without it
+    // the real name simply shows when the letters would have been done.
+    try { draw((await import('../../data/name-glyphs.json')).default); } catch {}
   }
   const target = drawDim();
   holder.append(dim);
-  if (playing && !hurried) {
+  if (playing && live()) {
     trip(target);
     dim.style.setProperty('--at', `${Math.max(0, DIM_AT - since())}ms`);
     dim.classList.add('plot');
@@ -326,5 +338,6 @@ if (playing) {
   Promise.all(document.getAnimations().filter(finite).map(a => a.finished))
     .then(arrive, arrive);
   INPUTS.forEach(t => addEventListener(t, hurry, { capture: true, passive: true }));
+  addEventListener('resize', resized);
 }
 start();

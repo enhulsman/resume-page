@@ -224,6 +224,32 @@ test('a wheel turned while the sheet squares up is not lost: it scrolls once it 
   await context.close();
 });
 
+test('a font that arrives late leaves nothing half-drawn behind', async () => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await context.route(/Archivo\.woff2/, async r => { await new Promise(res => setTimeout(res, 3000)); await r.continue(); });
+  const page = await context.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'commit' });
+  await page.waitForTimeout(5500);
+  const left = await page.evaluate(() => ({
+    intro: document.documentElement.classList.contains('intro'),
+    overlays: document.querySelectorAll('.glyphs, .pens, .name-guides').length,
+    name: getComputedStyle(document.querySelector('.name span')).color,
+  }));
+  assert.deepEqual(left, { intro: false, overlays: 0, name: 'rgb(43, 39, 102)' });
+  await context.close();
+});
+
+test('resizing the window mid-arrival hurries it to the end, rather than misdraw it', async () => {
+  const { context, page } = await open('/');
+  await page.waitForSelector('.sheet-you > .pens', { state: 'attached', timeout: 3000 });
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await page.waitForFunction(() => window.__log.arrived != null, null, { timeout: 3000 });
+  const l = await log(page);
+  assert.ok(l.arrived - l.intro < 1500, `over ${Math.round(l.arrived - l.intro)} ms after it began`);
+  assert.equal(await page.locator('.glyphs, .pens').count(), 0);
+  await context.close();
+});
+
 test('if the arrival script never runs, the page settles by itself', async () => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   await context.route(/intro\.js/, r => r.abort());
