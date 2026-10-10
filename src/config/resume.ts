@@ -19,7 +19,8 @@ export interface Experience {
   homeSummary: string;
   /** Only where the homepage words the role differently. */
   homeRole?: string;
-  /** The homepage table's stack column: the role's main tools, each named in its summary. */
+  /** The homepage table's stack column: the role's main tools and certificates, each on record
+   *  elsewhere on the site (its summary, the skills, the certifications or the ANNA section). */
   stack?: string[];
   relatedProject?: string;
   group: 'consulting' | 'prior';
@@ -79,7 +80,7 @@ export const experience: Experience[] = [
     role: 'Forward Deployed Engineer',
     client: 'Anamata',
     startDate: '2025',
-    stack: ['Python', 'Claude', 'MCP', 'Microsoft Teams'],
+    stack: ['Claude', 'Claude Code', 'Anthropic API', 'MCP', 'AI agents', 'Python', 'Microsoft Teams', 'Entra ID'],
     summary: 'Owns ANNA, Anamata\'s AI assistant in Microsoft Teams, end to end: Python, Claude and MCP, including connectors to the systems people already use. With it, staff request leave, log hours or search policy documents without switching apps. Half the job is engineering, the other half is working with the people who use it and looking after ANNA in production, from security to EU AI Act transparency. Also built the anamata.ai website and is laying the groundwork for rolling ANNA out to other companies.',
     homeSummary: 'Owns ANNA, Anamata\'s AI assistant in Microsoft Teams, end to end: Python, Claude and MCP, including connectors to the systems people already use. Staff request leave, log hours or search policy documents without switching apps. Also built the anamata.ai website and is laying the groundwork for rolling ANNA out to other companies.',
     relatedProject: 'AnnaAssistant',
@@ -88,7 +89,7 @@ export const experience: Experience[] = [
   {
     role: 'DevOps & Software Engineer',
     client: 'Major European bank',
-    stack: ['React', 'Node.js', 'Oracle', 'Azure DevOps', 'Ansible & AWX'],
+    stack: ['React', 'Node.js', 'Oracle', 'Pega', 'Azure DevOps', 'Ansible & AWX', 'ServiceNow'],
     startDate: '2025',
     summary: 'Sole developer of an enterprise self-service portal (React, Node.js, Oracle) used by ~20 tenants across 80+ Pega environments for pipeline management via Azure DevOps, operational audit logging, and ServiceNow ticketing. Manages incident resolution, platform upgrades, and infrastructure operations across multi-tenant DTAP environments using Ansible and AWX.',
     homeSummary: 'Sole developer of an enterprise self-service portal (React, Node.js, Oracle) used by about 20 tenants across 80+ Pega environments, for pipelines through Azure DevOps, audit logging and ServiceNow ticketing. Incidents, upgrades and multi-tenant DTAP operations with Ansible and AWX.',
@@ -97,7 +98,7 @@ export const experience: Experience[] = [
   {
     role: 'Platform & Software Engineer',
     client: 'Nordic financial regulator',
-    stack: ['Kubernetes', 'Pega', 'React', 'OIDC'],
+    stack: ['Kubernetes', 'Pega', 'Pega DX API', 'React', 'OIDC'],
     startDate: '2024',
     endDate: '2025',
     summary: 'Replaced a legacy VM-based Pega setup — where only 2.5 of 150 planned case types had shipped in 4 years — with four fresh containerized DTAP environments on self-hosted Kubernetes (~18 pods each, including Kafka and SRS). Built and integrated a React portal backed by Pega\'s DX API with a custom OIDC flow, unifying internal and external access under strict network-separation policies and reducing the case type footprint from 150 to ~25.',
@@ -107,7 +108,7 @@ export const experience: Experience[] = [
   {
     role: 'DevOps Engineer',
     client: 'European staffing company',
-    stack: ['Java', 'Playwright', 'CI/CD', 'Bash'],
+    stack: ['Java', 'Playwright', 'CI/CD', 'Bash', 'Microsoft Teams'],
     startDate: '2023',
     endDate: '2024',
     summary: 'Solo-built a Java/Playwright automation that replaced a daily 10–15 minute manual health report across ~50 VMs, with CI/CD-triggered email delivery, Teams alerts, and an issue-annotation page. Created a Bash maintenance toolbox of scheduled scripts to prevent storage exhaustion and piped PDC notifications into Teams channels. Still on call for occasional work.',
@@ -118,7 +119,7 @@ export const experience: Experience[] = [
     role: 'Pega DevOps Engineer',
     client: 'Anamata',
     startDate: '2023',
-    stack: ['Pega'],
+    stack: ['Pega', 'PDC', 'CPSA 8.8', 'CPBA 8.8', 'PSM I'],
     summary: 'Joined Anamata as a Pega DevOps Engineer, still my title on paper. The bank, regulator and staffing company roles above are that work. Earned the Pega Certified System Architect and Business Architect certifications in 2023.',
     homeSummary: 'Joined Anamata as a Pega DevOps Engineer, still my title on paper. The bank, regulator and staffing company roles above are that work. Pega Certified System Architect and Business Architect, 2023.',
     group: 'consulting',
@@ -126,7 +127,7 @@ export const experience: Experience[] = [
   {
     role: 'Junior Support Engineer',
     client: 'MovingMedia BV',
-    stack: ['Python', 'Synology'],
+    stack: ['Python', 'Synology NAS', 'VPS'],
     startDate: '2022',
     endDate: '2023',
     summary: 'Replaced plaintext password storage in documentation with a Python encryption tool (XOR with keys from Python\'s secrets module) on a secure remote VPS. Maintained client Synology NAS infrastructure and provided technical support.',
