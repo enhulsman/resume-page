@@ -355,8 +355,10 @@ export function createScene(canvas, { reduced = false, onFrame } = {}) {
   // read now as well: with reduced motion the drawing renders before start()
   readColors();
 
+  // the layout size, not the box on screen: the homepage's arrival tilts the page, and a tilted
+  // canvas measured in perspective reads larger than it is
   function resize() {
-    const r = canvas.getBoundingClientRect();
+    const r = { width: canvas.offsetWidth, height: canvas.offsetHeight };
     state.dpr = Math.min(2, window.devicePixelRatio || 1);
     state.w = r.width; state.h = r.height;
     canvas.width = Math.round(r.width * state.dpr);

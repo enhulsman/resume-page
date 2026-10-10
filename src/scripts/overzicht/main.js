@@ -33,7 +33,7 @@ const sizes = { cw: 250, ch: 190, idH: 40 };
 const scene = createScene(canvas, {
   reduced,
   onFrame(A, st, cam) {
-    const rect = stage.getBoundingClientRect();
+    const rect = { width: stage.offsetWidth };
     const sx = A.fit ? 1 / (window.devicePixelRatio > 2 ? 2 : (window.devicePixelRatio || 1)) : 1;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const P = k => A[k] && { x: A[k].x / dpr, y: A[k].y / dpr };
@@ -115,7 +115,8 @@ addEventListener('theme-changed', recolour);
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolour);
 
 function layoutFrame() {
-  const r = stage.getBoundingClientRect();
+  // layout sizes, as in scene.resize: true even while the arrival tilts the page
+  const r = { width: stage.offsetWidth, height: stage.offsetHeight };
   stage.classList.toggle('compact', r.width < 640);
   stage.classList.toggle('short', r.height < 560);
   const isPhone = stage.classList.contains('compact');

@@ -455,6 +455,20 @@ test('the dimension follows the name when the window changes size', async () => 
   await context.close();
 });
 
+test('the ANNA drawing is sized for the page, not for the tilted sheet it was measured on', async () => {
+  // measured mid-tilt, perspective made the stage look larger than it is, and nothing measured
+  // it again: the model drawn too large, the lower level labels off the screen
+  const { context, page } = await open('/');
+  await settle(page);
+  const r = await page.evaluate(() => {
+    const stage = document.querySelector('canvas').parentElement, c = stage.querySelector('canvas');
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    return { w: stage.clientWidth * dpr, h: stage.clientHeight * dpr, cw: c.width, ch: c.height };
+  });
+  assert.ok(Math.abs(r.cw - r.w) <= 1 && Math.abs(r.ch - r.h) <= 1, JSON.stringify(r));
+  await context.close();
+});
+
 test('the terminal waits for the arrival before it types', async () => {
   const { context, page } = await open('/');
   await page.waitForFunction(() => window.__log.typed != null, null, { timeout: 8000 });
