@@ -1,112 +1,48 @@
 ---
-import BaseLayout from "./BaseLayout.astro";
+// A post in the site diary, drawn as a sheet: the title on the left; on the right its title
+// block (date, reading time, the project it belongs to) and the post's opening, so the text
+// starts beside the title. From the first heading on, headings hang in the left column like
+// a drawing's notes.
+import OverzichtLayout from "./OverzichtLayout.astro";
 import site from "../config/site";
+import { readingMinutes, splitIntro, relatedProject } from "../lib/post";
+import { postDrawings } from "../components/overzicht/drawings";
 
 const { frontmatter } = Astro.props;
 const { title, description = "", date, updated = "" } = frontmatter;
 
-const formattedDate = date
-  ? new Date(date).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      timeZone: "UTC",
-    })
-  : null;
+const html = await Astro.slots.render("default");
+const { intro, rest } = splitIntro(html);
+const minutes = readingMinutes(html);
+const Drawing = postDrawings[Astro.url.pathname.replace(/\/$/, "").split("/").pop() ?? ""];
+const project = relatedProject(
+  frontmatter.project,
+  import.meta.glob("../pages/projects/*.mdx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>,
+);
 
-const formattedUpdated = updated
-  ? new Date(updated).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      timeZone: "UTC",
-    })
-  : null;
+const fmt = (d: string) =>
+  new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+const iso = (d: string) => new Date(d).toISOString().slice(0, 10);
 ---
 
-<BaseLayout
-  title={`${title} — ${site.name}`}
-  description={description}
-  ogType="article"
->
-  <article class="mx-auto max-w-5xl">
-    <!-- Post header -->
-    <header class="mb-8">
-      <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-6 md:p-8">
-        <h1 class="font-display text-3xl md:text-4xl font-bold tracking-tight text-theme-primary">
-          {title}
-        </h1>
-
-        {formattedDate && (
-          <p class="mt-2 text-sm text-theme-muted">
-            {formattedDate}
-            {formattedUpdated && <span> · Updated {formattedUpdated}</span>}
-          </p>
-        )}
+<OverzichtLayout current="blog" title={`${title} — ${site.name}`} description={description} ogType="article">
+  <article class="sheet sheet-first case post">
+    <header class="sheet-head case-head">
+      <div class="post-title">
+        <h1>{title}</h1>
+        {Drawing && <div class="post-dwg"><Drawing /></div>}
+      </div>
+      <div class="case-meta">
+        <table class="titleblock">
+          {date && <tr><th scope="row">Date</th><td><time datetime={iso(date)}>{fmt(date)}</time></td></tr>}
+          {updated && <tr><th scope="row">Updated</th><td><time datetime={iso(updated)}>{fmt(updated)}</time></td></tr>}
+          <tr><th scope="row">Reading</th><td>{minutes} min</td></tr>
+          {project && <tr><th scope="row">Project</th><td><a href={project.href}>{project.title}</a></td></tr>}
+        </table>
+        {intro && <div class="prose post-intro" set:html={intro} />}
       </div>
     </header>
 
-    <!-- Main content with prose styling -->
-    <div class="prose prose-slate max-w-none custom-prose">
-      <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-6 md:p-8">
-        <slot />
-      </div>
-    </div>
+    {rest && <div class="prose" set:html={rest} />}
   </article>
-</BaseLayout>
-
-<style>
-  /* Enhanced prose styling to match homepage aesthetic */
-  /* Use very high specificity to override Tailwind's base styles */
-  article .prose.custom-prose > div > :global(:first-child) {
-    margin-top: 0;
-  }
-
-  article .prose.custom-prose h1,
-  article .prose.custom-prose h2,
-  article .prose.custom-prose h3,
-  article .prose.custom-prose h4,
-  article .prose.custom-prose h5,
-  article .prose.custom-prose h6 {
-    color: var(--color-text-primary);
-    font-weight: 600;
-    font-family: 'Syne', ui-sans-serif, system-ui, sans-serif;
-    transition: var(--transition-fast);
-  }
-
-  article .prose.custom-prose :global(hr) {
-    border-color: var(--color-border-primary);
-    margin: 2rem 0;
-  }
-
-  article .prose.custom-prose h1 {
-    font-size: clamp(1.5rem, 3vw, 1.875rem);
-    line-height: 1.2;
-    font-weight: 700;
-  }
-
-  article .prose.custom-prose h2 {
-    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
-    line-height: 1.35;
-  }
-
-  article .prose.custom-prose h3 {
-    font-size: 1.25rem; /* 20px */
-    line-height: 1.75rem; /* 28px */
-  }
-
-  article .prose.custom-prose h4 {
-    font-size: 1.125rem; /* 18px */
-    line-height: 1.5rem; /* 24px */
-  }
-
-  article .prose.custom-prose h5 {
-    font-size: 1rem; /* 16px */
-    line-height: 1.25rem; /* 20px */
-  }
-
-  article .prose.custom-prose h6 {
-    font-size: 0.875rem; /* 14px */
-    line-height: 1.125rem; /* 18px */
-  }
-</style>
+</OverzichtLayout>

@@ -1,7 +1,7 @@
 ---
 title: "Encrypted Chat TUI"
 description: "Self-hosted terminal chat system built as a Cargo workspace: Tokio async server, Cursive TUI client, and a shared typed ndjson protocol with compile-time checked PostgreSQL queries"
-date: 2025-08-26
+date: 2024-08-09
 tech: ["Rust", "Tokio", "Cursive", "PostgreSQL", "sqlx", "ndjson"]
 layout: "../../layouts/ProjectLayout.astro"
 showcase: false
@@ -11,7 +11,7 @@ hook: "A self-hosted terminal chat system in Rust with a typed JSON protocol and
 
 ## What I Built
 
-The project is a Cargo workspace with three crates, originally started as a Computer Security course project and actively developed since.
+The project is a Cargo workspace with three crates, originally started as a Computer Security course project in 2024, and picked up again in 2026.
 
 - **Common protocol library**: Defines all request and response types as tagged enums with structured error codes, shared user types, and a newline-delimited JSON codec. The protocol is the single source of truth: adding a new message type is one enum variant, and the compiler enforces exhaustive handling on both sides.
 - **Async server**: Tokio-based server that spawns a task per TCP connection, decodes typed requests from the wire, dispatches them through a central handler, and responds with encoded JSON. PostgreSQL persistence via sqlx with compile-time checked queries that validate against the actual database schema at build time. Migrations run automatically on startup.

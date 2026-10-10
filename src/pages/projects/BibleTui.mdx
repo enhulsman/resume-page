@@ -1,0 +1,41 @@
+---
+title: "bible-tui"
+description: "Terminal Bible reader in Rust whose UI code also runs in the browser: a 102-line web port on ratzilla, three bug fixes on a fork of it, and three translations bundled in the WASM"
+date: 2026-04-25
+github: "https://github.com/enhulsman/bible-tui"
+preview: "https://bible.hulsman.dev"
+tech: ["Rust", "ratatui", "crossterm", "ratzilla", "WebAssembly", "postcard"]
+layout: "../../layouts/ProjectLayout.astro"
+showcase: false
+dateLabel: "Online since"
+hook: "A terminal Bible reader in Rust, with vim keys and three translations built in. The same UI code runs in the browser at bible.hulsman.dev: putting it there took 102 lines, and fixing what that surfaced took the rest of the two days."
+---
+
+import StatStrip from "../../components/StatStrip.astro";
+
+<StatStrip stats={[
+  { value: "102", label: "lines to put it in the browser" },
+  { value: "~5,500", label: "lines of Rust in all" },
+  { value: "3", label: "translations, nothing leaves the device" },
+  { value: "13.3 MB", label: "of WASM, scripture included" },
+]} />
+
+## What I Built
+
+**One core, two backends.** A Bible reader on ratatui, with vim keys, search, bookmarks and jump-to-reference. Everything that makes it a reader lives in a shared core crate of about 4,200 lines. The native binary wraps that core in crossterm and talks to a real terminal. The web crate wraps the identical UI in ratzilla, ratatui's web backend, which renders the character grid into the page, and it's 102 lines.
+
+**Three translations, offline.** The King James Version, the World English Bible with red-letter text and the Dutch Statenvertaling are parsed at build time into postcard's binary format and ship inside the WASM, so startup is a deserialize instead of a parse, and search and bookmarks run entirely in the browser.
+
+**A reader on a page.** At [bible.hulsman.dev](https://bible.hulsman.dev) the terminal sits in a fixed reading pane on a quiet parchment page, instead of taking over the window.
+
+## Key Decisions
+
+**Pre-wrapped text.** Text is wrapped before it reaches ratatui, so a scroll offset is a row offset. That keeps scroll position, verse highlighting and jump-to-reference consistent, and a small table maps wrapped lines back to verses.
+
+**Fix the backend, not the app.** Embedding ratzilla in an element instead of the whole window surfaced three bugs: it measured the window instead of its element and panicked every frame, it rebuilt the whole grid on every mobile address-bar resize, and it lost its event listeners when the grid was recreated. I fixed all three on [my fork](https://github.com/enhulsman/ratzilla), one commit per bug, and the web crate pins it.
+
+**Bundle the text.** 13.3 MB is a lot for a text application. The alternative was a loading spinner between the reader and the text.
+
+## Outcome
+
+From first commit to bible.hulsman.dev took two days. It's parked now: the web version doesn't remember your place yet, and a verse range parser (52 tests) is waiting to be wired in. The whole story, three bugs included, is in [the blog post](/blog/bible-tui).

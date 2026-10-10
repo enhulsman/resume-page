@@ -1,0 +1,68 @@
+---
+import { annaLevels } from "../../config/home";
+
+// Sheet 1: ANNA drawn as section A–A that turns into an exploded view, then read one level
+// per step; the stage labels each level by name.
+// The canvas and the leaders are driven by src/scripts/overzicht/main.js.
+---
+<section class="scrolly" id="anna" aria-label="ANNA, drawn as a section">
+  <div class="copy">
+
+    <div class="step" data-q="0" data-request>
+      <p class="tag">Section A–A</p>
+      <h2>One request, top to bottom</h2>
+      <p>Someone in Teams asks ANNA how much leave they have left. They don't open another app. ANNA works out who they are through Entra ID, loads their profile, history and memories, and hands the question to Claude, which reaches Loket through an MCP connector.</p>
+      <p>The answer comes back up the same way and lands as one Teams message that updates while it's being written.</p>
+      <figure class="callout callout-inline" aria-label="The conversation on the screen">
+        <figcaption>Detail: the screen</figcaption>
+        <p class="bubble bubble-q">How many leave days do I have left?</p>
+        <p class="bubble bubble-a"><b>ANNA</b> Checked Loket for you. Here's your balance for this year, and what's already booked.</p>
+      </figure>
+      <button class="replay" type="button">Replay the request</button>
+    </div>
+
+    <div class="step" id="anna-identity" data-q="1" data-cloud="identity">
+      <p class="tag">Exploded view · Level −1</p>
+      <h2>Everything is per user</h2>
+      <p>ANNA works out who's asking through Entra ID, then loads their profile, history and memories. Memory, documents and connector access are scoped to that person.</p>
+      <p>Connector secrets are stored encrypted, and when a login is needed, ANNA keeps the token, not the user's chat.</p>
+    </div>
+
+    <div class="step" id="anna-claude" data-q="1" data-cloud="claude">
+      <p class="tag">Level −2</p>
+      <h2>Two backends, one interface</h2>
+      <p>About 37,000 lines of Python: a service layer, a command registry and two Claude backends. One runs Claude Code as a subprocess and streams its output; the other calls the Anthropic API directly.</p>
+      <p>Teams is where people use ANNA. Slack is also being supported, with a working beta version currently under development.</p>
+    </div>
+
+    <div class="step" id="anna-connectors" data-q="1" data-cloud="connectors">
+      <p class="tag">Level −3</p>
+      <h2>Every system is an MCP server</h2>
+      <p>Loket for leave, ClockWise for hours, plus ANNA's own tools for memory, reminders and documents. Adding a system means registering a connector and granting access, not changing ANNA's core.</p>
+    </div>
+
+    <div class="step" id="anna-ops" data-q="1" data-cloud="ops">
+      <p class="tag">Level −4</p>
+      <h2>Running it is half the job</h2>
+      <p>The other half is working with the people who use it and looking after ANNA in production, from security to EU AI Act transparency. Health checks and a log analyser run alongside the bot, and tokens that are about to expire raise an alert before they break anything.</p>
+      <p><a class="more" href="/projects/AnnaAssistant">Read how ANNA is built</a></p>
+    </div>
+
+  </div>
+
+  <div class="stage">
+    <canvas class="drawing" aria-hidden="true"></canvas>
+    <div class="turn" role="group" aria-label="Turn the model"><button type="button" data-turn="-1" aria-label="Turn left">&larr;</button><button type="button" data-turn="1" aria-label="Turn right">&rarr;</button><span>Drag, or use these, to turn the model</span></div>
+    <svg class="leaders" aria-hidden="true"></svg>
+    <ol class="levels" aria-label="ANNA, level by level">
+      {annaLevels.map(l => <li data-level={l.id}><a href={`#anna-${l.id}`}><b>{l.name}</b></a></li>)}
+    </ol>
+    <figure class="callout" aria-label="The conversation on the screen">
+      <figcaption>Detail: the screen</figcaption>
+      <p class="bubble bubble-q">How many leave days do I have left?</p>
+      <p class="bubble bubble-a"><b>ANNA</b> Checked Loket for you. Here's your balance for this year, and what's already booked.</p>
+    </figure>
+    <button class="scale-note" type="button" aria-describedby="scale-tip"><span>E. Hulsman, for scale</span></button>
+    <p class="scale-tip" id="scale-tip" role="tooltip">E. Hulsman, 2 m. Tall enough to oversee both the codebase and the room it's deployed in.</p>
+  </div>
+</section>

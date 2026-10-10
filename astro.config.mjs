@@ -1,6 +1,5 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
-import react from '@astrojs/react';
 import site from './src/config/site';
 
 export default defineConfig({
@@ -8,11 +7,13 @@ export default defineConfig({
     mdx({
       // Apply ProjectLayout to all MDX files in projects directory
       grayMatter: false,
+      // both themes as CSS variables, no colour of their own: overzicht.css picks one with the
+      // page's theme, on the sheet's own paper
       shikiConfig: {
-        theme: 'github-dark'
+        themes: { light: 'github-light', dark: 'github-dark' },
+        defaultColor: false,
       }
-    }), 
-    react()
+    }),
   ],
   site: site.url,
   // Astro 7 changed the default to 'jsx' whitespace stripping; keep HTML-rule collapsing for visual parity.

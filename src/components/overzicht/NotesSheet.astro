@@ -1,0 +1,22 @@
+---
+import { notes } from "../../config/home";
+import { diaryEntries } from "../../lib/frontmatter";
+
+// The site diary: every published post, newest first, with the short `diary` line from its
+// frontmatter. Read as raw text so the posts' layout (and the old stylesheet) stay off this page.
+const posts = diaryEntries(import.meta.glob("../../pages/blog/*.mdx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>);
+---
+<section class="sheet" id="notes" aria-labelledby="notes-h">
+  <header class="sheet-head">
+    <h2 id="notes-h">General notes</h2>
+    <p>The part of a drawing you read before building anything.</p>
+  </header>
+  <ol class="notes">
+    {notes.map(n => <li>{n}</li>)}
+  </ol>
+
+  <h3 class="sub">Site diary</h3>
+  <ul class="diary">
+    {posts.map(p => <li><time datetime={p.iso}>{p.label}</time><a href={p.href}>{p.title}</a><span>{p.line}</span></li>)}
+  </ul>
+</section>

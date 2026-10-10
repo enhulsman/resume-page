@@ -10,7 +10,9 @@ dateLabel: "Released"
 hook: "An external, OS-level sandbox that isolates Claude Code from the rest of the system, independent of Claude Code's own built-in protections, so a vulnerability in one doesn't compromise the other."
 ---
 
-<img src="/images/claude-sandbox-architecture.svg" alt="Claude Sandbox architecture diagram showing namespace boundary, filesystem isolation, socat bridge, and egress proxy" style="width:100%;max-width:640px;margin:1.5rem auto;display:block;" />
+import SandboxArchitecture from "../../components/diagrams/SandboxArchitecture.astro";
+
+<SandboxArchitecture />
 
 ## What I Built
 
@@ -20,7 +22,7 @@ hook: "An external, OS-level sandbox that isolates Claude Code from the rest of 
 
 On Linux, bubblewrap bind mounts control exactly what the agent can see. Sensitive paths (`~/.ssh`, `~/.aws`, `~/.gnupg`, browser session data, git credential stores, 13+ categories total) are mounted to `/dev/null` or empty tmpfs. System directories are read-only. Claude Code's own `settings.json` is bind-mounted read-only inside the sandbox to prevent prompt injection from disabling deny rules. On macOS, dynamically generated Seatbelt profiles enforce equivalent restrictions at the kernel level.
 
-Writable paths go through a TOCTOU mitigation: each path is canonicalized before mounting, then re-resolved immediately before `exec`. If a symlink target changed between those two checks (indicating a possible race attack swapping a writable path to point at a blocked one), the sandbox aborts. A separate verification suite (308 lines) tests this against direct symlinks, path traversal, multi-hop chains, and circular symlinks.
+Writable paths go through a TOCTOU mitigation: each path is canonicalized before mounting, then re-resolved immediately before `exec`. If a symlink target changed between those two checks (indicating a possible race attack swapping a writable path to point at a blocked one), the sandbox aborts. A separate verification suite tests this against direct symlinks, path traversal, multi-hop chains, and circular symlinks.
 
 ### Network Isolation
 
@@ -38,7 +40,7 @@ An honest limitation: HTTPS CONNECT tunneling means the proxy sees `CONNECT gith
 
 Four built-in profiles in `config.toml` define isolation levels for different trust contexts:
 
-- **dev**: Writable workspace, ~45 allowed domains (npm, PyPI, crates.io, GitHub, docs)
+- **dev**: Writable workspace, ~50 allowed domains (npm, PyPI, crates.io, GitHub, docs)
 - **strict**: Workspace-only writes, API-only networking (3 domains)
 - **nixos-admin / macos-admin**: Read-only system config access for diagnosis tasks
 
@@ -58,4 +60,4 @@ On Raspberry Pi and Debian 12+ (usr-merged systems where `/bin` → `/usr/bin`),
 
 ## Outcome
 
-The sandbox runs daily on NixOS (x86_64) and Raspberry Pi (aarch64). It wraps Claude Code but the isolation architecture is agent-agnostic: the same profile-driven namespace, proxy, and audit pipeline works for any CLI tool that makes network requests.
+I used it daily on NixOS and Raspberry Pi, until it got too restrictive and too much upkeep, and Claude Code's auto mode covered what I needed. It wraps Claude Code but the isolation architecture is agent-agnostic: the same profile-driven namespace, proxy, and audit pipeline works for any CLI tool that makes network requests.

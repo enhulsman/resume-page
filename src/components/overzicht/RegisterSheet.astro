@@ -1,0 +1,25 @@
+---
+// The homepage's other projects as cards: every one the homepage does not draw in full,
+// except the ones marked hideOnHome, then a last card that goes to all of them.
+import site from "../../config/site";
+import { asCards, details, homeDrawn } from "../../config/home";
+import ProjectCard from "./ProjectCard.astro";
+
+const drawnHere = details.filter(d => homeDrawn.includes(d.id)).map(d => d.caseStudy);
+const cards = asCards().filter(c => !drawnHere.includes(c.href) && !c.hideOnHome);
+---
+<section class="sheet" id="register" aria-labelledby="register-h">
+  <header class="sheet-head">
+    <h2 id="register-h">More projects</h2>
+    <p>Smaller builds and side projects, each with a write-up.</p>
+  </header>
+  <ol class="register">
+    {cards.map(c => <ProjectCard card={c} />)}
+    <li class="card card-all"><a class="all-projects" href="/projects">All projects <span aria-hidden="true">→</span></a></li>
+  </ol>
+
+  <h3 class="sub" id="side">Other sheets, drawn for fun</h3>
+  <ul class="side">
+    {site.sidePieces.map(p => <li><a href={p.url}>{p.url.replace("https://", "")}</a><span>{p.line}</span></li>)}
+  </ul>
+</section>

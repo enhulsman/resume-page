@@ -1,42 +1,62 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
-import ProjectCard from "../../components/ProjectCard.astro";
+// /projects: the set's drawing register. ANNA leads with its section drawing; every other project
+// follows under where it stands (running, paused, done), drawn in full where it has a drawing and
+// as a card where it has none yet.
+import OverzichtLayout from "../../layouts/OverzichtLayout.astro";
+import DetailCard from "../../components/overzicht/DetailCard.astro";
+import AnnaPlate from "../../components/overzicht/AnnaPlate.astro";
+import ProjectCard from "../../components/overzicht/ProjectCard.astro";
+import { annaLead, details, groups, register } from "../../config/home";
 import site from "../../config/site";
 
-// Auto-discover MDX case studies in this folder
-const entries = Object.values(
-  import.meta.glob("./*.mdx", { eager: true })
-) as any[];
-
-const projects = entries
-  .map((m) => ({
-    title: m.frontmatter?.title ?? "Untitled",
-    description: m.frontmatter?.description ?? "",
-    href: m.url ?? "",
-    tags: m.frontmatter?.tech ?? [],
-    date: m.frontmatter?.date,
-  }))
-  .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+const entries = Object.values(import.meta.glob("./*.mdx", { eager: true })) as any[];
+const projects = entries.map((m) => ({ title: m.frontmatter?.title ?? "Untitled", tags: m.frontmatter?.tech ?? [] }));
 
 const projectsDescription = `Explore ${site.name}'s portfolio of projects including ${projects.map((p) => p.title).join(", ")}. Case studies and technical write-ups for selected work.`;
 const projectsKeywords = `${site.seo.keywords}, projects, portfolio, case studies, ${projects.flatMap((p) => p.tags).join(", ")}`;
 ---
 
-<BaseLayout
+<OverzichtLayout
+  current="projects"
   title={`Projects — ${site.name}`}
   description={projectsDescription}
   keywords={projectsKeywords}
   ogTitle={`Projects & Portfolio — ${site.name}`}
   ogDescription={projectsDescription}
 >
-  <header class="mt-2">
-    <span class="font-mono text-xs tracking-[0.3em] uppercase text-theme-accent">// Projects</span>
-    <h1 class="mt-2 font-display text-3xl md:text-4xl font-bold tracking-tight text-theme-primary">All projects</h1>
-    <p class="text-theme-muted mt-2 text-sm">Detailed write-ups for selected work.</p>
-  </header>
-  <section class="mt-4 sm:mt-6 grid-responsive-2 gap-4 sm:gap-5">
-    {projects.map(p => (
-      <ProjectCard title={p.title} description={p.description} href={p.href} tags={p.tags} />
-    ))}
+  <section class="sheet sheet-first" aria-labelledby="projects-h">
+    <header class="sheet-head">
+      <h1 id="projects-h">Projects</h1>
+      <p>Detailed write-ups for selected work.</p>
+    </header>
+
+    <div class="details details-rows">
+      <article class="detail detail-lead" id={annaLead.id}>
+        <AnnaPlate />
+        <div class="detail-text">
+          <h2><a href={annaLead.caseStudy}>{annaLead.title}</a></h2>
+          <p>{annaLead.text}</p>
+          <p class="detail-status">{annaLead.status}</p>
+          <p class="links"><a href={annaLead.caseStudy}>Case study</a></p>
+        </div>
+      </article>
+    </div>
+
+    {groups.map(g => {
+      const drawn = details.filter(d => d.group === g.id);
+      const cards = register.filter(r => r.group === g.id);
+      return (
+        <div class="status-group" data-group={g.id}>
+          <h2 class="group">{g.label}</h2>
+          {drawn.length > 0 && <div class="details details-rows">{drawn.map(d => <DetailCard detail={d} />)}</div>}
+          {cards.length > 0 && <ol class="register">{cards.map(c => <ProjectCard card={c} />)}</ol>}
+        </div>
+      );
+    })}
+
+    <h2 class="sub" id="side">Other sheets, drawn for fun</h2>
+    <ul class="side">
+      {site.sidePieces.map(p => <li><a href={p.url}>{p.url.replace("https://", "")}</a><span>{p.line}</span></li>)}
+    </ul>
   </section>
-</BaseLayout>
+</OverzichtLayout>

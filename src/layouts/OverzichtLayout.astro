@@ -1,0 +1,97 @@
+---
+// The drawing sheet every page is drawn on: frame, bar, foot. No global.css, Tailwind, Lenis
+// or dot grid; scrolling is the browser's own, and pages only ever read the scroll position.
+// The homepage passes no `current`; an inner page names itself so the bar marks it.
+import Metadata, { type MetadataProps } from "../components/Metadata.astro";
+import Bar from "../components/overzicht/Bar.astro";
+import Foot from "../components/overzicht/Foot.astro";
+import "../styles/overzicht.css";
+
+export type Props = MetadataProps & { current?: "projects" | "blog" | "resume" | "contact" };
+const { current, ...meta } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#16141D" />
+    <Metadata themeColor="#EFEDF3" {...meta} />
+    <link rel="preload" href="/fonts/Archivo.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/B612Mono.woff2" as="font" type="font/woff2" crossorigin />
+    <script is:inline>
+      // theme before first paint: the stored choice, else the system's
+      try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+      // the homepage's arrival (scripts/overzicht/intro.js), decided before first paint so the
+      // sheet never shows settled and then jumps back: once a session, never on reduced motion
+      // or a link into the page. A reload replays it, if the page was left at the top (further
+      // down, the browser puts the reader back where they were). ?intro=1 replays it, ?intro=0
+      // skips it. intro.js clears the
+      // class when it is over; if that script never runs, the backstop here does, so the sheet
+      // never stays one tilted screen. Input before intro.js has loaded is kept for it (it
+      // hurries the arrival, a wheel still scrolls); if it is slow to come, input ends it here.
+      try {
+        const q = new URLSearchParams(location.search).get('intro');
+        const seen = sessionStorage.getItem('ovz-arrived');
+        if (location.pathname === '/') {
+          const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+          const left = sessionStorage.getItem('ovz-y');
+          const again = nav && nav.type === 'reload' && left !== null && +left < 2;
+          addEventListener('pagehide', () => { try { sessionStorage.setItem('ovz-y', String(scrollY)); } catch (e) {} });
+          if (!location.hash && q !== '0' && (q === '1' || !seen || again) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.documentElement.classList.add('intro');
+            const early = window.ovzEarly = { wheel: 0, asked: false, taken: false };
+            const end = () => {
+              const h = document.documentElement;
+              if (!h.classList.contains('intro')) return;
+              h.classList.remove('intro');
+              document.dispatchEvent(new CustomEvent('ovz:arrived'));
+              if (early.wheel) scrollBy({ top: early.wheel, behavior: 'smooth' });
+            };
+            const ask = e => {
+              if (e.type === 'wheel') early.wheel += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+              if (early.asked) return;
+              early.asked = true;
+              setTimeout(() => early.taken || end(), 700);
+            };
+            const inputs = ['keydown', 'wheel', 'pointerdown', 'touchstart'];
+            inputs.forEach(t => addEventListener(t, ask, { capture: true, passive: true }));
+            early.off = () => inputs.forEach(t => removeEventListener(t, ask, true));
+            // from the first frame: a tab opened in the background has not started yet
+            requestAnimationFrame(() => setTimeout(end, 4000));
+          }
+          sessionStorage.setItem('ovz-arrived', '1');
+        }
+      } catch (e) {}
+    </script>
+    <noscript><style>
+      /* without JS nothing draws the ANNA stage or folds the links into a menu: the stage's
+         levels become a plain list, the empty drawing area goes */
+      .stage { position: static !important; height: auto !important; background: none !important; border: 0 !important; padding: 0 var(--gutter) 40px; }
+      .stage .drawing, .stage .leaders, .stage .turn, .stage .callout, .stage .scale-note, .stage .scale-tip { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+      .stage .levels li { position: static; transform: none; opacity: 1; width: auto; max-width: 34em; margin: 0 0 14px; }
+      @media (max-width: 860px) { .bar nav { display: flex !important; gap: 14px; overflow-x: auto; } .theme { display: none !important; } .bar-name { white-space: nowrap; } }
+    </style></noscript>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <div class="frame" aria-hidden="true">
+      <div class="frame-refs"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span></div>
+    </div>
+
+    <Bar current={current} />
+
+    <main id="main" class:list={[current && `page page-${current}`]}>
+      <slot />
+    </main>
+
+    <Foot />
+
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0 V7" class="hatch-line"/></pattern><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="currentColor" stroke-width="1.2"/></marker></defs>
+    </svg>
+    <script>
+      import '../scripts/overzicht/chrome.js';
+    </script>
+  </body>
+</html>

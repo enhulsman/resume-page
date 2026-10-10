@@ -1,17 +1,25 @@
 ---
-import BaseLayout from "./BaseLayout.astro";
+// A case study, drawn as a sheet in the set: title block, the project's own drawing at full
+// size (ANNA's is the homepage's model; projects without one have no plate), then the write-up.
+import OverzichtLayout from "./OverzichtLayout.astro";
+import AnnaPlate from "../components/overzicht/AnnaPlate.astro";
+import { drawings } from "../components/overzicht/drawings";
+import { annaLead, details } from "../config/home";
 import site from "../config/site";
 
 const { frontmatter } = Astro.props;
 const { title, date, dateLabel = "", hook = "", tech = [], preview = "", github = "", description = "" } = frontmatter;
 const githubUrl = github.startsWith("http") ? github : `${site.social.GitHub}/${github}`;
+const bare = (url: string) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 const formattedDate = date
-  ? new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-    })
+  ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", timeZone: "UTC" })
   : null;
+
+const path = Astro.url.pathname.replace(/\/$/, "");
+const detail = details.find((d) => d.caseStudy === path);
+const Drawing = detail && drawings[detail.id];
+const isAnna = path === annaLead.caseStudy;
 
 const projectDescription =
   description ||
@@ -22,7 +30,8 @@ const projectKeywords =
     : `${site.seo.keywords}, project case study, portfolio`;
 ---
 
-<BaseLayout
+<OverzichtLayout
+  current="projects"
   title={`${title} — ${site.name}`}
   description={projectDescription}
   keywords={projectKeywords}
@@ -30,104 +39,29 @@ const projectKeywords =
   ogDescription={projectDescription}
   ogType="article"
 >
-  <article class="mx-auto max-w-5xl">
-    <!-- Project header -->
-    <header class="mb-8">
-      <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-6 md:p-8">
-        <h1 class="font-display text-3xl md:text-4xl font-bold tracking-tight text-theme-primary">
-          {title}
-        </h1>
-
-        {formattedDate && (
-          <p class="mt-2 text-sm text-theme-muted">{dateLabel} {formattedDate}</p>
-        )}
-
-        {preview && (
-          <a href={preview} class="mt-4 inline-block text-sm font-medium text-theme-accent hover:underline">
-            Preview of this project
-          </a>
-        )}
-
-        {github && preview && <span class="mx-2 text-theme-muted">|</span>}
-
-        {github && (
-          <a href={githubUrl} class="mt-4 inline-block text-sm font-medium text-theme-accent hover:underline" >
-            View on GitHub
-          </a>
-        )}
-
-        {tech.length > 0 && (
-          <div class="mt-4 flex flex-wrap gap-2">
-            {tech.map((t: String, i: number) => (
-              <span class={`tech-badge-${(i % 4) + 1}`}>{t}</span>
-            ))}
-          </div>
-        )}
-
-        {hook && (
-          <p class="mt-5 text-base leading-relaxed text-theme-secondary border-t border-[var(--color-border-primary)] pt-5">
-            {hook}
-          </p>
-        )}
+  <article class="sheet sheet-first case">
+    <header class="sheet-head case-head">
+      <h1>{title}</h1>
+      <div class="case-meta">
+        {hook && <p class="lede">{hook}</p>}
+        <table class="titleblock">
+          <tr><th scope="row">Project</th><td>{title}</td></tr>
+          {formattedDate && <tr><th scope="row">{dateLabel}</th><td>{formattedDate}</td></tr>}
+          {tech.length > 0 && <tr><th scope="row">Stack</th><td>{tech.join(", ")}</td></tr>}
+          {github && <tr><th scope="row">Code</th><td><a href={githubUrl}>{bare(githubUrl)}</a></td></tr>}
+          {preview && <tr><th scope="row">Preview</th><td><a href={preview}>{bare(preview)}</a></td></tr>}
+        </table>
       </div>
     </header>
 
-    <!-- Main content with prose styling -->
-    <div class="prose prose-slate max-w-none custom-prose">
-      <div class="rounded-xl border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-6 md:p-8">
-        <slot />
+    {(Drawing || isAnna) && (
+      <div class="plate">
+        {isAnna ? <AnnaPlate /> : <div class="dwg-wrap"><div class="dwg-scroll"><Drawing /></div></div>}
       </div>
+    )}
+
+    <div class="prose">
+      <slot />
     </div>
   </article>
-</BaseLayout>
-
-<style>
-  /* Enhanced prose styling to match homepage aesthetic */
-  /* Use very high specificity to override Tailwind's base styles */
-  article .prose.custom-prose > div > :global(:first-child) {
-    margin-top: 0;
-  }
-
-  article .prose.custom-prose h1,
-  article .prose.custom-prose h2,
-  article .prose.custom-prose h3,
-  article .prose.custom-prose h4,
-  article .prose.custom-prose h5,
-  article .prose.custom-prose h6 {
-    color: var(--color-text-primary);
-    font-weight: 600;
-    font-family: 'Syne', ui-sans-serif, system-ui, sans-serif;
-    transition: var(--transition-fast);
-  }
-
-  article .prose.custom-prose h1 {
-    font-size: clamp(1.5rem, 3vw, 1.875rem);
-    line-height: 1.2;
-    font-weight: 700;
-  }
-
-  article .prose.custom-prose h2 {
-    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
-    line-height: 1.35;
-  }
-
-  article .prose.custom-prose h3 {
-    font-size: 1.25rem; /* 20px */
-    line-height: 1.75rem; /* 28px */
-  }
-
-  article .prose.custom-prose h4 {
-    font-size: 1.125rem; /* 18px */
-    line-height: 1.5rem; /* 24px */
-  }
-
-  article .prose.custom-prose h5 {
-    font-size: 1rem; /* 16px */
-    line-height: 1.25rem; /* 20px */
-  }
-
-  article .prose.custom-prose h6 {
-    font-size: 0.875rem; /* 14px */
-    line-height: 1.125rem; /* 18px */
-  }
-</style>
+</OverzichtLayout>

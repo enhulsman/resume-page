@@ -1,7 +1,7 @@
 ---
 title: "Henk — Homelab Agent"
 description: "Security-first homelab agent on the Claude Agent SDK: a default-deny toolset that refused a live prompt-injection payload, exactly-once event replay across hard container kills, and cadence state that survives redeploys"
-date: 2026-07-24
+date: 2026-07-20
 github: "https://github.com/enhulsman/henk"
 tech: ["Python", "Claude Agent SDK", "Docker", "Signal", "ntfy", "Tailscale", "pytest"]
 layout: "../../layouts/ProjectLayout.astro"
@@ -14,8 +14,7 @@ import StatStrip from "../../components/StatStrip.astro";
 import HenkFlow from "../../components/diagrams/HenkFlow.astro";
 
 <StatStrip stats={[
-  { value: "233", label: "tests, SDK mocked out" },
-  { value: "0", label: "mutating tools shipped" },
+  { value: "3,660", label: "tests, SDK mocked out" },
   { value: "1", label: "owner; everyone else is dropped" },
   { value: "4", label: "egress ports, zero inbound" },
   { value: "exactly once", label: "event replay across restarts" },
@@ -27,7 +26,7 @@ import HenkFlow from "../../components/diagrams/HenkFlow.astro";
 
 **Event pipeline.** Alerts arrive over an ntfy subscription, get a per-source identity, and pass a cadence policy (debounce, per-identity cooldown, recurrence tracking, and a daily cap on unprompted messages) before becoming a triage turn. Every outcome lands in an append-only JSONL audit log with a versioned schema. Triage output goes to Signal plus a published handoff other tooling can pick up.
 
-**Security posture.** Default-deny everywhere: a closed toolset enforced at a PreToolUse choke point, read-only tools only, an inline approval gate for any future mutation, one ntfy token scoped per-topic server-side, and its own Tailscale identity with egress to just the four ports its tools use. No SSH keys, no broad API credentials, nothing it doesn't need.
+**Security posture.** Default-deny everywhere: a closed toolset enforced at a PreToolUse choke point, read-only tools for everything it inspects, and four write tools that touch only its own memory, notes inbox and reminders, and only on my own messages, one ntfy token scoped per-topic server-side, and its own Tailscale identity with egress to just the four ports its tools use. No SSH keys, no broad API credentials, nothing it doesn't need.
 
 <HenkFlow />
 
@@ -45,6 +44,6 @@ import HenkFlow from "../../components/diagrams/HenkFlow.astro";
 
 ## Outcome
 
-Everything above was verified live on the Raspberry Pi 5 it runs on. A hostile payload attempting instruction override, out-of-registry tool calls, and env-var exfiltration produced a call pattern identical to a benign event, and Henk flagged the injection as a possible compromise of the alert source, lowering its confidence *because* the input was anomalous. An event published while the container was down was triaged exactly once after restart. Cap state survived a full rebuild redeploy. 233 tests cover the pipeline, permissions, and durability paths, with the SDK mocked out.
+Everything above was verified live on the Raspberry Pi 5 it runs on. A hostile payload attempting instruction override, out-of-registry tool calls, and env-var exfiltration produced a call pattern identical to a benign event, and Henk flagged the injection as a possible compromise of the alert source, lowering its confidence *because* the input was anomalous. An event published while the container was down was triaged exactly once after restart. Cap state survived a full rebuild redeploy. 3,660 tests cover the pipeline, permissions, and durability paths, with the SDK mocked out.
 
 The honest caveat, straight from the repo's own records: after the verification window, production went nine days with zero real events, so the cadence defaults remain untuned. Henk is a correctly-built, thoroughly-verified agent, the incident volume just hasn't arrived yet, and the project documents that rather than claiming otherwise.

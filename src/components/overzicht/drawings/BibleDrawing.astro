@@ -1,0 +1,44 @@
+---
+// Detail drawing, hand-placed: re-check label overlaps after any text change.
+---
+<svg class="dwg" viewBox="0 0 520 300" role="img" aria-labelledby="bib-t">
+        <title id="bib-t">bible-tui drawn as one core with two wings: the same reader code drives a terminal through crossterm and the browser through ratzilla in 102 lines, with the three fixes the web side needed redlined beside it.</title>
+        <g class="fill">
+          <path class="hatch" d="M190 200 H330 V210 H190 Z"/>
+        </g>
+        <g class="ln">
+          <path d="M190 96 H330 V200 H190 Z" class="cut"/>
+          <path d="M190 148 H130 M330 148 H390"/>
+          <path d="M40 120 H130 V176 H40 Z M390 120 H480 V176 H390 Z"/>
+          <path d="M85 176 V212 M435 176 V212" class="arrow"/>
+          <path d="M40 214 H130 V268 H40 Z"/>
+          <path d="M390 214 H480 V268 H390 Z M390 226 H480" class="thin"/>
+          <path d="M0 286 H520" class="thin"/>
+        </g>
+        <g class="red">
+          <path d="M384 114 H486 V182 H384 Z" class="dash"/>
+          <path d="M420 104 L435 78 L450 104 Z"/>
+        </g>
+        <g class="lbl">
+          <text x="260" y="84" class="sm" text-anchor="middle">the same UI code, two backends</text>
+          <text x="260" y="124" class="room" text-anchor="middle">BIBLE-CORE</text>
+          <text x="260" y="142" class="sm" text-anchor="middle">4,215 lines of Rust</text>
+          <text x="260" y="158" class="sm" text-anchor="middle">widgets, search,</text>
+          <text x="260" y="170" class="sm" text-anchor="middle">bookmarks, :goto</text>
+          <text x="260" y="226" class="sm" text-anchor="middle">3 translations, built in</text>
+          <text x="85" y="142" text-anchor="middle">native</text>
+          <text x="85" y="156" class="sm" text-anchor="middle">crossterm</text>
+          <text x="85" y="168" class="sm" text-anchor="middle">1,191 lines</text>
+          <text x="435" y="142" text-anchor="middle">web</text>
+          <text x="435" y="156" class="sm" text-anchor="middle">ratzilla</text>
+          <text x="435" y="168" class="sm" text-anchor="middle">102 lines</text>
+          <text x="48" y="240" class="sm">$ bible</text>
+          <text x="85" y="282" class="sm" text-anchor="middle">a terminal</text>
+          <text x="435" y="282" class="sm" text-anchor="middle">bible.hulsman.dev</text>
+          <text x="435" y="99" class="red-t" text-anchor="middle">3</text>
+          <text x="410" y="24" class="red-t sm" text-anchor="end">fixed on a fork:</text>
+          <text x="410" y="36" class="red-t sm" text-anchor="end">measured the window,</text>
+          <text x="410" y="48" class="red-t sm" text-anchor="end">rebuilt every resize,</text>
+          <text x="410" y="60" class="red-t sm" text-anchor="end">lost its listeners</text>
+        </g>
+      </svg>

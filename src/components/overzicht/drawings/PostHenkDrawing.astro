@@ -1,0 +1,34 @@
+---
+// Post detail for henk-exactly-once, hand-placed: re-check label overlaps after any text change.
+// Two time lines: ntfy keeps every alert; Henk's line has a hatched gap where the container was
+// down. The red arrow is the restart: resubscribe since the cursor, replay what was missed.
+---
+<svg class="dwg" viewBox="0 0 400 250" role="img" aria-labelledby="post-henk-t">
+  <title id="post-henk-t">Two time lines. Above, ntfy holds every alert as a tick. Below, Henk's line breaks into a hatched gap where the container was killed. A cursor marks the last alert recorded on disk; on restart a red arrow resumes from it, after the cursor, and replays the alerts that arrived during the gap, each once.</title>
+  <g class="fill">
+    <path class="hatch" d="M150 150 H262 V178 H150 Z"/>
+  </g>
+  <g class="ln">
+    <path d="M20 70 H384" class="arrow"/>
+    <path d="M20 164 H150 M262 164 H384" class="cut"/>
+    <path d="M150 150 H262 V178 H150 Z" class="thin"/>
+    <path d="M48 62 V78 M84 62 V78 M122 62 V78 M176 62 V78 M206 62 V78 M238 62 V78 M300 62 V78 M344 62 V78"/>
+    <path d="M48 70 V164 M84 70 V164 M122 70 V164" class="faint"/>
+    <path d="M300 70 V164 M344 70 V164" class="faint"/>
+  </g>
+  <g class="red">
+    <path d="M122 54 V188"/>
+    <path d="M126 92 H262 V158"/>
+    <path d="M257 150 L262 159 L267 150"/>
+  </g>
+  <g class="lbl">
+    <text x="20" y="52" class="sm">ntfy: every alert, kept 72 h</text>
+    <text x="20" y="200" class="sm">Henk</text>
+    <text x="206" y="196" class="sm" text-anchor="middle">kill -9</text>
+    <text x="206" y="208" class="sm" text-anchor="middle">down</text>
+    <text x="122" y="222" class="red-t sm" text-anchor="middle">cursor</text>
+    <text x="122" y="234" class="red-t sm" text-anchor="middle">last alert on disk</text>
+    <text x="270" y="108" class="red-t sm">restart: since=cursor,</text>
+    <text x="270" y="120" class="red-t sm">the gap replayed once</text>
+  </g>
+</svg>

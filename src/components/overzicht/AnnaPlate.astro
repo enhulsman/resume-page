@@ -1,0 +1,19 @@
+---
+// ANNA's section drawing as a plate: the homepage's model, already exploded, that turns by
+// hand and replays the request. Driven by src/scripts/overzicht/plate.js.
+import { annaLevels } from "../../config/home";
+---
+<div class="anna-plate">
+  <div class="plate-stage">
+    <canvas class="drawing" aria-hidden="true"></canvas>
+    <div class="turn" role="group" aria-label="Turn the model"><button type="button" data-turn="-1" aria-label="Turn left">&larr;</button><button type="button" data-turn="1" aria-label="Turn right">&rarr;</button><span>Drag, or use these, to turn the model</span></div>
+  </div>
+  <ol class="plate-levels" aria-label="ANNA, level by level">
+    {annaLevels.map(l => <li data-level={l.id}><b>{l.name}</b><span>{l.text}</span></li>)}
+  </ol>
+  <button class="replay" type="button">Replay the request</button>
+</div>
+
+<script>
+  import '../../scripts/overzicht/plate.js';
+</script>

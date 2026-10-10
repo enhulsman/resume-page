@@ -6,9 +6,9 @@
 
 **Portfolio & Resume for Ezra Hulsman**
 
-[![Astro](https://img.shields.io/badge/Astro-5.16-ff5d01?logo=astro&logoColor=white)](https://astro.build) [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6?logo=typescript&logoColor=white)](https://typescriptlang.org) [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.0-06b6d4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com) [![GSAP](https://img.shields.io/badge/GSAP-3.14-88ce02?logo=greensock&logoColor=white)](https://gsap.com) [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-f38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
+[![Astro](https://img.shields.io/badge/Astro-7-ff5d01?logo=astro&logoColor=white)](https://astro.build) [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6?logo=typescript&logoColor=white)](https://typescriptlang.org) [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-f38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 
-*Warm amber palette · Syne + Outfit typography · Interactive terminal · Scroll animations*
+*The site as a drawing set · Archivo + B612 Mono · An orthographic renderer on canvas · Interactive terminal*
 
 [Live Site](https://hulsman.dev) · [Resume](https://hulsman.dev/resume) · [Projects](https://hulsman.dev/projects)
 
@@ -16,18 +16,18 @@
 
 ---
 
-Personal portfolio and resume site. Static-first with Astro, animated with GSAP, deployed on Cloudflare Workers with a server-side contact form.
+Personal portfolio and resume site, drawn as an architect's drawing set ("Overzicht"). Static-first with Astro, no UI framework, deployed on Cloudflare Workers with a server-side contact form.
 
 ## Stack
 
 | Layer | Tool |
 | --- | --- |
-| Framework | [Astro](https://astro.build) 5 — static-first, islands architecture |
-| Styling | Tailwind CSS 3 with CSS custom properties for theming |
-| Animation | GSAP ScrollTrigger, CSS keyframes |
-| Content | MDX with auto-discovery for project case studies |
+| Framework | [Astro](https://astro.build) 7, static output, no client framework |
+| Styling | One stylesheet, `src/styles/overzicht.css`, with the design tokens as CSS custom properties |
+| Drawing | `src/scripts/overzicht/scene.js`, a small orthographic renderer on canvas 2D; SVG for the detail drawings |
+| Content | MDX with auto-discovery for project case studies and blog posts |
 | Deployment | Cloudflare Workers (server-side contact form via Resend) |
-| Fonts | Syne (display), Outfit (body), JetBrains Mono (code) |
+| Fonts | Archivo variable (lettering), B612 Mono (dimensions, title blocks, data) |
 
 ## Getting Started
 
@@ -46,37 +46,42 @@ npx wrangler dev   # Runs the Cloudflare Worker locally
 
 ## Features
 
-* **Dark / Light themes** with system preference detection and manual toggle
-* **Scroll-triggered animations** via GSAP ScrollTrigger
-* **Interactive terminal** hidden in the About section — 25+ commands, tab completion, command history, easter eggs
-* **MDX project pages** with auto-discovery and frontmatter-driven routing
-* **Contact form** powered by Cloudflare Workers + Resend email API
-* **Resume PDF generation** via Playwright (CI-ready)
-* **Print-optimized styles** — `/resume` page generates a clean PDF without UI chrome
-* **SEO** — Open Graph, Twitter Cards, structured metadata per page
+* **Two themes**, whiteprint (light) and light table (dark), following the system until you choose one
+* **ANNA drawn as a section** through one real request, that turns into an exploded axonometric as you scroll; the page only reads the scroll position, it never takes it over
+* **Every page a sheet in the set**: the same frame, bar and title blocks; projects as a drawing register, experience as a revision table, contact as a transmittal
+* **Interactive terminal** in the About section: 42 commands, pipes, tab completion, history
+* **MDX project pages and posts** with auto-discovery and frontmatter-driven routing
+* **Contact form** powered by Cloudflare Workers + Resend, with Turnstile and a honeypot
+* **Print-ready résumé**: `/resume` prints on white without the sheet's chrome; `scripts/generate-pdf.js` makes the PDF in CI
+* **Reduced motion respected**: drawings arrive drawn, nothing plots or types itself
 
 ## Project Structure
 
 ```tree
 src/
-├── components/          # Astro section components, icons/, ThemeToggle (React island)
-├── scripts/             # Interactive terminal engine (vanilla TS, ~1100 lines)
-├── config/              # site.ts (personal info, projects) + resume.ts (experience, education)
-├── layouts/             # BaseLayout + ProjectLayout for MDX
-├── pages/               # File-based routing — homepage, /resume, /contact, /projects/*.mdx
-├── lib/                 # Theme utilities, Gravatar integration
-├── styles/global.css    # Theme system, keyframes, print styles
-└── worker.ts            # Cloudflare Worker for contact form (Resend API)
+├── components/overzicht/  # The sheets: bar, foot, ANNA section and plate, details, register, terminal
+│   └── drawings/          # The four detail drawings (SVG)
+├── components/diagrams/   # Case-study diagrams, drawn in the same tokens
+├── scripts/overzicht/     # chrome.js (every page), main.js (homepage), plate.js (ANNA plate), scene.js
+├── scripts/               # Interactive terminal engine (vanilla TS)
+├── config/                # site.ts, resume.ts, home.ts (homepage and /projects copy)
+├── layouts/               # OverzichtLayout (every page), ProjectLayout and BlogLayout for MDX
+├── pages/                 # Homepage, /projects, /blog, /resume, /contact, rss.xml
+├── lib/                   # Theme and frontmatter helpers
+├── styles/overzicht.css   # Tokens, sheets, phone layout, print
+└── worker.ts              # Cloudflare Worker for the contact form (Resend API)
 scripts/
-└── generate-pdf.js      # Playwright-based resume PDF generation (CI-ready)
+└── generate-pdf.js        # Playwright-based resume PDF generation (CI-ready)
+tests/                     # node:test unit tests; *.e2e.mjs need a dev server on :4321
 ```
 
 ## Configuration
 
-All personal content lives in two config files:
+All personal content lives in three config files:
 
 * **`src/config/site.ts`** — name, role, company, location, skills, social links, projects, employment status, SEO metadata
 * **`src/config/resume.ts`** — experience timeline, education, certifications, skill categories, spoken languages
+* **`src/config/home.ts`** — homepage copy, the drawn projects and their dimensions (every number must match its case study), the register
 
 To update content, edit these files. The rest of the site reads from them.
 
@@ -131,7 +136,7 @@ widget (site key in `src/config/site.ts`, verified server-side in `src/worker.ts
 field, and a minimum fill time. The worker fails closed when `TURNSTILE_SECRET_KEY` is missing.
 For the dev server the always-passing Turnstile test key is used automatically.
 
-Run the worker tests with `npm test`.
+Run the unit tests with `npm test`, and the end-to-end checks with `npm run test:e2e` against a running dev server.
 
 ## PDF Generation
 

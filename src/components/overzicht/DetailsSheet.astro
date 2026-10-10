@@ -1,0 +1,15 @@
+---
+// The projects homeDrawn names, drawn in full. The head says "Two": change it with that list.
+import { details, homeDrawn } from "../../config/home";
+import DetailCard from "./DetailCard.astro";
+---
+<section class="sheet" id="details" aria-labelledby="details-h">
+  <header class="sheet-head">
+    <h2 id="details-h">Details</h2>
+    <p>Two more things I built, each drawn at the point where it gets interesting. Not to scale.</p>
+  </header>
+
+  <div class="details details-rows">
+    {details.filter(d => homeDrawn.includes(d.id)).map(d => <DetailCard detail={d} dims={1} />)}
+  </div>
+</section>

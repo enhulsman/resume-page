@@ -21,6 +21,7 @@ export interface MetadataProps {
   twitterCreator?: string;
   twitterSite?: string;
   noindex?: boolean;
+  themeColor?: string;
 }
 
 const {
@@ -46,6 +47,7 @@ const {
   twitterSite = site.seo.twitterSite,
 
   noindex = false,
+  themeColor = "#c9942b",
 } = Astro.props as MetadataProps;
 
 const canonicalUrl = canonical || site.seo.baseUrl + Astro.url.pathname;
@@ -66,7 +68,7 @@ const fullTwitterImage = twitterImage?.startsWith("http")
 <meta name="robots" content={noindex ? "noindex, nofollow" : robots} />
 
 <link rel="canonical" href={canonicalUrl} />
-<link rel="icon" href="/favicon-h.svg" type="image/svg+xml" />
+<link rel="icon" href="/favicon-eh.svg" type="image/svg+xml" />
 
 <meta property="og:title" content={ogTitle} />
 <meta property="og:description" content={ogDescription} />
@@ -82,6 +84,6 @@ const fullTwitterImage = twitterImage?.startsWith("http")
 {twitterCreator && <meta name="twitter:creator" content={twitterCreator} />}
 {twitterSite && <meta name="twitter:site" content={twitterSite} />}
 
-<meta name="theme-color" content="#c9942b" />
+<meta name="theme-color" content={themeColor} />
 <meta name="color-scheme" content="light dark" />
 <link rel="sitemap" href="/sitemap-index.xml" />
