@@ -1116,3 +1116,25 @@ test('on a wide screen each revision gets a bar on one axis of years; narrower, 
   assert.equal(await page.locator('.revs-axis').evaluate(e => getComputedStyle(e).display), 'none');
   await context.close();
 });
+
+test('the open roles run to today, not to the day the site was built, even into a new year', async () => {
+  const context = await browser.newContext({ viewport: { width: 2000, height: 1100 } });
+  await context.addInitScript(() => { try { sessionStorage.setItem('ovz-arrived', '1'); } catch {} });
+  const page = await context.newPage();
+  // well past any build: the axis grows a year, the open bars and the now line follow
+  await page.clock.setFixedTime(new Date('2028-03-01T12:00:00'));
+  await page.goto(BASE + '/', { waitUntil: 'load' });
+  const t = await page.evaluate(() => {
+    const years = [...document.querySelectorAll('.revs-axis span')].map(s => [s.textContent, s.getBoundingClientRect().left]);
+    const span = document.querySelector('.revs .span'), now = getComputedStyle(span, '::after').left;
+    const bars = [...document.querySelectorAll('.revs > li')].map(li => ({ open: /–\s*$/.test(li.querySelector('.when').textContent), right: li.querySelector('.span-bar').getBoundingClientRect().right }));
+    return { years, now: span.getBoundingClientRect().left + parseFloat(now), bars, right: span.getBoundingClientRect().right };
+  });
+  assert.equal(t.years.at(-1)[0], '2028', 'the axis reaches this year');
+  const y2028 = t.years.at(-1)[1];
+  assert.ok(t.now > y2028 && t.now < t.right, `now sits in 2028 (${t.now} vs ${y2028}..${t.right})`);
+  for (const b of t.bars.filter(b => b.open)) assert.ok(Math.abs(b.right - t.now) <= 1.5, `an open bar ends at now (${b.right} vs ${t.now})`);
+  // a closed role keeps its end
+  assert.ok(t.bars.filter(b => !b.open).every(b => b.right < y2028));
+  await context.close();
+});
