@@ -6,7 +6,8 @@ import OverzichtLayout from "../../layouts/OverzichtLayout.astro";
 import DetailCard from "../../components/overzicht/DetailCard.astro";
 import AnnaPlate from "../../components/overzicht/AnnaPlate.astro";
 import ProjectCard from "../../components/overzicht/ProjectCard.astro";
-import { annaLead, details, groups, register } from "../../config/home";
+import { groups } from "../../config/home";
+import { annaLead, details, register } from "../../lib/project-pages";
 import site from "../../config/site";
 
 const entries = Object.values(import.meta.glob("./*.mdx", { eager: true })) as any[];
@@ -34,10 +35,10 @@ const projectsKeywords = `${site.seo.keywords}, projects, portfolio, case studie
       <article class="detail detail-lead" id={annaLead.id}>
         <AnnaPlate />
         <div class="detail-text">
-          <h2><a href={annaLead.caseStudy}>{annaLead.title}</a></h2>
+          <h2><a href={annaLead.href}>{annaLead.title}</a></h2>
           <p>{annaLead.text}</p>
           <p class="detail-status">{annaLead.status}</p>
-          <p class="links"><a href={annaLead.caseStudy}>Case study</a></p>
+          <p class="links"><a href={annaLead.href}>Case study</a></p>
         </div>
       </article>
     </div>

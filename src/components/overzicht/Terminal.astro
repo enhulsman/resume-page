@@ -3,6 +3,7 @@
 // virtual filesystem). It types its intro once it is in view, then becomes real.
 import site from "../../config/site";
 import { experience, education, certifications, skillCategories } from "../../config/resume";
+import { terminal as projects } from "../../lib/project-pages";
 
 // Terminal config
 const user = 'ezra';
@@ -37,7 +38,7 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
   { type: 'out', text: `up ${uptimeStr}, 0 unplanned restarts` },
   { type: 'blank', text: '' },
   { type: 'cmd', text: 'ls projects/' },
-  ...site.projects.slice(0, 4).map(p => ({ type: 'out' as const, text: p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })),
+  ...projects.slice(0, 4).map(p => ({ type: 'out' as const, text: p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })),
   { type: 'blank', text: '' },
   { type: 'cmd', text: 'echo $STACK | tr ":" " - "' },
   { type: 'out', text: [...site.skills.languages, ...site.skills.tools].join(' - ') },
@@ -56,14 +57,7 @@ const terminalData = {
     employment: site.employment,
     careerStart: site.careerStart,
   },
-  projects: site.projects.map(p => ({
-    title: p.title,
-    description: p.description,
-    tech: p.tech,
-    github: p.github || '',
-    link: p.link || '',
-    slug: (p.link || '').replace('/projects/', ''),
-  })),
+  projects,
   experience: experience.map(e => ({ role: e.role, client: e.client, startDate: e.startDate, endDate: e.endDate || '', summary: e.summary, group: e.group })),
   education: education.map(e => ({ degree: e.degree, institution: e.institution, startYear: e.startYear, endYear: e.endYear, gpa: e.gpa || '', result: e.result || '' })),
   certifications: certifications.map(c => ({ name: c.name, institution: c.institution, year: c.year, credential: c.credential || '' })),

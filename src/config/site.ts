@@ -43,69 +43,6 @@ const site = {
   },
 
 
-  // Every project, for the terminal: its intro types the first four, `projects` lists them all.
-  projects: [
-    {
-      title: 'ANNA',
-      description: 'Anamata\'s AI assistant in Microsoft Teams: per-user memory, documents and MCP connectors, in production.',
-      tech: ['Python', 'Claude', 'MCP', 'Microsoft Teams'],
-      link: '/projects/AnnaAssistant',
-    },
-    {
-      title: 'Henk — Homelab Agent',
-      description: 'Security-first homelab agent on the Claude Agent SDK: default-deny toolset that refused a live prompt-injection payload, exactly-once event replay across restarts, cadence state surviving redeploys.',
-      tech: ['Python', 'Claude Agent SDK', 'Docker', 'Signal', 'Tailscale'],
-      github: 'https://github.com/enhulsman/henk',
-      link: '/projects/Henk',
-    },
-    {
-      title: 'Finance Bot',
-      description: 'Discord bot that turns bank exports into a monthly household budget: about 40 rules first, Claude for the rest, and anything below 0.75 confidence written flagged instead of guessed.',
-      tech: ['Python', 'discord.py', 'Claude', 'Google Sheets API'],
-      link: '/projects/FinanceBot',
-    },
-    {
-      title: 'Homelab Infrastructure',
-      description: 'Three-device hybrid cloud-home infrastructure with automated cross-device backups, Prometheus monitoring and alerting, recursive DNSSEC resolution, and Cloudflare Zero Trust networking',
-      tech: ['Docker', 'Prometheus', 'Grafana', 'Tailscale', 'Cloudflare', 'Bash', 'Linux'],
-      link: '/projects/HomelabInfrastructure',
-    },
-    {
-      title: 'bible-tui',
-      description: 'Terminal Bible reader in Rust whose UI code also runs in the browser: a 102-line web port on ratzilla, three translations bundled in the WASM.',
-      tech: ['Rust', 'ratatui', 'WebAssembly'],
-      github: 'https://github.com/enhulsman/bible-tui',
-      link: '/projects/BibleTui',
-    },
-    {
-      title: 'pytaiga-mcp',
-      description: 'Merged PR adding security hardening, centralized error handling, and the project\'s first test suite to a Taiga MCP server.',
-      tech: ['Python', 'MCP', 'pytest', 'CI/CD'],
-      github: 'https://github.com/talhaorak/pytaiga-mcp',
-      link: '/projects/PytaigaMcp',
-    },
-    {
-      title: 'Claude Sandbox',
-      description: 'Defense-in-depth sandbox isolating Claude Code with network namespaces, filesystem bind mounts, a domain-filtering egress proxy, and cross-platform Nix packaging.',
-      tech: ['Nix', 'Python', 'Bash', 'Linux'],
-      github: 'https://github.com/enhulsman/claude-sandbox',
-      link: '/projects/ClaudeSandbox',
-    },
-    {
-      title: 'Encrypted Chat TUI',
-      description: 'Self-hosted terminal chat system built as a Cargo workspace with Tokio async networking, a typed ndjson protocol, and compile-time checked PostgreSQL queries.',
-      tech: ['Rust', 'Tokio', 'PostgreSQL'],
-      github: 'https://github.com/enhulsman',
-      link: '/projects/EncryptedChatTUI',
-    },
-    {
-      title: 'Portfolio Site',
-      description: 'Config-driven portfolio drawn as a technical drawing set, with MDX auto-discovery, a light and dark theme, and server-side form handling on Cloudflare Workers.',
-      tech: ['Astro', 'TypeScript', 'Canvas', 'Cloudflare Workers'],
-      link: '/projects/ResumePage',
-    },
-  ],
-
   // Side pieces made for fun: the homepage's "Other sheets, drawn for fun"
   sidePieces: [
     { url: 'https://flag.hulsman.dev', line: '781 one-minute chess games, drawn as time' },

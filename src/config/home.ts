@@ -1,6 +1,9 @@
 // Homepage ("Overzicht") copy that has no other home in the site's data.
 // The page claims every dimension on it is real: when a number changes here,
 // check it against the project's MDX page (src/pages/projects/) first.
+// A project's dates, date label, code link, stack and description live in its page's
+// frontmatter, not here: src/lib/projects.ts joins them to these listings.
+import { education, spokenLanguages } from './resume.ts';
 
 /** /projects groups every project by where it stands, so a lighter treatment reads as paused, not as less. */
 export type Group = 'running' | 'paused' | 'done';
@@ -10,19 +13,18 @@ export const groups: { id: Group; label: string }[] = [
   { id: 'done', label: 'Done' },
 ];
 
-export interface Detail {
+export interface DetailListing {
   /** Also selects the drawing in src/components/overzicht/drawings/. */
   id: 'henk' | 'finance' | 'homelab' | 'bible' | 'pytaiga' | 'sandbox';
   title: string;
   text: string;
   /** Strongest first: the homepage shows the first, /projects the first two. */
   dims: { value: string; label: string }[];
-  /** Its one line and status, for where it is listed rather than drawn. */
+  /** Its one line, for where it is listed rather than drawn. */
   what: string;
-  status: string;
   group: Group;
-  caseStudy: string;
-  code?: string;
+  /** Its page in src/pages/projects/. */
+  href: string;
 }
 
 /** ANNA's levels below the room, as the homepage labels them; /projects labels its plate the same way. */
@@ -38,14 +40,13 @@ export const annaLead = {
   id: 'anna',
   title: 'ANNA',
   text: 'Anamata\'s AI assistant in Microsoft Teams: per-user memory, documents and MCP connectors, in production',
-  status: 'In development since Dec 2025',
-  caseStudy: '/projects/AnnaAssistant',
+  href: '/projects/AnnaAssistant',
 };
 
 /** The two drawn in full on the homepage; the others are its cards. */
-export const homeDrawn: Detail['id'][] = ['henk', 'finance'];
+export const homeDrawn: DetailListing['id'][] = ['henk', 'finance'];
 
-export const details: Detail[] = [
+export const details: DetailListing[] = [
   {
     id: 'henk',
     title: 'Henk, homelab agent',
@@ -55,10 +56,8 @@ export const details: Detail[] = [
       { value: '3,660', label: 'tests, SDK mocked out' },
     ],
     what: 'Security-first homelab agent on the Claude Agent SDK, talking over Signal',
-    status: 'Running since Jul 2026',
     group: 'running',
-    caseStudy: '/projects/Henk',
-    code: 'https://github.com/enhulsman/henk',
+    href: '/projects/Henk',
   },
   {
     id: 'finance',
@@ -70,9 +69,8 @@ export const details: Detail[] = [
       { value: '40', label: 'transactions per Claude batch' },
     ],
     what: 'Discord bot that turns bank exports into a categorized budget, with Claude for the hard cases',
-    status: 'Running since Jul 2025',
     group: 'running',
-    caseStudy: '/projects/FinanceBot',
+    href: '/projects/FinanceBot',
   },
   {
     id: 'homelab',
@@ -84,9 +82,8 @@ export const details: Detail[] = [
       { value: '19', label: 'alert rules, in Grafana' },
     ],
     what: 'Three servers and a workstation on a Tailscale mesh behind Cloudflare tunnels, with Prometheus, recursive DNS and nightly cross-device backups',
-    status: 'Operating since Jun 2025',
     group: 'running',
-    caseStudy: '/projects/HomelabInfrastructure',
+    href: '/projects/HomelabInfrastructure',
   },
   {
     id: 'bible',
@@ -98,10 +95,8 @@ export const details: Detail[] = [
       { value: '13.3 MB', label: 'of WASM, scripture included' },
     ],
     what: 'Terminal Bible reader in Rust, running in the browser on the same UI code',
-    status: 'Online since Apr 2026',
     group: 'paused',
-    caseStudy: '/projects/BibleTui',
-    code: 'https://github.com/enhulsman/bible-tui',
+    href: '/projects/BibleTui',
   },
   {
     id: 'pytaiga',
@@ -113,10 +108,8 @@ export const details: Detail[] = [
       { value: '50 → 5', label: 'fields per story in a list' },
     ],
     what: 'A merged pull request to an open-source MCP server for Taiga',
-    status: 'Merged Jan 2026',
     group: 'done',
-    caseStudy: '/projects/PytaigaMcp',
-    code: 'https://github.com/talhaorak/pytaiga-mcp',
+    href: '/projects/PytaigaMcp',
   },
   {
     id: 'sandbox',
@@ -128,25 +121,17 @@ export const details: Detail[] = [
       { value: '13+', label: 'kinds of sensitive path hidden' },
     ],
     what: 'An OS-level sandbox around Claude Code: kernel isolation, a filtering egress proxy and a risk score per session',
-    status: 'Released Feb 2026, now retired',
     group: 'done',
-    caseStudy: '/projects/ClaudeSandbox',
-    code: 'https://github.com/enhulsman/claude-sandbox',
+    href: '/projects/ClaudeSandbox',
   },
 ];
 
 /** The projects without a drawing yet, each with a project page; they show as cards. */
-export interface Card { title: string; href: string; what: string; status: string; group: Group; /** Left off the homepage's cards. */ hideOnHome?: boolean; }
-export const register: Card[] = [
-  { title: 'Encrypted Chat TUI', href: '/projects/EncryptedChatTUI', what: 'Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL', status: 'Started Aug 2024', group: 'paused' },
-  { title: 'This site', href: '/projects/ResumePage', what: 'Static-first Astro portfolio on Cloudflare Workers', status: 'Online since Aug 2025', group: 'running', hideOnHome: true }, // you are on it
+export interface CardListing { title: string; href: string; what: string; group: Group; /** Left off the homepage's cards. */ hideOnHome?: boolean; }
+export const register: CardListing[] = [
+  { title: 'Encrypted Chat TUI', href: '/projects/EncryptedChatTUI', what: 'Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL', group: 'paused' },
+  { title: 'This site', href: '/projects/ResumePage', what: 'Static-first Astro portfolio on Cloudflare Workers', group: 'running', hideOnHome: true }, // you are on it
 ];
-
-/** Every project as a card, the drawn ones included, in /projects' group order. */
-export const asCards = (): Card[] => groups.flatMap(g => [
-  ...details.filter(d => d.group === g.id).map(d => ({ title: d.title, href: d.caseStudy, what: d.what, status: d.status, group: d.group })),
-  ...register.filter(r => r.group === g.id),
-]);
 
 /** The skills, as a drawing's materials schedule. */
 export const materials: [string, string][] = [
@@ -158,9 +143,9 @@ export const materials: [string, string][] = [
 ];
 
 export const specification: [string, string][] = [
-  ['Education', 'BSc Computer Science, Vrije Universiteit Amsterdam, 2020 – 2023, GPA 8.0'],
+  ['Education', ((e) => `${e.degree}, ${e.institution}, ${e.startYear} – ${e.endYear}, GPA ${e.gpa}`)(education[0])],
   ['Certified', 'Professional Scrum Master I, Pega CPSA 8.8 and CPBA 8.8 (2023), Cambridge Proficiency (2018)'],
-  ['Speaks', 'Dutch (native), English (fluent)'],
+  ['Speaks', spokenLanguages.map(l => `${l.name} (${l.level.toLowerCase()})`).join(', ')],
 ];
 
 /** About, as the drawing's general notes. The terminal sits on the first sheet, beside the photo. */

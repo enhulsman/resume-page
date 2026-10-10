@@ -17,9 +17,9 @@ const formattedDate = date
   : null;
 
 const path = Astro.url.pathname.replace(/\/$/, "");
-const detail = details.find((d) => d.caseStudy === path);
+const detail = details.find((d) => d.href === path);
 const Drawing = detail && drawings[detail.id];
-const isAnna = path === annaLead.caseStudy;
+const isAnna = path === annaLead.href;
 
 const projectDescription =
   description ||

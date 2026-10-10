@@ -1,6 +1,6 @@
 ---
 // One project as a card: name, one line, status. The name's link covers the card.
-import type { Card } from "../../config/home";
+import type { Card } from "../../lib/project-pages";
 
 interface Props { card: Card; heading?: "h2" | "h3"; }
 const { card: c, heading: H = "h3" } = Astro.props;
