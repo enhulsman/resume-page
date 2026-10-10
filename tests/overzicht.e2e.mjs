@@ -106,6 +106,8 @@ const RETIRED = new Set([
   // 2026-10-09: ANNA is read one level per step; the drawing labels the levels by name, −4 is Operations
   'Exploded view', 'What holds it up', '−4 RUNNING IT',
   "Memory, documents and connector access are scoped to the person asking. Connector secrets are stored encrypted, and when a login is needed, ANNA keeps the token, not the user's chat.",
+  // 2026-10-10: the bar signs "EH." and gives the name in full
+  'E. HULSMAN',
 ]);
 // the drawn projects the homepage leaves out are drawn on /projects, so their copy counts from there
 test('every line of the prototype\'s copy is still on the homepage or /projects', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {

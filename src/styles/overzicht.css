@@ -183,7 +183,15 @@ html.intro main > section:not(.sheet-you) { animation: later .4s ease 1.9s backw
   transition: background-color .5s ease;
 }
 .bar a { text-decoration: none; }
-.bar-name { font-stretch: 100%; letter-spacing: .04em; margin-right: auto; }
+.bar-name { font-stretch: 100%; letter-spacing: .04em; margin-right: auto; display: inline-flex; align-items: center; white-space: nowrap; }
+.sig { font: 820 15px/1 var(--sans); font-stretch: 125%; letter-spacing: -.02em; }
+.sig-dot { color: var(--red); }
+.sig::after { content: ""; display: inline-block; width: .75px; height: 14px; background: var(--hair); margin: 0 12px; vertical-align: -2px; }
+/* on the smallest phones the signature and the full name keep their line: the lamp button
+   shows its lamp alone (its label stays for screen readers) */
+@media (max-width: 360px) {
+  .theme-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
 .bar nav { display: flex; gap: 22px; }
 .theme {
   appearance: none; border: .75px solid var(--ink); background: none; color: inherit; cursor: pointer;
