@@ -2,7 +2,7 @@
 // One drawn project: its detail drawing, what it is, its strongest real dimensions, and its links.
 // The homepage's Details sheet and /projects both draw them; `heading` follows the page.
 // The title's link covers the whole card, so the drawing opens the case study too.
-import type { Detail } from "../../config/home";
+import type { Detail } from "../../lib/project-pages";
 import { drawings } from "./drawings";
 
 interface Props { detail: Detail; heading?: "h2" | "h3"; dims?: number; }
@@ -12,11 +12,11 @@ const Drawing = drawings[d.id];
 <article class="detail" id={d.id}>
   <div class="dwg-wrap"><div class="dwg-scroll"><Drawing /></div></div>
   <div class="detail-text">
-    <H><a class="card-link" href={d.caseStudy}>{d.title}</a></H>
+    <H><a class="card-link" href={d.href}>{d.title}</a></H>
     <p>{d.text}</p>
     <dl class="dims">
       {d.dims.slice(0, dims).map(m => <div><dt>{m.value}</dt><dd>{m.label}</dd></div>)}
     </dl>
-    <p class="links"><a href={d.caseStudy}>Case study</a>{d.code && <a href={d.code}>Code</a>}</p>
+    <p class="links"><a href={d.href}>Case study</a>{d.code && <a href={d.code}>Code</a>}</p>
   </div>
 </article>

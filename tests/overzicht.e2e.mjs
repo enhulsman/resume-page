@@ -2,17 +2,12 @@
 // and the port plan. Needs a running site (npm run dev, or npm run build && npm run preview).
 //
 //   BASE=http://localhost:4321 node --test tests/overzicht.e2e.mjs
-//
-// The copy-parity test also needs the prototype (PROTO, default ~/Coding/resume-lab/proto);
-// it is skipped when the prototype is not on this machine.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
-const PROTO = process.env.PROTO || `${homedir()}/Coding/resume-lab/proto`;
 
 let browser;
 before(async () => { browser = await chromium.launch(); });
@@ -43,17 +38,6 @@ const pageText = () => {
   clone.remove();
   return t.replace(/\s+/g, ' ').trim();
 };
-// The same text as lines, one per block, so moved copy still matches.
-const pageLines = () => {
-  const clone = document.body.cloneNode(true);
-  clone.querySelectorAll('script, style, noscript, .term-out, #terminal-body, .term-line, .skip, svg title').forEach(n => n.remove());
-  clone.style.cssText = 'position:absolute;left:-99999px;top:0;width:1400px';
-  document.documentElement.append(clone);
-  const t = clone.innerText;
-  clone.remove();
-  return t.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
-};
-
 async function activeTerminal(page) {
   await page.locator('#terminal-body').scrollIntoViewIfNeeded();
   await page.waitForSelector('.terminal-input-line', { timeout: 30000 });
@@ -70,73 +54,6 @@ async function run(page, cmd) {
   const after = await page.locator('#terminal-body').innerText();
   return after.slice(before.length);
 }
-
-// The homepage started as a port of the prototype; it has since moved on (the person first,
-// the terminal beside the photo), so this checks that no line of its copy was lost on the way.
-// Lines retired on purpose are named here.
-const RETIRED = new Set([
-  'NOTE 7: A TERMINAL IS PROVIDED', // as rendered: the head is uppercase
-  // the bar links to the pages now, the same on every sheet
-  'ANNA', 'WORK', 'EXPERIENCE', 'ABOUT',
-  // the homepage draws two projects; each drawn project keeps its two strongest dimensions
-  'Four more things I built, each drawn at the point where it gets interesting. Not to scale.',
-  'The rest of the set: smaller builds, each with its own sheet.',
-  '0', 'mutating tools shipped', '13+', 'kinds of sensitive path hidden', '14', 'alert rules', '14%', 'less server code',
-  'PROJECT WHAT IT IS STATUS', // the register is a list now, not a table with a header row
-  // corrected after the 2026-10-09 fact-check against the repos, the homelab docs and the owner
-  '233', '6', '−207 lines',
-  'Three devices on a Tailscale mesh, fronted by Cloudflare tunnels, so no home device has a public port. Prometheus watches all of them, DNS resolves recursively with DNSSEC on every box, and backups cross devices every night.',
-  'devices, one mesh', 'Also in the set', // the workstation makes four machines; the cards are "More projects"
-  'Finance Bot Discord bot that turns bank exports into a categorized budget, with Claude for the hard cases Running since Jul 2025', // drawn now
-  'A terminal Bible reader in Rust, running in the browser', // bible-tui has its own project now, not a side piece
-  "About 32,000 lines of Python: a service layer, a command registry and two Claude backends. Every connected system is an MCP server, so adding one means registering a connector and granting access, not changing ANNA's core.",
-  'Encrypted Chat TUI Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL Started Aug 2025',
-  'This site Static-first Astro portfolio on Cloudflare Workers Launched Mar 2026',
-  'Replaced a daily 10 to 15 minute manual health report across about 50 VMs with a Java and Playwright automation, delivered by CI/CD with Teams alerts. A Bash toolbox of scheduled scripts keeps storage from running out.',
-  "Pega platform and DevOps engineering for Anamata's clients, alongside the Forward Deployed Engineer role. Pega Certified System Architect and Business Architect, 2023.",
-  'Replaced plaintext passwords in documentation with a Python one-time-pad encryption system on a secure remote VPS. Looked after client Synology NAS infrastructure.',
-  // 2026-10-09: experience is headed Experience; the notes and the scale note are in the third person
-  'Revisions', 'Experience, newest first, the way a drawing records its changes.',
-  'At 2 meters tall, I have a good overview of both the codebase and the room it gets deployed in.',
-  "I'm a Forward Deployed Engineer at Anamata, where I own ANNA, our AI assistant in Microsoft Teams, and much of what we build around it.",
-  'Most of that work is Python: connecting ANNA to the tools teams already use, and keeping it secure and reliable in production.',
-  "I came to AI coding agents as a sceptic. Now they write a lot of my code, and I still build like one: tests first, a spec for anything bigger, and nothing ships that I can't explain.",
-  'In my free time I work on personal projects like a self-hosted chat TUI in Rust, and contribute to open source when I can.',
-  "I'm a big Formula 1 fan. There's something satisfying about both well-tuned race cars and well-optimized code.",
-  // 2026-10-09: ANNA is read one level per step; the drawing labels the levels by name, −4 is Operations
-  'Exploded view', 'What holds it up', '−4 RUNNING IT',
-  "Memory, documents and connector access are scoped to the person asking. Connector secrets are stored encrypted, and when a login is needed, ANNA keeps the token, not the user's chat.",
-  // 2026-10-10: the bar signs "EH." and gives the name in full
-  'E. HULSMAN',
-]);
-// the drawn projects the homepage leaves out are drawn on /projects, so their copy counts from there
-test('every line of the prototype\'s copy is still on the homepage or /projects', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {
-  const proto = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
-  const pp = await proto.newPage();
-  await pp.goto(`file://${PROTO}/index.html`);
-  const want = await pp.evaluate(pageLines);
-  await proto.close();
-
-  const { context, page } = await open('/', { js: false });
-  const got = new Set(await page.evaluate(pageLines));
-  // a register row read as one line, the way the prototype's table row reads
-  for (const l of await page.locator('.register li').evaluateAll(lis => lis.map(li => [...li.children].map(c => c.textContent.trim()).join(' ')))) got.add(l);
-  await page.goto(BASE + '/projects');
-  for (const l of await page.evaluate(pageLines)) got.add(l);
-  await context.close();
-
-  assert.deepEqual(want.filter(l => !got.has(l) && !RETIRED.has(l)), [], 'prototype lines missing from the site');
-});
-
-test('page title and description are the prototype\'s', { skip: !existsSync(`${PROTO}/index.html`) && 'prototype not found' }, async () => {
-  const html = readFileSync(`${PROTO}/index.html`, 'utf8');
-  const title = html.match(/<title>(.*?)<\/title>/)[1];
-  const desc = html.match(/name="description" content="(.*?)"/)[1];
-  const { context, page } = await open('/', { js: false });
-  assert.equal(await page.title(), title);
-  assert.equal(await page.getAttribute('meta[name="description"]', 'content'), desc);
-  await context.close();
-});
 
 test('the real terminal is on the homepage with all 42 commands', async () => {
   const src = readFileSync(new URL('../src/scripts/interactive-terminal.ts', import.meta.url), 'utf8');

@@ -2,11 +2,12 @@
 // The homepage's other projects as cards: every one the homepage does not draw in full,
 // except the ones marked hideOnHome, then a last card that goes to all of them.
 import site from "../../config/site";
-import { asCards, details, homeDrawn } from "../../config/home";
+import { details, homeDrawn } from "../../config/home";
+import { cards as allCards } from "../../lib/project-pages";
 import ProjectCard from "./ProjectCard.astro";
 
-const drawnHere = details.filter(d => homeDrawn.includes(d.id)).map(d => d.caseStudy);
-const cards = asCards().filter(c => !drawnHere.includes(c.href) && !c.hideOnHome);
+const drawnHere = details.filter(d => homeDrawn.includes(d.id)).map(d => d.href);
+const cards = allCards.filter(c => !drawnHere.includes(c.href) && !c.hideOnHome);
 ---
 <section class="sheet" id="register" aria-labelledby="register-h">
   <header class="sheet-head">

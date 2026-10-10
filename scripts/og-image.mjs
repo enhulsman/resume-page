@@ -6,6 +6,7 @@
 
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'node:url';
+import site from '../src/config/site.ts';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
 const out = fileURLToPath(new URL('../public/og-image.png', import.meta.url));
@@ -24,7 +25,7 @@ p { margin:30px 0 0; font-size:43px; font-weight:650; font-stretch:92%; color:va
 p b { color:var(--red); font-weight:650; }
 canvas { position:absolute; left:742px; top:44px; width:420px; height:542px; }
 </style></head><body><div class="frame"></div>
-<div class="txt"><h1><span>Ezra</span><span>Hulsman</span></h1><p>Forward Deployed Engineer</p></div>
+<div class="txt"><h1>${site.name.split(' ').map(w => `<span>${w}</span>`).join('')}</h1><p>${site.role}</p></div>
 <canvas></canvas>
 <script type="module">
 const k = 2.6; // lines about 2.6 times the site's weight, so they survive a 300px preview
