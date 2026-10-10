@@ -515,10 +515,36 @@ test('on a desktop the crosshair travels to the name by itself', async () => {
 test('a second visit in the same session skips straight to the dimension', async () => {
   const { context, page } = await open('/');
   await settle(page);
-  await page.reload({ waitUntil: 'load' });
+  // back to Home from another page (a reload at the top is the exception, below)
+  await page.goto(BASE + '/blog', { waitUntil: 'load' });
+  await page.goto(BASE + '/', { waitUntil: 'load' });
   assert.equal((await log(page)).intro, null, 'no intro on the second visit');
   await page.waitForTimeout(800);
   assert.equal(await page.locator('.name-dim').count(), 1);
+  await context.close();
+});
+
+test('reloaded at the top, it plays again, letters and boxes drawn anew', async () => {
+  const { context, page } = await open('/');
+  await settle(page);
+  await page.reload({ waitUntil: 'load' });
+  assert.ok((await log(page)).intro != null, 'the arrival plays on the reload');
+  await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
+  assert.ok(await page.locator('.pens').count() > 0, 'the boxes are drawn again');
+  await settle(page);
+  assert.equal(await page.locator('.name .glyphs').count(), 0);
+  await context.close();
+});
+
+test('reloaded further down, it does not play and the page keeps its place', async () => {
+  const { context, page } = await open('/');
+  await settle(page);
+  await page.evaluate(() => scrollTo(0, 1600));
+  await page.waitForTimeout(200);
+  await page.reload({ waitUntil: 'load' });
+  assert.equal((await log(page)).intro, null, 'no arrival');
+  await page.waitForTimeout(300);
+  assert.ok(await page.evaluate(() => scrollY) > 1200, 'still where it was read');
   await context.close();
 });
 
