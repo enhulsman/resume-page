@@ -81,9 +81,11 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
    it does, the body is one screen tall: the frame and bar are fixed, and inside a transformed
    body fixed means fixed to the body, so the body has to be the screen. */
 html.intro { perspective: 1600px; background: var(--table); }
-html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; transform-origin: 50% 62%; animation: tilt 1.2s cubic-bezier(.5, 0, .25, 1) backwards; }
+html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; transform-origin: 50% 100%; animation: tilt 1.2s cubic-bezier(.5, 0, .25, 1) backwards; }
 @media (max-width: 860px) { html.intro body { --tilt: 14deg; } }
-@keyframes tilt { from { transform: rotateX(var(--tilt)) scale(.94); } }
+/* Turned about its near edge, which stays in the screen's plane, so the scale alone sets how
+   wide that edge starts, on any screen; lifted a little, the table shows below it too. */
+@keyframes tilt { from { transform: translateY(-4vh) rotateX(var(--tilt)) scale(.9); } }
 /* The name is drawn letter by letter (intro.js, from the font's own outlines): sketch lines
    round each letter, its outline traced, then filled in the settled ink. The real text waits
    underneath, invisible, until the last letter is done; it shows then even if the drawing

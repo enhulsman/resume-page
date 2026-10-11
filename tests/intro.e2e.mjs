@@ -194,6 +194,23 @@ test('the sheet starts tilted on the table and squares up', async () => {
   await context.close();
 });
 
+test('at the first frame the whole sheet lies on the table, its near edge too, on any screen', async () => {
+  for (const [width, height] of [[1440, 900], [1920, 1200], [1280, 640], [390, 844], [360, 640]]) {
+    const context = await browser.newContext({ viewport: { width, height } });
+    const page = await context.newPage();
+    await page.goto(BASE + '/', { waitUntil: 'commit' });
+    await page.waitForFunction(() => document.body?.getAnimations().some(a => a.animationName === 'tilt'));
+    const box = await page.evaluate(() => {
+      for (const a of document.getAnimations()) { a.pause(); a.currentTime = 0; }
+      const r = document.body.getBoundingClientRect();
+      return { left: r.left, right: innerWidth - r.right, top: r.top, bottom: innerHeight - r.bottom };
+    });
+    // the table shows on all four sides, not just behind the far edge
+    for (const [side, gap] of Object.entries(box)) assert.ok(gap >= 8, `${width}x${height}: the sheet's ${side} edge is ${Math.round(gap)} px from the screen's (${JSON.stringify(box)})`);
+    await context.close();
+  }
+});
+
 test('the sheet walks up in 1.2 s, easing in as well as out, so the table registers first', async () => {
   const { context, page } = await open('/');
   const t = await page.evaluate(() => ({
