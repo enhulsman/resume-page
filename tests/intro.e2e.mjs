@@ -189,8 +189,12 @@ test('the sheet starts tilted on the table and squares up', async () => {
   // the table shows around the sheet while it lies there, and the sheet is one screen tall
   assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor), 'rgb(201, 209, 198)');
   assert.ok(await page.evaluate(() => document.body.getBoundingClientRect().height <= innerHeight + 1), 'one screen while it tilts');
+  // its own layer for the whole arrival: dropped when the tilt ended, a phone repainted the
+  // whole sheet mid-drawing and flashed the bare table (only a real GPU shows it)
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).willChange), 'transform');
   await settle(page);
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).transform), 'none');
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).willChange), 'auto', 'and lets it go after');
   await context.close();
 });
 
@@ -223,6 +227,27 @@ test('with scrollbars that take room (Windows), nothing shifts sideways when the
     await page.waitForFunction(() => !document.documentElement.classList.contains('intro'), null, { timeout: 8000 });
     assert.deepEqual(await place(), during, 'the page is as wide, and the terminal where it was, before and after');
   } finally { await classic.close(); }
+});
+
+test('while the sheet lies tilted there is nothing to scroll to sideways, so a phone cannot start it off-centre', async () => {
+  // the tilt projects the long page below the screen far out sideways; uncontained, that
+  // was a page thousands of pixels wide that a phone could start scrolled or zoomed into
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'commit' });
+  await page.waitForFunction(() => document.body?.getAnimations().some(a => a.animationName === 'tilt'));
+  for (const at of [0, 600, 1199]) {
+    const r = await page.evaluate(at => {
+      const tilt = document.body.getAnimations().find(a => a.animationName === 'tilt');
+      tilt.pause(); tilt.currentTime = at;
+      scrollTo(200, 0);
+      const out = { wide: document.documentElement.scrollWidth, x: scrollX };
+      scrollTo(0, 0);
+      return out;
+    }, at);
+    assert.deepEqual(r, { wide: 390, x: 0 }, `at ${at} ms into the tilt`);
+  }
+  await context.close();
 });
 
 test('the top bar has its final shape from the first frame, before any script file has come', async () => {
