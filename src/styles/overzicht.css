@@ -43,7 +43,9 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--frame) + 6px + var(--bar) + 12px); }
+/* the scrollbar's room is always kept: a newer Chrome leaves it out of 100vw only while it is
+   kept, and --wide centres on 100vw, so the page would move sideways when the arrival ends */
+html { scrollbar-gutter: stable; -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--frame) + 6px + var(--bar) + 12px); }
 body {
   margin: 0;
   background: var(--sheet);
@@ -80,18 +82,25 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
    The sheet lies on the table, seen at an angle as you come up to it, and squares up. While
    it does, the body is one screen tall: the frame and bar are fixed, and inside a transformed
    body fixed means fixed to the body, so the body has to be the screen. */
-/* the scrollbar's room is kept while the page is one screen, so it does not narrow when the
-   scrollbar comes back at the end (Windows draws it in the page's width) */
-html.intro { perspective: 1600px; background: var(--table); scrollbar-gutter: stable; }
+html.intro { background: var(--table); }
 /* contain: the tilt projects the long page below the screen far out sideways, which made a
    page thousands of pixels wide that a phone could start scrolled into (the sheet began off
    centre). will-change: the sheet keeps its own layer until the arrival is over; dropped when
    the tilt ended, a phone repainted the whole sheet mid-drawing and showed the bare table */
 html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; contain: paint; will-change: transform; transform-origin: 50% 100%; animation: tilt 1.2s cubic-bezier(.5, 0, .25, 1) backwards; }
 @media (max-width: 860px) { html.intro body { --tilt: 14deg; } }
+/* squared up, it keeps a layer of its own, drawn again at the sheet's real size: the one it
+   turned in kept the turn's scale, a touch soft, and the sheet sharpened when the arrival ended */
+html.intro.square body { will-change: opacity; }
 /* Turned about its near edge, which stays in the screen's plane, so the scale alone sets how
-   wide that edge starts, on any screen; lifted a little, the table shows below it too. */
-@keyframes tilt { from { transform: translateY(-4vh) rotateX(var(--tilt)) scale(.9); } }
+   wide that edge starts, on any screen; lifted a little, the table shows below it too. Seen
+   from in front of the screen's middle (the perspective sits there, half the sheet's height
+   above its near edge), and only while it turns: a perspective left on the page once it lies
+   square kept the sheet drawn a little soft, and it sharpened visibly when the arrival ended. */
+@keyframes tilt {
+  from { transform: translateY(-50%) perspective(1600px) translateY(50%) translateY(-4vh) rotateX(var(--tilt)) scale(.9); }
+  to { transform: translateY(-50%) perspective(1600px) translateY(50%); }
+}
 /* The name is drawn letter by letter (intro.js, from the font's own outlines): sketch lines
    round each letter, its outline traced, then filled in the settled ink. The real text waits
    underneath, invisible, until the drawing goes with the arrival; if no drawing came (no glyph
@@ -101,10 +110,11 @@ html.intro .name:not(.as-is) span { color: transparent; }
 .glyphs .g-box { fill: none; stroke: var(--faint); stroke-width: calc(var(--sw) * .7); stroke-dasharray: 1; opacity: 0;
   animation: g-draw .24s cubic-bezier(.4, 0, .2, 1) var(--d) backwards, g-box .24s ease calc(var(--d) + .5s) backwards; }
 .glyphs .g-line { fill: var(--ink); stroke: var(--ink); stroke-width: var(--sw); stroke-dasharray: 1; stroke-linejoin: round;
-  animation: g-draw .5s cubic-bezier(.45, 0, .25, 1) calc(var(--d) + .12s) backwards, g-fill .26s ease calc(var(--d) + .5s) backwards; }
+  animation: g-draw .5s cubic-bezier(.45, 0, .25, 1) calc(var(--d) + .12s) backwards, g-fill .26s ease calc(var(--d) + .5s) both; }
 @keyframes g-draw { from { stroke-dashoffset: 1; } }
 @keyframes g-box { from { opacity: 1; } }
-@keyframes g-fill { from { fill-opacity: 0; } }
+/* inked, the outline goes: the letter is then the font's own weight, as the real text is */
+@keyframes g-fill { from { fill-opacity: 0; stroke-opacity: 1; } to { fill-opacity: 1; stroke-opacity: 0; } }
 /* the theme's colour transitions wait until the arrival is over: the paper covering the text
    (below) does not transition, and would show as blocks while they caught up */
 html.intro body, html.intro body::after, html.intro .frame { transition: none; }
@@ -149,6 +159,8 @@ html.intro .site-photo .clip path { stroke-dasharray: 1; animation: pen .35s cub
 @keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
 @keyframes drop { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
 @keyframes pen { from { stroke-dashoffset: 1; } }
+/* at the end the drawing lies on the real borders and name, which show then: it fades off them */
+:is(.glyphs, .pens, .name-guides).leaving { opacity: 0; transition: opacity .25s ease; }
 .pens { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 3; }
 .pens path { fill: none; stroke: var(--ink); stroke-dasharray: 1; animation: pen var(--for) cubic-bezier(.45, 0, .25, 1) var(--at) backwards; }
 /* whatever of the next sheets shows on a tall screen comes in once this one is drawn */
@@ -856,7 +868,7 @@ kbd { font: inherit; color: var(--red); }
   }
   body { background: #fff; color: #000; font-size: 11pt; transition: none; }
   /* printed mid-arrival: the whole sheet, square, not the one tilted screen */
-  html.intro { perspective: none; background: none; }
+  html.intro { background: none; }
   html.intro body { height: auto; overflow: visible; contain: none; will-change: auto; transform: none; }
   body::before, body::after, .bar, .frame, .foot, .skip, .dim-hl, .replay, .turn, .xhair, .pencil-mark, .pencil-line { display: none !important; }
   main { padding: 0; }

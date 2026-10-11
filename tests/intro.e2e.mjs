@@ -131,6 +131,24 @@ test('boxes are drawn by a pen going round them, on their own borders', async ()
   }
 });
 
+test('the title block\'s cells share their lines, and the pen draws each line once', async () => {
+  // (a desktop's title block: on a phone its cells are stacked rows with borders of their own)
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 1920, height: 1080 }]) {
+    const { context, page } = await open('/', viewport);
+    await page.waitForSelector('.sheet-you > .pens', { state: 'attached', timeout: 3000 });
+    // the cells' pens, in the order of the cells: each one's left and right side
+    const sides = await page.evaluate(() => {
+      const cells = [...document.querySelectorAll('[data-pen] :is(th, td)')];
+      const paths = [...document.querySelectorAll('.pens path:not([data-for])')];
+      const firstRow = cells.filter(c => c.parentElement === cells[0].parentElement).length;
+      return paths.slice(0, firstRow).map(p => { const [l, , rt] = p.getAttribute('d').match(/-?[\d.]+/g).map(Number); return [l, rt]; });
+    });
+    assert.ok(sides.length >= 2, `${sides.length} cells in the first row`);
+    for (let i = 1; i < sides.length; i++) assert.ok(Math.abs(sides[i - 1][1] - sides[i][0]) < .01, `cell ${i} starts on the line cell ${i - 1} ends on (${JSON.stringify(sides)})`);
+    await context.close();
+  }
+});
+
 test('once arrived, no cover, pen line or hidden border is left', async () => {
   const { context, page } = await open('/');
   await settle(page);
@@ -193,7 +211,7 @@ test('the real borders and the name show when the drawing goes, in the same fram
         if (document.documentElement.classList.contains('intro')) return;
         mo.disconnect();
         window.__at = {
-          overlays: document.querySelectorAll('.glyphs, .pens, .name-guides').length,
+          overlays: [...document.querySelectorAll('.glyphs, .pens, .name-guides')].map(o => o.classList.contains('leaving')),
           borders: [...document.querySelectorAll('[data-pen], [data-pen] :is(th, td)')].map(el => getComputedStyle(el).borderTopColor),
           name: [...document.querySelectorAll('.name span')].map(s => getComputedStyle(s).color),
         };
@@ -206,7 +224,9 @@ test('the real borders and the name show when the drawing goes, in the same fram
     const at = await page.evaluate(() => window.__at);
     assert.ok(at.borders.length >= 6 && at.borders.every(c => c !== 'rgba(0, 0, 0, 0)'), `${how}: borders shown (${at.borders})`);
     assert.ok(at.name.every(c => c === 'rgb(43, 39, 102)'), `${how}: name inked`);
-    if (how === 'itself') assert.equal(at.overlays, 0, 'drawing cleared in the same moment');
+    // the drawing, on top of the real thing, fades away rather than being cut, then goes
+    assert.ok(at.overlays.length > 0 && at.overlays.every(Boolean), `${how}: the drawing is leaving (${at.overlays})`);
+    await page.waitForFunction(() => document.querySelectorAll('.glyphs, .pens, .name-guides').length === 0, null, { timeout: 600 });
     await context.close();
   }
 });
@@ -278,13 +298,18 @@ test('the sheet starts tilted on the table and squares up', async () => {
   assert.ok(from, 'the body has a tilt animation');
   const m = await page.evaluate(f => { const d = document.createElement('div'); d.style.transform = f; document.body.append(d); const t = getComputedStyle(d).transform; d.remove(); return t; }, from);
   assert.equal(angle(m), 22, `tilted 22 degrees on a desktop (${from})`);
-  assert.ok(await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).perspective) > 0), 'seen in perspective');
+  // seen in perspective while it turns, and only then: none is left on the page once it lies square
+  assert.match(from, /perspective\(1600px\)/, 'seen in perspective');
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).perspective), 'none');
   // the table shows around the sheet while it lies there, and the sheet is one screen tall
   assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor), 'rgb(201, 209, 198)');
   assert.ok(await page.evaluate(() => document.body.getBoundingClientRect().height <= innerHeight + 1), 'one screen while it tilts');
   // its own layer for the whole arrival: dropped when the tilt ended, a phone repainted the
   // whole sheet mid-drawing and flashed the bare table (only a real GPU shows it)
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).willChange), 'transform');
+  // squared up, still a layer of its own, but no longer one held at the turn's scale
+  await page.waitForFunction(() => document.body.getAnimations().every(a => a.animationName !== 'tilt'), null, { timeout: 3000 });
+  if (await page.evaluate(() => document.documentElement.classList.contains('intro'))) assert.equal(await page.evaluate(() => getComputedStyle(document.body).willChange), 'opacity');
   await settle(page);
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).transform), 'none');
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).willChange), 'auto', 'and lets it go after');
@@ -312,14 +337,76 @@ test('with scrollbars that take room (Windows), nothing shifts sideways when the
   // the shared browser hides scrollbars; this one draws them in the page's width, as Windows does
   const classic = await chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] });
   try {
-    const page = await classic.newPage({ viewport: { width: 1440, height: 900 } });
-    await page.goto(BASE + '/', { waitUntil: 'commit' });
-    await page.waitForFunction(() => document.documentElement.classList.contains('intro') && document.querySelector('.term'));
-    const place = () => page.evaluate(() => ({ width: document.body.offsetWidth, term: document.querySelector('.term').offsetLeft }));
-    const during = await place();
-    await page.waitForFunction(() => !document.documentElement.classList.contains('intro'), null, { timeout: 8000 });
-    assert.deepEqual(await place(), during, 'the page is as wide, and the terminal where it was, before and after');
+    // wider than 1920 the sheets are centred on the screen's width, which a newer Chrome reads
+    // without the scrollbar's room only while that room is kept: so it is kept for good
+    for (const viewport of [{ width: 1440, height: 900 }, { width: 2560, height: 1080 }]) {
+      const page = await classic.newPage({ viewport });
+      await page.goto(BASE + '/', { waitUntil: 'commit' });
+      await page.waitForFunction(() => document.documentElement.classList.contains('intro') && document.querySelector('.term'));
+      const place = () => page.evaluate(() => ({
+        width: document.body.offsetWidth, term: document.querySelector('.term').offsetLeft,
+        bar: document.querySelector('.bar a').offsetLeft, gutter: getComputedStyle(document.documentElement).scrollbarGutter,
+      }));
+      const during = await place();
+      await page.waitForFunction(() => !document.documentElement.classList.contains('intro'), null, { timeout: 8000 });
+      assert.deepEqual(await place(), during, `at ${viewport.width} the page is as wide, and the terminal and bar where they were, before and after`);
+      assert.equal(during.gutter, 'stable');
+      await page.close();
+    }
   } finally { await classic.close(); }
+});
+
+// The arrival held open just before its end: one more animation it waits for
+const HOLD = () => {
+  const add = () => {
+    const s = document.createElement('style');
+    s.textContent = 'html.intro .foot { animation: hold 30s linear backwards; } @keyframes hold { from { outline-color: transparent; } }';
+    document.head.append(s);
+  };
+  new MutationObserver((_, mo) => { if (document.head) { mo.disconnect(); add(); } }).observe(document, { childList: true, subtree: true });
+};
+
+test('when the arrival ends, the sheet does not change its look: text nothing was drawn over stays as it was', async () => {
+  // (desktops: a phone's raster is a real GPU's, which this browser does not have)
+  for (const viewport of [{ width: 1920, height: 1080 }, { width: 1440, height: 900 }]) {
+    const context = await browser.newContext({ viewport, isMobile: viewport.isMobile, hasTouch: viewport.hasTouch });
+    await context.addInitScript(HOLD);
+    const page = await context.newPage();
+    await page.goto(BASE + '/', { waitUntil: 'load' });
+    // everything drawn, the class still on
+    await page.waitForFunction(() => document.documentElement.classList.contains('intro') && document.getAnimations().filter(a => a.animationName && a.animationName !== 'hold' && a.playState !== 'finished' && a.effect.getComputedTiming().iterations !== Infinity).length === 0, null, { timeout: 8000 });
+    await page.waitForTimeout(300);
+    // the text no drawing lies on (the drawn parts fade off the real ones, tested above): it was
+    // held a little soft in the layer the sheet turned in, and sharpened as the arrival ended
+    const TEXT = ['.role', '.lede', '.site-photo figcaption'];
+    const shots = async () => Promise.all(TEXT.map(s => page.locator(s).screenshot()));
+    const held = await shots();
+    await page.evaluate(() => { for (const a of document.getAnimations()) if (a.animationName === 'hold') a.finish(); });
+    await page.waitForFunction(() => !document.documentElement.classList.contains('intro'));
+    await page.waitForTimeout(600);
+    const ended = await shots();
+    // the same size, and no edge off by half a pixel: no pixel changes by more than half of what
+    // lies between ink and paper (about 190 a channel). A layer held at the turn's scale drew
+    // the line wider and its letters blurred; what is left is anti-aliasing.
+    for (const [i, s] of TEXT.entries()) {
+      const d = await page.evaluate(async ([a, b]) => {
+        const px = async src => {
+          const img = await createImageBitmap(await (await fetch(`data:image/png;base64,${src}`)).blob());
+          const c = new OffscreenCanvas(img.width, img.height).getContext('2d');
+          c.drawImage(img, 0, 0);
+          return { w: img.width, h: img.height, data: c.getImageData(0, 0, img.width, img.height).data };
+        };
+        const [x, y] = [await px(a), await px(b)];
+        if (x.w !== y.w || x.h !== y.h) return { size: [`${x.w}x${x.h}`, `${y.w}x${y.h}`] };
+        let max = 0;
+        for (let k = 0; k < x.data.length; k++) max = Math.max(max, Math.abs(x.data[k] - y.data[k]));
+        return { max };
+      }, [held[i].toString('base64'), ended[i].toString('base64')]);
+      assert.ok(!d.size, `${s} keeps its size at ${viewport.width} (${d.size})`);
+      assert.ok(d.max <= 95, `${s} keeps its look at ${viewport.width} (edges off by ${d.max} of 255)`);
+    }
+    await context.close();
+  }
 });
 
 test('while the sheet lies tilted there is nothing to scroll to sideways, so a phone cannot start it off-centre', async () => {
@@ -463,7 +550,7 @@ test('ended by anyone else (the head\'s backstop), the arrival still leaves no d
   await page.waitForSelector('.sheet-you > .pens', { state: 'attached', timeout: 3000 });
   await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
   await page.evaluate(() => { document.documentElement.classList.remove('intro'); document.dispatchEvent(new CustomEvent('ovz:arrived')); });
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(500);
   assert.equal(await page.locator('.glyphs, .pens, .name-guides').count(), 0);
   await context.close();
 });
@@ -533,6 +620,15 @@ test('each letter of the name is drawn from construction lines, then inked', asy
   assert.ok(delays.every((d, i) => i === 0 || d > delays[i - 1]), `staggered (${delays.join(', ')})`);
   // the real text waits, invisible, under the drawing; the page itself starts blank
   assert.equal(await page.locator('.name').evaluate(n => getComputedStyle(n.querySelector('span')).color), 'rgba(0, 0, 0, 0)');
+  await context.close();
+});
+
+test('an inked letter is the font\'s own weight: the pen\'s outline goes as the ink comes in', async () => {
+  const { context, page } = await open('/');
+  await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
+  await seek(page, 2300);
+  const lines = await page.locator('.name .g-line').evaluateAll(ps => ps.map(p => [getComputedStyle(p).strokeOpacity, getComputedStyle(p).fillOpacity]));
+  assert.ok(lines.length > 0 && lines.every(([s, f]) => s === '0' && f === '1'), JSON.stringify(lines));
   await context.close();
 });
 

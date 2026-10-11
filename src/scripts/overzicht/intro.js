@@ -160,9 +160,14 @@ function drawLetters(data) {
 // when the arrival is over, under the finished lines.
 const CELLS_AT = 1600, CELL_STAGGER = 30, CELL_FOR = 200, PENS_LATEST = 1200;
 
-function pen(r, cs) {
+// on a box's border, or for a cell of a collapsed table on its edge: the cells there share
+// their borders, which lie across the line between them (drawn inside each, they doubled)
+function pen(r, cs, shared = false) {
   const w = ['Top', 'Right', 'Bottom', 'Left'].map(s => parseFloat(cs[`border${s}Width`]) || 0);
-  const [t, rt, b, l] = [r.top + w[0] / 2, r.right - w[1] / 2, r.bottom - w[2] / 2, r.left + w[3] / 2];
+  // a shared border lies on the line, half a device pixel past it when it is an odd number wide
+  const on = n => (n * devicePixelRatio % 2) / 2 / devicePixelRatio;
+  const [t, rt, b, l] = shared ? [r.top + on(w[0]), r.right + on(w[1]), r.bottom + on(w[2]), r.left + on(w[3])]
+    : [r.top + w[0] / 2, r.right - w[1] / 2, r.bottom - w[2] / 2, r.left + w[3] / 2];
   const f = n => n.toFixed(2);
   const d = w.every(Boolean) ? `M${f(l)} ${f(t)}H${f(rt)}V${f(b)}H${f(l)}Z`
     : [w[0] && `M${f(r.left)} ${f(t)}H${f(r.right)}`, w[1] && `M${f(rt)} ${f(r.top)}V${f(r.bottom)}`,
@@ -184,19 +189,22 @@ function penBoxes() {
     ...boxes.map((el, i) => [el, i, ...el.dataset.pen.split(' ').map(Number)]),
     ...cells.map((el, i) => [el, null, CELLS_AT + i * CELL_STAGGER, CELL_FOR]),
   ];
-  const strokes = square(() => {
-    const sb = sheet.getBoundingClientRect();
-    return jobs.map(([el, n, start, dur]) => {
-      const r = el.getBoundingClientRect();
-      const p = pen({ top: r.top - sb.top, right: r.right - sb.left, bottom: r.bottom - sb.top, left: r.left - sb.left }, getComputedStyle(el));
-      return p && { ...p, n, start, dur };
-    }).filter(Boolean);
-  });
   const svg = document.createElementNS(SVGNS, 'svg');
   svg.setAttribute('class', 'pens');
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('width', sheet.offsetWidth);
   svg.setAttribute('height', sheet.offsetHeight);
+  sheet.append(svg);
+  const strokes = square(() => {
+    const sb = sheet.getBoundingClientRect();
+    return jobs.map(([el, n, start, dur]) => {
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      const shared = cs.display === 'table-cell' && getComputedStyle(el.closest('table')).borderCollapse === 'collapse';
+      const p = pen({ top: r.top - sb.top, right: r.right - sb.left, bottom: r.bottom - sb.top, left: r.left - sb.left }, cs, shared);
+      return p && { ...p, n, start, dur };
+    }).filter(Boolean);
+  });
   for (const { d, w, n, start, dur } of strokes) {
     const p = document.createElementNS(SVGNS, 'path');
     p.setAttribute('d', d);
@@ -207,7 +215,6 @@ function penBoxes() {
     p.style.setProperty('--for', `${dur}ms`);
     svg.append(p);
   }
-  sheet.append(svg);
   lock(svg);
 }
 
@@ -266,15 +273,23 @@ function trip(target) {
   } }));
 }
 
-// the drawing goes, whoever ended the arrival (this script, or the layout head's backstop)
-const clear = () => document.querySelectorAll('.glyphs, .pens, .name-guides').forEach(s => s.remove());
+// The drawing goes, whoever ended the arrival (this script, or the layout head's backstop). It
+// lies on the real borders and name, which show as the class goes, so it fades off them rather
+// than being cut; after a resize it lies wrong, and goes at once.
+function clear(e) {
+  for (const s of document.querySelectorAll('.glyphs, .pens, .name-guides')) {
+    if (e?.type === 'resize') { s.remove(); continue; }
+    s.classList.add('leaving');
+    setTimeout(() => s.remove(), 300);
+  }
+}
 
 function arrive() {
   INPUTS.forEach(t => removeEventListener(t, hurry, true));
   removeEventListener('resize', resized);
   clear();
   if (!html.classList.contains('intro')) return;
-  html.classList.remove('intro');
+  html.classList.remove('intro', 'square');
   document.dispatchEvent(new CustomEvent('ovz:arrived'));
   // the sheet was one screen while it squared up: a wheel turned meanwhile scrolls now, and
   // a link tabbed to meanwhile is brought into view
@@ -301,7 +316,7 @@ function hurry(e) {
 const width0 = innerWidth;
 function resized(e) {
   if (innerWidth === width0) return;
-  clear();
+  clear(e);
   hurry(e);
 }
 
@@ -347,6 +362,7 @@ if (playing) {
   const css = Promise.all(document.getAnimations().filter(finite).map(a => a.finished));
   css.then(() => Promise.all(drawnParts)).then(arrive, arrive);
   document.addEventListener('ovz:arrived', clear);
+  document.body.getAnimations().find(a => a.animationName === 'tilt')?.finished.then(() => html.classList.add('square'), () => {});
   INPUTS.forEach(t => addEventListener(t, hurry, { capture: true, passive: true }));
   addEventListener('resize', resized);
   // what the visitor did before this script had loaded (the layout's head kept it)
