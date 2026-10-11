@@ -189,9 +189,77 @@ test('the sheet starts tilted on the table and squares up', async () => {
   // the table shows around the sheet while it lies there, and the sheet is one screen tall
   assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor), 'rgb(201, 209, 198)');
   assert.ok(await page.evaluate(() => document.body.getBoundingClientRect().height <= innerHeight + 1), 'one screen while it tilts');
+  // its own layer for the whole arrival: dropped when the tilt ended, a phone repainted the
+  // whole sheet mid-drawing and flashed the bare table (only a real GPU shows it)
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).willChange), 'transform');
   await settle(page);
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).transform), 'none');
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).willChange), 'auto', 'and lets it go after');
   await context.close();
+});
+
+test('at the first frame the whole sheet lies on the table, its near edge too, on any screen', async () => {
+  for (const [width, height] of [[1440, 900], [1920, 1200], [1280, 640], [390, 844], [360, 640]]) {
+    const context = await browser.newContext({ viewport: { width, height } });
+    const page = await context.newPage();
+    await page.goto(BASE + '/', { waitUntil: 'commit' });
+    await page.waitForFunction(() => document.body?.getAnimations().some(a => a.animationName === 'tilt'));
+    const box = await page.evaluate(() => {
+      for (const a of document.getAnimations()) { a.pause(); a.currentTime = 0; }
+      const r = document.body.getBoundingClientRect();
+      return { left: r.left, right: innerWidth - r.right, top: r.top, bottom: innerHeight - r.bottom };
+    });
+    // the table shows on all four sides, not just behind the far edge
+    for (const [side, gap] of Object.entries(box)) assert.ok(gap >= 8, `${width}x${height}: the sheet's ${side} edge is ${Math.round(gap)} px from the screen's (${JSON.stringify(box)})`);
+    await context.close();
+  }
+});
+
+test('with scrollbars that take room (Windows), nothing shifts sideways when the arrival ends', async () => {
+  // the shared browser hides scrollbars; this one draws them in the page's width, as Windows does
+  const classic = await chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] });
+  try {
+    const page = await classic.newPage({ viewport: { width: 1440, height: 900 } });
+    await page.goto(BASE + '/', { waitUntil: 'commit' });
+    await page.waitForFunction(() => document.documentElement.classList.contains('intro') && document.querySelector('.term'));
+    const place = () => page.evaluate(() => ({ width: document.body.offsetWidth, term: document.querySelector('.term').offsetLeft }));
+    const during = await place();
+    await page.waitForFunction(() => !document.documentElement.classList.contains('intro'), null, { timeout: 8000 });
+    assert.deepEqual(await place(), during, 'the page is as wide, and the terminal where it was, before and after');
+  } finally { await classic.close(); }
+});
+
+test('while the sheet lies tilted there is nothing to scroll to sideways, so a phone cannot start it off-centre', async () => {
+  // the tilt projects the long page below the screen far out sideways; uncontained, that
+  // was a page thousands of pixels wide that a phone could start scrolled or zoomed into
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'commit' });
+  await page.waitForFunction(() => document.body?.getAnimations().some(a => a.animationName === 'tilt'));
+  for (const at of [0, 600, 1199]) {
+    const r = await page.evaluate(at => {
+      const tilt = document.body.getAnimations().find(a => a.animationName === 'tilt');
+      tilt.pause(); tilt.currentTime = at;
+      scrollTo(200, 0);
+      const out = { wide: document.documentElement.scrollWidth, x: scrollX };
+      scrollTo(0, 0);
+      return out;
+    }, at);
+    assert.deepEqual(r, { wide: 390, x: 0 }, `at ${at} ms into the tilt`);
+  }
+  await context.close();
+});
+
+test('the top bar has its final shape from the first frame, before any script file has come', async () => {
+  for (const [width, shown] of [[390, '.menu-btn'], [1440, '.theme']]) {
+    const context = await browser.newContext({ viewport: { width, height: 844 } });
+    const page = await context.newPage();
+    // only the page's own inline scripts run: what a slow phone paints before the rest arrives
+    await page.route('**/*', r => (r.request().resourceType() === 'script' ? r.abort() : r.continue()));
+    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    assert.ok(await page.locator(shown).isVisible(), `${width} px: ${shown} shows from the start`);
+    await context.close();
+  }
 });
 
 test('the sheet walks up in 1.2 s, easing in as well as out, so the table registers first', async () => {

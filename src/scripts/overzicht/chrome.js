@@ -3,7 +3,7 @@
 // The homepage's ANNA section adds main.js on top.
 import { getCurrentTheme, setTheme } from '../../lib/theme';
 
-document.documentElement.classList.add('js');
+// (the 'js' class is set in the layout's head, before first paint)
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ---------- theme: whiteprint by day, light table at night ----------
