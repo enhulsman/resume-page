@@ -211,6 +211,32 @@ test('at the first frame the whole sheet lies on the table, its near edge too, o
   }
 });
 
+test('with scrollbars that take room (Windows), nothing shifts sideways when the arrival ends', async () => {
+  // the shared browser hides scrollbars; this one draws them in the page's width, as Windows does
+  const classic = await chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] });
+  try {
+    const page = await classic.newPage({ viewport: { width: 1440, height: 900 } });
+    await page.goto(BASE + '/', { waitUntil: 'commit' });
+    await page.waitForFunction(() => document.documentElement.classList.contains('intro') && document.querySelector('.term'));
+    const place = () => page.evaluate(() => ({ width: document.body.offsetWidth, term: document.querySelector('.term').offsetLeft }));
+    const during = await place();
+    await page.waitForFunction(() => !document.documentElement.classList.contains('intro'), null, { timeout: 8000 });
+    assert.deepEqual(await place(), during, 'the page is as wide, and the terminal where it was, before and after');
+  } finally { await classic.close(); }
+});
+
+test('the top bar has its final shape from the first frame, before any script file has come', async () => {
+  for (const [width, shown] of [[390, '.menu-btn'], [1440, '.theme']]) {
+    const context = await browser.newContext({ viewport: { width, height: 844 } });
+    const page = await context.newPage();
+    // only the page's own inline scripts run: what a slow phone paints before the rest arrives
+    await page.route('**/*', r => (r.request().resourceType() === 'script' ? r.abort() : r.continue()));
+    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    assert.ok(await page.locator(shown).isVisible(), `${width} px: ${shown} shows from the start`);
+    await context.close();
+  }
+});
+
 test('the sheet walks up in 1.2 s, easing in as well as out, so the table registers first', async () => {
   const { context, page } = await open('/');
   const t = await page.evaluate(() => ({
