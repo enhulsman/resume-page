@@ -9,6 +9,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import * as fontkit from 'fontkit';
 import woff2 from 'wawoff2';
 
@@ -19,7 +20,9 @@ const name = readFileSync(at('../src/config/site.ts'), 'utf8').match(/^\s*name:\
 const [first, ...rest] = name.split(' ');
 const lines = [first, rest.join(' ')];
 
-const ttf = Buffer.from(await woff2.decompress(readFileSync(at('../public/fonts/Archivo.woff2'))));
+const FONT = 'public/fonts/Archivo.woff2';
+const woff = readFileSync(at(`../${FONT}`));
+const ttf = Buffer.from(await woff2.decompress(woff));
 const font = fontkit.create(ttf).getVariation({ wght: WGHT, wdth: WDTH });
 const upm = font.unitsPerEm;
 const track = TRACKING * upm;
@@ -42,6 +45,8 @@ function svgPath(path) {
 
 const out = {
   name, upm, wght: WGHT, wdth: WDTH, tracking: TRACKING,
+  // which font file it was made from: a new one fails the test until this is re-run
+  font: { file: FONT, sha256: createHash('sha256').update(woff).digest('hex') },
   capHeight: font.capHeight, xHeight: font.xHeight,
   lines: lines.map(text => {
     const run = font.layout(text);

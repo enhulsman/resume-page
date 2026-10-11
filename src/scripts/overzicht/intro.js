@@ -22,9 +22,9 @@ const playing = html.classList.contains('intro');
 // the arrival is every finite animation running from first paint (the endless ones, a
 // blinking cursor, are the page's own), and the drawn parts added to it below
 const finite = a => a.animationName && a.effect?.getComputedTiming().iterations !== Infinity;
-// in the arrival's own clock (ms), keep in step with overzicht.css
-// (the last letter starts at LETTERS_AT + 10 STAGGER and takes 800 ms: the 1.95 s of 'letters')
-const GUIDES_END = 1800, LETTERS_AT = 550, STAGGER = 60, TRIP_FROM = 1000, DIM_AT = 1950;
+// in the arrival's own clock (ms); the boxes' pens are in the markup (data-pen), the text's
+// sweeps in overzicht.css. The real name and borders need no time: they show when it is over.
+const GUIDES_LATEST = 1800, LETTERS_AT = 550, STAGGER = 60, TRIP_FROM = 1000, DIM_AT = 1950;
 
 // The arrival's clock: the tilt's start, its first frame (read in start(), once the tilt has
 // really started). Every drawn part added later is put on this clock (lock), with delays
@@ -46,23 +46,33 @@ function square(fn) {
   try { return fn(); } finally { tilt.forEach((a, i) => { a.currentTime = at[i]; }); }
 }
 
-// each line of the name: its extent and baseline, relative to the name's holder, in layout
-// pixels
-const lines = () => square(() => {
-  const hb = holder.getBoundingClientRect();
-  return [...name.querySelectorAll('span')].map(span => {
-    const range = document.createRange();
-    range.selectNodeContents(span);
-    const r = range.getBoundingClientRect();
-    // a zero-size inline box sits on the baseline
-    const probe = document.createElement('i');
-    probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
-    span.append(probe);
-    const base = probe.getBoundingClientRect().top - hb.top;
-    probe.remove();
-    return { left: r.left - hb.left, width: r.width, base };
-  });
-});
+// One line of the name (a span), as laid out: its extent and baseline relative to ref, and
+// with letters, each letter's left edge from the line's start. Call it inside square().
+function measureLine(span, ref, letters = false) {
+  const rb = ref.getBoundingClientRect();
+  const range = document.createRange();
+  range.selectNodeContents(span);
+  const r = range.getBoundingClientRect();
+  // a zero-size inline box sits on the baseline
+  const probe = document.createElement('i');
+  probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+  span.append(probe);
+  const base = probe.getBoundingClientRect().top - rb.top;
+  probe.remove();
+  const xs = [];
+  const text = span.firstChild;
+  for (let i = 0; letters && text && i < text.length; i++) {
+    if (!text.data[i].trim()) continue;
+    const c = document.createRange();
+    c.setStart(text, i); c.setEnd(text, i + 1);
+    xs.push(c.getBoundingClientRect().left - r.left);
+  }
+  return { left: r.left - rb.left, width: r.width, base, xs };
+}
+const nameLines = () => [...name.querySelectorAll(':scope > span')];
+
+// each line of the name, relative to the name's holder, in layout pixels
+const lines = () => square(() => nameLines().map(span => measureLine(span, holder)));
 
 function capHeight() {
   const cs = getComputedStyle(name);
@@ -72,9 +82,10 @@ function capHeight() {
 }
 
 // ---------- the lettering guides ----------
-function rule() {
+// ruled with a pen (overzicht.css), each line of the name between its baseline and cap line
+function ruleGuides() {
   const at = since();
-  if (!live() || at > GUIDES_END) return;
+  if (!live() || at > GUIDES_LATEST) return;
   const svg = document.createElementNS(SVGNS, 'svg');
   svg.setAttribute('class', 'name-guides');
   svg.setAttribute('aria-hidden', 'true');
@@ -86,6 +97,7 @@ function rule() {
       const ln = document.createElementNS(SVGNS, 'line');
       ln.setAttribute('x1', -8); ln.setAttribute('x2', w);
       ln.setAttribute('y1', y - nameTop); ln.setAttribute('y2', y - nameTop);
+      ln.setAttribute('pathLength', 1);
       svg.append(ln);
     }
   }
@@ -102,31 +114,14 @@ function rule() {
 const OVER = 70; // how far the sketch lines run past the corners, in font units
 const PX = 1.1; // outline width on screen
 
-function draw(data) {
+// no drawing (too late, no glyph data): the real name shows as it is
+const plainName = () => name.classList.add('as-is');
+
+function drawLetters(data) {
   const at = since();
-  if (!live() || at > LETTERS_AT + 200) return;
+  if (!live() || at > LETTERS_AT + 200) return plainName();
   const scale = parseFloat(getComputedStyle(name).fontSize) / data.upm;
-  const ls = square(() => {
-    const nb = name.getBoundingClientRect();
-    return [...name.querySelectorAll(':scope > span')].map(span => {
-      const range = document.createRange();
-      range.selectNodeContents(span);
-      const r = range.getBoundingClientRect();
-      const probe = document.createElement('i');
-      probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
-      span.append(probe);
-      const base = probe.getBoundingClientRect().top - nb.top;
-      probe.remove();
-      const text = span.firstChild, xs = [];
-      for (let i = 0; text && i < text.length; i++) {
-        if (!text.data[i].trim()) continue;
-        const c = document.createRange();
-        c.setStart(text, i); c.setEnd(text, i + 1);
-        xs.push(c.getBoundingClientRect().left - r.left);
-      }
-      return { left: r.left - nb.left, base, xs };
-    });
-  });
+  const ls = square(() => nameLines().map(span => measureLine(span, name, true)));
   let i = 0;
   data.lines.forEach((line, n) => {
     const l = ls[n];
@@ -147,6 +142,7 @@ function draw(data) {
       const x = measured ? (l.xs[j] / scale).toFixed(1) : g.x;
       const gl = document.createElementNS(SVGNS, 'g');
       gl.setAttribute('class', 'glyph');
+      gl.dataset.char = g.char;
       gl.setAttribute('transform', `translate(${x} 0)`);
       gl.style.setProperty('--d', `${LETTERS_AT + i++ * STAGGER}ms`);
       gl.innerHTML = `<path class="g-box" pathLength="1" d="M${x0 - OVER} ${y0}H${x1 + OVER}M${x1} ${y0 - OVER}V${y1 + OVER}M${x1 + OVER} ${y1}H${x0 - OVER}M${x0} ${y1 + OVER}V${y0 - OVER}"/><path class="g-line" pathLength="1" d="${g.d}"/>`;
@@ -158,13 +154,10 @@ function draw(data) {
 }
 
 // ---------- the boxes, drawn ----------
-// One svg over the first sheet: for each box a pen line on its borders, the sides it has, in
-// the order a hand goes round (top, right, bottom, left). The real borders show at 2.2 s,
-// under the finished lines. [selector, start, duration] in the arrival's clock (ms).
-const PENS = [
-  ['.term', 700, 450], ['.term-head', 1000, 250], ['.site-photo .photo', 950, 400],
-  ['.status-mark', 1350, 200], ['.act-main', 1450, 300], ['.titleblock', 1450, 400],
-];
+// One svg over the first sheet: for each box marked data-pen="start duration" (the arrival's
+// clock, ms) a pen line on its borders, the sides it has, in the order a hand goes round (top,
+// right, bottom, left); a marked table's cells follow it, one by one. The real borders show
+// when the arrival is over, under the finished lines.
 const CELLS_AT = 1600, CELL_STAGGER = 30, CELL_FOR = 200, PENS_LATEST = 1200;
 
 function pen(r, cs) {
@@ -177,24 +170,26 @@ function pen(r, cs) {
   return d && { d, w: Math.max(...w) };
 }
 
-function box() {
+function penBoxes() {
   const at = since();
   const sheet = document.querySelector('.sheet-you');
-  // too late for the pen (a slow font): the borders simply show at their time
+  // too late for the pen (a slow font): the borders simply show when it is over
   if (!sheet || !live() || at > PENS_LATEST) return;
-  const cells = [...sheet.querySelectorAll('.titleblock :is(th, td)')];
+  const boxes = [...sheet.querySelectorAll('[data-pen]')];
+  const cells = [...sheet.querySelectorAll('[data-pen] :is(th, td)')];
   // the cells' text sweeps were timed at first paint; only their moment changes
   cells.forEach((c, i) => c.style.setProperty('--sweep-at', `${CELLS_AT + 50 + i * CELL_STAGGER}ms`));
+  // [box, its place among the marked ones (the pen's data-for), start, duration]
   const jobs = [
-    ...PENS.flatMap(([sel, start, dur]) => [...sheet.querySelectorAll(sel)].map(el => [sel, el, start, dur])),
-    ...cells.map((el, i) => [null, el, CELLS_AT + i * CELL_STAGGER, CELL_FOR]),
+    ...boxes.map((el, i) => [el, i, ...el.dataset.pen.split(' ').map(Number)]),
+    ...cells.map((el, i) => [el, null, CELLS_AT + i * CELL_STAGGER, CELL_FOR]),
   ];
-  const lines = square(() => {
+  const strokes = square(() => {
     const sb = sheet.getBoundingClientRect();
-    return jobs.map(([sel, el, start, dur]) => {
+    return jobs.map(([el, n, start, dur]) => {
       const r = el.getBoundingClientRect();
       const p = pen({ top: r.top - sb.top, right: r.right - sb.left, bottom: r.bottom - sb.top, left: r.left - sb.left }, getComputedStyle(el));
-      return p && { ...p, sel, start, dur };
+      return p && { ...p, n, start, dur };
     }).filter(Boolean);
   });
   const svg = document.createElementNS(SVGNS, 'svg');
@@ -202,12 +197,12 @@ function box() {
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('width', sheet.offsetWidth);
   svg.setAttribute('height', sheet.offsetHeight);
-  for (const { d, w, sel, start, dur } of lines) {
+  for (const { d, w, n, start, dur } of strokes) {
     const p = document.createElementNS(SVGNS, 'path');
     p.setAttribute('d', d);
     p.setAttribute('pathLength', 1);
     p.setAttribute('stroke-width', w);
-    if (sel) p.dataset.for = sel;
+    if (n != null) p.dataset.for = n;
     p.style.setProperty('--at', `${start}ms`);
     p.style.setProperty('--for', `${dur}ms`);
     svg.append(p);
@@ -320,11 +315,11 @@ async function start() {
   if (tilt) { await tilt.ready; t0 = tilt.startTime ?? t0; }
 
   if (playing) {
-    box();
-    rule();
+    penBoxes();
+    ruleGuides();
     // only fetched for the arrival; a first visit is the only time it is needed. Without it
-    // the real name simply shows when the letters would have been done.
-    try { draw((await import('../../data/name-glyphs.json')).default); } catch {}
+    // the real name simply shows.
+    try { drawLetters((await import('../../data/name-glyphs.json')).default); } catch { plainName(); }
   }
   const target = drawDim();
   holder.append(dim);

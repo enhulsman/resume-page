@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 
 const at = p => new URL(p, import.meta.url);
 const data = JSON.parse(readFileSync(at('../src/data/name-glyphs.json'), 'utf8'));
@@ -34,4 +35,11 @@ test('the outlines are the name weight and width the page sets', () => {
   assert.match(rule, new RegExp(`font-weight: ${data.wght}\\b`));
   assert.match(rule, new RegExp(`font-stretch: ${data.wdth}%`));
   assert.match(rule, new RegExp(`letter-spacing: ${String(data.tracking).replace('0.', '.')}em`));
+});
+
+test('the outlines come from the font file the site serves', () => {
+  // a new Archivo.woff2 can move every outline; the data says which file it was made from
+  const sha = createHash('sha256').update(readFileSync(at(`../${data.font?.file}`))).digest('hex');
+  assert.equal(data.font?.file, 'public/fonts/Archivo.woff2');
+  assert.equal(data.font.sha256, sha, 'run `npm run name-glyphs`');
 });

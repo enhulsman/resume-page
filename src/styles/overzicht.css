@@ -94,10 +94,9 @@ html.intro body { --tilt: 22deg; height: 100vh; height: 100svh; overflow: clip; 
 @keyframes tilt { from { transform: translateY(-4vh) rotateX(var(--tilt)) scale(.9); } }
 /* The name is drawn letter by letter (intro.js, from the font's own outlines): sketch lines
    round each letter, its outline traced, then filled in the settled ink. The real text waits
-   underneath, invisible, until the last letter is done; it shows then even if the drawing
-   never came (no glyph data, a late font). Keep the 1.95 s in step with intro.js. */
-html.intro .name span { animation: letters 1.95s steps(1, end) backwards; }
-@keyframes letters { from { color: transparent; } }
+   underneath, invisible, until the drawing goes with the arrival; if no drawing came (no glyph
+   data, a late font), intro.js shows it as it is. */
+html.intro .name:not(.as-is) span { color: transparent; }
 .glyphs { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 .glyphs .g-box { fill: none; stroke: var(--faint); stroke-width: calc(var(--sw) * .7); stroke-dasharray: 1; opacity: 0;
   animation: g-draw .24s cubic-bezier(.4, 0, .2, 1) var(--d) backwards, g-box .24s ease calc(var(--d) + .5s) backwards; }
@@ -113,8 +112,8 @@ html.intro body, html.intro body::after, html.intro .frame { transition: none; }
 /* The rest of the first sheet is drawn in around the name, from a blank sheet: only the frame
    and the bar are pre-printed. Text is ruled, then a cover of paper is swept off it (a
    transform, so the phone's compositor does the work); boxes are drawn by a pen going round
-   them (intro.js lays its lines on their borders, which stay hidden until 2.2 s); fills and
-   the photo come after their outlines. Nothing here animates a colour the whole page
+   them (the ones marked data-pen: intro.js lays its lines on their borders, which stay hidden
+   while the arrival lasts); fills and the photo come after their outlines. Nothing here animates a colour the whole page
    inherits: that restyles every element on every frame. Times are the arrival's clock. */
 html.intro :is(.role, .lede, .status, .site-photo figcaption, .actions .act:not(.act-main), .titleblock th, .titleblock td) { position: relative; }
 html.intro :is(.role, .lede, .status, .site-photo figcaption, .actions .act:not(.act-main), .titleblock th, .titleblock td)::after {
@@ -138,17 +137,17 @@ html.intro .site-photo figcaption { --rule-at: 1.45s; --sweep-at: 1.6s; }
 html.intro .actions .act:not(.act-main) { --sweep-at: 1.6s; --sweep-for: .3s; }
 html.intro .actions .act:not(.act-main) + .act { --sweep-at: 1.68s; }
 html.intro .actions .act:not(.act-main) + .act + .act { --sweep-at: 1.76s; }
-/* boxes: the real borders wait for the pen; then the fills */
-html.intro :is(.titleblock, .titleblock th, .titleblock td, .status-mark) { animation: borders 2.2s steps(1, end) backwards; }
-html.intro .term { animation: borders 2.2s steps(1, end) backwards, fill .3s ease 1.05s backwards; }
-html.intro .term-head { animation: borders 2.2s steps(1, end) backwards, wipe .4s cubic-bezier(.55, 0, .25, 1) 1.25s backwards; }
-html.intro .act-main { animation: borders 2.2s steps(1, end) backwards, fill .25s ease 1.72s backwards; }
-html.intro .site-photo .photo { animation: borders 2.2s steps(1, end) backwards, photo .7s ease 1.15s backwards; }
+/* boxes: the real borders are the pen's lines until the arrival is over (a table's cells are
+   drawn with it); then the fills, and the photo comes down from under its clip */
+html.intro :is([data-pen], [data-pen] :is(th, td)) { border-color: transparent; }
+html.intro .term { animation: fill .3s ease 1.05s backwards; }
+html.intro .term-head { animation: wipe .4s cubic-bezier(.55, 0, .25, 1) 1.25s backwards; }
+html.intro .act-main { animation: fill .25s ease 1.72s backwards; }
+html.intro .site-photo .photo { animation: drop .7s cubic-bezier(.55, 0, .25, 1) 1.15s backwards; }
 html.intro .site-photo .clip path { stroke-dasharray: 1; animation: pen .35s cubic-bezier(.45, 0, .25, 1) .9s backwards; }
-@keyframes borders { from { border-color: transparent; } }
 @keyframes fill { from { background-color: transparent; } }
 @keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
-@keyframes photo { from { opacity: 0; } }
+@keyframes drop { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
 @keyframes pen { from { stroke-dashoffset: 1; } }
 .pens { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 3; }
 .pens path { fill: none; stroke: var(--ink); stroke-dasharray: 1; animation: pen var(--for) cubic-bezier(.45, 0, .25, 1) var(--at) backwards; }
@@ -157,10 +156,13 @@ html.intro main > section:not(.sheet-you) { animation: later .4s ease 1.9s backw
 @keyframes later { from { opacity: 0; } }
 
 /* lettering guides: cap line and baseline, ruled before the name is inked, erased after */
-.name-guides { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; animation: guides 2.3s linear backwards; opacity: 0; }
+.name-guides { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; opacity: .9; animation: erase .3s linear 2s forwards; }
 /* (on the arrival's clock: intro.js sets these animations' start to the tilt's) */
-.name-guides line { stroke: var(--faint); stroke-width: .75; }
-@keyframes guides { 0%, 14% { opacity: 0; } 21%, 86% { opacity: .9; } 100% { opacity: 0; } }
+.name-guides line { stroke: var(--faint); stroke-width: .75; stroke-dasharray: 1; animation: pen .3s cubic-bezier(.45, 0, .25, 1) .3s backwards; }
+.name-guides line:nth-child(2n) { animation-delay: .38s; }
+.name-guides line:nth-child(n + 3) { animation-delay: .44s; }
+.name-guides line:nth-child(n + 3):nth-child(2n) { animation-delay: .52s; }
+@keyframes erase { to { opacity: 0; } }
 
 /* the name's dimension: its real width, in the sheet's own units (the crosshair's) */
 .name-dim { position: absolute; left: 0; overflow: visible; pointer-events: none; }

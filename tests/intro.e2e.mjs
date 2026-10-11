@@ -90,6 +90,7 @@ test('the sheet starts blank but for its frame and bar, and is drawn in', async 
       head: getComputedStyle(document.querySelector('.term-head')).clipPath,
       borders: ['.term', '.titleblock', '.act-main', '.site-photo .photo'].map(s => getComputedStyle(document.querySelector(s)).borderTopColor),
       photo: getComputedStyle(document.querySelector('.site-photo .photo')).opacity,
+      wipe: getComputedStyle(document.querySelector('.site-photo .photo')).clipPath,
       bar: getComputedStyle(document.querySelector('.bar')).opacity,
       frame: getComputedStyle(document.querySelector('.frame')).borderTopColor,
     };
@@ -98,7 +99,9 @@ test('the sheet starts blank but for its frame and bar, and is drawn in', async 
   for (const t of at0.covered) assert.match(t, /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/, 'text covered at the start');
   assert.match(at0.head, /inset\(0px 100%/);
   for (const b of at0.borders) assert.equal(b, 'rgba(0, 0, 0, 0)', 'boxes not yet drawn');
-  assert.equal(at0.photo, '0');
+  // the photo is wiped down from under its clip, not faded in
+  assert.equal(at0.photo, '1');
+  assert.match(at0.wipe, /^inset\(0px 0px 100%/);
   assert.equal(at0.bar, '1', 'the bar is pre-printed');
   assert.equal(at0.frame, 'rgb(43, 39, 102)', 'the frame is pre-printed');
   await context.close();
@@ -116,10 +119,10 @@ test('boxes are drawn by a pen going round them, on their own borders', async ()
     // the terminal and its head, the photo, the main button, the status mark, the title block and its cells
     assert.ok(pens.n >= 15, `${pens.n} pen lines`);
     await seek(page, 2050);
+    await definePenOf(page);
     const off = await page.evaluate(() => {
-      const svg = document.querySelector('.sheet-you > .pens');
       return ['.term', '.titleblock', '.act-main', '.site-photo .photo'].map(s => {
-        const p = svg.querySelector(`[data-for="${s}"]`).getBoundingClientRect(), r = document.querySelector(s).getBoundingClientRect();
+        const p = penOf(s).getBoundingClientRect(), r = document.querySelector(s).getBoundingClientRect();
         return Math.max(Math.abs(p.left - r.left), Math.abs(p.top - r.top), Math.abs(p.right - r.right), Math.abs(p.bottom - r.bottom));
       });
     });
@@ -137,26 +140,116 @@ test('once arrived, no cover, pen line or hidden border is left', async () => {
     dwgs: document.querySelectorAll('svg.dwg').length,
     covers: ['.role', '.lede', '.status', '.term-head'].map(s => getComputedStyle(document.querySelector(s), '::after').content),
     borders: ['.term', '.titleblock', '.act-main'].map(s => getComputedStyle(document.querySelector(s)).borderTopColor),
-    photo: getComputedStyle(document.querySelector('.site-photo .photo')).opacity,
+    photo: getComputedStyle(document.querySelector('.site-photo .photo')).clipPath,
   }));
   assert.equal(after.pens, 0);
   assert.ok(after.dwgs >= 2, `${after.dwgs} drawings on the page`);
   for (const c of after.covers) assert.equal(c, 'none');
   for (const b of after.borders) assert.equal(b, 'rgb(43, 39, 102)');
-  assert.equal(after.photo, '1');
+  assert.equal(after.photo, 'none');
   await context.close();
 });
 
+// a box drawn by a pen, found through the box: the pen's data-for is the box's place among
+// the boxes marked data-pen
+const definePenOf = page => page.evaluate(() => {
+  window.penOf = s => document.querySelector(`.pens [data-for="${[...document.querySelectorAll('[data-pen]')].indexOf(document.querySelector(s))}"]`);
+});
+
+test('the boxes a pen draws are marked once, in the markup, each with its own moment', async () => {
+  const { context, page } = await open('/');
+  await page.waitForSelector('.sheet-you > .pens', { state: 'attached', timeout: 3000 });
+  await definePenOf(page);
+  const marked = await page.evaluate(() => [...document.querySelectorAll('[data-pen]')].map(el => {
+    const [at, dur] = el.dataset.pen.split(' ').map(Number);
+    const a = document.querySelector(`.pens [data-for="${[...document.querySelectorAll('[data-pen]')].indexOf(el)}"]`)?.getAnimations()[0]?.effect.getTiming();
+    return { at, dur, drawn: a ? [a.delay, a.duration] : null };
+  }));
+  // the terminal and its head, the photo, the main button, the status mark, the title block
+  assert.ok(marked.length >= 6, `${marked.length} boxes marked`);
+  for (const m of marked) assert.deepEqual(m.drawn, [m.at, m.dur], 'its pen draws at the moment the markup gives');
+  await context.close();
+});
+
+test('the real borders and the name show when the drawing goes, in the same frame, not on a clock of their own', async () => {
+  const { context, page } = await open('/');
+  await page.waitForSelector('.sheet-you > .pens', { state: 'attached', timeout: 3000 });
+  await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
+  // long after every pen and letter is done, the drawing still stands in for them
+  await seek(page, 2400);
+  const late = await page.evaluate(() => ({
+    borders: [...document.querySelectorAll('[data-pen], [data-pen] :is(th, td)')].map(el => getComputedStyle(el).borderTopColor),
+    name: [...document.querySelectorAll('.name span')].map(s => getComputedStyle(s).color),
+  }));
+  assert.ok(late.borders.length >= 6 && late.borders.every(c => c === 'rgba(0, 0, 0, 0)'), `borders still hidden (${late.borders})`);
+  assert.ok(late.name.every(c => c === 'rgba(0, 0, 0, 0)'), `name still hidden (${late.name})`);
+  await context.close();
+
+  // the moment the class goes: the drawing is gone and the real borders and name are there
+  for (const how of ['itself', 'backstop']) {
+    const { context, page } = await open('/');
+    await page.evaluate(() => {
+      new MutationObserver((_, mo) => {
+        if (document.documentElement.classList.contains('intro')) return;
+        mo.disconnect();
+        window.__at = {
+          overlays: document.querySelectorAll('.glyphs, .pens, .name-guides').length,
+          borders: [...document.querySelectorAll('[data-pen], [data-pen] :is(th, td)')].map(el => getComputedStyle(el).borderTopColor),
+          name: [...document.querySelectorAll('.name span')].map(s => getComputedStyle(s).color),
+        };
+      }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    });
+    await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
+    if (how === 'backstop') await page.evaluate(() => { document.documentElement.classList.remove('intro'); document.dispatchEvent(new CustomEvent('ovz:arrived')); });
+    await page.waitForFunction(() => window.__at, null, { timeout: 8000 });
+    // a microtask after the class went: the drawing's own listener has run by then
+    const at = await page.evaluate(() => window.__at);
+    assert.ok(at.borders.length >= 6 && at.borders.every(c => c !== 'rgba(0, 0, 0, 0)'), `${how}: borders shown (${at.borders})`);
+    assert.ok(at.name.every(c => c === 'rgb(43, 39, 102)'), `${how}: name inked`);
+    if (how === 'itself') assert.equal(at.overlays, 0, 'drawing cleared in the same moment');
+    await context.close();
+  }
+});
+
+test('the lettering guides are ruled with a pen, not faded in', async () => {
+  const { context, page } = await open('/');
+  await page.waitForSelector('.name .name-guides', { state: 'attached', timeout: 3000 });
+  const at = async t => { await seek(page, t); return page.locator('.name-guides line').evaluateAll(ls => ls.map(l => [l.getAttribute('pathLength'), parseFloat(getComputedStyle(l).strokeDashoffset), +getComputedStyle(l.ownerSVGElement).opacity])); };
+  const before = await at(100), mid = await at(420), done = await at(1200);
+  assert.ok(before.length >= 4, `${before.length} guides`);
+  for (const [len, off] of before) { assert.equal(len, '1'); assert.equal(off, 1, 'not yet drawn'); }
+  assert.ok(mid.some(([, off, o]) => off > 0 && off < 1 && o > .5), `half drawn, at full strength (${JSON.stringify(mid)})`);
+  for (const [, off] of done) assert.equal(off, 0, 'drawn');
+  await context.close();
+});
+
+// What a page-wide repaint looks like from the inside: an inherited property (a colour, a
+// custom property) animated on an element with a big subtree restyles all of it, every frame.
+const RESTYLES_ALL = () => {
+  const INHERITED = /^(color|fill|stroke|fill-?opacity|stroke-?opacity|font|letter-?spacing|word-?spacing|line-?height|visibility|--.*)/i;
+  const out = [];
+  for (const a of document.getAnimations()) {
+    const el = a.effect?.target;
+    if (!el || el.querySelectorAll('*').length <= 40) continue;
+    const props = new Set(a.effect.getKeyframes().flatMap(k => Object.keys(k)).filter(k => !['offset', 'easing', 'composite', 'computedOffset'].includes(k)));
+    for (const p of props) if (INHERITED.test(p)) out.push(`${el.tagName.toLowerCase()}.${[...el.classList].join('.')} ${a.animationName || a.transitionProperty || 'script'}: ${p}`);
+  }
+  return out;
+};
+
 test('the arrival never repaints the whole page frame by frame', async () => {
-  // a colour animated on the root restyles every element on every frame: phones stutter
-  for (const opts of [{}, { colorScheme: 'dark' }]) {
+  // a colour animated on a big part of the page restyles every element in it on every frame:
+  // phones stutter. Checked on every animation of the arrival, the drawn parts included.
+  for (const opts of [{}, { colorScheme: 'dark' }, { width: 390, height: 844, hasTouch: true, isMobile: true }]) {
     const { context, page } = await open('/', opts);
-    const on = await page.evaluate(() => ({
-      html: document.documentElement.getAnimations({ subtree: false }).map(a => a.animationName),
-      body: document.body.getAnimations({ subtree: false }).map(a => a.animationName),
-    }));
-    assert.deepEqual(on.html, []);
-    assert.deepEqual(on.body, ['tilt']);
+    await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
+    assert.deepEqual(await page.evaluate(RESTYLES_ALL), [], JSON.stringify(opts));
+    // and the check itself sees one: a colour put on the first sheet
+    const caught = await page.evaluate(RESTYLES_ALL => {
+      document.querySelector('.sheet-you').animate({ color: ['red', 'blue'] }, 1000);
+      return new Function(`return (${RESTYLES_ALL})()`)();
+    }, RESTYLES_ALL.toString());
+    assert.equal(caught.length, 1, 'the check catches a colour on the sheet');
     await context.close();
   }
 });
@@ -396,7 +489,8 @@ test('the drawn parts keep the arrival\'s own clock, even on a slow phone', asyn
   const at = await page.evaluate(() => {
     const t0 = document.body.getAnimations().find(a => a.animationName === 'tilt').startTime;
     const begins = el => { const a = el.getAnimations()[0]; return Math.round(a.startTime + a.effect.getTiming().delay - t0); };
-    return { letter: begins(document.querySelector('.glyph .g-line')), term: begins(document.querySelector('.pens [data-for=".term"]')) };
+    const term = document.querySelector(`.pens [data-for="${[...document.querySelectorAll('[data-pen]')].indexOf(document.querySelector('.term'))}"]`);
+    return { letter: begins(document.querySelector('.glyph .g-line')), term: begins(term) };
   });
   assert.ok(Math.abs(at.letter - 670) <= 5, `first letter traced at ${at.letter} ms`);
   assert.ok(Math.abs(at.term - 700) <= 5, `terminal drawn from ${at.term} ms`);
@@ -459,14 +553,20 @@ test('the drawn letters lie exactly on the real ones', async () => {
         chars.push(r.getBoundingClientRect().left);
       }
       const origins = [...svg.querySelectorAll('.glyph')].map(g => sb.left + g.transform.baseVal[0].matrix.e * k);
-      const line = document.createRange(); line.selectNodeContents(span);
-      const t = line.getBoundingClientRect();
-      const ink = Math.max(...[...svg.querySelectorAll('.g-line')].map(p => p.getBoundingClientRect().bottom));
-      return { off: origins.map((o, i) => +(o - chars[i]).toFixed(2)), bottom: t.bottom - ink, h: t.height };
+      // the real baseline: where a zero-size inline box sits
+      const probe = document.createElement('i');
+      probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+      span.append(probe);
+      const base = probe.getBoundingClientRect().top;
+      probe.remove();
+      // the letters that stand flat on it (round ones overshoot, as type does)
+      const flat = [...svg.querySelectorAll('.glyph')].filter(g => /^[EHzrlmnu]$/.test(g.dataset.char ?? ''));
+      const ink = flat.map(g => +(g.querySelector('.g-line').getBoundingClientRect().bottom - base).toFixed(2));
+      return { off: origins.map((o, i) => +(o - chars[i]).toFixed(2)), ink };
     }));
     for (const l of lines) {
       assert.ok(l.off.every(d => Math.abs(d) < 1), `letters within 1 px of the text at ${viewport.width} (${l.off.join(', ')})`);
-      assert.ok(l.bottom > -2 && l.bottom < l.h * .4, `stands in its line box (${l.bottom.toFixed(1)})`);
+      assert.ok(l.ink.length >= 2 && l.ink.every(d => Math.abs(d) < 2), `flat letters stand on the baseline within 2 px at ${viewport.width} (${l.ink.join(', ')})`);
     }
     await context.close();
   }
