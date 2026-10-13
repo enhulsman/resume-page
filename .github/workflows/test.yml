@@ -1,0 +1,49 @@
+name: Test
+
+# Unit tests, then the browser tests against the production build (served by astro preview),
+# so a change that breaks the homepage, its arrival or the inner sheets fails before it deploys.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Serve the build
+        run: |
+          npx astro preview --port 4321 >/tmp/preview.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sSf http://localhost:4321/ >/dev/null && echo "server up" && break
+            sleep 1
+          done
+
+      - name: Browser tests
+        run: npm run test:e2e
+        env:
+          BASE: http://localhost:4321
+
+      - name: Server log
+        if: failure()
+        run: cat /tmp/preview.log
