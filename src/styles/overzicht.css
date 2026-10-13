@@ -103,9 +103,12 @@ html.intro.square body { will-change: opacity; }
 }
 /* The name is drawn letter by letter (intro.js, from the font's own outlines): sketch lines
    round each letter, its outline traced, then filled in the settled ink. The real text waits
-   underneath, invisible, until the drawing goes with the arrival; if no drawing came (no glyph
-   data, a late font), intro.js shows it as it is. */
+   underneath, invisible; if no drawing came (no glyph data, a late font), intro.js shows it as
+   it is when the arrival ends. */
 html.intro .name:not(.as-is) span { color: transparent; }
+/* once arrived, the finished letters stay as the name (intro.js) over the text, which is still
+   read and copied; printed, the text itself shows */
+@media screen { .name:has(> .glyphs:not(.leaving)) span { color: transparent; } }
 .glyphs { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 .glyphs .g-box { fill: none; stroke: var(--faint); stroke-width: calc(var(--sw) * .7); stroke-dasharray: 1; opacity: 0;
   animation: g-draw .24s cubic-bezier(.4, 0, .2, 1) var(--d) backwards, g-box .24s ease calc(var(--d) + .5s) backwards; }
@@ -870,7 +873,7 @@ kbd { font: inherit; color: var(--red); }
   /* printed mid-arrival: the whole sheet, square, not the one tilted screen */
   html.intro { background: none; }
   html.intro body { height: auto; overflow: visible; contain: none; will-change: auto; transform: none; }
-  body::before, body::after, .bar, .frame, .foot, .skip, .dim-hl, .replay, .turn, .xhair, .pencil-mark, .pencil-line { display: none !important; }
+  body::before, body::after, .bar, .frame, .foot, .skip, .glyphs, .dim-hl, .replay, .turn, .xhair, .pencil-mark, .pencil-line { display: none !important; }
   main { padding: 0; }
   .sheet { padding: 18px 0 0; border-top: 0; min-height: 0; }
   .sheet-first { padding-top: 0; }

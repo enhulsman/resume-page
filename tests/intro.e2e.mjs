@@ -189,7 +189,7 @@ test('the boxes a pen draws are marked once, in the markup, each with its own mo
   await context.close();
 });
 
-test('the real borders and the name show when the drawing goes, in the same frame, not on a clock of their own', async () => {
+test('the real borders show when the drawing goes, in the same frame, not on a clock of their own; the drawn name stays as the name', async () => {
   const { context, page } = await open('/');
   await page.waitForSelector('.sheet-you > .pens', { state: 'attached', timeout: 3000 });
   await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
@@ -203,15 +203,18 @@ test('the real borders and the name show when the drawing goes, in the same fram
   assert.ok(late.name.every(c => c === 'rgba(0, 0, 0, 0)'), `name still hidden (${late.name})`);
   await context.close();
 
-  // the moment the class goes: the drawing is gone and the real borders and name are there
+  // the moment the class goes: the real borders are there, and the pens fade off them. The
+  // finished letters stay: the same shapes a moment later in the browser's text raster would be
+  // a change of their own. Ended early (the head's backstop), half-drawn letters go too.
   for (const how of ['itself', 'backstop']) {
     const { context, page } = await open('/');
     await page.evaluate(() => {
       new MutationObserver((_, mo) => {
         if (document.documentElement.classList.contains('intro')) return;
         mo.disconnect();
+        const leaving = s => [...document.querySelectorAll(s)].map(o => o.classList.contains('leaving'));
         window.__at = {
-          overlays: [...document.querySelectorAll('.glyphs, .pens, .name-guides')].map(o => o.classList.contains('leaving')),
+          pens: leaving('.pens, .name-guides'), glyphs: leaving('.glyphs'),
           borders: [...document.querySelectorAll('[data-pen], [data-pen] :is(th, td)')].map(el => getComputedStyle(el).borderTopColor),
           name: [...document.querySelectorAll('.name span')].map(s => getComputedStyle(s).color),
         };
@@ -223,10 +226,16 @@ test('the real borders and the name show when the drawing goes, in the same fram
     // a microtask after the class went: the drawing's own listener has run by then
     const at = await page.evaluate(() => window.__at);
     assert.ok(at.borders.length >= 6 && at.borders.every(c => c !== 'rgba(0, 0, 0, 0)'), `${how}: borders shown (${at.borders})`);
-    assert.ok(at.name.every(c => c === 'rgb(43, 39, 102)'), `${how}: name inked`);
-    // the drawing, on top of the real thing, fades away rather than being cut, then goes
-    assert.ok(at.overlays.length > 0 && at.overlays.every(Boolean), `${how}: the drawing is leaving (${at.overlays})`);
-    await page.waitForFunction(() => document.querySelectorAll('.glyphs, .pens, .name-guides').length === 0, null, { timeout: 600 });
+    assert.ok(at.pens.length > 0 && at.pens.every(Boolean), `${how}: the pens are leaving (${at.pens})`);
+    assert.equal(at.glyphs.length, 2);
+    if (how === 'itself') {
+      assert.ok(at.glyphs.every(l => !l), 'itself: the drawn name stays');
+      assert.ok(at.name.every(c => c === 'rgba(0, 0, 0, 0)'), 'itself: the text stays under it, unseen');
+    } else {
+      assert.ok(at.glyphs.every(Boolean), 'backstop: the half-drawn name is leaving');
+      assert.ok(at.name.every(c => c === 'rgb(43, 39, 102)'), 'backstop: name inked');
+    }
+    await page.waitForFunction(() => document.querySelectorAll('.pens, .name-guides').length === 0, null, { timeout: 600 });
     await context.close();
   }
 });
@@ -376,7 +385,7 @@ test('when the arrival ends, the sheet does not change its look: text nothing wa
     // everything drawn, the class still on
     await page.waitForFunction(() => document.documentElement.classList.contains('intro') && document.getAnimations().filter(a => a.animationName && a.animationName !== 'hold' && a.playState !== 'finished' && a.effect.getComputedTiming().iterations !== Infinity).length === 0, null, { timeout: 8000 });
     await page.waitForTimeout(300);
-    // the text no drawing lies on (the drawn parts fade off the real ones, tested above): it was
+    // the text no drawing lies on (the drawn parts: the next test): it was
     // held a little soft in the layer the sheet turned in, and sharpened as the arrival ended
     const TEXT = ['.role', '.lede', '.site-photo figcaption'];
     const shots = async () => Promise.all(TEXT.map(s => page.locator(s).screenshot()));
@@ -406,6 +415,56 @@ test('when the arrival ends, the sheet does not change its look: text nothing wa
       assert.ok(d.max <= 95, `${s} keeps its look at ${viewport.width} (edges off by ${d.max} of 255)`);
     }
     await context.close();
+  }
+});
+
+test('when the arrival ends, the drawn lines and letters are already what stays: nothing on them changes', async () => {
+  // the pens lie on the device pixels the real borders are painted on, as wide as those are
+  // painted (whole device pixels); the drawn name stays. A Windows laptop at 125 % and a phone
+  // (whose text has no colour fringes) get a browser at their pixel density, which lays out in
+  // device pixels as theirs do; an emulated density does not.
+  const SCREENS = [{ width: 1920, height: 1080 }, { width: 1440, height: 900 }, { width: 2560, height: 1080 },
+    { width: 1440, height: 900, scale: 1.25 }, { width: 412, height: 892, scale: 2.625, phone: true }];
+  for (const viewport of SCREENS) {
+    const own = viewport.scale && await chromium.launch({ args: [`--force-device-scale-factor=${viewport.scale}`, `--window-size=${viewport.width},${viewport.height}`, ...(viewport.phone ? ['--disable-lcd-text'] : [])] });
+    const context = own ? await own.newContext({ viewport: null }) : await browser.newContext({ viewport });
+    await context.addInitScript(HOLD);
+    const page = await context.newPage();
+    await page.goto(BASE + '/', { waitUntil: 'load' });
+    await page.waitForFunction(() => document.documentElement.classList.contains('intro') && document.getAnimations().filter(a => a.animationName && a.animationName !== 'hold' && a.playState !== 'finished' && a.effect.getComputedTiming().iterations !== Infinity).length === 0, null, { timeout: 8000 });
+    await page.waitForTimeout(300);
+    // each part with a little paper round it; the terminal by its frame's top, which its typing
+    // (it starts as the arrival ends) leaves alone
+    const clips = await page.evaluate(() => ['.name', '.titleblock', '.site-photo .photo', '.act-main[data-pen]', '.term'].map(s => {
+      const r = document.querySelector(s).getBoundingClientRect();
+      const h = s === '.term' ? document.querySelector('.term-head').getBoundingClientRect().bottom - r.top : r.height;
+      return { s, clip: { x: Math.floor(r.left) - 3, y: Math.floor(r.top) - 3, width: Math.ceil(r.width) + 6, height: Math.ceil(h) + 6 } };
+    }));
+    const shots = () => Promise.all(clips.map(({ clip }) => page.screenshot({ clip })));
+    const held = await shots();
+    await page.evaluate(() => { for (const a of document.getAnimations()) if (a.animationName === 'hold') a.finish(); });
+    await page.waitForFunction(() => !document.documentElement.classList.contains('intro'));
+    await page.waitForTimeout(600);
+    const ended = await shots();
+    for (const [i, { s }] of clips.entries()) {
+      const d = await page.evaluate(async ([a, b]) => {
+        const px = async src => {
+          const img = await createImageBitmap(await (await fetch(`data:image/png;base64,${src}`)).blob());
+          const c = new OffscreenCanvas(img.width, img.height).getContext('2d');
+          c.drawImage(img, 0, 0);
+          return c.getImageData(0, 0, img.width, img.height).data;
+        };
+        const [x, y] = [await px(a), await px(b)];
+        let max = 0;
+        for (let k = 0; k < x.length; k++) max = Math.max(max, Math.abs(x[k] - y[k]));
+        return max;
+      }, [held[i].toString('base64'), ended[i].toString('base64')]);
+      // a line half a pixel off, a device pixel wider, or a letter in another raster changes its
+      // edges by 90 and more; what is left is anti-aliasing (a corner, a hair of phase)
+      assert.ok(d <= 75, `${s} unchanged at ${viewport.width}x${viewport.scale ?? 1} (off by ${d} of 255)`);
+    }
+    await context.close();
+    await own?.close();
   }
 });
 
@@ -668,12 +727,23 @@ test('the drawn letters lie exactly on the real ones', async () => {
   }
 });
 
-test('once arrived the drawing is gone and the name is plain text again', async () => {
+test('once arrived the drawn name stands for the text, which readers and copying still get, until the width changes or it is printed', async () => {
   const { context, page } = await open('/');
   await settle(page);
-  assert.equal(await page.locator('.name .glyphs').count(), 0);
-  assert.equal(await page.locator('.name').evaluate(n => getComputedStyle(n.querySelector('span')).color), 'rgb(43, 39, 102)');
+  assert.equal(await page.locator('.name .glyphs').count(), 2);
+  assert.equal(await page.locator('.name').evaluate(n => getComputedStyle(n.querySelector('span')).color), 'rgba(0, 0, 0, 0)');
   assert.equal((await page.locator('h1.name').textContent()).replace(/\s+/g, ' ').trim(), 'Ezra Hulsman');
+  // printed, the text is printed
+  await page.emulateMedia({ media: 'print' });
+  const printed = await page.evaluate(() => [getComputedStyle(document.querySelector('.name .glyphs')).display, getComputedStyle(document.querySelector('.name span')).color]);
+  assert.equal(printed[0], 'none');
+  assert.notEqual(printed[1], 'rgba(0, 0, 0, 0)', 'the text prints');
+  await page.emulateMedia({ media: null });
+  // another width sets the text anew, where the drawing would lie wrong: the text takes over
+  await page.setViewportSize({ width: 1200, height: 900 });
+  await page.waitForFunction(() => document.querySelectorAll('.name .glyphs').length === 0, null, { timeout: 1000 });
+  // (the ink eases back from the print's black)
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('.name span')).color === 'rgb(43, 39, 102)', null, { timeout: 1500 });
   await context.close();
 });
 
@@ -796,7 +866,8 @@ test('reloaded at the top, it plays again, letters and boxes drawn anew', async 
   await page.waitForSelector('.name .glyphs', { state: 'attached', timeout: 3000 });
   assert.ok(await page.locator('.pens').count() > 0, 'the boxes are drawn again');
   await settle(page);
-  assert.equal(await page.locator('.name .glyphs').count(), 0);
+  assert.equal(await page.locator('.pens').count(), 0);
+  assert.equal(await page.locator('.name .glyphs').count(), 2, 'one drawn name, its two lines');
   await context.close();
 });
 

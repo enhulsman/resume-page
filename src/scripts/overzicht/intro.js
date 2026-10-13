@@ -23,7 +23,8 @@ const playing = html.classList.contains('intro');
 // blinking cursor, are the page's own), and the drawn parts added to it below
 const finite = a => a.animationName && a.effect?.getComputedTiming().iterations !== Infinity;
 // in the arrival's own clock (ms); the boxes' pens are in the markup (data-pen), the text's
-// sweeps in overzicht.css. The real name and borders need no time: they show when it is over.
+// sweeps in overzicht.css. The real borders need no time: they show when it is over (the drawn
+// name stays as the name).
 const GUIDES_LATEST = 1800, LETTERS_AT = 550, STAGGER = 60, TRIP_FROM = 1000, DIM_AT = 1950;
 
 // The arrival's clock: the tilt's start, its first frame (read in start(), once the tilt has
@@ -161,18 +162,25 @@ function drawLetters(data) {
 const CELLS_AT = 1600, CELL_STAGGER = 30, CELL_FOR = 200, PENS_LATEST = 1200;
 
 // on a box's border, or for a cell of a collapsed table on its edge: the cells there share
-// their borders, which lie across the line between them (drawn inside each, they doubled)
-function pen(r, cs, shared = false) {
-  const w = ['Top', 'Right', 'Bottom', 'Left'].map(s => parseFloat(cs[`border${s}Width`]) || 0);
-  // a shared border lies on the line, half a device pixel past it when it is an odd number wide
-  const on = n => (n * devicePixelRatio % 2) / 2 / devicePixelRatio;
-  const [t, rt, b, l] = shared ? [r.top + on(w[0]), r.right + on(w[1]), r.bottom + on(w[2]), r.left + on(w[3])]
-    : [r.top + w[0] / 2, r.right - w[1] / 2, r.bottom - w[2] / 2, r.left + w[3] / 2];
-  const f = n => n.toFixed(2);
+// their borders, which lie across the line between them (drawn inside each, they doubled). On
+// the device pixels the browser paints the border on, and as wide: it rounds a box's edges to
+// whole device pixels, the width down to whole ones (at least one), and a shared border's start.
+// r: the box in the page; o: where the svg's own origin lands, which is rounded the same way.
+function pen(r, cs, o, shared = false) {
+  const dpr = devicePixelRatio;
+  // (a hair over, as an edge on a half device pixel reads back a hair under it)
+  const w = ['Top', 'Right', 'Bottom', 'Left'].map(s => parseFloat(cs[`border${s}Width`]) || 0)
+    .map(n => n && Math.max(1, Math.floor(n * dpr + .001)) / dpr);
+  const snap = n => Math.round(n * dpr + .001) / dpr;
+  // the middle of the border on an edge: inside the box from its start (1) or its end (-1)
+  const mid = (e, n, side) => shared ? snap(e - n / 2) + n / 2 : snap(e) + side * n / 2;
+  const [t, rt, b, l] = [mid(r.top, w[0], 1) - o.y, mid(r.right, w[1], -1) - o.x, mid(r.bottom, w[2], -1) - o.y, mid(r.left, w[3], 1) - o.x];
+  const [x0, x1, y0, y1] = [snap(r.left) - o.x, snap(r.right) - o.x, snap(r.top) - o.y, snap(r.bottom) - o.y];
+  const f = n => +n.toFixed(3);
   const d = w.every(Boolean) ? `M${f(l)} ${f(t)}H${f(rt)}V${f(b)}H${f(l)}Z`
-    : [w[0] && `M${f(r.left)} ${f(t)}H${f(r.right)}`, w[1] && `M${f(rt)} ${f(r.top)}V${f(r.bottom)}`,
-       w[2] && `M${f(r.right)} ${f(b)}H${f(r.left)}`, w[3] && `M${f(l)} ${f(r.bottom)}V${f(r.top)}`].filter(Boolean).join('');
-  return d && { d, w: Math.max(...w) };
+    : [w[0] && `M${f(x0)} ${f(t)}H${f(x1)}`, w[1] && `M${f(rt)} ${f(y0)}V${f(y1)}`,
+       w[2] && `M${f(x1)} ${f(b)}H${f(x0)}`, w[3] && `M${f(l)} ${f(y1)}V${f(y0)}`].filter(Boolean).join('');
+  return d && { d, w: +Math.max(...w).toFixed(4) };
 }
 
 function penBoxes() {
@@ -196,12 +204,12 @@ function penBoxes() {
   svg.setAttribute('height', sheet.offsetHeight);
   sheet.append(svg);
   const strokes = square(() => {
-    const sb = sheet.getBoundingClientRect();
+    const sb = svg.getBoundingClientRect();
+    const o = { x: Math.round(sb.left * devicePixelRatio + .001) / devicePixelRatio, y: Math.round(sb.top * devicePixelRatio + .001) / devicePixelRatio };
     return jobs.map(([el, n, start, dur]) => {
-      const r = el.getBoundingClientRect();
       const cs = getComputedStyle(el);
       const shared = cs.display === 'table-cell' && getComputedStyle(el.closest('table')).borderCollapse === 'collapse';
-      const p = pen({ top: r.top - sb.top, right: r.right - sb.left, bottom: r.bottom - sb.top, left: r.left - sb.left }, cs, shared);
+      const p = pen(el.getBoundingClientRect(), cs, o, shared);
       return p && { ...p, n, start, dur };
     }).filter(Boolean);
   });
@@ -210,6 +218,8 @@ function penBoxes() {
     p.setAttribute('d', d);
     p.setAttribute('pathLength', 1);
     p.setAttribute('stroke-width', w);
+    // a box's outline closes where it began: a square end fills that corner as a turn would
+    if (d.endsWith('Z')) p.setAttribute('stroke-linecap', 'square');
     if (n != null) p.dataset.for = n;
     p.style.setProperty('--at', `${start}ms`);
     p.style.setProperty('--for', `${dur}ms`);
@@ -274,11 +284,15 @@ function trip(target) {
 }
 
 // The drawing goes, whoever ended the arrival (this script, or the layout head's backstop). It
-// lies on the real borders and name, which show as the class goes, so it fades off them rather
-// than being cut; after a resize it lies wrong, and goes at once.
+// lies on the real borders, which show as the class goes, so it fades off them rather than
+// being cut; after a resize it lies wrong, and goes at once. The finished letters stay as the
+// name (overzicht.css hides the text under them): the browser's own raster of the same shapes
+// differs by a hair, which showed as the name settling a moment after it had.
+const finished = s => s.getAnimations({ subtree: true }).every(a => a.playState === 'finished');
 function clear(e) {
   for (const s of document.querySelectorAll('.glyphs, .pens, .name-guides')) {
     if (e?.type === 'resize') { s.remove(); continue; }
+    if (s.matches('.glyphs') && finished(s)) continue;
     s.classList.add('leaving');
     setTimeout(() => s.remove(), 300);
   }
@@ -365,6 +379,12 @@ if (playing) {
   document.body.getAnimations().find(a => a.animationName === 'tilt')?.finished.then(() => html.classList.add('square'), () => {});
   INPUTS.forEach(t => addEventListener(t, hurry, { capture: true, passive: true }));
   addEventListener('resize', resized);
+  // a new width sets the name anew, where the drawn one would lie wrong: the text takes over
+  addEventListener('resize', function letGo() {
+    if (innerWidth === width0) return;
+    removeEventListener('resize', letGo);
+    for (const s of document.querySelectorAll('.name .glyphs')) s.remove();
+  });
   // what the visitor did before this script had loaded (the layout's head kept it)
   const early = window.ovzEarly;
   if (early) {
