@@ -1,7 +1,7 @@
 // ANNA's stack (/hero-lab?lab=1): four glass panes over one flame. Scrolling in pulls the block
 // apart, the level being read slides out and sharpens, and a drag (or the buttons) turns it.
 // The numbers live in anna-model.js; this file reads the page and moves the panes.
-import { paneFor, redraw, looping } from './hero.js';
+import { paneFor, redrawPane, looping } from './hero.js';
 import { paneTarget, gapShare, turnBy, TURN } from './anna-model.js';
 
 const section = document.querySelector('.anna-x');
@@ -50,14 +50,17 @@ if (section) {
       const x = -0.24 * S * c.slide, y = (i - 1.5) * gap;
       p.el.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotateX(${turn.rx.toFixed(2)}deg) rotateZ(${turn.rz.toFixed(2)}deg)`;
       const g = paneFor(p.el);
-      if (g) {
+      // hand the pane its new light only when it changed: a settled stack costs nothing
+      const was = c.drawn;
+      if (g && (!was || Math.abs(was.distance - c.distance) + Math.abs(was.tongue - c.tongue) + Math.abs(was.halo - c.halo) > 0.002)) {
+        c.drawn = { distance: c.distance, tongue: c.tongue, halo: c.halo };
         g.distance = c.distance;
         const tune = structuredClone(p.conf.tune);
         tune[0].set.opacity = c.halo; tune[2].set.opacity = c.tongue;
         g.tune = tune;
+        if (!looping()) redrawPane(g);
       }
     });
-    if (!looping()) redraw();
     if (live) kick();
   }
 

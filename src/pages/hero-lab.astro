@@ -8,6 +8,7 @@
 import { glassCards, benched, h2Card, annaExploded, type GlassCard, type AnnaPane } from "../config/glass.ts";
 import { annaLead } from "../config/home";
 import site from "../config/site";
+import Terminal from "../components/overzicht/Terminal.astro";
 
 const role = `${site.role} at ${site.company}.`;
 const intro = "I\u00a0build ANNA, an AI assistant in Microsoft Teams that does the admin no one should spend their day on.";
@@ -37,6 +38,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       h.dataset.cards = q.get('cards') === '5' ? '5' : '4';
       h.dataset.look = q.get('look') === 'before' ? 'before' : 'now';
       if (q.get('lab') === '1') h.dataset.lab = '';
+      h.dataset.name = q.get('name') === 'glass' ? 'glass' : 'plain';
     </script>
   </head>
   <body>
@@ -52,7 +54,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       <!-- H3: the name, and the work as four lights -->
       <section class="hero h3" aria-labelledby="name-h3">
         <div class="top">
-          <h1 id="name-h3" class="name">Ezra<br />Hulsman</h1>
+          <h1 id="name-h3" class="name">Ezra<br />Hulsman<span class="glass-card name-pane" aria-hidden="true" data-light="0" data-base="[238,234,227]" data-tune='[{"set":{"opacity":0}},{"set":{"opacity":0}},{"set":{"opacity":0}}]' data-distance="0" data-quiet="off"><canvas></canvas></span></h1>
           <p class="intro">{role} {intro}</p>
         </div>
         <ul class="cards" aria-label="Projects">
@@ -115,18 +117,35 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
           ))}
         </div>
       </section>
+
+      <!-- lab only: the terminal as a clean frosted glass window over a soft glow of the hero's four
+           colours; the hero's panes reflect, upside down and faint, along its top inside edge -->
+      <section class="term-lab" aria-label="Terminal">
+        <div class="term-glow" aria-hidden="true"></div>
+        <div class="term-window">
+          <div class="term-reflect" aria-hidden="true">
+            {glassCards.map(c => (
+              <span class="glass-card mini" data-light={c.light} data-base={JSON.stringify(c.base)} data-tune={c.tune && JSON.stringify(c.tune)} data-distance={Math.max(1, c.distance)} data-wash={JSON.stringify(c.wash)} data-quiet="off" style={`--base: ${rgb(c)}`}><canvas></canvas></span>
+            ))}
+          </div>
+          <div class="term-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="term-title">ezra@hulsman: ~</span></div>
+          <Terminal />
+        </div>
+      </section>
     </main>
 
     <nav class="lab" aria-label="Variant">
       <span class="seg"><a href="?v=h3" data-key="v" data-val="h3">H3</a><a href="?v=h2" data-key="v" data-val="h2">H2</a></span>
       <span class="seg"><a href="?cards=4" data-key="cards" data-val="4">4</a><a href="?cards=5" data-key="cards" data-val="5">5</a></span>
       <span class="seg"><a href="?look=now" data-key="look" data-val="now" title="the cards now">now</a><a href="?look=before" data-key="look" data-val="before" title="before review round 3: no wash, upright flame, darker Henk">before</a></span>
+      <span class="seg"><a href="?name=plain" data-key="name" data-val="plain" title="the name as plain text">name</a><a href="?name=glass" data-key="name" data-val="glass" title="the name arrives behind glass (reload to replay)">glass</a></span>
       <label class="dial">distance <input id="blur" type="range" min="0" max="1.5" step="0.05" value="1" /> <output id="blur-out" title="back to each card's own">per card</output></label>
     </nav>
 
     <script>
       import "../scripts/glass/hero.js";
       import "../scripts/glass/anna.js";
+      import "../scripts/glass/words.js";
     </script>
   </body>
 </html>
@@ -251,7 +270,8 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   .lab .seg { display: flex; gap: 0; padding-right: 6px; border-right: 1px solid rgb(255 255 255 / 0.15); }
   html[data-v="h3"] .lab a[data-key="v"][data-val="h3"], html[data-v="h2"] .lab a[data-key="v"][data-val="h2"],
   html[data-cards="4"] .lab a[data-key="cards"][data-val="4"], html[data-cards="5"] .lab a[data-key="cards"][data-val="5"],
-  html[data-look="now"] .lab a[data-key="look"][data-val="now"], html[data-look="before"] .lab a[data-key="look"][data-val="before"] { background: #EEEAE3; color: #111; }
+  html[data-look="now"] .lab a[data-key="look"][data-val="now"], html[data-look="before"] .lab a[data-key="look"][data-val="before"],
+  html[data-name="plain"] .lab a[data-key="name"][data-val="plain"], html[data-name="glass"] .lab a[data-key="name"][data-val="glass"] { background: #EEEAE3; color: #111; }
 
   /* lab: four or five cards; five keep the original 296 x 360 card */
   html[data-cards="4"] .cards li.bench { display: none; }
@@ -292,6 +312,70 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   .turn button:hover { background: rgb(17 17 16 / 0.13); }
   .turn button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   .turn span { margin-left: 6px; }
+
+  /* ---- the name behind glass (lab, ?name=glass) ---- */
+  #name-h3 { position: relative; }
+  .h3 .glass-card.name-pane { position: absolute; inset: -8% -4%; width: auto; height: auto; aspect-ratio: auto; display: none; border-radius: 0; box-shadow: none; transition: none; z-index: 1; }
+  .glass-card.name-pane::after { display: none; }
+  html[data-name="glass"] .h3 .glass-card.name-pane { display: block; }
+  #name-h3.behind { color: rgb(17 17 16 / var(--name-show, 0)); }
+
+  /* ---- the terminal as a glass window (lab) ---- */
+  html:not([data-lab]) .term-lab { display: none; }
+  .term-lab { position: relative; padding: 10svh var(--gutter) 24svh; display: grid; justify-items: center; }
+  /* what the window frosts: the hero's four lights as one soft field behind it */
+  .term-glow {
+    position: absolute; left: 50%; top: 50%; width: min(86vw, 900px); height: 380px; transform: translate(-50%, -54%);
+    background:
+      radial-gradient(closest-side at 22% 40%, rgb(236 120 70 / 0.55), transparent),
+      radial-gradient(closest-side at 46% 62%, rgb(110 150 214 / 0.45), transparent),
+      radial-gradient(closest-side at 70% 38%, rgb(240 150 120 / 0.45), transparent),
+      radial-gradient(closest-side at 86% 64%, rgb(150 190 110 / 0.42), transparent);
+    filter: blur(28px);
+  }
+  .term-window {
+    position: relative; width: min(100%, 780px); height: 460px; display: flex; flex-direction: column; overflow: hidden;
+    border-radius: 18px;
+    background: rgb(250 248 244 / 0.42);
+    -webkit-backdrop-filter: blur(26px) saturate(1.5); backdrop-filter: blur(26px) saturate(1.5);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.45),
+      inset 0 -1px 0 rgb(80 60 40 / 0.08),
+      0 1px 2px rgb(70 50 30 / 0.08), 0 30px 60px -28px rgb(70 50 30 / 0.45);
+  }
+  /* a sheen across the glass, top left to bottom right */
+  .term-window::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+    background: linear-gradient(115deg, rgb(255 255 255 / 0.32), rgb(255 255 255 / 0) 34%, rgb(255 255 255 / 0) 70%, rgb(255 255 255 / 0.12));
+  }
+  /* the hero's panes, reflected: mirrored top to bottom, small, soft, fading down */
+  .term-reflect {
+    position: absolute; left: 4%; right: 4%; top: 0; height: 120px; z-index: 0; pointer-events: none;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    transform: scaleY(-1); opacity: 0.22; filter: blur(2.5px) saturate(1.2);
+    -webkit-mask-image: linear-gradient(to top, black, transparent 85%); mask-image: linear-gradient(to top, black, transparent 85%);
+  }
+  .term-reflect .glass-card.mini { position: relative; display: block; width: auto; height: 100%; aspect-ratio: auto; border-radius: 10px; box-shadow: none; transition: none; }
+  .term-reflect .glass-card.mini::after { display: none; }
+  .term-bar { position: relative; z-index: 3; display: flex; align-items: center; gap: 14px; height: 40px; padding: 0 16px; flex: none; border-bottom: 1px solid rgb(17 17 16 / 0.06); }
+  .term-bar .dots { display: flex; gap: 7px; }
+  .term-bar .dots i { width: 11px; height: 11px; border-radius: 50%; background: rgb(17 17 16 / 0.14); box-shadow: inset 0 0.5px 0 rgb(255 255 255 / 0.5); }
+  .term-title { flex: 1; text-align: center; margin-right: 47px; font-size: 13px; font-weight: 500; color: rgb(17 17 16 / 0.55); }
+  .term-window .term { position: relative; z-index: 3; flex: 1; min-height: 0; }
+  .term-window .term-head { display: none; }
+  .term-window .term-body { height: 100%; padding: 16px 22px 20px; overflow-y: auto; overflow-x: hidden; font: 14px/1.6 ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; color: #3a3632; outline: none; scrollbar-width: thin; scrollbar-color: rgb(17 17 16 / 0.18) transparent; cursor: text; }
+  .term-window .term-body .h-1 { height: 4px; }
+  .term-window .terminal-input-line, .term-window .terminal-output-line { white-space: pre-wrap; overflow-wrap: break-word; max-width: 100%; }
+  .term-window .terminal-prompt { white-space: nowrap; }
+  .term-window .terminal-user, .term-window .terminal-separator, .term-window .terminal-path, .term-window .terminal-dollar { color: #B4432B; }
+  .term-window .terminal-cmd { color: var(--ink); }
+  .term-window .terminal-accent { color: var(--ink); font-weight: 700; }
+  .term-window .terminal-dim { color: #8a8278; }
+  .term-window .terminal-error { color: #B4432B; }
+  .term-window .terminal-cursor { display: inline-block; min-width: 8px; height: 1.1em; vertical-align: text-bottom; background: var(--ink); color: var(--stone); animation: term-blink 1s steps(1) infinite; }
+  .term-window .terminal-cursor.typing { animation: none; }
+  @keyframes term-blink { 50% { opacity: 0; } }
+  .term-window:focus-within { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.6), 0 0 0 2px rgb(17 17 16 / 0.18), 0 30px 60px -28px rgb(70 50 30 / 0.45); }
 
   @media (max-width: 760px) {
     .anna-x { grid-template-columns: 1fr; }
