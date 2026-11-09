@@ -5,7 +5,7 @@
 // ?cards=5 adds Finance Bot as 05; ?look=before shows the cards before review round 3.
 // ?blur=<0..1.5> sets one distance for every card (0 hard edges, 1 the study's softness);
 // without it each card uses its own. Clicking the value goes back to per card.
-// ?anna=turn|journey|stack picks ANNA's staging (lab only).
+// ?anna=turn|journey|stack picks ANNA's staging (lab only); ?name=glare sweeps a glare across the name.
 import { glassCards, benched, h2Card, annaExploded, type GlassCard, type AnnaPane } from "../config/glass.ts";
 import { annaLead, annaLevels } from "../config/home";
 import { LABEL_Y, TURN_PANE, JOURNEY_PANE } from "../scripts/glass/anna-scene.js";
@@ -40,7 +40,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       h.dataset.cards = q.get('cards') === '5' ? '5' : '4';
       h.dataset.look = q.get('look') === 'before' ? 'before' : 'now';
       if (q.get('lab') === '1') h.dataset.lab = '';
-      h.dataset.name = q.get('name') === 'glass' ? 'glass' : 'plain';
+      h.dataset.name = q.get('name') === 'glare' ? 'glare' : 'plain';
       h.dataset.anna = ['journey', 'stack'].includes(q.get('anna')) ? q.get('anna') : 'turn';
     </script>
   </head>
@@ -57,7 +57,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       <!-- H3: the name, and the work as four lights -->
       <section class="hero h3" aria-labelledby="name-h3">
         <div class="top">
-          <h1 id="name-h3" class="name">Ezra<br />Hulsman<span class="glass-card name-pane" aria-hidden="true" data-light="0" data-base="[238,234,227]" data-tune='[{"set":{"opacity":0}},{"set":{"opacity":0}},{"set":{"opacity":0}}]' data-distance="0" data-quiet="off"><canvas></canvas></span></h1>
+          <h1 id="name-h3" class="name" data-glare={"Ezra\nHulsman"}>Ezra<br />Hulsman</h1>
           <p class="intro">{role} {intro}</p>
         </div>
         <ul class="cards" aria-label="Projects">
@@ -188,7 +188,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       <span class="seg"><a href="?v=h3" data-key="v" data-val="h3">H3</a><a href="?v=h2" data-key="v" data-val="h2">H2</a></span>
       <span class="seg"><a href="?cards=4" data-key="cards" data-val="4">4</a><a href="?cards=5" data-key="cards" data-val="5">5</a></span>
       <span class="seg"><a href="?look=now" data-key="look" data-val="now" title="the cards now">now</a><a href="?look=before" data-key="look" data-val="before" title="before review round 3: no wash, upright flame, darker Henk">before</a></span>
-      <span class="seg"><a href="?name=plain" data-key="name" data-val="plain" title="the name as plain text">name</a><a href="?name=glass" data-key="name" data-val="glass" title="the name arrives behind glass (reload to replay)">glass</a></span>
+      <span class="seg"><a href="?name=plain" data-key="name" data-val="plain" title="the name as plain text">name</a><a href="?name=glare" data-key="name" data-val="glare" title="a glare sweeps across the name (hover it to replay)">glare</a></span>
       <span class="seg"><a href="?anna=turn" data-key="anna" data-val="turn" title="ANNA: the card, turned">turn</a><a href="?anna=journey" data-key="anna" data-val="journey" title="ANNA: the question goes down and comes back">journey</a><a href="?anna=stack" data-key="anna" data-val="stack" title="ANNA: the exploded stack">stack</a></span>
       <label class="dial">distance <input id="blur" type="range" min="0" max="1.5" step="0.05" value="1" /> <output id="blur-out" title="back to each card's own">per card</output></label>
     </nav>
@@ -198,7 +198,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       import "../scripts/glass/anna.js";
       import "../scripts/glass/anna-turn.js";
       import "../scripts/glass/anna-journey.js";
-      import "../scripts/glass/words.js";
+      import "../scripts/glass/glare.js";
     </script>
   </body>
 </html>
@@ -324,7 +324,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   html[data-v="h3"] .lab a[data-key="v"][data-val="h3"], html[data-v="h2"] .lab a[data-key="v"][data-val="h2"],
   html[data-cards="4"] .lab a[data-key="cards"][data-val="4"], html[data-cards="5"] .lab a[data-key="cards"][data-val="5"],
   html[data-look="now"] .lab a[data-key="look"][data-val="now"], html[data-look="before"] .lab a[data-key="look"][data-val="before"],
-  html[data-name="plain"] .lab a[data-key="name"][data-val="plain"], html[data-name="glass"] .lab a[data-key="name"][data-val="glass"],
+  html[data-name="plain"] .lab a[data-key="name"][data-val="plain"], html[data-name="glare"] .lab a[data-key="name"][data-val="glare"],
   html[data-anna="turn"] .lab a[data-key="anna"][data-val="turn"], html[data-anna="journey"] .lab a[data-key="anna"][data-val="journey"], html[data-anna="stack"] .lab a[data-key="anna"][data-val="stack"] { background: #EEEAE3; color: #111; }
 
   /* lab: four or five cards; five keep the original 296 x 360 card */
@@ -367,12 +367,22 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   .turn button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   .turn span { margin-left: 6px; }
 
-  /* ---- the name behind glass (lab, ?name=glass) ---- */
+  /* ---- a glare across the name (lab, ?name=glare): light on black lacquer, one sweep on arrival
+     and again when the pointer comes onto the name; ?glare=<0..1> holds one moment ---- */
   #name-h3 { position: relative; }
-  .h3 .glass-card.name-pane { position: absolute; inset: -8% -4%; width: auto; height: auto; aspect-ratio: auto; display: none; border-radius: 0; box-shadow: none; transition: none; z-index: 1; }
-  .glass-card.name-pane::after { display: none; }
-  html[data-name="glass"] .h3 .glass-card.name-pane { display: block; }
-  #name-h3.behind { color: rgb(17 17 16 / var(--name-show, 0)); }
+  #name-h3::after {
+    /* the name again, as a pseudo-element so its text stays out of the page's text and the accessibility tree */
+    content: attr(data-glare) / ""; white-space: pre;
+    position: absolute; inset: 0; display: none; pointer-events: none; color: transparent;
+    background:
+      linear-gradient(104deg, transparent 41%, rgb(255 250 242 / 0.28) 46%, rgb(255 250 242 / 0.34) 49%, transparent 54%),
+      linear-gradient(104deg, transparent 55.2%, rgb(255 255 255 / 0.85) 56%, rgb(255 255 255 / 0.85) 56.6%, transparent 57.6%);
+    background-size: 300% 100%; background-repeat: no-repeat;
+    background-position: var(--glare-x, 100%) 0;
+    -webkit-background-clip: text; background-clip: text;
+  }
+  html[data-name="glare"] #name-h3::after { display: block; }
+  @media (prefers-reduced-motion: reduce) { html[data-name="glare"] #name-h3::after { display: none; } }
 
   /* ---- ANNA, staging A: the card, turned (lab, ?anna=turn) ---- */
   html:not([data-lab]) .anna-turn, html:not([data-anna="turn"]) .anna-turn { display: none; }
