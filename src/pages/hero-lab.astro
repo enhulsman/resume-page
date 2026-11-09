@@ -5,8 +5,10 @@
 // ?cards=5 adds Finance Bot as 05; ?look=before shows the cards before review round 3.
 // ?blur=<0..1.5> sets one distance for every card (0 hard edges, 1 the study's softness);
 // without it each card uses its own. Clicking the value goes back to per card.
+// ?anna=turn|journey|stack picks ANNA's staging (lab only).
 import { glassCards, benched, h2Card, annaExploded, type GlassCard, type AnnaPane } from "../config/glass.ts";
-import { annaLead } from "../config/home";
+import { annaLead, annaLevels } from "../config/home";
+import { LABEL_Y, TURN_PANE, JOURNEY_PANE } from "../scripts/glass/anna-scene.js";
 import site from "../config/site";
 import Terminal from "../components/overzicht/Terminal.astro";
 
@@ -39,6 +41,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       h.dataset.look = q.get('look') === 'before' ? 'before' : 'now';
       if (q.get('lab') === '1') h.dataset.lab = '';
       h.dataset.name = q.get('name') === 'glass' ? 'glass' : 'plain';
+      h.dataset.anna = ['journey', 'stack'].includes(q.get('anna')) ? q.get('anna') : 'turn';
     </script>
   </head>
   <body>
@@ -92,7 +95,54 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
         </a>
       </section>
 
-      <!-- lab only (task 2.3): ANNA as four glass panes over one flame. Scrolling in pulls the
+      <!-- lab only, staging A (?anna=turn): the ANNA card, turned. Face-on its four level lights are
+           the one flame; scrolling or a sideways drag turns it and the levels come apart by depth,
+           each one's copy beside its light. -->
+      <section class="anna-turn" aria-labelledby="anna-turn-h">
+        <div class="turn-stage">
+          <div class="turn-head">
+            <h2 id="anna-turn-h">ANNA</h2>
+            <p>{annaLead.text}.</p>
+            <a class="more" href={annaLead.href}>How ANNA is built <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="turn-scene">
+            <div class="turn-tilt">
+              <div class="glass-card turn-pane" data-light="0" data-base={JSON.stringify(glassCards[0].base)} data-quiet="off" style={`--base: ${rgb(glassCards[0])}; aspect-ratio: ${TURN_PANE.w} / ${TURN_PANE.h}`}>
+                <canvas aria-hidden="true"></canvas>
+                <span class="title" aria-hidden="true">ANNA</span>
+                <span class="readout" aria-hidden="true">{glassCards[0].readout}</span>
+                {LABEL_Y.map((y) => <i class="mark" aria-hidden="true" style={`top: ${(100 * y / TURN_PANE.h).toFixed(2)}%`}></i>)}
+              </div>
+            </div>
+            <ol class="levels">
+              {annaLevels.map((l, i) => (
+                <li style={`top: ${(100 * LABEL_Y[i] / TURN_PANE.h).toFixed(2)}%`}><h3>{l.name}</h3><p>{l.text}</p></li>
+              ))}
+            </ol>
+          </div>
+          <p class="turn-caption" aria-hidden="true"></p>
+        </div>
+      </section>
+
+      <!-- lab only, staging B (?anna=journey): one tall pane; reading down the levels sends the
+           question down, out along a connector and back up as one message. -->
+      <section class="anna-journey" aria-labelledby="anna-journey-h">
+        <div class="journey-stage">
+          <div class="glass-card journey-pane" aria-hidden="true" data-light="0" data-base={JSON.stringify(glassCards[0].base)} data-quiet="off" style={`--base: ${rgb(glassCards[0])}; aspect-ratio: ${JOURNEY_PANE.w} / ${JOURNEY_PANE.h}`}><canvas></canvas></div>
+        </div>
+        <div class="journey-steps">
+          <div class="step intro">
+            <h2 id="anna-journey-h">ANNA</h2>
+            <p>{annaLead.text}.</p>
+          </div>
+          {annaLevels.map((l, i) => (
+            <div class="step" data-step={i}><h3>{l.name}</h3><p>{l.text}</p></div>
+          ))}
+          <div class="step end"><a class="more" href={annaLead.href}>How ANNA is built <span aria-hidden="true">→</span></a></div>
+        </div>
+      </section>
+
+      <!-- lab only (?anna=stack, task 2.3): ANNA as four glass panes over one flame. Scrolling in pulls the
            block apart; the level being read slides out and sharpens; drag or the buttons turn it. -->
       <section class="anna-x" aria-labelledby="anna-h">
         <div class="anna-stage">
@@ -139,12 +189,15 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       <span class="seg"><a href="?cards=4" data-key="cards" data-val="4">4</a><a href="?cards=5" data-key="cards" data-val="5">5</a></span>
       <span class="seg"><a href="?look=now" data-key="look" data-val="now" title="the cards now">now</a><a href="?look=before" data-key="look" data-val="before" title="before review round 3: no wash, upright flame, darker Henk">before</a></span>
       <span class="seg"><a href="?name=plain" data-key="name" data-val="plain" title="the name as plain text">name</a><a href="?name=glass" data-key="name" data-val="glass" title="the name arrives behind glass (reload to replay)">glass</a></span>
+      <span class="seg"><a href="?anna=turn" data-key="anna" data-val="turn" title="ANNA: the card, turned">turn</a><a href="?anna=journey" data-key="anna" data-val="journey" title="ANNA: the question goes down and comes back">journey</a><a href="?anna=stack" data-key="anna" data-val="stack" title="ANNA: the exploded stack">stack</a></span>
       <label class="dial">distance <input id="blur" type="range" min="0" max="1.5" step="0.05" value="1" /> <output id="blur-out" title="back to each card's own">per card</output></label>
     </nav>
 
     <script>
       import "../scripts/glass/hero.js";
       import "../scripts/glass/anna.js";
+      import "../scripts/glass/anna-turn.js";
+      import "../scripts/glass/anna-journey.js";
       import "../scripts/glass/words.js";
     </script>
   </body>
@@ -271,7 +324,8 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   html[data-v="h3"] .lab a[data-key="v"][data-val="h3"], html[data-v="h2"] .lab a[data-key="v"][data-val="h2"],
   html[data-cards="4"] .lab a[data-key="cards"][data-val="4"], html[data-cards="5"] .lab a[data-key="cards"][data-val="5"],
   html[data-look="now"] .lab a[data-key="look"][data-val="now"], html[data-look="before"] .lab a[data-key="look"][data-val="before"],
-  html[data-name="plain"] .lab a[data-key="name"][data-val="plain"], html[data-name="glass"] .lab a[data-key="name"][data-val="glass"] { background: #EEEAE3; color: #111; }
+  html[data-name="plain"] .lab a[data-key="name"][data-val="plain"], html[data-name="glass"] .lab a[data-key="name"][data-val="glass"],
+  html[data-anna="turn"] .lab a[data-key="anna"][data-val="turn"], html[data-anna="journey"] .lab a[data-key="anna"][data-val="journey"], html[data-anna="stack"] .lab a[data-key="anna"][data-val="stack"] { background: #EEEAE3; color: #111; }
 
   /* lab: four or five cards; five keep the original 296 x 360 card */
   html[data-cards="4"] .cards li.bench { display: none; }
@@ -281,7 +335,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   html[data-look="before"] .glass-card .title { font-weight: 640; }
 
   /* ---- ANNA's section (lab only) ---- */
-  html:not([data-lab]) .anna-x { display: none; }
+  html:not([data-lab]) .anna-x, html:not([data-anna="stack"]) .anna-x { display: none; }
   .anna-x {
     display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
     column-gap: clamp(24px, 5vw, 96px); padding: 0 var(--gutter);
@@ -319,6 +373,52 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   .glass-card.name-pane::after { display: none; }
   html[data-name="glass"] .h3 .glass-card.name-pane { display: block; }
   #name-h3.behind { color: rgb(17 17 16 / var(--name-show, 0)); }
+
+  /* ---- ANNA, staging A: the card, turned (lab, ?anna=turn) ---- */
+  html:not([data-lab]) .anna-turn, html:not([data-anna="turn"]) .anna-turn { display: none; }
+  .anna-turn { height: 260svh; padding: 0 var(--gutter); }
+  .turn-stage {
+    position: sticky; top: 0; height: 100svh; display: grid; align-content: center;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); column-gap: clamp(24px, 5vw, 96px);
+  }
+  .turn-head { max-width: 30ch; }
+  .turn-head h2, .journey-steps h2 { margin: 0; font: 900 clamp(48px, 6.4vw, 104px)/0.9 "Archivo"; font-stretch: 88%; letter-spacing: -0.04em; }
+  .turn-head p, .journey-steps .intro p { margin: 0.8em 0 0; font-size: clamp(18px, 1.6vw, 23px); line-height: 1.34; color: var(--ink-2); text-wrap: pretty; }
+  .turn-head .more, .journey-steps .more { display: inline-block; margin-top: 1.2em; font-weight: 600; }
+  .turn-scene { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: clamp(20px, 2.6vw, 44px); }
+  .turn-tilt { perspective: 1600px; }
+  .turn-tilt { transform-style: preserve-3d; transform-origin: 50% 50%; }
+  .glass-card.turn-pane {
+    height: min(78svh, 600px); width: auto; border-radius: clamp(14px, 1.6vw, 22px);
+    touch-action: pan-y; cursor: grab; user-select: none; transition: none;
+  }
+  .glass-card.turn-pane.dragging { cursor: grabbing; }
+  .turn-pane .title { left: 7%; top: 5%; font-weight: 680; font-size: clamp(18px, 1.7vw, 24px); letter-spacing: -0.02em; }
+  .turn-pane .readout { left: 7%; bottom: 4.5%; font-weight: 480; font-size: clamp(13px, 1.15vw, 16px); }
+  .turn-pane .mark { position: absolute; left: 0; width: 1px; height: 0; pointer-events: none; }
+  .levels { position: relative; list-style: none; margin: 0; padding: 0; }
+  .levels li { position: absolute; left: 0; right: 0; transform: translateY(-50%); max-width: 34ch; opacity: 0; }
+  .levels h3 { margin: 0; font-weight: 700; font-size: clamp(17px, 1.5vw, 22px); letter-spacing: -0.02em; }
+  .levels p { margin: 0.3em 0 0; font-size: clamp(14px, 1.08vw, 16px); line-height: 1.38; color: var(--ink-2); text-wrap: pretty; }
+  /* phones: names beside the lights, the newest level's sentence under the card */
+  .turn-caption { display: none; }
+
+  /* ---- ANNA, staging B: the journey (lab, ?anna=journey) ---- */
+  html:not([data-lab]) .anna-journey, html:not([data-anna="journey"]) .anna-journey { display: none; }
+  .anna-journey {
+    display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    column-gap: clamp(24px, 5vw, 96px); padding: 0 var(--gutter);
+  }
+  .journey-steps { grid-column: 1; grid-row: 1; padding-bottom: 20svh; }
+  .journey-stage { grid-column: 2; grid-row: 1; position: sticky; top: 0; height: 100svh; display: grid; place-items: center; }
+  .glass-card.journey-pane { height: min(88svh, 760px); width: auto; border-radius: clamp(14px, 1.6vw, 22px); }
+  .journey-steps .step { min-height: 62svh; display: flex; flex-direction: column; justify-content: center; max-width: 34ch; }
+  .journey-steps .step.intro { min-height: 100svh; }
+  .journey-steps .step h3 { margin: 0; font-weight: 700; font-size: clamp(22px, 2.2vw, 32px); letter-spacing: -0.02em; }
+  .journey-steps .step[data-step] p { margin: 0.5em 0 0; font-size: clamp(16px, 1.3vw, 19px); line-height: 1.4; color: var(--ink-2); text-wrap: pretty; }
+  .journey-steps .step[data-step] { opacity: 0.38; transition: opacity 0.4s; }
+  .journey-steps .step[data-step].reading { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .journey-steps .step[data-step] { opacity: 1; transition: none; } }
 
   /* ---- the terminal as a glass window (lab) ---- */
   html:not([data-lab]) .term-lab { display: none; }
@@ -378,6 +478,21 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   .term-window:focus-within { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.6), 0 0 0 2px rgb(17 17 16 / 0.18), 0 30px 60px -28px rgb(70 50 30 / 0.45); }
 
   @media (max-width: 760px) {
+    .turn-stage { grid-template-columns: 1fr; align-content: start; row-gap: 18px; padding-top: 16px; }
+    .turn-head h2 { font-size: 44px; }
+    .turn-head p { font-size: 16px; margin-top: 0.5em; }
+    .turn-head .more { margin-top: 0.6em; }
+    .turn-scene { column-gap: 14px; }
+    .glass-card.turn-pane { height: min(54svh, 76vw); }
+    .levels h3 { font-size: 15px; }
+    .levels p { display: none; }
+    .turn-caption { display: block; margin: 0; min-height: 4.2em; font-size: 15px; line-height: 1.38; color: var(--ink-2); }
+    .anna-journey { grid-template-columns: 1fr; }
+    .journey-stage { grid-column: 1; grid-row: 1; height: 56svh; z-index: 2; background: var(--stone); }
+    .glass-card.journey-pane { height: 52svh; }
+    .journey-steps { grid-column: 1; grid-row: 2; }
+    .journey-steps .step { min-height: 34svh; }
+    .journey-steps .step.intro { min-height: 40svh; }
     .anna-x { grid-template-columns: 1fr; }
     .anna-stage { grid-column: 1; grid-row: 1; height: 54svh; z-index: 2; background: var(--stone); }
     .anna-steps { grid-column: 1; grid-row: 2; }

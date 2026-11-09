@@ -15,7 +15,7 @@ async function open(q = '', { width = 1440, height = 900, reducedMotion = 'no-pr
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   page.on('console', m => m.type() === 'error' && errors.push(m.text()));
-  await page.goto(`${BASE}/hero-lab?lab=1${q}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/hero-lab?lab=1&anna=stack${q}`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__glassReady === true && window.__anna);
   return { context, page, errors };
 }
@@ -56,7 +56,7 @@ test('scrolling in pulls the block apart; then each level, read in turn, slides 
   const apart = await scrollTo(page, 0.8, (s) => s.open > 0.95);
   const reading = [];
   for (let k = 0; k < 4; k++) {
-    await page.locator(`.step[data-step="${k}"]`).evaluate(el => el.scrollIntoView({ block: 'center' }));
+    await page.locator(`.anna-x .step[data-step="${k}"]`).evaluate(el => el.scrollIntoView({ block: 'center' }));
     reading.push(await until(page, (s, k) => s.active === k && s.slides[k] > 0.5 && s.distances.indexOf(Math.min(...s.distances)) === k, k));
   }
   await context.close();
@@ -99,7 +99,7 @@ test('reduced motion: the stack is apart from the start, nothing eases', async (
 test('phone: the stage stays pinned above the text and the level being read is the one below it', async () => {
   const { context, page, errors } = await open('&t=2.4', { width: 390, height: 844 });
   await scrollTo(page, 0.6, (s) => s.open > 0.95);
-  await page.locator('.step[data-step="2"]').evaluate(el => {
+  await page.locator('.anna-x .step[data-step="2"]').evaluate(el => {
     const stage = document.querySelector('.anna-stage').getBoundingClientRect();
     const r = el.getBoundingClientRect(), line = stage.bottom + (innerHeight - stage.bottom) / 2;
     scrollBy(0, (r.top + r.bottom) / 2 - line);
