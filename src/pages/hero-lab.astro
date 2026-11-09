@@ -3,7 +3,7 @@
 // stone. Not linked from anywhere and not indexed. ?v=h2 shows H2; ?t=<seconds> freezes the light;
 // ?blur=<0..1.5> sets one distance for every card (0 hard edges, 1 the study's softness);
 // without it each card uses its own. Clicking the value goes back to per card.
-import { glassCards, h2Card, type GlassCard } from "../config/glass.ts";
+import { glassCards, benched, h2Card, type GlassCard } from "../config/glass.ts";
 import site from "../config/site";
 
 const role = `${site.role} at ${site.company}.`;
@@ -28,7 +28,10 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
     <title>{site.name} (hero lab)</title>
     <link rel="preload" href="/fonts/Archivo.woff2" as="font" type="font/woff2" crossorigin />
     <script is:inline>
-      document.documentElement.dataset.v = new URLSearchParams(location.search).get('v') === 'h2' ? 'h2' : 'h3';
+      const q = new URLSearchParams(location.search), h = document.documentElement;
+      h.dataset.v = q.get('v') === 'h2' ? 'h2' : 'h3';
+      h.dataset.cards = q.get('cards') === '5' ? '5' : '4';
+      h.dataset.look = q.get('look') === 'before' ? 'before' : 'now';
     </script>
   </head>
   <body>
@@ -48,9 +51,9 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
           <p class="intro">{role} {intro}</p>
         </div>
         <ul class="cards" aria-label="Projects">
-          {glassCards.map((c, i) => (
-            <li>
-              <a class="glass-card" href={c.href} data-light={c.light} data-base={JSON.stringify(c.base)} data-tune={c.tune && JSON.stringify(c.tune)} data-distance={c.distance} data-wash={JSON.stringify(c.wash)} style={`--base: ${rgb(c)}`}>
+          {[...glassCards, ...benched].map((c, i) => (
+            <li class={i >= glassCards.length ? 'bench' : undefined}>
+              <a class="glass-card" href={c.href} data-light={c.light} data-base={JSON.stringify(c.base)} data-tune={c.tune && JSON.stringify(c.tune)} data-distance={c.distance} data-wash={JSON.stringify(c.wash)} data-tune-before={c.before?.tune && JSON.stringify(c.before.tune)} style={`--base: ${rgb(c)}`}>
                 <canvas aria-hidden="true"></canvas>
                 <span class="title">{c.title}</span>
                 <span class="idx" aria-hidden="true">{idx(i)}</span>
@@ -73,7 +76,7 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
             <a class="pill ghost" href="/resume">Résumé</a>
           </p>
         </div>
-        <a class="glass-card big" href={h2Card.href} data-light={h2Card.light} data-base={JSON.stringify(h2Card.base)} data-tune={h2Card.tune && JSON.stringify(h2Card.tune)} data-distance={h2Card.distance} data-wash={JSON.stringify(h2Card.wash)} style={`--base: ${rgb(h2Card)}`}>
+        <a class="glass-card big" href={h2Card.href} data-light={h2Card.light} data-base={JSON.stringify(h2Card.base)} data-tune={h2Card.tune && JSON.stringify(h2Card.tune)} data-distance={h2Card.distance} data-wash={JSON.stringify(h2Card.wash)} data-tune-before={h2Card.before?.tune && JSON.stringify(h2Card.before.tune)} style={`--base: ${rgb(h2Card)}`}>
           <canvas aria-hidden="true"></canvas>
           <span class="title">{h2Card.title}</span>
           <span class="idx" aria-hidden="true">01</span>
@@ -84,7 +87,9 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
     </main>
 
     <nav class="lab" aria-label="Variant">
-      <a href="?v=h3" data-for="h3">H3</a><a href="?v=h2" data-for="h2">H2</a>
+      <span class="seg"><a href="?v=h3" data-key="v" data-val="h3">H3</a><a href="?v=h2" data-key="v" data-val="h2">H2</a></span>
+      <span class="seg"><a href="?cards=4" data-key="cards" data-val="4">4</a><a href="?cards=5" data-key="cards" data-val="5">5</a></span>
+      <span class="seg"><a href="?look=now" data-key="look" data-val="now" title="the cards now">now</a><a href="?look=before" data-key="look" data-val="before" title="before review round 3: no wash, upright flame, darker Henk">before</a></span>
       <label class="dial">distance <input id="blur" type="range" min="0" max="1.5" step="0.05" value="1" /> <output id="blur-out" title="back to each card's own">per card</output></label>
     </nav>
 
@@ -209,7 +214,17 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
   .lab .dial { display: flex; align-items: center; gap: 8px; color: #ddd; padding: 0 12px 0 10px; }
   .lab .dial input { width: 140px; accent-color: #EEEAE3; }
   .lab .dial output { font-variant-numeric: tabular-nums; min-width: 7ch; cursor: pointer; }
-  html[data-v="h3"] .lab a[data-for="h3"], html[data-v="h2"] .lab a[data-for="h2"] { background: #EEEAE3; color: #111; }
+  .lab .seg { display: flex; gap: 0; padding-right: 6px; border-right: 1px solid rgb(255 255 255 / 0.15); }
+  html[data-v="h3"] .lab a[data-key="v"][data-val="h3"], html[data-v="h2"] .lab a[data-key="v"][data-val="h2"],
+  html[data-cards="4"] .lab a[data-key="cards"][data-val="4"], html[data-cards="5"] .lab a[data-key="cards"][data-val="5"],
+  html[data-look="now"] .lab a[data-key="look"][data-val="now"], html[data-look="before"] .lab a[data-key="look"][data-val="before"] { background: #EEEAE3; color: #111; }
+
+  /* lab: four or five cards; five keep the original 296 x 360 card */
+  html[data-cards="4"] .cards li.bench { display: none; }
+  html[data-cards="5"] .cards { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  html[data-cards="5"] .h3 .glass-card { height: auto; aspect-ratio: 296 / 360; }
+  /* lab: before review round 3 the titles were a touch lighter */
+  html[data-look="before"] .glass-card .title { font-weight: 640; }
 
   @media (max-width: 760px) {
     .bar nav a:not(.pill) { display: none; }

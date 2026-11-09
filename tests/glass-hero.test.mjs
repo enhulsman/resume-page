@@ -207,3 +207,16 @@ test('Finance Bot is benched, not deleted: its card can come back as 05', () => 
   const d = details.find(x => x.id === 'finance');
   assert.ok(d.dims.some(dim => dim.value === benched[0].value));
 });
+
+test('the "before round 3" look: the lights as they were, no wash', () => {
+  const all = [...glassCards, ...benched];
+  for (const c of all) assert.ok(c.before, `${c.id} has a before look`);
+  const by = id => all.find(c => c.id === id).before.tune;
+  assert.equal(by('anna')[2].lean, undefined);
+  assert.equal(by('anna')[2].stretch, undefined);
+  assert.deepEqual(by('henk')[0].set.color2, [30, 70, 150]);
+  assert.equal(by('henk')[0].scale, 1.1);
+  assert.deepEqual(by('finance')[0].set.color, [168, 176, 190]);
+  // the cards round 3 did not touch keep their tune
+  for (const id of ['homelab', 'sandbox']) assert.deepEqual(by(id), all.find(c => c.id === id).tune);
+});

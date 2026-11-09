@@ -17,7 +17,7 @@ const cards = [...document.querySelectorAll('.glass-card[data-light]')].map((el)
   const r = canvas && createRenderer(canvas);
   if (!r) return null;
   el.classList.add('lit');
-  return { el, canvas, r, light: +el.dataset.light, base: JSON.parse(el.dataset.base), tune: el.dataset.tune ? JSON.parse(el.dataset.tune) : undefined, distance: +(el.dataset.distance ?? 1), wash: el.dataset.wash ? JSON.parse(el.dataset.wash) : undefined, visible: true, size: null };
+  return { el, canvas, r, light: +el.dataset.light, base: JSON.parse(el.dataset.base), tune: el.dataset.tune ? JSON.parse(el.dataset.tune) : undefined, tuneBefore: el.dataset.tuneBefore ? JSON.parse(el.dataset.tuneBefore) : undefined, distance: +(el.dataset.distance ?? 1), wash: el.dataset.wash ? JSON.parse(el.dataset.wash) : undefined, visible: true, size: null };
 }).filter(Boolean);
 
 function fit(c) {
@@ -37,7 +37,8 @@ function fit(c) {
 function drawCard(c, t) {
   if (!c.size) fit(c);
   if (!c.size) return;
-  const state = cardState(c.light, t, c.base, c.tune, blur ?? c.distance, c.wash);
+  const before = document.documentElement.dataset.look === 'before'; // lab: the cards before review round 3
+  const state = cardState(c.light, t, c.base, before ? (c.tuneBefore ?? c.tune) : c.tune, blur ?? c.distance, before ? undefined : c.wash);
   state.quiet = c.quiet;
   c.r.draw(state, { size: c.size, radius: c.radius, px: c.px, glass: GLASS });
 }
@@ -76,9 +77,12 @@ if (dial) {
     blur = +dial.value; show(); drawAll();
     const u = new URL(location.href); u.searchParams.set('blur', String(blur)); history.replaceState(null, '', u);
   });
-  document.querySelectorAll('.lab a[data-for]').forEach((a) => a.addEventListener('click', (e) => {
+  // the switches change the page in place: H3/H2, four or five cards, now or before round 3
+  document.querySelectorAll('.lab a[data-key]').forEach((a) => a.addEventListener('click', (e) => {
     e.preventDefault();
-    const u = new URL(location.href); u.searchParams.set('v', a.dataset.for); location.href = u.toString();
+    document.documentElement.dataset[a.dataset.key] = a.dataset.val;
+    const u = new URL(location.href); u.searchParams.set(a.dataset.key, a.dataset.val); history.replaceState(null, '', u);
+    requestAnimationFrame(() => { cards.forEach(fit); drawAll(); });
   }));
 }
 

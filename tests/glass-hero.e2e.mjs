@@ -32,10 +32,10 @@ const spread = (page, sel) => page.$$eval(sel, cs => cs.map(c => {
 test('H3: the name is real text, four cards link to their pages, every card is lit', async () => {
   const { context, page, errors } = await open();
   assert.equal((await page.textContent('#name-h3')).replace(/\s+/g, ''), 'EzraHulsman');
-  const links = await page.$$eval('.h3 .glass-card', as => as.map(a => [a.querySelector('.title').textContent, a.getAttribute('href')]));
+  const links = await page.$$eval('.h3 li:not(.bench) .glass-card', as => as.map(a => [a.querySelector('.title').textContent, a.getAttribute('href')]));
   assert.deepEqual(links.map(l => l[0]), ['ANNA', 'Henk', 'Homelab', 'Claude Sandbox']);
   for (const [, href] of links) assert.match(href, /^\/projects\//);
-  for (const s of await spread(page, '.h3 .glass-card canvas')) assert.ok(s > 40, `a lit card varies (${s})`);
+  for (const s of await spread(page, '.h3 li:not(.bench) .glass-card canvas')) assert.ok(s > 40, `a lit card varies (${s})`);
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -79,9 +79,36 @@ test('the four cards fill the row: no gap after the last card', async () => {
   const { context, page } = await open();
   const gap = await page.evaluate(() => {
     const row = document.querySelector('.h3 .cards').getBoundingClientRect();
-    const cards = [...document.querySelectorAll('.h3 .glass-card')].map(c => c.getBoundingClientRect());
+    const cards = [...document.querySelectorAll('.h3 li:not(.bench) .glass-card')].map(c => c.getBoundingClientRect());
     return row.right - cards.at(-1).right;
   });
   await context.close();
   assert.ok(Math.abs(gap) < 1, `${gap}px left over`);
+});
+
+test('lab: four cards by default, five with ?cards=5, Finance Bot as 05', async () => {
+  for (const [q, n] of [['', 4], ['?cards=5', 5]]) {
+    const { context, page, errors } = await open(q);
+    const vis = await page.$$eval('.h3 .cards li', lis => lis.filter(l => getComputedStyle(l).display !== 'none').map(l => [l.querySelector('.title').textContent, l.querySelector('.idx').textContent]));
+    const bottom = await page.$eval('.h3 .cards', el => el.getBoundingClientRect().bottom);
+    await context.close();
+    assert.equal(vis.length, n, q);
+    if (n === 5) assert.deepEqual(vis[4], ['Finance Bot', '05']);
+    assert.ok(bottom <= 900, `${q}: cards end at ${bottom}`);
+    assert.deepEqual(errors, []);
+  }
+});
+
+test('lab: ?look=before draws the earlier lights and title weight', async () => {
+  const shot = async q => {
+    const { context, page } = await open(q);
+    const url = await page.$eval('.h3 .glass-card canvas', c => c.toDataURL());
+    const w = await page.$eval('.h3 .glass-card .title', t => getComputedStyle(t).fontWeight);
+    await context.close();
+    return { url, w };
+  };
+  const now = await shot('?t=2'), before = await shot('?t=2&look=before');
+  assert.notEqual(now.url, before.url);
+  assert.equal(now.w, '680');
+  assert.equal(before.w, '640');
 });

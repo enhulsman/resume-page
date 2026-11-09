@@ -32,6 +32,8 @@ export interface GlassCard {
   distance: number;
   /** One faint broad light under the rest, in the card's hue, so the ribs show across the whole card. */
   wash: { color: RGB; opacity: number };
+  /** Lab only: the card as it was before review round 3 (no wash; set below). */
+  before?: { tune?: (LayerTune | null)[] };
 }
 
 const dim = (id: DetailListing['id'], i: number) => {
@@ -87,5 +89,21 @@ export const benched: GlassCard[] = [
     { scale: 1.25, dy: -24, lean: 0.15, set: { color: [250, 251, 253], color2: [186, 196, 216], g0: 190, g1: 260, sigma: 0.08 } },
   ]),
 ];
+
+// Lab only (/hero-lab?look=before): the lights as they were before review round 3, which added
+// the wash, leaned the flame, and lightened Henk. Homelab and Sandbox kept their tune.
+const beforeTune: Partial<Record<GlassCard['id'], (LayerTune | null)[]>> = {
+  anna: [
+    { scale: 1.9, dy: 10, set: { color: [242, 168, 112], sigma: 1.0, opacity: 0.75 } },
+    { set: { opacity: 0 } },
+    { scale: 1.45, dy: -22, set: { color: [214, 58, 34], color2: [255, 196, 96], g0: 150, g1: 300, sigma: 0.07 } },
+  ],
+  henk: [{ scale: 1.1, set: { color: [120, 164, 222], color2: [30, 70, 150], g0: 130, g1: 260, sigma: 0.1 } }],
+  finance: [
+    { scale: 2.6, dy: -30, set: { color: [168, 176, 190], sigma: 1.0 } },
+    { scale: 1.25, dy: -24, set: { color: [252, 252, 253], color2: [206, 213, 226], g0: 190, g1: 260, sigma: 0.08 } },
+  ],
+};
+for (const c of [...glassCards, ...benched]) c.before = { tune: beforeTune[c.id] ?? c.tune };
 
 export const h2Card: GlassCard = { ...glassCards[0], readout: 'In production at Anamata' };
