@@ -7,7 +7,7 @@ import { glassCards, h2Card, type GlassCard } from "../config/glass.ts";
 import site from "../config/site";
 
 const role = `${site.role} at ${site.company}.`;
-const intro = "I build ANNA, an AI assistant in Microsoft Teams that does the admin no one should spend their day on.";
+const intro = "I\u00a0build ANNA, an AI assistant in Microsoft Teams that does the admin no one should spend their day on.";
 const nav = [
   { label: "Projects", href: "/projects" },
   { label: "Blog", href: "/blog" },
@@ -41,7 +41,7 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
     </header>
 
     <main>
-      <!-- H3: the name, and the work as five lights -->
+      <!-- H3: the name, and the work as four lights -->
       <section class="hero h3" aria-labelledby="name-h3">
         <div class="top">
           <h1 id="name-h3" class="name">Ezra<br />Hulsman</h1>
@@ -50,7 +50,7 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
         <ul class="cards" aria-label="Projects">
           {glassCards.map((c, i) => (
             <li>
-              <a class="glass-card" href={c.href} data-light={c.light} data-base={JSON.stringify(c.base)} data-tune={c.tune && JSON.stringify(c.tune)} data-distance={c.distance} style={`--base: ${rgb(c)}`}>
+              <a class="glass-card" href={c.href} data-light={c.light} data-base={JSON.stringify(c.base)} data-tune={c.tune && JSON.stringify(c.tune)} data-distance={c.distance} data-wash={JSON.stringify(c.wash)} style={`--base: ${rgb(c)}`}>
                 <canvas aria-hidden="true"></canvas>
                 <span class="title">{c.title}</span>
                 <span class="idx" aria-hidden="true">{idx(i)}</span>
@@ -73,7 +73,7 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
             <a class="pill ghost" href="/resume">Résumé</a>
           </p>
         </div>
-        <a class="glass-card big" href={h2Card.href} data-light={h2Card.light} data-base={JSON.stringify(h2Card.base)} data-tune={h2Card.tune && JSON.stringify(h2Card.tune)} data-distance={h2Card.distance} style={`--base: ${rgb(h2Card)}`}>
+        <a class="glass-card big" href={h2Card.href} data-light={h2Card.light} data-base={JSON.stringify(h2Card.base)} data-tune={h2Card.tune && JSON.stringify(h2Card.tune)} data-distance={h2Card.distance} data-wash={JSON.stringify(h2Card.wash)} style={`--base: ${rgb(h2Card)}`}>
           <canvas aria-hidden="true"></canvas>
           <span class="title">{h2Card.title}</span>
           <span class="idx" aria-hidden="true">01</span>
@@ -151,18 +151,20 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
   }
   .cards {
     list-style: none; margin: clamp(28px, 3.6vw, 52px) 0 0; padding: 0;
-    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(8px, 1vw, 14px);
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 1vw, 14px);
   }
 
   /* ---- the card ---- */
   .glass-card {
-    position: relative; display: block; aspect-ratio: 296 / 360;
+    position: relative; display: block; aspect-ratio: 296 / 340;
     border-radius: clamp(12px, 1.3vw, 18px);
     background: var(--base);
     color: var(--ink);
     transition: transform 0.35s cubic-bezier(.2,.7,.2,1);
     box-shadow: 0 1px 1px rgb(70 50 30 / 0.06), 0 14px 28px -18px rgb(70 50 30 / 0.35);
   }
+  /* four across: the row never pushes the cards below the first screen */
+  .h3 .glass-card { aspect-ratio: auto; width: 100%; height: min(40svh, 27vw); }
   .glass-card canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: inherit; }
   /* the glass edge: a light rim above the light */
   .glass-card::after {
@@ -175,7 +177,7 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
       inset 0 0 9px 1px rgb(255 255 255 / 0.22);
   }
   .glass-card > span { position: absolute; z-index: 1; }
-  .glass-card .title { left: 7%; top: 6.5%; font-weight: 640; font-size: clamp(15px, 1.5vw, 22px); letter-spacing: -0.02em; line-height: 1.1; }
+  .glass-card .title { left: 7%; top: 6.5%; font-weight: 680; font-size: clamp(15px, 1.5vw, 22px); letter-spacing: -0.02em; line-height: 1.1; }
   .glass-card .idx { right: 7%; top: 7.2%; font-weight: 450; font-size: clamp(11px, 0.9vw, 13px); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
   .glass-card .readout { left: 7%; bottom: 6.5%; font-weight: 480; font-size: clamp(12px, 1.05vw, 15px); font-variant-numeric: tabular-nums; }
   .glass-card .go {
@@ -219,6 +221,7 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
       padding: 4px var(--gutter) 16px; scroll-padding-inline: var(--gutter); scrollbar-width: none;
     }
     .cards li { scroll-snap-align: start; }
+    .h3 .glass-card { height: auto; aspect-ratio: 296 / 340; }
     .glass-card .title { font-size: 19px; }
     .glass-card .readout { font-size: 14px; }
     .h2 { grid-template-columns: 1fr; min-height: 0; }

@@ -29,11 +29,11 @@ const spread = (page, sel) => page.$$eval(sel, cs => cs.map(c => {
   return hi - lo;
 }));
 
-test('H3: the name is real text, five cards link to their pages, every card is lit', async () => {
+test('H3: the name is real text, four cards link to their pages, every card is lit', async () => {
   const { context, page, errors } = await open();
   assert.equal((await page.textContent('#name-h3')).replace(/\s+/g, ''), 'EzraHulsman');
   const links = await page.$$eval('.h3 .glass-card', as => as.map(a => [a.querySelector('.title').textContent, a.getAttribute('href')]));
-  assert.deepEqual(links.map(l => l[0]), ['ANNA', 'Henk', 'Finance Bot', 'Homelab', 'Claude Sandbox']);
+  assert.deepEqual(links.map(l => l[0]), ['ANNA', 'Henk', 'Homelab', 'Claude Sandbox']);
   for (const [, href] of links) assert.match(href, /^\/projects\//);
   for (const s of await spread(page, '.h3 .glass-card canvas')) assert.ok(s > 40, `a lit card varies (${s})`);
   assert.deepEqual(errors, []);
@@ -43,8 +43,8 @@ test('H3: the name is real text, five cards link to their pages, every card is l
 for (const [w, h] of [[1440, 900], [1280, 720], [1920, 1080]]) test(`H3 fits one ${w} x ${h} screen, cards included`, async () => {
   const { context, page } = await open('', { width: w, height: h });
   const bottom = await page.$eval('.h3 .cards', el => el.getBoundingClientRect().bottom);
+  await context.close(); // before asserting: a context left open keeps animating and starves the next test
   assert.ok(bottom <= h, `cards end at ${bottom}`);
-  await context.close();
 });
 
 test('reduced motion: the light holds still', async () => {
@@ -73,4 +73,15 @@ test('H2: the name and one lit card, ANNA', async () => {
   assert.ok(s > 40, `lit (${s})`);
   assert.deepEqual(errors, []);
   await context.close();
+});
+
+test('the four cards fill the row: no gap after the last card', async () => {
+  const { context, page } = await open();
+  const gap = await page.evaluate(() => {
+    const row = document.querySelector('.h3 .cards').getBoundingClientRect();
+    const cards = [...document.querySelectorAll('.h3 .glass-card')].map(c => c.getBoundingClientRect());
+    return row.right - cards.at(-1).right;
+  });
+  await context.close();
+  assert.ok(Math.abs(gap) < 1, `${gap}px left over`);
 });

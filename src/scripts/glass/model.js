@@ -38,16 +38,16 @@ const evalVec = (v, t) => v.map((x) => evalParam(x, t));
  * wash out: `scale` multiplies its size, `dx`/`dy` move it, `set` replaces values outright
  * (colour, edge softness, opacity, gradient), `stretch` scales width and height apart,
  * `ground` turns a band into a fixed-height ground under the study's top edge,
- * `dist` scales the card's distance for this layer alone.
+ * `dist` scales the card's distance for this layer alone, `lean` adds to its shear.
+ * `wash` lays one faint broad light under the rest, so the ribs show across the whole card.
+ * A layer tuned to opacity 0 is dropped (the shader draws at most three).
  * The motion stays the study's.
  * `blur` is the distance dial: how far behind the glass the light sits. At 0 a retuned layer
  * keeps its own edge, at 1 every edge is as soft as the study's, above 1 softer still.
  */
-export function cardState(i, t, base, tune, blur = 0) {
+export function cardState(i, t, base, tune, blur = 0, wash) {
   const c = spec.cards[i];
-  return {
-    base: base ?? c.base,
-    layers: c.layers.map((L, j) => {
+  const layers = c.layers.map((L, j) => {
       const out = { kind: L.kind };
       for (const [k, v] of Object.entries(L)) {
         if (k === 'kind') continue;
@@ -67,6 +67,7 @@ export function cardState(i, t, base, tune, blur = 0) {
         if (study != null) study *= out.sy / T.ground;
         out.cy = out.cy - out.sy + T.ground; out.sy = T.ground;
       }
+      if (T.lean) out.shear = (out.shear ?? 0) + T.lean;
       if (T.dx) for (const k of ['cx']) if (out[k] != null) out[k] += T.dx;
       if (T.dy) for (const k of ['cy', 'y0', 'g0', 'g1']) if (out[k] != null) out[k] += T.dy;
       if (T.set) {
@@ -79,8 +80,9 @@ export function cardState(i, t, base, tune, blur = 0) {
         out.sigma = (out.sigma * (1 - k) + study * k) * Math.max(1, d);
       }
       return out;
-    }),
-  };
+    }).filter((L) => (L.opacity ?? 1) > 0);
+  if (wash) layers.unshift({ kind: 'ellipse', cx: REF.w / 2, cy: REF.h / 2, sx: 1.45 * REF.w, sy: 1.45 * REF.h, sigma: 1, shear: 0, color: wash.color, opacity: wash.opacity });
+  return { base: base ?? c.base, layers };
 }
 
 // ---- CPU mirror of the fragment shader (used by tests and the numeric checks) ----

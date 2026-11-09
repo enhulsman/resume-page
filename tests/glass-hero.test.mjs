@@ -4,12 +4,12 @@
 //   node --test tests/glass-hero.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { glassCards, h2Card } from '../src/config/glass.ts';
+import { glassCards, h2Card, benched } from '../src/config/glass.ts';
 import { details, annaLead } from '../src/config/home.ts';
 import { cardState, pixelAt, glassAt, PERIOD, REF, toRef } from '../src/scripts/glass/model.js';
 
-test('five cards, in the order of the sketch, each linking to its project page', () => {
-  assert.deepEqual(glassCards.map(c => c.title), ['ANNA', 'Henk', 'Finance Bot', 'Homelab', 'Claude Sandbox']);
+test('four cards, the work Ezra stands behind, each linking to its project page', () => {
+  assert.deepEqual(glassCards.map(c => c.title), ['ANNA', 'Henk', 'Homelab', 'Claude Sandbox']);
   assert.equal(glassCards[0].href, annaLead.href);
   for (const c of glassCards.slice(1)) {
     const d = details.find(x => x.id === c.id);
@@ -35,7 +35,7 @@ test('the H2 card is ANNA', () => {
 });
 
 test('each light runs on one loop: t and t + PERIOD are the same frame', () => {
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 5; i++) { // all five of the study's lights, benched ones included
     for (const [u, v] of [[60, 90], [148, 200], [230, 300]]) {
       const a = pixelAt(cardState(i, 1.3), u, v), b = pixelAt(cardState(i, 1.3 + PERIOD), u, v);
       a.forEach((x, j) => assert.ok(Math.abs(x - b[j]) < 1e-6, `light ${i} at ${u},${v}`));
@@ -138,7 +138,7 @@ test('a light can be stretched on one axis, its study edge kept the same width i
 });
 
 test('each card sits at its own distance behind the glass', () => {
-  assert.deepEqual(glassCards.map(c => c.distance), [0.35, 0.8, 0.5, 0.5, 0.45]);
+  assert.deepEqual(glassCards.map(c => c.distance), [0.35, 0.8, 0.5, 0.45]);
 });
 
 test('the sun sets into the ground: below the horizon it never shows, at any moment', () => {
@@ -171,4 +171,39 @@ test('Homelab: the sun is nearer than the ground, and the ground fades out befor
   const g = h.tune[1].set;
   assert.ok(g.g1 <= 300, `ground has faded to stone by y ${g.g1}`);
   assert.ok(g.color.reduce((a, b) => a + b) / 3 > 120, 'the ground is a muted plum, not near-black');
+});
+
+test('a light can lean: `lean` adds to its shear and keeps the sway', () => {
+  const a = cardState(0, 1.1), b = cardState(0, 1.1, null, [null, null, { lean: 0.15 }]);
+  assert.ok(Math.abs(b.layers[2].shear - ((a.layers[2].shear ?? 0) + 0.15)) < 1e-9);
+});
+
+test('a wash: one faint broad light under the rest, so the ribs show across the whole card', () => {
+  const s = cardState(1, 2, null, null, 0.5, { color: [120, 150, 200], opacity: 0.2 });
+  assert.equal(s.layers[0].kind, 'ellipse');
+  assert.deepEqual(s.layers[0].color, [120, 150, 200]);
+  assert.equal(s.layers[0].opacity, 0.2);
+  assert.ok(s.layers[0].sx > 296 && s.layers[0].sy > 360, 'it covers the card');
+  assert.equal(s.layers.length, cardState(1, 2).layers.length + 1);
+});
+
+test('a light switched off is dropped, so every card fits the shader\'s three layers', () => {
+  for (const c of glassCards) {
+    const s = cardState(c.light, 3, c.base, c.tune, c.distance, c.wash);
+    assert.ok(s.layers.length <= 3, `${c.id}: ${s.layers.length} layers`);
+    assert.ok(s.layers.every(L => (L.opacity ?? 1) > 0), `${c.id}: no dead layers`);
+  }
+});
+
+test('every card has a wash in its own hue, faint', () => {
+  for (const c of glassCards) {
+    assert.ok(c.wash, c.id);
+    assert.ok(c.wash.opacity > 0 && c.wash.opacity <= 0.25, `${c.id} ${c.wash.opacity}`);
+  }
+});
+
+test('Finance Bot is benched, not deleted: its card can come back as 05', () => {
+  assert.deepEqual(benched.map(c => c.title), ['Finance Bot']);
+  const d = details.find(x => x.id === 'finance');
+  assert.ok(d.dims.some(dim => dim.value === benched[0].value));
 });

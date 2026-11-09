@@ -17,7 +17,7 @@ const cards = [...document.querySelectorAll('.glass-card[data-light]')].map((el)
   const r = canvas && createRenderer(canvas);
   if (!r) return null;
   el.classList.add('lit');
-  return { el, canvas, r, light: +el.dataset.light, base: JSON.parse(el.dataset.base), tune: el.dataset.tune ? JSON.parse(el.dataset.tune) : undefined, distance: +(el.dataset.distance ?? 1), visible: true, size: null };
+  return { el, canvas, r, light: +el.dataset.light, base: JSON.parse(el.dataset.base), tune: el.dataset.tune ? JSON.parse(el.dataset.tune) : undefined, distance: +(el.dataset.distance ?? 1), wash: el.dataset.wash ? JSON.parse(el.dataset.wash) : undefined, visible: true, size: null };
 }).filter(Boolean);
 
 function fit(c) {
@@ -37,7 +37,7 @@ function fit(c) {
 function drawCard(c, t) {
   if (!c.size) fit(c);
   if (!c.size) return;
-  const state = cardState(c.light, t, c.base, c.tune, blur ?? c.distance);
+  const state = cardState(c.light, t, c.base, c.tune, blur ?? c.distance, c.wash);
   state.quiet = c.quiet;
   c.r.draw(state, { size: c.size, radius: c.radius, px: c.px, glass: GLASS });
 }
