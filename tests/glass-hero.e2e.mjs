@@ -49,9 +49,9 @@ for (const [w, h] of [[1440, 900], [1280, 720], [1920, 1080]]) test(`H3 fits one
 
 test('reduced motion: the light holds still', async () => {
   const { context, page } = await open('', { reducedMotion: 'reduce' });
-  const a = await page.$eval('.h3 .glass-card canvas', c => c.toDataURL());
+  const a = await page.$eval('.h3 .cards .glass-card canvas', c => c.toDataURL());
   await page.waitForTimeout(600);
-  const b = await page.$eval('.h3 .glass-card canvas', c => c.toDataURL());
+  const b = await page.$eval('.h3 .cards .glass-card canvas', c => c.toDataURL());
   assert.equal(a, b);
   await context.close();
 });
@@ -102,7 +102,7 @@ test('lab: four cards by default, five with ?cards=5, Finance Bot as 05', async 
 test('lab: ?look=before draws the earlier lights and title weight', async () => {
   const shot = async q => {
     const { context, page } = await open(q);
-    const url = await page.$eval('.h3 .glass-card canvas', c => c.toDataURL());
+    const url = await page.$eval('.h3 .cards .glass-card canvas', c => c.toDataURL());
     const w = await page.$eval('.h3 .glass-card .title', t => getComputedStyle(t).fontWeight);
     await context.close();
     return { url, w };
@@ -120,4 +120,17 @@ test('the lab bar is hidden; ?lab=1 brings it back', async () => {
     await context.close();
     assert.equal(vis, shown, q || 'default');
   }
+});
+
+// Phones keep only a few WebGL contexts alive and drop the oldest: with one context per pane the
+// first hero cards went blank once the lab added ANNA's stack and the terminal (2026-11-09).
+test('every pane draws on a phone, however many panes the page has: one WebGL context in all', async () => {
+  const { context, page, errors } = await open('?lab=1', { width: 390, height: 844 });
+  const kinds = await page.$$eval('.glass-card[data-light] canvas', cs => cs.map(c => (c.getContext('2d') ? '2d' : 'other')));
+  const spreads = await spread(page, '.h3 li:not(.bench) .glass-card canvas');
+  await context.close();
+  assert.ok(kinds.length >= 12, `the lab page has many panes (${kinds.length})`);
+  assert.ok(kinds.every(k => k === '2d'), 'each pane shows a copy, not its own context');
+  spreads.forEach((s, i) => assert.ok(s > 40, `hero card ${i + 1} is lit (${s})`));
+  assert.deepEqual(errors, []);
 });

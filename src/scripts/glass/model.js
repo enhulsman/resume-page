@@ -129,6 +129,16 @@ export function fieldAt(state, X, Y, clip = true) {
     P = P.map((p, j) => p * (1 - cov) + col[j] * cov);
     A = A * (1 - cov) + cov;
   }
+  // ink: a drawing behind the glass, over the lights. `sample(X, Y)` is its coverage 0..1 (the
+  // shader reads a texture's alpha instead, blurred by mip level for distance)
+  const ink = state.ink;
+  if (ink) {
+    const a = Math.min(1, Math.max(0, ink.sample(X, Y))) * (ink.strength ?? 1);
+    if (a > 0) {
+      P = P.map((p, j) => p * (1 - a) + ink.color[j] * a);
+      A = A * (1 - a) + a;
+    }
+  }
   const F = state.base.map((b, j) => b * (1 - A) + P[j]);
   return clip ? F.map((x) => Math.min(255, Math.max(0, x))) : F;
 }

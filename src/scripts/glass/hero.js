@@ -1,6 +1,8 @@
-// Mounts the [04] glass on every .glass-card[data-light] on the page: one WebGL canvas per
-// card, all on one shared 10 s loop. Still on reduced motion, paused off screen and in a
-// background tab. Without WebGL the card keeps its CSS colour and its text.
+// Mounts the [04] glass on every .glass-card[data-light] on the page, all on one shared 10 s
+// loop. One WebGL context draws every pane in turn and each pane's own canvas (2D) gets a copy:
+// phones keep only a few WebGL contexts alive and drop the oldest, so one context per pane left
+// the first cards blank once a page had a dozen panes. Still on reduced motion, paused off
+// screen and in a background tab. Without WebGL a pane keeps its CSS colour and its text.
 import { cardState, GLASS, PERIOD, REF, toRef } from './model.js';
 import { createRenderer } from './shader.js';
 
@@ -12,12 +14,14 @@ const STILL_T = 2.4; // a moment where every light is well inside its card
 // Each card has its own (data-distance); the lab slider, or ?blur=, sets one for all.
 let blur = params.has('blur') ? +params.get('blur') : null;
 
+const shared = document.createElement('canvas');
+const r = createRenderer(shared);
 const cards = [...document.querySelectorAll('.glass-card[data-light]')].map((el) => {
   const canvas = el.querySelector('canvas');
-  const r = canvas && createRenderer(canvas);
-  if (!r) return null;
+  const ctx = r && canvas?.getContext('2d');
+  if (!ctx) return null;
   el.classList.add('lit');
-  return { el, canvas, r, light: +el.dataset.light, base: JSON.parse(el.dataset.base), tune: el.dataset.tune ? JSON.parse(el.dataset.tune) : undefined, tuneBefore: el.dataset.tuneBefore ? JSON.parse(el.dataset.tuneBefore) : undefined, distance: +(el.dataset.distance ?? 1), wash: el.dataset.wash ? JSON.parse(el.dataset.wash) : undefined, visible: true, size: null };
+  return { el, canvas, ctx, light: +el.dataset.light, base: JSON.parse(el.dataset.base), tune: el.dataset.tune ? JSON.parse(el.dataset.tune) : undefined, tuneBefore: el.dataset.tuneBefore ? JSON.parse(el.dataset.tuneBefore) : undefined, distance: +(el.dataset.distance ?? 1), wash: el.dataset.wash ? JSON.parse(el.dataset.wash) : undefined, visible: true, size: null };
 }).filter(Boolean);
 
 function fit(c) {
@@ -29,6 +33,8 @@ function fit(c) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = Math.round(box.width * dpr), h = Math.round(box.height * dpr);
   if (c.canvas.width !== w || c.canvas.height !== h) { c.canvas.width = w; c.canvas.height = h; }
+  // the shared canvas only ever grows: resizing it clears it, which is fine between panes
+  if (shared.width < w || shared.height < h) { shared.width = Math.max(shared.width, w); shared.height = Math.max(shared.height, h); }
   const k = toRef(box.width);
   const radius = parseFloat(getComputedStyle(c.el).borderTopLeftRadius) || 0;
   c.size = { w: REF.w, h: box.height * k };
@@ -44,7 +50,12 @@ function drawCard(c, t) {
   const before = document.documentElement.dataset.look === 'before'; // lab: the cards before review round 3
   const state = cardState(c.light, t, c.base, before ? (c.tuneBefore ?? c.tune) : c.tune, blur ?? c.distance, before ? undefined : c.wash);
   state.quiet = c.quiet;
-  c.r.draw(state, { size: c.size, radius: c.radius, px: c.px, glass: GLASS });
+  if (c.ink) state.ink = c.ink; // set by a page script through paneFor()
+  const w = c.canvas.width, h = c.canvas.height;
+  r.draw(state, { size: c.size, radius: c.radius, px: c.px, glass: GLASS, target: { w, h } });
+  // WebGL draws from the bottom-left corner up: that corner of the shared canvas is this pane
+  c.ctx.clearRect(0, 0, w, h);
+  c.ctx.drawImage(shared, 0, shared.height - h, w, h, 0, 0, w, h);
 }
 
 const now = () => (frozen ?? (still.matches ? STILL_T : (performance.now() / 1000) % PERIOD));
@@ -91,9 +102,11 @@ if (dial) {
 }
 
 // for page scripts that change a pane while it runs (ANNA's stack): its live state, by element.
-// Set `distance` and `tune` on it; call redraw() when the loop is not running (reduced motion, ?t=).
+// Set `distance`, `tune` or `ink` on it; call redrawPane() when the loop is not running (reduced motion, ?t=).
 export const paneFor = (el) => cards.find((c) => c.el === el);
 export const redraw = () => drawAll();
+/** Redraw one pane (from paneFor) now: cheaper than redraw() when only it changed. */
+export const redrawPane = (c) => { if (c) drawCard(c, now()); };
 export const looping = () => frozen == null && !still.matches;
 
 // for tests and screenshots: window.__glass.at(seconds) draws every card at that moment

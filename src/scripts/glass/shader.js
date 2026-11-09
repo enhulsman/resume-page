@@ -29,6 +29,9 @@ uniform vec3 uCard;          // w, h, radius
 uniform float uPx;           // stage px per device px
 uniform float uGlassOn;
 uniform vec3 uQuiet;         // readout band: y0, y1 (study px), light kept behind the text
+uniform sampler2D uInk;      // ink: a drawing behind the glass over the lights; its alpha is coverage
+uniform vec4 uInkP;          // on, strength, mip level (its distance: blur), unused
+uniform vec3 uInkCol;        // 0..255
 out vec4 outColor;
 
 // clamp first: tanh of a large argument is NaN on some GPUs (it is computed as inf/inf)
@@ -71,6 +74,11 @@ vec3 field(float X, float Y) {
     if (e.a > 0.5) col = mix(col, f.rgb, clamp((Y - d.z) / (d.w - d.z), 0.0, 1.0));
     P = P * (1.0 - cov) + col * cov;
     A = A * (1.0 - cov) + cov;
+  }
+  if (uInkP.x > 0.5) { // ink over the lights, as fieldAt() in model.js
+    float a = clamp(textureLod(uInk, vec2(X / uCard.x, Y / uCard.y), uInkP.z).a, 0.0, 1.0) * uInkP.y;
+    P = P * (1.0 - a) + uInkCol * a;
+    A = A * (1.0 - a) + a;
   }
   return uBase * (1.0 - A) + P; // unclipped: the seams mix the light before it is clipped
 }
@@ -162,14 +170,39 @@ export function createRenderer(canvas) {
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, 'aPos');
   const U = {};
-  for (const n of ['uSize', 'uBase', 'uL', 'uCount', 'uGlass', 'uLine', 'uD', 'uA', 'uTable', 'uSeam2', 'uCard', 'uPx', 'uGlassOn', 'uQuiet']) U[n] = gl.getUniformLocation(prog, n);
+  for (const n of ['uSize', 'uBase', 'uL', 'uCount', 'uGlass', 'uLine', 'uD', 'uA', 'uTable', 'uSeam2', 'uCard', 'uPx', 'uGlassOn', 'uQuiet', 'uInk', 'uInkP', 'uInkCol']) U[n] = gl.getUniformLocation(prog, n);
+
+  // one texture per ink source: a shared renderer draws many panes, each may bring its own ink
+  const inks = new WeakMap();
+  function uploadInk(ink) {
+    let t = inks.get(ink.source);
+    if (!t) { t = { tex: gl.createTexture(), version: -1 }; inks.set(ink.source, t); }
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, t.tex);
+    if (ink.version === t.version) return;
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ink.source);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    t.version = ink.version;
+  }
 
   return {
     gl,
-    /** state: cardState(); size: the card in study px; radius in study px; px: study px per device px. */
-    draw(state, { size, radius, px, glass, glassOn = true }) {
-      gl.viewport(0, 0, canvas.width, canvas.height);
+    /**
+     * state: cardState(); size: the card in study px; radius in study px; px: study px per device px.
+     * target: the device px to draw into, from the canvas's bottom-left corner (default: all of it),
+     * so one shared canvas can draw panes of any size in turn.
+     */
+    draw(state, { size, radius, px, glass, glassOn = true, target }) {
+      const w = target?.w ?? canvas.width, h = target?.h ?? canvas.height;
+      gl.viewport(0, 0, w, h);
+      gl.enable(gl.SCISSOR_TEST); gl.scissor(0, 0, w, h);
       gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.disable(gl.SCISSOR_TEST);
       gl.useProgram(prog);
       gl.enableVertexAttribArray(loc);
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -189,6 +222,14 @@ export function createRenderer(canvas) {
       gl.uniform3f(U.uBase, ...state.base);
       gl.uniform4fv(U.uL, packLayers(state.layers));
       gl.uniform1i(U.uCount, Math.min(state.layers.length, MAX_LAYERS));
+      // ink: { source: a canvas (or image), version: bump it when the canvas is redrawn, color, strength, lod }
+      const ink = state.ink;
+      if (ink?.source) {
+        uploadInk(ink);
+        gl.uniform1i(U.uInk, 0);
+        gl.uniform4f(U.uInkP, 1, ink.strength ?? 1, ink.lod ?? 0, 0);
+        gl.uniform3f(U.uInkCol, ...ink.color);
+      } else gl.uniform4f(U.uInkP, 0, 0, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     },
   };
