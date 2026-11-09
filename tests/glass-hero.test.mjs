@@ -156,3 +156,19 @@ test('the sun sets into the ground: below the horizon it never shows, at any mom
     assert.ok(Math.abs(p[0] - p[2]) < 60, `t=${t}: sun shows under the horizon (${p.map(Math.round)}) vs ground ${g}`);
   }
 });
+
+test('a layer can sit nearer the glass than its card: `dist` scales the card\'s distance for it', () => {
+  const tune = [{ dist: 0.5, set: { sigma: 0.05 } }, { set: { sigma: 0.05 } }];
+  const study = cardState(3, 2.2).layers.map(L => L.sigma);
+  const s = cardState(3, 2.2, null, tune, 0.6);
+  assert.ok(Math.abs(s.layers[0].sigma - (0.05 * 0.7 + study[0] * 0.3)) < 1e-9);
+  assert.ok(Math.abs(s.layers[1].sigma - (0.05 * 0.4 + study[1] * 0.6)) < 1e-9);
+});
+
+test('Homelab: the sun is nearer than the ground, and the ground fades out before the readout', () => {
+  const h = glassCards.find(c => c.id === 'homelab');
+  assert.ok(h.tune[0].dist < 1);
+  const g = h.tune[1].set;
+  assert.ok(g.g1 <= 300, `ground has faded to stone by y ${g.g1}`);
+  assert.ok(g.color.reduce((a, b) => a + b) / 3 > 120, 'the ground is a muted plum, not near-black');
+});

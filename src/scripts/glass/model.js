@@ -37,7 +37,8 @@ const evalVec = (v, t) => v.map((x) => evalParam(x, t));
  * light). `tune[j]`, when set, reshapes layer j for a pale card, where the study's soft glows
  * wash out: `scale` multiplies its size, `dx`/`dy` move it, `set` replaces values outright
  * (colour, edge softness, opacity, gradient), `stretch` scales width and height apart,
- * `ground` turns a band into a fixed-height ground under the study's top edge.
+ * `ground` turns a band into a fixed-height ground under the study's top edge,
+ * `dist` scales the card's distance for this layer alone.
  * The motion stays the study's.
  * `blur` is the distance dial: how far behind the glass the light sits. At 0 a retuned layer
  * keeps its own edge, at 1 every edge is as soft as the study's, above 1 softer still.
@@ -73,8 +74,9 @@ export function cardState(i, t, base, tune, blur = 0) {
         Object.assign(out, T.set);
       }
       if (out.sigma != null && studySigma != null) {
-        const k = Math.min(1, Math.max(0, blur));
-        out.sigma = (out.sigma * (1 - k) + study * k) * far;
+        const d = blur * (T.dist ?? 1); // `dist` puts this layer nearer (or further) than its card
+        const k = Math.min(1, Math.max(0, d));
+        out.sigma = (out.sigma * (1 - k) + study * k) * Math.max(1, d);
       }
       return out;
     }),

@@ -6,6 +6,8 @@ import { details, annaLead, type DetailListing } from './home.ts';
 type RGB = [number, number, number];
 export interface LayerTune {
   scale?: number; stretch?: [number, number]; ground?: number; dx?: number; dy?: number;
+  /** This layer's distance as a share of the card's (below 1: nearer the glass). */
+  dist?: number;
   set?: { color?: RGB; color2?: RGB; g0?: number; g1?: number; sigma?: number; opacity?: number; h?: number };
 }
 
@@ -67,8 +69,8 @@ export const glassCards: GlassCard[] = [
   // the sunset: a sun disc, yellow above and coral below, setting into a plum ground that fills
   // everything below the horizon, so the sun never shows again under it
   card('homelab', 'Homelab', 0, v => `${v} machines`, 3, tint([5, -5, -6]), 'dark', 0.5, [
-    { scale: 1.5, dy: -3, set: { color: [255, 186, 112], color2: [238, 96, 88], g0: 115, g1: 255, sigma: 0.05 } },
-    { ground: 150, dy: -55, set: { sx: 900, color: [112, 84, 118], color2: [206, 186, 192], g0: 220, g1: 360, sigma: 0.018 } },
+    { scale: 1.5, dy: -3, dist: 0.45, set: { color: [255, 180, 104], color2: [242, 92, 80], g0: 115, g1: 255, sigma: 0.05 } },
+    { ground: 150, dy: -55, set: { sx: 900, color: [150, 122, 150], color2: [226, 212, 208], g0: 222, g1: 292, sigma: 0.018 } },
     { set: { opacity: 0 } },
   ]),
   // the moss: a pale halo, and a hard-rimmed pod, lit at the top
