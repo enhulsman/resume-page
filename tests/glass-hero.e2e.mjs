@@ -112,3 +112,12 @@ test('lab: ?look=before draws the earlier lights and title weight', async () => 
   assert.equal(now.w, '680');
   assert.equal(before.w, '640');
 });
+
+test('the lab bar is hidden; ?lab=1 brings it back', async () => {
+  for (const [q, shown] of [['', false], ['?lab=1', true]]) {
+    const { context, page } = await open(q);
+    const vis = await page.isVisible('nav.lab');
+    await context.close();
+    assert.equal(vis, shown, q || 'default');
+  }
+});

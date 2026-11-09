@@ -1,6 +1,8 @@
 ---
 // Prototype of the glass hero (card run 7: H3, with H2 as the alternative), on G4's warm
 // stone. Not linked from anywhere and not indexed. ?v=h2 shows H2; ?t=<seconds> freezes the light;
+// ?lab=1 shows the lab bar (hidden by default; the parameters work without it).
+// ?cards=5 adds Finance Bot as 05; ?look=before shows the cards before review round 3.
 // ?blur=<0..1.5> sets one distance for every card (0 hard edges, 1 the study's softness);
 // without it each card uses its own. Clicking the value goes back to per card.
 import { glassCards, benched, h2Card, type GlassCard } from "../config/glass.ts";
@@ -32,6 +34,7 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
       h.dataset.v = q.get('v') === 'h2' ? 'h2' : 'h3';
       h.dataset.cards = q.get('cards') === '5' ? '5' : '4';
       h.dataset.look = q.get('look') === 'before' ? 'before' : 'now';
+      if (q.get('lab') === '1') h.dataset.lab = '';
     </script>
   </head>
   <body>
@@ -209,6 +212,8 @@ const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
   .glass-card.big .title { font-size: clamp(18px, 1.7vw, 24px); }
   .glass-card.big .readout { font-size: clamp(13px, 1.15vw, 16px); }
 
+  /* the lab bar: hidden unless ?lab=1 (Ezra settled on H3, four cards, now, per-card distance) */
+  html:not([data-lab]) .lab { display: none; }
   .lab { position: fixed; right: 12px; bottom: 12px; display: flex; gap: 2px; font: 500 12px/1 "Archivo"; background: rgb(17 17 16 / 0.85); border-radius: 999px; padding: 3px; }
   .lab a { color: #ddd; padding: 6px 10px; border-radius: 999px; }
   .lab .dial { display: flex; align-items: center; gap: 8px; color: #ddd; padding: 0 12px 0 10px; }
