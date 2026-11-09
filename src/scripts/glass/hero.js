@@ -21,8 +21,11 @@ const cards = [...document.querySelectorAll('.glass-card[data-light]')].map((el)
 }).filter(Boolean);
 
 function fit(c) {
-  const box = c.el.getBoundingClientRect();
-  if (!box.width) return;
+  // the layout size, not getBoundingClientRect: a pane under a CSS transform (ANNA's exploded
+  // stack) would report its rotated outline's box and the light would be fitted to that
+  const cs = getComputedStyle(c.el);
+  const box = { width: parseFloat(cs.width) || 0, height: parseFloat(cs.height) || 0 };
+  if (!box.width || cs.display === 'none' || !c.el.offsetParent) return;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = Math.round(box.width * dpr), h = Math.round(box.height * dpr);
   if (c.canvas.width !== w || c.canvas.height !== h) { c.canvas.width = w; c.canvas.height = h; }
@@ -31,7 +34,8 @@ function fit(c) {
   c.size = { w: REF.w, h: box.height * k };
   c.radius = radius * k;
   c.px = k / dpr;
-  c.quiet = { y0: c.size.h * 0.79, y1: c.size.h * 0.88, keep: 0.3 }; // behind the readout
+  // behind the readout; a pane whose text sits beside its light (data-quiet="off") has none
+  c.quiet = c.el.dataset.quiet === 'off' ? null : { y0: c.size.h * 0.79, y1: c.size.h * 0.88, keep: 0.3 };
 }
 
 function drawCard(c, t) {
