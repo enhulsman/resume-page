@@ -5,7 +5,7 @@
 // ?cards=5 adds Finance Bot as 05; ?look=before shows the cards before review round 3.
 // ?blur=<0..1.5> sets one distance for every card (0 hard edges, 1 the study's softness);
 // without it each card uses its own. Clicking the value goes back to per card.
-import { glassCards, benched, h2Card, annaDepth, annaExploded, type GlassCard, type AnnaPane } from "../config/glass.ts";
+import { glassCards, benched, h2Card, annaExploded, type GlassCard, type AnnaPane } from "../config/glass.ts";
 import { annaLead } from "../config/home";
 import site from "../config/site";
 
@@ -37,7 +37,6 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       h.dataset.cards = q.get('cards') === '5' ? '5' : '4';
       h.dataset.look = q.get('look') === 'before' ? 'before' : 'now';
       if (q.get('lab') === '1') h.dataset.lab = '';
-      h.dataset.anna = q.get('anna') === 'exploded' ? 'exploded' : 'depth';
     </script>
   </head>
   <body>
@@ -91,34 +90,29 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
         </a>
       </section>
 
-      <!-- lab only (task 2.3): ANNA's section, two variants; ?anna=depth|exploded -->
-      <section class="anna-lab" aria-labelledby="anna-h">
-        <div class="anna-copy">
-          <h2 id="anna-h">ANNA</h2>
-          <p>{annaLead.text}.</p>
-          <a class="more" href={annaLead.href}>How ANNA is built <span aria-hidden="true">→</span></a>
-        </div>
-
-        <ol class="depth" aria-label="ANNA, level by level">
-          {annaDepth.panes.map(p => (
-            <li class="glass-card row" {...lit(p)}>
-              <canvas aria-hidden="true"></canvas>
-              <span class="lvl"><b>{p.name}</b><span>{p.text}</span></span>
-            </li>
-          ))}
-        </ol>
-
-        <div class="exploded">
+      <!-- lab only (task 2.3): ANNA as four glass panes over one flame. Scrolling in pulls the
+           block apart; the level being read slides out and sharpens; drag or the buttons turn it. -->
+      <section class="anna-x" aria-labelledby="anna-h">
+        <div class="anna-stage">
           <div class="stack" aria-hidden="true">
-            {annaExploded.panes.map((p, i) => (
-              <div class="glass-card slab" style={`--i: ${i}`} {...lit(p)}>
-                <canvas></canvas>
-              </div>
-            ))}
+            {annaExploded.panes.map((p) => <div class="glass-card slab" {...lit(p)}><canvas></canvas></div>)}
           </div>
-          <ol class="labels" aria-label="ANNA, level by level">
-            {annaExploded.panes.map((p, i) => <li style={`--i: ${i}`}><b>{p.name}</b><span>{p.text}</span></li>)}
-          </ol>
+          <div class="turn" role="group" aria-label="Turn the stack">
+            <button type="button" data-turn="-1" aria-label="Turn left">&larr;</button>
+            <button type="button" data-turn="1" aria-label="Turn right">&rarr;</button>
+            <button type="button" data-tilt aria-label="Tilt edge-on and back">&#8597;</button>
+            <span>Drag to turn</span>
+          </div>
+        </div>
+        <div class="anna-steps">
+          <div class="step intro">
+            <h2 id="anna-h">ANNA</h2>
+            <p>{annaLead.text}.</p>
+            <a class="more" href={annaLead.href}>How ANNA is built <span aria-hidden="true">→</span></a>
+          </div>
+          {annaExploded.panes.map((p, i) => (
+            <div class="step" data-step={i}><h3>{p.name}</h3><p>{p.text}</p></div>
+          ))}
         </div>
       </section>
     </main>
@@ -127,12 +121,12 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       <span class="seg"><a href="?v=h3" data-key="v" data-val="h3">H3</a><a href="?v=h2" data-key="v" data-val="h2">H2</a></span>
       <span class="seg"><a href="?cards=4" data-key="cards" data-val="4">4</a><a href="?cards=5" data-key="cards" data-val="5">5</a></span>
       <span class="seg"><a href="?look=now" data-key="look" data-val="now" title="the cards now">now</a><a href="?look=before" data-key="look" data-val="before" title="before review round 3: no wash, upright flame, darker Henk">before</a></span>
-      <span class="seg"><a href="?anna=depth" data-key="anna" data-val="depth" title="ANNA: one pane, deeper rows further behind">depth</a><a href="?anna=exploded" data-key="anna" data-val="exploded" title="ANNA: four panes over one flame">exploded</a></span>
       <label class="dial">distance <input id="blur" type="range" min="0" max="1.5" step="0.05" value="1" /> <output id="blur-out" title="back to each card's own">per card</output></label>
     </nav>
 
     <script>
       import "../scripts/glass/hero.js";
+      import "../scripts/glass/anna.js";
     </script>
   </body>
 </html>
@@ -257,8 +251,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   .lab .seg { display: flex; gap: 0; padding-right: 6px; border-right: 1px solid rgb(255 255 255 / 0.15); }
   html[data-v="h3"] .lab a[data-key="v"][data-val="h3"], html[data-v="h2"] .lab a[data-key="v"][data-val="h2"],
   html[data-cards="4"] .lab a[data-key="cards"][data-val="4"], html[data-cards="5"] .lab a[data-key="cards"][data-val="5"],
-  html[data-look="now"] .lab a[data-key="look"][data-val="now"], html[data-look="before"] .lab a[data-key="look"][data-val="before"],
-  html[data-anna="depth"] .lab a[data-key="anna"][data-val="depth"], html[data-anna="exploded"] .lab a[data-key="anna"][data-val="exploded"] { background: #EEEAE3; color: #111; }
+  html[data-look="now"] .lab a[data-key="look"][data-val="now"], html[data-look="before"] .lab a[data-key="look"][data-val="before"] { background: #EEEAE3; color: #111; }
 
   /* lab: four or five cards; five keep the original 296 x 360 card */
   html[data-cards="4"] .cards li.bench { display: none; }
@@ -268,48 +261,47 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   html[data-look="before"] .glass-card .title { font-weight: 640; }
 
   /* ---- ANNA's section (lab only) ---- */
-  html:not([data-lab]) .anna-lab { display: none; }
-  html[data-anna="depth"] .exploded, html[data-anna="exploded"] .depth { display: none; }
-  .anna-lab {
-    display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); align-items: start;
-    gap: clamp(24px, 5vw, 96px); padding: clamp(64px, 8vw, 128px) var(--gutter);
+  html:not([data-lab]) .anna-x { display: none; }
+  .anna-x {
+    display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    column-gap: clamp(24px, 5vw, 96px); padding: 0 var(--gutter);
   }
-  .anna-copy { position: sticky; top: 32px; }
-  .anna-copy h2 { margin: 0; font: 900 clamp(48px, 6.4vw, 104px)/0.9 "Archivo"; font-stretch: 88%; letter-spacing: -0.04em; }
-  .anna-copy p { margin: 0.8em 0 0; max-width: 30ch; font-size: clamp(18px, 1.6vw, 23px); line-height: 1.34; color: var(--ink-2); text-wrap: pretty; }
-  .anna-copy .more { display: inline-block; margin-top: 1.2em; font-weight: 600; }
-  .anna-lab ol { list-style: none; margin: 0; padding: 0; }
-  .lvl b, .labels b { display: block; font-weight: 680; font-size: clamp(16px, 1.35vw, 20px); letter-spacing: -0.015em; }
-  .lvl span, .labels span { display: block; margin-top: 0.3em; font-size: clamp(13px, 1.02vw, 15px); line-height: 1.38; color: var(--ink-2); text-wrap: pretty; }
+  .anna-steps { grid-column: 1; grid-row: 1; padding-bottom: 30svh; }
+  .anna-stage { grid-column: 2; grid-row: 1; position: sticky; top: 0; height: 100svh; touch-action: pan-y; cursor: grab; user-select: none; }
+  .anna-stage.dragging { cursor: grabbing; }
+  .step { min-height: 62svh; display: flex; flex-direction: column; justify-content: center; max-width: 34ch; }
+  .step.intro { min-height: 100svh; }
+  .step h2 { margin: 0; font: 900 clamp(48px, 6.4vw, 104px)/0.9 "Archivo"; font-stretch: 88%; letter-spacing: -0.04em; }
+  .step.intro p { margin: 0.8em 0 0; font-size: clamp(18px, 1.6vw, 23px); line-height: 1.34; color: var(--ink-2); text-wrap: pretty; }
+  .step .more { margin-top: 1.2em; font-weight: 600; }
+  .step h3 { margin: 0; font-weight: 700; font-size: clamp(22px, 2.2vw, 32px); letter-spacing: -0.02em; }
+  .step[data-step] p { margin: 0.5em 0 0; font-size: clamp(16px, 1.3vw, 19px); line-height: 1.4; color: var(--ink-2); text-wrap: pretty; }
+  .step[data-step] { opacity: 0.38; transition: opacity 0.4s; }
+  .step[data-step].reading { opacity: 1; }
 
-  /* depth: four panes in one column, a row per level; the CSS keeps the study's 296 x 106 */
-  .depth { display: grid; gap: 6px; max-width: 680px; }
-  .glass-card.row { aspect-ratio: 296 / 106; border-radius: 12px; }
-  .row .lvl { left: 6%; top: 50%; transform: translateY(-50%); max-width: 50%; }
-
-  /* exploded: the panes drawn as an axonometric stack, pulled apart; labels flat beside them */
-  .exploded { --S: min(330px, 30vw); --gap: calc(var(--S) * 0.44); --dh: calc(var(--S) * 0.7071);
-    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(16px, 3vw, 48px); }
-  .stack { position: relative; width: calc(var(--S) * 1.4142); height: calc(3 * var(--gap) + var(--dh)); }
+  /* the panes: placed and turned by anna.js (translate, rotateX, rotateZ, no perspective) */
+  .stack { position: absolute; inset: 0; --S: min(330px, 26vw, 34svh); }
   .glass-card.slab {
-    position: absolute; width: var(--S); aspect-ratio: 1; border-radius: 14px;
-    left: calc(var(--S) * 0.2071); top: calc(var(--i) * var(--gap) + var(--dh) / 2 - var(--S) / 2);
-    transform: rotateX(60deg) rotateZ(-45deg); z-index: calc(10 - var(--i));
+    position: absolute; left: 50%; top: 50%; width: var(--S); aspect-ratio: 1; border-radius: 14px;
+    transform: translate(-50%, -50%) rotateX(60deg) rotateZ(-45deg);
     box-shadow: 0 1px 1px rgb(70 50 30 / 0.06), 0 22px 30px -16px rgb(70 50 30 / 0.4);
   }
-  .labels { position: relative; height: calc(3 * var(--gap) + var(--dh)); }
-  .labels li { position: absolute; left: 0; right: 0; max-width: 36ch; top: calc(var(--i) * var(--gap) + var(--dh) / 2); transform: translateY(-50%); }
-  .labels li::before { content: ""; position: absolute; right: calc(100% + 10px); top: 0.7em; width: clamp(16px, 3vw, 48px); border-top: 1px solid rgb(17 17 16 / 0.35); }
+  .slab:nth-child(1) { z-index: 4; } .slab:nth-child(2) { z-index: 3; } .slab:nth-child(3) { z-index: 2; } .slab:nth-child(4) { z-index: 1; }
+  .turn { position: absolute; left: 50%; bottom: 5svh; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); }
+  .turn button { width: 34px; height: 34px; border-radius: 999px; border: 0; background: rgb(17 17 16 / 0.07); color: var(--ink); font: 500 15px/1 "Archivo"; cursor: pointer; }
+  .turn button:hover { background: rgb(17 17 16 / 0.13); }
+  .turn button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .turn span { margin-left: 6px; }
 
   @media (max-width: 760px) {
-    .anna-lab { grid-template-columns: 1fr; }
-    .anna-copy { position: static; }
-    .row .lvl { max-width: 56%; }
-    .row .lvl span { font-size: 12.5px; }
-    .exploded { --S: 58vw; grid-template-columns: 1fr; justify-items: center; }
-    .labels { height: auto; display: grid; gap: 14px; justify-self: stretch; }
-    .labels li { position: static; transform: none; max-width: none; }
-    .labels li::before { display: none; }
+    .anna-x { grid-template-columns: 1fr; }
+    .anna-stage { grid-column: 1; grid-row: 1; height: 54svh; z-index: 2; background: var(--stone); }
+    .anna-steps { grid-column: 1; grid-row: 2; }
+    .stack { --S: min(44vw, 22svh); }
+    .turn { bottom: 8px; }
+    .turn span { display: none; }
+    .step { min-height: 34svh; }
+    .step.intro { min-height: 50svh; }
     .bar nav a:not(.pill) { display: none; }
     .h3 .top { grid-template-columns: 1fr; row-gap: 18px; }
     .h3 .intro { justify-self: start; }

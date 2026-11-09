@@ -108,9 +108,8 @@ for (const c of [...glassCards, ...benched]) c.before = { tune: beforeTune[c.id]
 
 export const h2Card: GlassCard = { ...glassCards[0], readout: 'In production at Anamata' };
 
-// ---- ANNA's section, two variants under trial (task 2.3, /hero-lab?lab=1) ----
-// Both use ANNA's own light, the flame, so the section reads as ANNA and never borrows another
-// card's light. Words come from annaLevels in home.ts.
+// ---- ANNA's section (task 2.3, /hero-lab?lab=1): four panes over one flame, pulled apart ----
+// ANNA's own light, the flame, so the section reads as ANNA and never borrows another card's. Words come from annaLevels in home.ts.
 
 export interface AnnaPane {
   id: (typeof annaLevels)[number]['id'];
@@ -134,23 +133,8 @@ const flame = (o: { x: number; haloY: number; halo: number; tongueY: number; ton
   { scale: o.tongue, stretch: [0.8, 1.15], lean: 0.15, dx: o.x - 148.5, dy: o.tongueY - 287, set: { color: o.tip, color2: o.root, g0: o.g[0], g1: o.g[1], sigma: 0.07, opacity: o.tongueOpacity ?? 1 } },
 ];
 
-// depth: the flame cools as it goes down, from ANNA's card colours to a plum ember
-const depthColours: { tip: RGB; root: RGB; glow: RGB; wash: RGB }[] = [
-  { tip: [214, 58, 34], root: [255, 196, 96], glow: [242, 168, 112], wash: [236, 150, 96] },
-  { tip: [190, 52, 48], root: [246, 160, 90], glow: [232, 142, 106], wash: [226, 138, 104] },
-  { tip: [158, 50, 70], root: [230, 128, 96], glow: [208, 130, 122], wash: [206, 128, 124] },
-  { tip: [120, 62, 98], root: [206, 124, 120], glow: [178, 124, 142], wash: [176, 126, 146] },
-];
-const depthDistance = [0.35, 0.6, 0.9, 1.25];
-
-export const annaDepth: AnnaVariant = {
-  h: 106,
-  panes: annaLevels.map((l, i) => ({
-    ...l, light: FLAME, base: ANNA_BASE, distance: depthDistance[i],
-    wash: { color: depthColours[i].wash, opacity: 0.18 },
-    tune: flame({ x: 228, haloY: 55, halo: 1.0, tongueY: 70, tongue: 0.55, g: [25, 82], ...depthColours[i] }),
-  })),
-};
+// ANNA's card colours: a red tip, a yellow root, an amber glow
+const annaFlame = { tip: [214, 58, 34] as RGB, root: [255, 196, 96] as RGB, glow: [242, 168, 112] as RGB };
 
 // exploded: one flame under the stack. The bottom pane is nearest it and shows it whole; each
 // pane above sees it further off and through more glass: softer and fainter
@@ -165,6 +149,6 @@ export const annaExploded: AnnaVariant = {
   panes: annaLevels.map((l, i) => ({
     ...l, light: FLAME, base: ANNA_BASE, distance: up[i].distance,
     wash: { color: [236, 150, 96], opacity: 0.2 },
-    tune: flame({ x: 148, haloY: 150, halo: 1.5, tongueY: 205, tongue: 1.1, g: [116, 229], haloOpacity: up[i].halo, tongueOpacity: up[i].tongue, ...depthColours[0] }),
+    tune: flame({ x: 148, haloY: 150, halo: 1.5, tongueY: 205, tongue: 1.1, g: [116, 229], haloOpacity: up[i].halo, tongueOpacity: up[i].tongue, ...annaFlame }),
   })),
 };

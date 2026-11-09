@@ -90,6 +90,12 @@ if (dial) {
   }));
 }
 
+// for page scripts that change a pane while it runs (ANNA's stack): its live state, by element.
+// Set `distance` and `tune` on it; call redraw() when the loop is not running (reduced motion, ?t=).
+export const paneFor = (el) => cards.find((c) => c.el === el);
+export const redraw = () => drawAll();
+export const looping = () => frozen == null && !still.matches;
+
 // for tests and screenshots: window.__glass.at(seconds) draws every card at that moment
 window.__glass = { at(t) { drawAll(t); }, count: cards.length };
 document.fonts.ready.then(() => { cards.forEach(fit); drawAll(); window.__glassReady = true; });
