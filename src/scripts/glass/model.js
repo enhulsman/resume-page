@@ -40,7 +40,7 @@ const evalVec = (v, t) => v.map((x) => evalParam(x, t));
  * `ground` turns a band into a fixed-height ground under the study's top edge,
  * `dist` scales the card's distance for this layer alone, `lean` adds to its shear.
  * `wash` lays one faint broad light under the rest, so the ribs show across the whole card.
- * A layer tuned to opacity 0 is dropped (the shader draws at most three).
+ * A layer tuned to opacity 0 is dropped (the shader draws at most MAX_LAYERS).
  * The motion stays the study's.
  * `blur` is the distance dial: how far behind the glass the light sits. At 0 a retuned layer
  * keeps its own edge, at 1 every edge is as soft as the study's, above 1 softer still.
@@ -89,7 +89,19 @@ export function cardState(i, t, base, tune, blur = 0, wash) {
 const Phi = (x0) => { const x = Math.min(6, Math.max(-6, x0)); return 0.5 * (1 + Math.tanh(0.7978845608 * (x + 0.044715 * x * x * x))); };
 const soft = (sd, s) => Phi(-sd / Math.max(s, 1e-4));
 
-export function shapeCoverage(L, X, Y) {
+/** Where the sample lands in the light's own frame: slid by `ox`, turned by `rot` (radians, clockwise on screen) about (px, py), its centre by default. */
+export function layerFrame(L, X0, Y0) {
+  let X = X0 - (L.ox ?? 0), Y = Y0;
+  if (L.rot) {
+    const px = L.px ?? L.cx ?? 0, py = L.py ?? L.cy ?? L.y0 ?? 0;
+    const c = Math.cos(L.rot), s = Math.sin(L.rot), dx = X - px, dy = Y - py;
+    X = px + c * dx + s * dy; Y = py - s * dx + c * dy;
+  }
+  return [X, Y];
+}
+
+export function shapeCoverage(L, X0, Y0) {
+  const [X, Y] = layerFrame(L, X0, Y0);
   const x = L.shear ? X - L.shear * (Y - (L.cy ?? 0)) : X;
   if (L.kind === 'ellipse') {
     const sx = Math.max(Math.abs(L.sx), 4), sy = Math.max(Math.abs(L.sy), 4); // sizes never cross zero

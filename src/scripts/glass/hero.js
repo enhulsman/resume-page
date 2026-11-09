@@ -48,7 +48,8 @@ function drawCard(c, t) {
   if (!c.size) fit(c);
   if (!c.size) return;
   const before = document.documentElement.dataset.look === 'before'; // lab: the cards before review round 3
-  const state = cardState(c.light, t, c.base, before ? (c.tuneBefore ?? c.tune) : c.tune, blur ?? c.distance, before ? undefined : c.wash);
+  // a page script may hand a pane its own scene (ANNA's stagings): a function of time giving { base, layers }
+  const state = c.scene ? c.scene(t) : cardState(c.light, t, c.base, before ? (c.tuneBefore ?? c.tune) : c.tune, blur ?? c.distance, before ? undefined : c.wash);
   state.quiet = c.quiet;
   if (c.ink) state.ink = c.ink; // set by a page script through paneFor()
   const w = c.canvas.width, h = c.canvas.height;
@@ -102,7 +103,7 @@ if (dial) {
 }
 
 // for page scripts that change a pane while it runs (ANNA's stack): its live state, by element.
-// Set `distance`, `tune` or `ink` on it; call redrawPane() when the loop is not running (reduced motion, ?t=).
+// Set `distance`, `tune`, `ink` or `scene` on it; call redrawPane() when the loop is not running (reduced motion, ?t=).
 export const paneFor = (el) => cards.find((c) => c.el === el);
 export const redraw = () => drawAll();
 /** Redraw one pane (from paneFor) now: cheaper than redraw() when only it changed. */

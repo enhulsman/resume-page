@@ -1,7 +1,9 @@
 // WebGL2 renderer for one glass card, carried over from the [04] study (src/shader.js).
 // The fragment shader is the GLSL twin of pixelAt() in model.js; keep the two in step.
 // The card is drawn in the study's units (296 x 360), whatever its CSS size.
-export const MAX_LAYERS = 3;
+export const MAX_LAYERS = 8;
+/** vec4s per layer; the last holds ox, rot, and the pivot (px, py) it turns about. */
+export const STRIDE = 8;
 const KIND = { ellipse: 0, band: 1, drop: 2 };
 
 const VS = `#version 300 es
@@ -17,7 +19,7 @@ const FS = `#version 300 es
 precision highp float;
 in vec2 vLocal;
 uniform vec3 uBase;          // 0..255
-uniform vec4 uL[${MAX_LAYERS * 7}];
+uniform vec4 uL[${MAX_LAYERS * STRIDE}];
 uniform int uCount;
 uniform vec4 uGlass;         // pitch, m, seamDepth, seamWidth
 uniform vec3 uLine;          // groove depth (levels), groove width, seam blur radius
@@ -38,19 +40,26 @@ out vec4 outColor;
 float Phi(float x) { x = clamp(x, -6.0, 6.0); return 0.5 * (1.0 + tanh(0.7978845608 * (x + 0.044715 * x * x * x))); }
 float soft(float sd, float s) { return Phi(-sd / max(s, 1e-4)); }
 
-float coverage(int i, float X, float Y) {
-  vec4 a = uL[i*7], b = uL[i*7+1], c = uL[i*7+2], d = uL[i*7+3];
+float coverage(int i, float X0, float Y0) {
+  int o = i * ${STRIDE};
+  vec4 a = uL[o], b = uL[o+1], c = uL[o+2], d = uL[o+3], r = uL[o+${STRIDE - 1}];
+  // the light's own frame: slid by ox, turned by rot about (px, py), as layerFrame() in model.js
+  float X = X0 - r.x, Y = Y0;
+  if (r.y != 0.0) {
+    float cr = cos(r.y), sr = sin(r.y), dx = X - r.z, dy = Y - r.w;
+    X = r.z + cr * dx + sr * dy; Y = r.w - sr * dx + cr * dy;
+  }
   int kind = int(a.x + 0.5);
   float cx = a.y, cy = a.z, sx = a.w, sy = b.x, sigma = b.y, h = b.z, shear = b.w;
   float x = X - shear * (Y - cy);
   if (kind == 0) {
     vec2 q = abs(vec2((x - cx) / max(abs(sx), 4.0), (Y - cy) / max(abs(sy), 4.0))); // sizes never cross zero
-    float pn = uL[i*7+6].w; // superellipse norm, 2 = ellipse
+    float pn = uL[o+6].w; // superellipse norm, 2 = ellipse
     float dq = pn == 2.0 ? length(q) : pow(pow(q.x, pn) + pow(q.y, pn), 1.0 / pn);
     return soft(dq - 1.0, sigma);
   }
   if (kind == 1) {
-    vec4 w2 = uL[i*7+6];
+    vec4 w2 = uL[o+6];
     float yc = c.x + c.y * sin(6.283185307 * x / c.z + c.w) + w2.x * sin(6.283185307 * x / w2.y + w2.z);
     float hh = a.y > 0.5 ? 10.0 + abs(d.x) : d.x;            // band: a.y = 1 when d.x is hq (floor 10 px)
     float sg = b.z != 0.0 ? abs(b.z) / max(abs(hh), 1e-3) : sigma; // band: b.z = edge softness in px
@@ -68,7 +77,8 @@ vec3 field(float X, float Y) {
   vec3 P = vec3(0.0); float A = 0.0;
   for (int i = 0; i < ${MAX_LAYERS}; i++) {
     if (i >= uCount) break;
-    vec4 d = uL[i*7+3], e = uL[i*7+4], f = uL[i*7+5];
+    int o = i * ${STRIDE};
+    vec4 d = uL[o+3], e = uL[o+4], f = uL[o+5];
     float cov = coverage(i, X, Y) * d.y;
     vec3 col = e.rgb;
     if (e.a > 0.5) col = mix(col, f.rgb, clamp((Y - d.z) / (d.w - d.z), 0.0, 1.0));
@@ -140,9 +150,9 @@ function compile(gl, type, src) {
 }
 
 export function packLayers(layers) {
-  const a = new Float32Array(MAX_LAYERS * 7 * 4);
+  const a = new Float32Array(MAX_LAYERS * STRIDE * 4);
   layers.slice(0, MAX_LAYERS).forEach((L, i) => {
-    const o = i * 28;
+    const o = i * STRIDE * 4;
     const v = [
       KIND[L.kind], L.kind === 'band' ? (L.hq != null ? 1 : 0) : (L.cx ?? 0), L.cy ?? 0, L.sx ?? 1,
       L.sy ?? 1, L.sigma ?? 0, L.kind === 'band' ? (L.soft ?? 0) : (L.h ?? 2), L.shear ?? 0,
@@ -151,6 +161,7 @@ export function packLayers(layers) {
       ...L.color, L.color2 ? 1 : 0,
       ...(L.color2 ?? [0, 0, 0]), 0,
       L.amp2 ?? 0, L.lam2 ?? 1e9, L.phase2 ?? 0, L.pn ?? 2,
+      L.ox ?? 0, L.rot ?? 0, L.px ?? L.cx ?? 0, L.py ?? L.cy ?? L.y0 ?? 0,
     ];
     a.set(v, o);
   });
