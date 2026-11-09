@@ -1,0 +1,227 @@
+---
+// Prototype of the glass hero (card run 7: H3, with H2 as the alternative), on G4's warm
+// stone. Not linked from anywhere and not indexed. ?v=h2 shows H2; ?t=<seconds> freezes the light;
+// ?blur=<0..1.5> sets one distance for every card (0 hard edges, 1 the study's softness);
+// without it each card uses its own. Clicking the value goes back to per card.
+import { glassCards, h2Card, type GlassCard } from "../config/glass.ts";
+import site from "../config/site";
+
+const role = `${site.role} at ${site.company}.`;
+const intro = "I build ANNA, an AI assistant in Microsoft Teams that does the admin no one should spend their day on.";
+const nav = [
+  { label: "Projects", href: "/projects" },
+  { label: "Blog", href: "/blog" },
+  { label: "Résumé", href: "/resume" },
+  { label: "Contact", href: "/contact" },
+];
+const idx = (i: number) => String(i + 1).padStart(2, "0");
+const rgb = (c: GlassCard) => `rgb(${c.base.join(" ")})`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#EEEAE3" />
+    <title>{site.name} (hero lab)</title>
+    <link rel="preload" href="/fonts/Archivo.woff2" as="font" type="font/woff2" crossorigin />
+    <script is:inline>
+      document.documentElement.dataset.v = new URLSearchParams(location.search).get('v') === 'h2' ? 'h2' : 'h3';
+    </script>
+  </head>
+  <body>
+    <header class="bar">
+      <a class="mark" href="/" aria-label={site.name}>EH.</a>
+      <nav aria-label="Site">
+        {nav.map(n => <a href={n.href}>{n.label}</a>)}
+        <a class="pill" href="/contact">Get in touch</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- H3: the name, and the work as five lights -->
+      <section class="hero h3" aria-labelledby="name-h3">
+        <div class="top">
+          <h1 id="name-h3" class="name">Ezra<br />Hulsman</h1>
+          <p class="intro">{role} {intro}</p>
+        </div>
+        <ul class="cards" aria-label="Projects">
+          {glassCards.map((c, i) => (
+            <li>
+              <a class="glass-card" href={c.href} data-light={c.light} data-base={JSON.stringify(c.base)} data-tune={c.tune && JSON.stringify(c.tune)} data-distance={c.distance} style={`--base: ${rgb(c)}`}>
+                <canvas aria-hidden="true"></canvas>
+                <span class="title">{c.title}</span>
+                <span class="idx" aria-hidden="true">{idx(i)}</span>
+                <span class="readout">{c.readout}</span>
+                <span class="go" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- H2: the name, and one light: ANNA -->
+      <section class="hero h2" aria-labelledby="name-h2">
+        <div class="copy">
+          <h1 id="name-h2" class="name">Ezra<br />Hulsman</h1>
+          <p class="role">{role.replace(/\.$/, "")}</p>
+          <p class="intro">{intro}</p>
+          <p class="actions">
+            <a class="pill" href="/contact">Get in touch</a>
+            <a class="pill ghost" href="/resume">Résumé</a>
+          </p>
+        </div>
+        <a class="glass-card big" href={h2Card.href} data-light={h2Card.light} data-base={JSON.stringify(h2Card.base)} data-tune={h2Card.tune && JSON.stringify(h2Card.tune)} data-distance={h2Card.distance} style={`--base: ${rgb(h2Card)}`}>
+          <canvas aria-hidden="true"></canvas>
+          <span class="title">{h2Card.title}</span>
+          <span class="idx" aria-hidden="true">01</span>
+          <span class="readout">{h2Card.readout}</span>
+          <span class="go" aria-hidden="true">→</span>
+        </a>
+      </section>
+    </main>
+
+    <nav class="lab" aria-label="Variant">
+      <a href="?v=h3" data-for="h3">H3</a><a href="?v=h2" data-for="h2">H2</a>
+      <label class="dial">distance <input id="blur" type="range" min="0" max="1.5" step="0.05" value="1" /> <output id="blur-out" title="back to each card's own">per card</output></label>
+    </nav>
+
+    <script>
+      import "../scripts/glass/hero.js";
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  @font-face { font-family: "Archivo"; src: url(/fonts/Archivo.woff2) format("woff2-variations"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+
+  :root {
+    --stone: #EEEAE3;
+    --ink: #111110;
+    --ink-2: #2a2826;
+    --gutter: clamp(16px, 2.2vw, 32px);
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--stone);
+    color: var(--ink);
+    font: 400 16px/1.4 "Archivo", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    word-spacing: 0.06em;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  html[data-v="h3"] .hero.h2, html[data-v="h2"] .hero.h3 { display: none; }
+
+  .bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px var(--gutter) 0;
+  }
+  .mark { font: 900 28px/1 "Archivo"; letter-spacing: -0.04em; }
+  .bar nav { display: flex; align-items: center; gap: clamp(16px, 3.2vw, 46px); font-weight: 450; font-size: 17px; }
+  .pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--ink); color: var(--stone);
+    padding: 9px 20px; border-radius: 999px; font-weight: 500;
+  }
+  .pill.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+  .name {
+    margin: 0;
+    font: 900 clamp(64px, min(13.6vw, 21svh), 212px)/0.84 "Archivo";
+    font-stretch: 88%;
+    letter-spacing: -0.045em;
+    margin-left: -0.04em;
+  }
+
+  /* ---- H3 ---- */
+  .h3 { padding: clamp(32px, 4.4vw, 64px) var(--gutter) 40px; }
+  .h3 .top {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end;
+    column-gap: clamp(24px, 4vw, 64px);
+  }
+  .h3 .intro {
+    margin: 0 0 0.35em; max-width: 33ch; justify-self: end;
+    font-size: clamp(18px, 1.75vw, 25px); line-height: 1.32; color: var(--ink-2); text-wrap: pretty;
+  }
+  .cards {
+    list-style: none; margin: clamp(28px, 3.6vw, 52px) 0 0; padding: 0;
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(8px, 1vw, 14px);
+  }
+
+  /* ---- the card ---- */
+  .glass-card {
+    position: relative; display: block; aspect-ratio: 296 / 360;
+    border-radius: clamp(12px, 1.3vw, 18px);
+    background: var(--base);
+    color: var(--ink);
+    transition: transform 0.35s cubic-bezier(.2,.7,.2,1);
+    box-shadow: 0 1px 1px rgb(70 50 30 / 0.06), 0 14px 28px -18px rgb(70 50 30 / 0.35);
+  }
+  .glass-card canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: inherit; }
+  /* the glass edge: a light rim above the light */
+  .glass-card::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.85),
+      inset 1px 0 0 rgb(255 255 255 / 0.6), inset -1px 0 0 rgb(255 255 255 / 0.6),
+      inset 0 -1px 0 rgb(80 60 40 / 0.12),
+      inset 0 0 0 1px rgb(255 255 255 / 0.18),
+      inset 0 0 9px 1px rgb(255 255 255 / 0.22);
+  }
+  .glass-card > span { position: absolute; z-index: 1; }
+  .glass-card .title { left: 7%; top: 6.5%; font-weight: 640; font-size: clamp(15px, 1.5vw, 22px); letter-spacing: -0.02em; line-height: 1.1; }
+  .glass-card .idx { right: 7%; top: 7.2%; font-weight: 450; font-size: clamp(11px, 0.9vw, 13px); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+  .glass-card .readout { left: 7%; bottom: 6.5%; font-weight: 480; font-size: clamp(12px, 1.05vw, 15px); font-variant-numeric: tabular-nums; }
+  .glass-card .go {
+    right: 7%; bottom: 6.5%; font-weight: 500; font-size: clamp(13px, 1.1vw, 16px); line-height: 1;
+    transition: transform 0.35s cubic-bezier(.2,.7,.2,1);
+  }
+  .glass-card:hover, .glass-card:focus-visible { transform: translateY(-3px); }
+  .glass-card:hover .go, .glass-card:focus-visible .go { transform: translateX(4px); }
+  .glass-card:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  /* ---- H2 ---- */
+  .h2 {
+    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center;
+    gap: clamp(24px, 4vw, 72px);
+    padding: clamp(32px, 5vw, 72px) var(--gutter) 48px;
+    min-height: calc(100svh - 70px);
+  }
+  .h2 .name { font-size: clamp(64px, 10.4vw, 160px); }
+  .h2 .role { margin: 0.9em 0 0; font-weight: 640; font-size: clamp(18px, 1.9vw, 28px); letter-spacing: -0.015em; }
+  .h2 .intro { text-wrap: pretty; margin: 0.6em 0 0; max-width: 34ch; font-size: clamp(17px, 1.6vw, 23px); line-height: 1.34; color: var(--ink-2); }
+  .h2 .actions { display: flex; gap: 12px; margin: 1.6em 0 0; }
+  .h2 .actions .pill { padding: 13px 26px; font-size: 17px; }
+  .glass-card.big { width: min(100%, 520px); justify-self: end; border-radius: clamp(16px, 2vw, 26px); }
+  .glass-card.big .title { font-size: clamp(18px, 1.7vw, 24px); }
+  .glass-card.big .readout { font-size: clamp(13px, 1.15vw, 16px); }
+
+  .lab { position: fixed; right: 12px; bottom: 12px; display: flex; gap: 2px; font: 500 12px/1 "Archivo"; background: rgb(17 17 16 / 0.85); border-radius: 999px; padding: 3px; }
+  .lab a { color: #ddd; padding: 6px 10px; border-radius: 999px; }
+  .lab .dial { display: flex; align-items: center; gap: 8px; color: #ddd; padding: 0 12px 0 10px; }
+  .lab .dial input { width: 140px; accent-color: #EEEAE3; }
+  .lab .dial output { font-variant-numeric: tabular-nums; min-width: 7ch; cursor: pointer; }
+  html[data-v="h3"] .lab a[data-for="h3"], html[data-v="h2"] .lab a[data-for="h2"] { background: #EEEAE3; color: #111; }
+
+  @media (max-width: 760px) {
+    .bar nav a:not(.pill) { display: none; }
+    .h3 .top { grid-template-columns: 1fr; row-gap: 18px; }
+    .h3 .intro { justify-self: start; }
+    .cards {
+      grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%;
+      overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--gutter));
+      padding: 4px var(--gutter) 16px; scroll-padding-inline: var(--gutter); scrollbar-width: none;
+    }
+    .cards li { scroll-snap-align: start; }
+    .glass-card .title { font-size: 19px; }
+    .glass-card .readout { font-size: 14px; }
+    .h2 { grid-template-columns: 1fr; min-height: 0; }
+    .glass-card.big { justify-self: stretch; width: 100%; }
+  }
+</style>
