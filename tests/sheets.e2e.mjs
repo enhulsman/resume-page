@@ -249,11 +249,13 @@ test('/blog is the site diary: every post, newest first, dated', async () => {
   await context.close();
 });
 
-test('a post opens with its date in a title block and reads at a sane measure', async () => {
+// (openspec stone-inner-pages 6.2, decision 2026-11-10: B1 with layout ac, the title block goes)
+test('a post opens with its date in the side\'s facts and reads at a sane measure', async () => {
   const { context, page } = await open(`/blog/${POSTS[0]}`);
-  assert.equal((await page.locator('.titleblock th').first().innerText()).trim(), 'DATE');
-  const measure = await page.locator('.prose p').first().evaluate(p => p.getBoundingClientRect().width / parseFloat(getComputedStyle(p).fontSize));
-  assert.ok(measure < 44, `a line is about ${measure.toFixed(0)}em`);
+  assert.equal((await page.locator('.art-facts dt').first().innerText()).trim(), 'Date');
+  assert.match(await page.locator('.art-facts dd').first().locator('time').getAttribute('datetime'), /^\d{4}-\d{2}-\d{2}$/);
+  const width = await page.locator('.art .prose').evaluate(p => p.getBoundingClientRect().width);
+  assert.ok(width <= 672.5, `the prose column is ${width}px wide`);
   await context.close();
 });
 
@@ -549,65 +551,48 @@ test('/contact offers plain mail under the form', async () => {
 
 const box = (page, sel) => page.locator(sel).first().evaluate(el => { const r = el.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom }; });
 
-test('a post\'s text starts beside its title, right under the title block', async () => {
-  const { context, page } = await open('/blog/henk-exactly-once');
-  const [h1, tb, p] = await Promise.all([box(page, 'main h1'), box(page, '.titleblock'), box(page, '.post-intro p')]);
-  assert.ok(p.l > h1.r, 'the text is in the column beside the title');
-  assert.ok(Math.abs(p.l - tb.l) < 2, 'aligned with the title block');
-  assert.ok(p.t > tb.b && p.t - tb.b < 64, `right under the title block (gap ${Math.round(p.t - tb.b)}px)`);
-  assert.ok(p.t < h1.t + 400, 'it starts up beside the title, not a screen further down');
-  await context.close();
-});
+// Retired (openspec stone-inner-pages 6.2, decision 2026-11-10: B1 with layout ac; the hanging heads
+// and the title block go): "a post's text starts beside its title" and "every heading of a post still
+// hangs in the left column". tests/inner-blog.e2e.mjs checks the post's head, columns and order.
 
-test('a post\'s title block gives its reading time and, where it has one, its project', async () => {
-  const rows = async page => page.locator('.titleblock tr').evaluateAll(trs => trs.map(tr => [tr.querySelector('th').innerText.trim(), tr.querySelector('td').innerText.trim()]));
+test('a post\'s facts give its reading time and, where it has one, its project', async () => {
   let { context, page } = await open('/blog/henk-exactly-once');
-  const henk = Object.fromEntries(await rows(page));
-  assert.match(henk.READING, /^\d+ min$/);
-  assert.equal(await page.locator('.titleblock a[href="/projects/Henk"]').count(), 1, 'links its project');
-  assert.ok(henk.PROJECT, 'names its project');
+  const facts = async page => Object.fromEntries(await page.locator('.art-facts > div').evaluateAll(ds => ds.map(d => [d.querySelector('dt').innerText.trim(), d.querySelector('dd').innerText.trim()])));
+  assert.match((await facts(page)).Reading, /^\d+ min$/);
+  assert.equal(await page.locator('.art-stick .art-proj a[href="/projects/Henk"]').count(), 1, 'its project, linked');
   await context.close();
   ({ context, page } = await open('/blog/spec-factory'));
-  const spec = Object.fromEntries(await rows(page));
-  assert.match(spec.READING, /^\d+ min$/);
-  assert.equal(spec.PROJECT, undefined, 'no project row when the post names none');
+  assert.match((await facts(page)).Reading, /^\d+ min$/);
+  assert.equal(await page.locator('.art-proj').count(), 0, 'no project when the post names none');
   await context.close();
 });
 
-test('on a phone a post reads in order: title, title block, text', async () => {
+test('on a phone a post reads in order: title, lead, window, text, facts', async () => {
   const { context, page } = await open('/blog/henk-exactly-once', { width: 390, height: 844 });
-  const [h1, tb, p] = await Promise.all([box(page, 'main h1'), box(page, '.titleblock'), box(page, '.post-intro p')]);
-  assert.ok(h1.b <= tb.t && tb.b <= p.t);
+  const [h1, lead, win, prose, facts] = await Promise.all(['main h1', '.art-lead', '.art-window', '.art .prose', '.art-facts'].map(sel => box(page, sel)));
+  assert.ok(h1.b <= lead.t && lead.b <= win.t && win.b <= prose.t && prose.b <= facts.t);
   await context.close();
 });
 
-test('every heading of a post still hangs in the left column after the intro', async () => {
-  const { context, page } = await open('/blog/henk-exactly-once');
-  const [h1, h2s] = await Promise.all([box(page, 'main h1'), page.locator('.prose > h2').evaluateAll(hs => hs.map(h => h.getBoundingClientRect().left))]);
-  assert.ok(h2s.length > 0);
-  for (const l of h2s) assert.ok(Math.abs(l - h1.l) < 2);
-  await context.close();
-});
-
-test('the Henk post carries its own drawing under the title; a post without one has none', async () => {
+test('the Henk post carries its own drawing in the frosted pane opening the right column; a post without one has none', async () => {
   let { context, page } = await open('/blog/henk-exactly-once');
-  const dwg = page.locator('.post-dwg svg.dwg');
+  const dwg = page.locator('.art-window [data-glass="frosted"] svg.dwg');
   assert.equal(await dwg.count(), 1);
   assert.match(await dwg.locator('title').textContent(), /cursor/);
-  const [h1, tb, d] = await Promise.all([box(page, 'main h1'), box(page, '.titleblock'), box(page, '.post-dwg svg')]);
-  assert.ok(d.t >= h1.b, 'under the title');
-  assert.ok(d.r < tb.l, 'in the title\'s column, not over the text');
+  assert.equal(await page.locator('.art > aside > :first-child').evaluate(el => el.classList.contains('art-window')), true, 'the pane opens the right column');
+  const [h1, d] = await Promise.all([box(page, 'main h1'), box(page, '.art-window svg.dwg')]);
+  assert.ok(d.l > h1.r || d.l >= h1.l + 672, 'beside the text, not over it');
   assert.ok(d.r - d.l > 280, `drawn at a legible size (${Math.round(d.r - d.l)}px)`);
-  await page.waitForFunction(() => document.querySelector('.post-dwg svg').classList.contains('drawn'));
+  await page.waitForFunction(() => document.querySelector('.art-window svg.dwg').classList.contains('drawn'));
   await context.close();
   ({ context, page } = await open('/blog/spec-factory'));
-  assert.equal(await page.locator('.post-dwg').count(), 0);
+  assert.equal(await page.locator('svg.dwg').count(), 0);
   await context.close();
 });
 
 test('on a phone the post drawing fits the screen whole', async () => {
   const { context, page } = await open('/blog/henk-exactly-once', { width: 390, height: 844 });
-  const d = await box(page, '.post-dwg svg');
+  const d = await box(page, '.art-window [data-glass="frosted"] svg.dwg');
   assert.ok(d.l >= 0 && d.r <= 390);
   await context.close();
 });

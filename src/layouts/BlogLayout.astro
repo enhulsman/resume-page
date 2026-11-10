@@ -1,48 +1,95 @@
 ---
-// A post in the site diary, drawn as a sheet: the title on the left; on the right its title
-// block (date, reading time, the project it belongs to) and the post's opening, so the text
-// starts beside the title. From the first heading on, headings hang in the left column like
-// a drawing's notes.
+// A post (openspec stone-inner-pages: stone-blog "a post", stone-article-layout; Ezra, 2026-11-10, B1
+// with layout ac): the stone article, as on a project page. The head is the title and the
+// description; the right column holds the window `innerGlass` names for the post (Henk's chat,
+// bible-tui's reader, or the henk-exactly-once drawing in a frosted pane), then the contents, the
+// facts (Date, Updated, Reading) and the project's first number, and ends with the post's project
+// (its index, title, line and status) or, for a post with neither window nor project, "Other
+// writing". Fenced code sits in a frosted window over the glow of the post's project.
 import OverzichtLayout from "./OverzichtLayout.astro";
+import Article from "../components/stone/Article.astro";
+import GlassWindow from "../components/stone/GlassWindow.astro";
+import ProjectWindow from "../components/stone/ProjectWindow.astro";
+import DrawingPane from "../components/stone/DrawingPane.astro";
 import site from "../config/site";
-import { readingMinutes, splitIntro, relatedProject } from "../lib/post";
-import { postDrawings } from "../components/overzicht/drawings";
+import { readingMinutes, relatedProject } from "../lib/post";
+import { factsOf, numbersOf, otherWriting } from "../lib/article.ts";
+import { details } from "../lib/project-pages.ts";
+import { glassCards, hueInk, innerGlass, windowGlows } from "../config/glass.ts";
+import { pageWords } from "../config/pages.ts";
 
 const { frontmatter } = Astro.props;
-const { title, description = "", date, updated = "" } = frontmatter;
+const { title, description = "" } = frontmatter;
 
+const path = Astro.url.pathname.replace(/\/$/, "");
+const slug = path.split("/").pop() ?? "";
 const html = await Astro.slots.render("default");
-const { intro, rest } = splitIntro(html);
 const minutes = readingMinutes(html);
-const Drawing = postDrawings[Astro.url.pathname.replace(/\/$/, "").split("/").pop() ?? ""];
+
 const project = relatedProject(
   frontmatter.project,
   import.meta.glob("../pages/projects/*.mdx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>,
 );
+const detail = project ? details.find((d) => d.href === project.href) : undefined;
+const ci = detail ? glassCards.findIndex((c) => c.id === detail.id) : -1;
+const index = ci >= 0 ? String(ci + 1).padStart(2, "0") : undefined;
+const hue = ci >= 0 ? hueInk(glassCards[ci]) : undefined;
 
-const fmt = (d: string) =>
-  new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-const iso = (d: string) => new Date(d).toISOString().slice(0, 10);
+// every built post has an entry (tests/inner-pages.test.mjs); a sketch rendering a post's MDX under
+// its own route gets none
+const moments = innerGlass[path] ?? [];
+const WINDOWS = ["henk", "bible", "post-drawing"] as const;
+const moment = moments.find((m): m is (typeof WINDOWS)[number] => (WINDOWS as readonly string[]).includes(m));
+
+// the code's glow: the post's project's light, else the hero's four (Homelab's window is its dusk)
+type Glow = keyof typeof windowGlows;
+const glow: Glow = !detail ? "cards" : detail.id === "homelab" ? "dusk" : detail.id in windowGlows ? (detail.id as Glow) : "cards";
+
+// the prose, cut at every fenced block, so each sits in its own window
+const pieces: { code: boolean; html: string }[] = [];
+let last = 0;
+for (const m of html.matchAll(/<pre\b[\s\S]*?<\/pre>/g)) {
+  if (m.index! > last) pieces.push({ code: false, html: html.slice(last, m.index) });
+  pieces.push({ code: true, html: m[0] });
+  last = m.index! + m[0].length;
+}
+if (last < html.length) pieces.push({ code: false, html: html.slice(last) });
+
+const facts = factsOf(frontmatter, "post", minutes);
+const numbers = numbersOf({ kind: "post", dims: detail?.dims });
+const others = otherWriting(
+  import.meta.glob("../pages/blog/*.mdx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>,
+  { href: path, project: frontmatter.project, window: moment !== undefined },
+);
+const w = pageWords.article;
 ---
 
 <OverzichtLayout current="blog" title={`${title} — ${site.name}`} description={description} ogType="article">
-  <article class="sheet sheet-first case post">
-    <header class="sheet-head case-head">
-      <div class="post-title">
-        <h1>{title}</h1>
-        {Drawing && <div class="post-dwg"><Drawing /></div>}
+  <Article title={title} lead={description} facts={facts} numbers={numbers} moment={moment}>
+    {(moment === "henk" || moment === "bible") && <ProjectWindow slot="window" id={moment} class="art-stage" />}
+    {moment === "post-drawing" && <DrawingPane slot="window" id={slug} glow="henk" class="art-stage" />}
+    {pieces.map((p) =>
+      p.code ? (
+        <div class="art-code" data-glass-moment="code">
+          <GlassWindow title="" glow={glow} dots class="art-code-stage" windowClass="art-code-window"><Fragment set:html={p.html} /></GlassWindow>
+        </div>
+      ) : (
+        <Fragment set:html={p.html} />
+      ),
+    )}
+    {detail && (
+      <div slot="side" class="art-proj">
+        {index && <span class="art-proj-idx" aria-hidden="true" style={hue && `color: ${hue}`}>{index}</span>}
+        <a class="art-proj-title" href={detail.href}>{detail.title}</a>
+        <p class="art-proj-what">{detail.what}</p>
+        <p class="art-proj-status">{detail.status}</p>
       </div>
-      <div class="case-meta">
-        <table class="titleblock">
-          {date && <tr><th scope="row">Date</th><td><time datetime={iso(date)}>{fmt(date)}</time></td></tr>}
-          {updated && <tr><th scope="row">Updated</th><td><time datetime={iso(updated)}>{fmt(updated)}</time></td></tr>}
-          <tr><th scope="row">Reading</th><td>{minutes} min</td></tr>
-          {project && <tr><th scope="row">Project</th><td><a href={project.href}>{project.title}</a></td></tr>}
-        </table>
-        {intro && <div class="prose post-intro" set:html={intro} />}
-      </div>
-    </header>
-
-    {rest && <div class="prose" set:html={rest} />}
-  </article>
+    )}
+    {others.length > 0 && (
+      <nav slot="side" class="art-others" aria-labelledby="art-others-h">
+        <p class="art-label" id="art-others-h">{w.otherWriting}</p>
+        <ol>{others.map((o) => <li><a href={o.href}>{o.title}</a><time datetime={o.iso}>{o.date}</time></li>)}</ol>
+      </nav>
+    )}
+  </Article>
 </OverzichtLayout>

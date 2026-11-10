@@ -148,10 +148,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .act-main { padding: 12px 16px; border: 1.5px solid var(--ink); background: var(--ink); color: var(--sheet); }
 .act-main:hover { background: var(--red); border-color: var(--red); color: #fff; }
 
-.titleblock { border-collapse: collapse; font: 400 11px/1.3 var(--mono); width: 100%; max-width: 30rem; border: 1.5px solid var(--ink); }
-.titleblock th, .titleblock td { border: .75px solid var(--ink); padding: 6px 8px; text-align: left; vertical-align: top; }
-.titleblock th { font-weight: 400; color: var(--label); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; width: 1%; white-space: nowrap; }
-
 /* ANNA's plate (AnnaPlate.astro): its canvas fills the stage */
 .drawing { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
@@ -328,12 +324,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .card-link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
 .detail .links a { position: relative; z-index: 2; }
 
-/* a case study or a post: title block beside the title, the plate, then the write-up */
-.case-head { align-items: start; }
-.case-head h1 { font-size: clamp(36px, 4.2vw, 68px); line-height: .95; font-stretch: 104%; }
-.case-meta { display: grid; gap: 22px; }
-.case-meta .titleblock { max-width: 34rem; }
-.titleblock td a { text-decoration-color: var(--faint); }
 .plate {
   display: grid; grid-template-columns: minmax(0, 38fr) minmax(0, 62fr); column-gap: var(--gutter);
   border-top: .75px solid var(--ink); border-bottom: .75px solid var(--ink); padding: clamp(24px, 4vh, 40px) 0; margin-bottom: clamp(40px, 7vh, 72px);
@@ -373,11 +363,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .prose table { border-collapse: collapse; font-size: 15px; }
 .prose th, .prose td { border: .75px solid var(--ink); padding: 6px 10px; text-align: left; }
 .prose .dims-strip { grid-template-columns: repeat(3, minmax(0, auto)); gap: 18px 28px; margin: 0 0 2em; }
-.post .prose > * { max-width: 36em; }
-/* a post's opening runs under its title block, in the title block's column */
-.post-intro { display: block; }
-/* a post's own drawn detail, under its title, near the project drawings' scale */
-.post-dwg { margin-top: clamp(32px, 6vh, 64px); max-width: 480px; }
 
 /* the blog index: the diary, with room for each post's description */
 .diary-full li { grid-template-columns: 140px minmax(0, 20em) minmax(0, 1fr); padding: 18px 0; }
@@ -440,13 +425,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
   }
   .js .bar.open nav { visibility: visible; clip-path: inset(0 0 -2px 0); transition: clip-path .22s cubic-bezier(.4,0,.2,1); }
   .js .bar nav a { padding: 16px var(--stone-gutter); font-size: 18px; border-top: 1px solid var(--hair); }
-  .titleblock { max-width: none; }
-  /* the title block restacks as label and value pairs, so no value breaks mid-word */
-  .titleblock { display: grid; grid-template-columns: auto minmax(0, 1fr); }
-  .titleblock tbody, .titleblock tr { display: contents; }
-  .titleblock th, .titleblock td { border: 0; border-top: .75px solid var(--ink); width: auto; }
-  .titleblock th { border-right: .75px solid var(--ink); }
-  .titleblock tr:first-child > :nth-child(-n+2) { border-top: 0; }
   .sheet-head { grid-template-columns: 1fr; gap: 14px; }
   .details { grid-template-columns: 1fr; }
   .detail { padding: 20px 16px 24px; }
