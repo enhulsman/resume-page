@@ -79,10 +79,11 @@ export const glassCards: GlassCard[] = [
   ]),
 ];
 
-// What may be glass (Ezra, 2026-11-10): only an object with something behind it, never to explain
-// anything, at most one on any screen. Each id is a `data-glass-moment` on the page, top to bottom;
-// a new glass object is one line here and passes the same tests (tests/glass-home.*).
-export const glassMoments = ['hero', 'anna', 'terminal'] as const;
+// What may be glass (Ezra, 2026-11-10, changed 2026-11-11): any object that genuinely holds
+// something, a light or a window's content, never to explain anything; two may share a screen.
+// Each id is a `data-glass-moment` on the page, top to bottom; a new glass object is one line here
+// and passes the same tests (tests/glass-home.*). henk, sandbox and bible are the Projects windows.
+export const glassMoments = ['hero', 'anna', 'henk', 'sandbox', 'bible', 'terminal'] as const;
 export type GlassMoment = (typeof glassMoments)[number];
 
 const rgba = (c: RGB, a: number) => `rgb(${c.join(' ')} / ${a})`;
@@ -161,7 +162,16 @@ export const terminalReflection: { blur: number; opacity: number; panes: Reflect
 
 // As tuned in the glass lab (2026-11-09): ANNA's flame, red at its foot, yellow at its heart, amber
 // around. The terminal's: the two reflected cards' hues, warm high on the left, cool low on the right.
-export const windowGlows: Record<'flame' | 'cards', WindowGlow> = {
+// The projects' windows (sketch A2, 2026-11-11): each project's own light, near high on the left,
+// deep low on the right: Henk's tide and the sandbox's moss from their cards, a new amber for bible-tui.
+const projectGlow = (near: RGB, deep: RGB): WindowGlow => ({ inset: '4% -7% 2%', blur: 26, lights: [
+  { at: [30, 38], color: near, opacity: 0.95 },
+  { at: [70, 66], color: deep, opacity: 0.62 },
+] });
+export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible', WindowGlow> = {
+  henk: projectGlow([128, 170, 226], [48, 92, 172]),
+  sandbox: projectGlow([196, 224, 140], [86, 140, 50]),
+  bible: projectGlow([244, 196, 110], [196, 110, 52]),
   flame: { inset: '14% -7% 10%', blur: 28, lights: [
     { at: [28, 66], color: [214, 58, 34], opacity: 0.5 },
     { at: [52, 42], color: [255, 196, 96], opacity: 0.6 },

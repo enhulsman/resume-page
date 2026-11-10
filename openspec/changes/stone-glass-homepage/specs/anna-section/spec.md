@@ -32,7 +32,7 @@ The ANNA section SHALL NOT include a production-facts line (versions, release co
 - **THEN** there is exactly one `[data-glass]` element, a frosted window, and no element with class `anna-turn`, `anna-journey`, `anna-x` or `slab`
 
 ### Requirement: The Teams window plays "Close my week"
-Beside (desktop) or below (phone) the copy, a frosted window titled `annaCalls.window` SHALL hold anna-site's "Close my week" conversation from `src/config/anna-demo.ts`: Joris's request, ANNA's answer, the sources she read after `annaCalls.read`, her steps, her question, Joris's reply typed into the compose box and sent, her result, and the record under `annaDemo.recordHeading`. Every beat MUST be in the markup from the start, hidden until it lands. The conversation SHALL play once when about 40% of the window is in view, keep the newest beat in view unless the reader has scrolled the chat, and play again from the start on Replay (`annaCalls.replay`). The `?chat=<seconds>` hold stays on `/` as a test hook.
+Beside (desktop) or below (phone) the copy, a frosted window titled `annaCalls.window` SHALL hold anna-site's "Close my week" conversation from `src/config/anna-demo.ts`: Joris's request, ANNA's answer, one line of her work (below), her question, Joris's reply typed into the compose box and sent, and her result. Her steps list and the record SHALL NOT be shown, in the window or under it: her result says what she did (Ezra, 2026-11-11). Every beat MUST be in the markup from the start, hidden until it lands. The window SHALL be as tall as the finished conversation from the first frame: nothing in it scrolls, and its size never changes while the conversation plays. The conversation SHALL play once when about 40% of the window is in view, and play again from the start on Replay (`annaCalls.replay`). The `?chat=<seconds>` hold stays on `/` as a test hook. Pacing (Ezra, 2026-11-11: about 8 s to her question was too fast, 22 s too slow): her question SHALL land between 13 and 15 s after the play starts, and the whole play SHALL take at most 23 s.
 
 #### Scenario: The words are anna-site's
 - **GIVEN** `src/config/anna-demo.ts` and an anna-site checkout
@@ -42,37 +42,73 @@ Beside (desktop) or below (phone) the copy, a frosted window titled `annaCalls.w
 #### Scenario: All there before it plays
 - **GIVEN** the homepage loaded with the window out of view
 - **WHEN** the window's beats are read
-- **THEN** every beat from `person` to `record` is in the DOM in timeline order, none is shown, and the hidden beats are not announced
+- **THEN** every beat from `person` to `result` is in the DOM in timeline order (the work line as the `sources` beat), none is shown, the hidden beats are not announced, and there is no steps list, no record and no `record` beat
 
 #### Scenario: Plays once to the end
 - **GIVEN** the homepage loaded
 - **WHEN** the window is scrolled into view and the test waits for the window's `done` state
-- **THEN** every beat was shown in timeline order, the compose box held the reply typed out before it was sent, the newest beat is inside the chat's visible area, and no beat is replayed without Replay
+- **THEN** every beat was shown in timeline order, the compose box held the reply typed out before it was sent, every beat lies inside the window's box, the page did not scroll, and no beat is replayed without Replay
+
+#### Scenario: The pacing
+- **GIVEN** the timeline in a unit test, built from `annaCalls.work.lines` and `annaDemo.reply`
+- **WHEN** its beats are read
+- **THEN** her question lands between 13 and 15 s, every line of work stays up at least 1.9 s, the whole play takes at most 23 s, and every beat comes at least 0.4 s after the one before
+
+#### Scenario: The window never changes size
+- **GIVEN** the homepage at 1440x900, 1280x720 and 390x844
+- **WHEN** the conversation is held (`?chat=`) at its start, at each line of work, at her question, while the reply is typed, and at its end
+- **THEN** the window's width and height are the same at every moment, and nothing inside it scrolls
 
 #### Scenario: Replay
 - **GIVEN** the conversation finished
 - **WHEN** Replay is pressed
-- **THEN** the beats hide and play again from `person` to `record`
-
-#### Scenario: The reader scrolls back
-- **GIVEN** the conversation playing
-- **WHEN** the reader scrolls the chat up
-- **THEN** later beats do not pull the chat back down until the reader scrolls back to the newest beat
+- **THEN** the beats hide and play again from `person` to `result`
 
 #### Scenario: Reduced motion
 - **GIVEN** the homepage loaded with `prefers-reduced-motion: reduce`, or with reduced motion switched on after load, before or during play
 - **WHEN** the window comes into view, or is in view
-- **THEN** the finished conversation shows at once with every beat visible, nothing is typed into the compose box, and Replay is not shown
+- **THEN** the finished conversation shows at once with every beat visible and the work line settled, nothing is typed into the compose box, and Replay is not shown
+
+#### Scenario: Without JavaScript
+- **GIVEN** the homepage loaded with JavaScript off, or with its window script failing to load
+- **WHEN** the window is read
+- **THEN** every beat shows, the work line reads its settled summary, and there is no Replay
 
 #### Scenario: No focus trap
 - **GIVEN** the homepage loaded
 - **WHEN** the reader tabs through the ANNA section
-- **THEN** focus moves into the window (Replay) and out to the next section's first link
+- **THEN** focus moves into the window (Replay) and out to the next section's first link; the transcript is a region named `annaCalls.chat`
 
 #### Scenario: Phone
 - **GIVEN** the homepage loaded at 390x844
 - **WHEN** the ANNA section is laid out and the conversation has played to its `done` state
 - **THEN** the window's top is below the copy's bottom, the window lies within 0..390 px horizontally, and the page has no sideways scroll at the section's top, middle and bottom
+
+### Requirement: One line of her work
+Under her answer the window SHALL show one line of her work: a small dot that pulses while she works, then text that starts with what she read (`annaCalls.work.lines[0]`: `annaCalls.read` and the sources) and is replaced by each step in turn (`annaCalls.work.lines[1..]`, each short enough for one line on a phone), each line crossfading into the next and staying up for 1.1 s plus 25 ms a character; when her question lands it settles into `annaCalls.work.done` ("4 steps, from 3 sources", the counts taken from `annaDemo`), and the dot stops. The line SHALL be exactly one line at a fixed height at every width: it never wraps, and should a line ever be too long it ends in an ellipsis instead; the shipped copy fits without one at 1440, 1280 and 390 px. Every word comes from config.
+
+#### Scenario: The line of work, in order
+- **GIVEN** the homepage loaded with `?chat=` held at the moment each work line is up, and at her question
+- **WHEN** the work line is read
+- **THEN** it reads `annaCalls.work.lines` in order, then `annaCalls.work.done` once the question has landed
+
+#### Scenario: One line at every width
+- **GIVEN** the homepage at 1440x900, 1280x720 and 390x844
+- **WHEN** the work line is held at each of its texts
+- **THEN** its height is one line and the same for every text, and each text fits its box without an ellipsis
+
+#### Scenario: Settled when still
+- **GIVEN** the homepage with reduced motion, or the conversation finished
+- **WHEN** the work line is read
+- **THEN** it reads `annaCalls.work.done` and its dot does not pulse
+
+### Requirement: ANNA's window stands level with her heading
+On a desktop, ANNA's section SHALL keep today's stone above it (its top padding `clamp(120px, 22svh, 220px)`), and her window's top SHALL stand level with the top of her index "01", beside her heading, so the window and the copy balance.
+
+#### Scenario: Level with the heading
+- **GIVEN** the homepage at 1440x900 and 1280x720
+- **WHEN** the ANNA section is measured
+- **THEN** the window's top is within 4 px of the index's top, and the window starts less than 320 px below the bottom of the hero's cards (no stone kept for a one-moment rule)
 
 ### Requirement: The four levels live on /projects, not on the homepage
 `annaLevels` SHALL be rendered on /projects (ANNA's plate, each level's name and text) and SHALL NOT be rendered on the homepage. No homepage component and no homepage-only config SHALL import `annaLevels`.

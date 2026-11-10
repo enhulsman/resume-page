@@ -3,7 +3,7 @@
 **Your decisions (made 2026-11-10), binding on this change:**
 
 - Glass only on an object with something behind it, never to explain anything.
-- At most one glass moment on any screen; the list of glass objects stays open for a new object that passes that test.
+- Glass appears on any object that genuinely holds something (a light, or a window's content); where a section has something in glass that fits, it stays, even when two glass moments share a screen. The list of glass objects stays open for a new object that passes that test. (Changed 2026-11-11: the earlier "at most one glass moment on any screen" rule is removed.)
 - Ribbed glass holds a light (the hero's four cards, H3); frosted glass holds a window's content (the ANNA Teams window, the terminal). Everything else is type on stone.
 - ANNA's section: the lead line, "What she may do, and for whom." with the three rules, the onboarding line, a link to anna-site.anamata.ai, and the frosted Teams window playing anna-site's "Close my week".
 - ANNA's four levels leave the homepage and stay on /projects.
@@ -13,6 +13,14 @@
 - Every text on glass reaches 4.5:1 contrast, through one shared fix.
 - No data-dot boards, hard or literal shapes, or colour panels; soft far-behind-glass lights.
 - The lab page and the rejected stagings are removed last, once the homepage carries everything.
+
+**Your decisions from the sketches (2026-11-11), binding on this change:**
+
+- No hard "one glass moment per screen": glass goes on any object that genuinely holds something, and stays even when two moments share a screen.
+- ANNA's window stands level with her "01"/ANNA heading, with today's stone under the hero.
+- ANNA's work is one line under her answer (C2): a pulsing dot, what she read, then each step replacing the last, settling into a summary. Her question lands between round 1 (about 8 s) and round 2 (22 s). The line never changes the window's size. No steps or record block under the window.
+- Projects are A2 tight: Henk, Claude Sandbox and bible-tui each in their own frosted window holding a real artefact, two offset columns on a desktop, tight chapters on a phone; the rest stay rows. A1 and A3 are dropped.
+- The pointer is a light on a desktop (B1); grain in the frosted glass (B2); the current page in bold in the bar, with a soft glow on hover (B3 b and c). B3 a (the travelling full stop) is parked.
 
 **Still standing from 2026-11-09:** the stone top bar, footer, colours and type go on every page
 (inner page bodies keep their layout); dark mode is dropped until after the light redesign; the
@@ -54,12 +62,7 @@ real page; you judge the real page instead.
     job's end year, the terminal title "ezra@hulsman: ~" (as in the lab), and the photo's alt text
     "Ezra Hulsman, photographed from below" (the current alt, moved). The hero's role and intro
     lines move from the lab page into config unchanged.
-13. **"One glass moment per screen" is measured on the glass itself:** never two glass objects
-    with a third or more of their height on screen together. The cost, measured on the built page:
-    641 px between the bottom of the cards and the top of ANNA's window on a 1440x900 screen, 566 px
-    at 1280x720 (the rule alone needs about 580 and 446), filled by ANNA's heading, lead and first
-    rule plus stone. Her window therefore
-    starts beside her rules, below her heading, lead and first rule.
+13. *(Retired 2026-11-11 with the one-moment rule; ANNA's window now stands level with her heading, after today's stone under the hero.)*
 14. **The drawing-sheet frame (the border with A–F letters) and its green table leave every page,**
     not only the homepage, with the stone bar and footer. The bar keeps "EH." with your name
     beside it, as today.
@@ -79,7 +82,7 @@ With reduced motion the terminal's intro is already shown at once today; that st
   own order under Anamata); the newest writing; About with the notes, the photo and
   the live terminal in a frosted window; contact as the e-mail address set large.
 - ANNA's four levels are no longer on the homepage; they stay on /projects.
-- Glass appears in three places only, never two on one screen. Anyone who asks for reduced motion
+- Glass appears where it holds something: the hero's cards, ANNA's window, the three project windows and the terminal; two may share a screen. Anyone who asks for reduced motion
   gets a still page: still lights, the conversation finished, the terminal's intro already there.
 - On a phone the cards scroll in their own row, ANNA's window sits under her copy, and the page
   never scrolls sideways.
@@ -99,8 +102,9 @@ hero cannot ship on its own: the page under it has to speak the same language.
 - **New homepage** in stone and glass, in this order: hero, ANNA, Projects, Experience, Writing,
   About, Contact. Every word and number comes from `src/config/home.ts`, `site.ts`, `resume.ts`,
   `anna-demo.ts`, `glass.ts`, project frontmatter or blog frontmatter.
-- **Three glass moments, listed in config** (`glassMoments` in `src/config/glass.ts`): the hero
-  cards (ribbed), ANNA's Teams window (frosted), the terminal window (frosted). A new glass object
+- **Glass moments, listed in config** (`glassMoments` in `src/config/glass.ts`): the hero
+  cards (ribbed), ANNA's Teams window (frosted), the three project windows (frosted, 2026-11-11),
+  the terminal window (frosted). A new glass object
   is added to that list and passes the same tests.
 - **The glass leaves the lab:** `glass.ts`, `scripts/glass/*` (model, shader, the shared-context
   pane driver), the ANNA window and the terminal window become site components.
@@ -119,7 +123,7 @@ hero cannot ship on its own: the page under it has to speak the same language.
 
 ### New Capabilities
 
-- `glass-material`: what may be glass, the two kinds (ribbed, frosted), the one-moment rule, the
+- `glass-material`: what may be glass, the two kinds (ribbed, frosted), glass wherever it holds something, the pointer as a light, grain in the frost, the
   light's loop, still frame, pausing and fallbacks, and text contrast on glass.
 - `stone-homepage`: the homepage's sections, order, sources and layout, the hero's fit, phone
   width, reduced motion for the whole page, the single-source copy rule, the shared chrome, and the

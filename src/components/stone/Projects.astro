@@ -1,66 +1,202 @@
 ---
-// Projects (openspec stone-glass-homepage, design 7): every project but ANNA as a row of type on
-// stone, no glass. The hero-card projects come first with their card's index, the index in its
-// card's hue (the only colour mark here); each row's strongest number is set large in tabular
-// figures, its label beside it. Rows come from src/lib/projects.ts (homeRows over buildProjects).
+// Projects (openspec stone-glass-homepage; Ezra, 2026-11-11, sketch A2 tight): three projects each
+// hold a real artefact of their own in a frosted window, the way ANNA's window plays a real
+// conversation: Henk's Signal chat, the sandbox's session report, bible-tui's reader. Each chapter is
+// its own glass moment. The other projects stay rows of type on stone, no glass. Hero-card projects
+// carry their card's index, in its card's hue (the only colour mark on stone). Rows come from
+// src/lib/projects.ts (homeRows over buildProjects); every word in the windows from projectWindows.
+//
+// Wider than 760 px: two offset columns in one grid, Henk then bible-tui on the left, the sandbox on
+// the right starting lower, the rows under it; the page order is Henk, the sandbox, bible-tui, the
+// rows at every width, so reading order and visual order never differ. At 760 px and below: one
+// column. The artefacts land once when well in view (src/scripts/glass/artefacts.js); without a
+// script, or with reduced motion, they show whole.
 import "../../styles/stone.css";
+import GlassWindow from "./GlassWindow.astro";
 import { details, register } from "../../lib/project-pages.ts";
 import { homeRows } from "../../lib/projects.ts";
 import { glassCards, hueInk } from "../../config/glass.ts";
-import { homeSections, siteNav } from "../../config/home.ts";
+import { homeSections, siteNav, projectWindows, projectChapters } from "../../config/home.ts";
 
 const rows = homeRows(details, register, glassCards.map((c) => c.id));
+const rowOf = (id: string) => {
+  const r = rows.find((x) => x.id === id);
+  if (!r) throw new Error(`no homepage row for ${id}`);
+  return r;
+};
+const chapters = projectChapters.map((id) => ({ id, row: rowOf(id) }));
+const rest = rows.filter((r) => !(projectChapters as readonly string[]).includes(r.id ?? ""));
 const ink = (id?: string) => {
   const c = glassCards.find((x) => x.id === id);
   return c ? `color: ${hueInk(c)}` : undefined;
 };
 const all = siteNav.links.find((l) => l.id === "projects")!;
+const { henk, sandbox, bible } = projectWindows;
 ---
 
 <section class="stone-section projects" aria-labelledby="projects-h">
   <h2 id="projects-h">{homeSections.headings.projects}</h2>
-  <ol class="stone-rows">
-    {rows.map((r) => (
-      <li class="row">
-        {r.index && <span class="idx" aria-hidden="true" style={ink(r.id)}>{r.index}</span>}
-        <div class="body">
-          <h3 class="title"><a href={r.href}>{r.title}</a></h3>
-          <p class="what">{r.what}</p>
-          <p class="since">{r.status}</p>
+  <div class="pj-grid">
+    {chapters.map(({ id, row }) => (
+      <article class:list={["pj-chapter", "pj-entry", `pj-${id}`]} data-glass-moment={id}>
+        <div class="pj-text">
+          {row.index && <span class="idx" aria-hidden="true" style={ink(row.id)}>{row.index}</span>}
+          <h3 class="title"><a href={row.href}>{row.title}</a></h3>
+          <p class="what">{row.what}</p>
+          {row.number && <p class="num"><span class="value">{row.number.value}</span><span class="label">{row.number.label}</span></p>}
+          <p class="since">{row.status}</p>
         </div>
-        {r.number && (
-          <p class="num"><span class="value">{r.number.value}</span><span class="label">{r.number.label}</span></p>
-        )}
-      </li>
+        <GlassWindow title={projectWindows[id].title} glow={id} dots={id !== "henk"} class="pj-stage" windowClass={`pj-window pj-w-${id}`}>
+          {id === "henk" && (
+            <div class="pw sgl" data-play data-gap="1100">
+              <div class="sgl-alert b"><span class="from pw-quiet">{henk.alert.from}</span><span class="pw-text">{henk.alert.text}</span></div>
+              {henk.messages.map((m, i) => (
+                <div class:list={["sgl-msg", "b", m.from]}>
+                  {i === 0 && <span class="who pw-quiet">{henk.name}</span>}
+                  <p><span class={m.from === "me" ? "pw-me" : "pw-text"}>{m.text}</span></p>
+                </div>
+              ))}
+            </div>
+          )}
+          {id === "sandbox" && (
+            <div class="pw rep" data-play data-gap="260">
+              <p class="b"><b class="pw-strong">$</b> <span class="pw-text">{sandbox.command}</span></p>
+              {sandbox.lines.map((l) => <p class="b"><span class="k pw-quiet">{l.key}</span><span class="pw-text">{l.value}</span></p>)}
+              <p class="b risk"><span class="k pw-quiet">{sandbox.risk.key}</span><b class="pw-strong">{sandbox.risk.score}</b> <span class="pw-text">{sandbox.risk.of}</span></p>
+              {sandbox.risk.why.map((w) => <p class="b"><span class="k"></span><span class="pw-text">{w}</span></p>)}
+            </div>
+          )}
+          {id === "bible" && (
+            <div class="pw tui" data-play data-gap="120">
+              <div class="tui-head b"><span class="pw-strong">{bible.book}</span><span class="pw-quiet">{bible.translation}</span></div>
+              <ol class="tui-vv">{bible.verses.map((v, k) => <li class:list={["b", k === 0 && "hl"]}><span class="n">{k + 1}</span><span class="pw-text">{v}</span></li>)}</ol>
+              <p class="tui-foot b pw-quiet">{bible.keys}</p>
+            </div>
+          )}
+        </GlassWindow>
+      </article>
     ))}
-  </ol>
+    <ol class="stone-rows pj-rows">
+      {rest.map((r) => (
+        <li class="row pj-entry">
+          {r.index ? <span class="idx" aria-hidden="true" style={ink(r.id)}>{r.index}</span> : <span class="idx-none"></span>}
+          <div class="body">
+            <h3 class="title"><a href={r.href}>{r.title}</a></h3>
+            <p class="what">{r.what}</p>
+            <p class="since">{r.status}</p>
+          </div>
+          {r.number && (
+            <p class="num"><span class="value">{r.number.value}</span><span class="label">{r.number.label}</span></p>
+          )}
+        </li>
+      ))}
+    </ol>
+  </div>
   <a class="stone-more more" href={all.href}>{homeSections.links.projects} <span aria-hidden="true">→</span></a>
+  <script is:inline>
+    // hide the artefacts' lines as soon as they are parsed; if artefacts.js has not taken over by
+    // load (blocked or broken), show them whole
+    (function (s) {
+      var ps = s.querySelectorAll('[data-play]');
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      for (var i = 0; i < ps.length; i++) ps[i].classList.add('pending');
+      addEventListener('load', function () { for (var i = 0; i < ps.length; i++) if (!ps[i].classList.contains('live')) ps[i].classList.remove('pending'); });
+    })(document.currentScript.parentElement);
+  </script>
 </section>
 
 <style>
-  .row {
-    display: grid; grid-template-columns: 6.5em minmax(0, 1.25fr) minmax(0, 1fr);
-    column-gap: clamp(16px, 2.6vw, 44px); align-items: baseline;
-    padding: clamp(12px, 1.2vw, 18px) 0 clamp(20px, 2vw, 28px);
-  }
-  .idx {
-    grid-column: 1; font-size: var(--stone-t-small); font-weight: 650; letter-spacing: 0.06em;
-    font-variant-numeric: tabular-nums;
-  }
-  .body { grid-column: 2; max-width: 44em; }
-  .what { margin: 0.45em 0 0; font-size: var(--stone-t-body); line-height: 1.42; color: var(--stone-ink-2); text-wrap: pretty; }
-  .since { margin: 0.5em 0 0; font-size: var(--stone-t-small); line-height: 1.35; color: var(--stone-ink-2); }
-  .num { grid-column: 3; margin: 0; display: flex; align-items: baseline; gap: 0.9em; }
-  .value {
-    flex: none; font-weight: 800; font-size: clamp(36px, 3.4vw, 56px); line-height: 1; font-stretch: 88%;
-    letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
-  }
-  .label { max-width: 18em; font-size: var(--stone-t-small); line-height: 1.35; color: var(--stone-ink-2); text-wrap: pretty; }
+  .projects { overflow-x: clip; } /* the windows' glows reach past their sides; never the page */
 
-  /* a phone: the index beside the title, the number under the words */
+  /* a desktop: two offset columns. Henk (row 1) and bible-tui (rows 2-3) on the left; the sandbox
+     (rows 1-2, padded down so it starts lower) and the rows (row 3) on the right. Spanning items
+     keep each column's own spacing close to the row gap. */
+  .pj-grid {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto auto;
+    column-gap: clamp(32px, 5vw, 88px); row-gap: clamp(56px, 7svh, 80px); align-items: start;
+  }
+  .pj-henk { grid-column: 1; grid-row: 1; }
+  .pj-sandbox { grid-column: 2; grid-row: 1 / span 2; margin-top: clamp(120px, 20svh, 200px); }
+  .pj-bible { grid-column: 1; grid-row: 2 / span 2; }
+  .pj-rows { grid-column: 2; grid-row: 3; }
+
+  .pj-chapter { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+  .pj-text { max-width: 30em; }
+  .idx { display: block; font-size: var(--stone-t-small); font-weight: 650; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+  .pj-text .idx { margin-bottom: 0.7em; }
+  .pj-text .title { margin: 0; font: 900 clamp(34px, 3.2vw, 50px)/0.95 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.035em; }
+  .title a { color: inherit; text-decoration: none; }
+  .title a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+  .title a:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
+  .what { margin: 0.7em 0 0; font-size: var(--stone-t-body); line-height: 1.45; color: var(--stone-ink-2); text-wrap: pretty; }
+  .num { margin: 0.9em 0 0; display: flex; align-items: baseline; gap: 0.8em; }
+  .value { flex: none; font-weight: 800; font-size: clamp(32px, 2.6vw, 42px); line-height: 1; font-stretch: 88%; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .label { max-width: 18em; font-size: var(--stone-t-small); line-height: 1.35; color: var(--stone-ink-2); text-wrap: pretty; }
+  .since { margin: 0.8em 0 0; font-size: var(--stone-t-small); line-height: 1.35; color: var(--stone-ink-2); }
+
+  .pj-chapter :global(.pj-stage) { width: min(100%, 600px); justify-self: start; }
+  .pj-chapter :global(.pj-window) { background: rgb(250 248 244 / 0.32); }
+
+  /* the artefacts land line by line, once (artefacts.js) */
+  [data-play].pending .b:not(.on) { opacity: 0; transform: translateY(5px); }
+  /* only the landing moves: hiding them is instant */
+  [data-play].pending .b.on { transition: opacity 0.45s ease, transform 0.5s cubic-bezier(.2,.7,.2,1); }
+  .pw { position: relative; z-index: 3; }
+  .pw p { margin: 0; }
+
+  /* Henk in Signal */
+  .sgl { display: flex; flex-direction: column; gap: 8px; padding: 20px 20px 18px; font-size: 14.5px; line-height: 1.42; }
+  .sgl-alert { align-self: center; max-width: 92%; padding: 9px 12px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.1); font: 12.5px/1.45 ui-monospace, Menlo, monospace; }
+  .sgl-alert .from { display: block; margin-bottom: 3px; font: 600 11.5px/1.2 var(--stone-sans); }
+  .sgl-msg { max-width: 84%; }
+  .sgl-msg .who { display: block; margin: 6px 0 4px; font-size: 12px; font-weight: 600; }
+  .sgl-msg p { padding: 9px 13px; border-radius: 16px; }
+  .sgl-msg.henk { align-self: flex-start; }
+  .sgl-msg.henk p { background: rgb(255 255 255 / 0.4); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4); }
+  .sgl-msg.me { align-self: flex-end; margin-top: 8px; }
+  .sgl-msg.me p { background: rgb(36 70 140 / 0.86); }
+  .sgl-msg.me + .henk { margin-top: 8px; }
+
+  /* the sandbox's report */
+  .rep { padding: 20px 24px; font: 14px/1.75 ui-monospace, "JetBrains Mono", Menlo, monospace; overflow: hidden; }
+  .rep .b { display: flex; white-space: pre; }
+  .rep .k { flex: none; width: 9ch; }
+  .rep .b > .pw-strong:first-child { margin-right: 1ch; }
+  .rep .risk .pw-strong { font-size: 1.15em; margin-right: 0.5ch; }
+
+  /* bible-tui */
+  .tui { display: flex; flex-direction: column; padding: 14px 18px 12px; font: 13.5px/1.6 ui-monospace, "JetBrains Mono", Menlo, monospace; }
+  .tui-head { display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgb(17 17 16 / 0.12); font-weight: 700; }
+  .tui-vv { list-style: none; margin: 8px 0 0; padding: 0; }
+  .tui-vv li { display: grid; grid-template-columns: 2.2ch 1fr; gap: 1ch; padding: 2px 6px; border-radius: 4px; transition: background 0.3s, opacity 0.45s, transform 0.5s; }
+  .tui-vv li.hl { background: rgb(17 17 16 / 0.07); }
+  .tui-vv .n { color: var(--glass-ink-red); font-weight: 700; }
+  .tui-foot { margin-top: 8px !important; padding-top: 8px; border-top: 1px solid rgb(17 17 16 / 0.12); white-space: pre; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; }
+
+  /* the rest, as rows under the sandbox */
+  .pj-rows .row {
+    display: grid; grid-template-columns: 3.2em minmax(0, 1fr); column-gap: 12px; row-gap: 10px; align-items: baseline;
+    padding: 14px 0 18px;
+  }
+  .pj-rows .row > .num { grid-column: 2; margin: 0; }
+  .pj-rows .title { font-weight: 700; font-size: var(--stone-t-h3); letter-spacing: -0.02em; line-height: 1.15; }
+  .pj-rows .what { margin-top: 0.45em; max-width: 40em; }
+  .pj-rows .since { margin-top: 0.5em; }
+  .pj-rows .value { font-size: clamp(32px, 2.4vw, 38px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-play].pending .b.on, .tui-vv li { transition: none; }
+  }
+
+  /* a phone: one column, Henk, the sandbox, bible-tui, then the rows, tight */
   @media (max-width: 760px) {
-    .row { grid-template-columns: 2.6em minmax(0, 1fr); row-gap: 14px; }
-    .num { grid-column: 2; }
-    .value { font-size: 36px; }
+    .pj-grid { display: flex; flex-direction: column; gap: 72px; }
+    .pj-sandbox { margin-top: 0; }
+    .pj-chapter { gap: 24px; }
+    .pj-text .title { font-size: 40px; }
+    .rep { font-size: 12px; padding: 16px; }
+    .tui { font-size: 12.5px; padding: 12px; }
+    .tui-foot { font-size: 11px; }
+    .pj-rows .row { grid-template-columns: 2.6em minmax(0, 1fr); }
   }
 </style>

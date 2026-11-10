@@ -27,14 +27,13 @@
 
 /* ---- text on glass: every colour a text inside a frosted window takes ---- */
 [data-glass="frosted"] { color: var(--stone-ink); }
-/* the lab's alpha inks (window titles 0.55 and 0.66, Replay, message names, sources, the record's
-   heading) and the terminal's dim text (#8a8278, about 3.8:1 even on white) */
+/* the lab's alpha inks (window titles 0.55 and 0.66, Replay, message names), the terminal's dim
+   text (#8a8278, about 3.8:1 even on white), and ANNA's work line once it has settled */
 [data-glass="frosted"] .glass-title,
 [data-glass="frosted"] .aw-replay,
 [data-glass="frosted"] .msg .who,
-[data-glass="frosted"] .sources,
-[data-glass="frosted"] .rec-head,
-[data-glass="frosted"] .terminal-dim { color: var(--glass-ink-quiet); }
+[data-glass="frosted"] .terminal-dim,
+[data-glass="frosted"] .aw-work.settled { color: var(--glass-ink-quiet); }
 [data-glass="frosted"] .aw-replay:hover { color: var(--stone-ink); }
 /* the terminal's prompt and errors: a darker red, so they read over the four-colour glow */
 [data-glass="frosted"] .terminal-user,
@@ -48,8 +47,15 @@
 /* already opaque and darker: kept (the terminal's output, as in the lab) */
 [data-glass="frosted"] .term-body,
 [data-glass="frosted"] .term-body .text-theme-secondary { color: #3a3632; }
-[data-glass="frosted"] .steps { color: #4a453f; }
-[data-glass="frosted"] .record ul { color: #3a3632; }
+/* ANNA's work line while she works, and the projects' artefacts: opaque and darker. The artefacts'
+   quiet text (the alert's source, the report's keys, the reader's keys) sits over the projects'
+   brighter glows, where the shared quiet ink measured 4.0:1, so it takes the darker #4a453f */
+[data-glass="frosted"] .aw-work,
+[data-glass="frosted"] .pw-quiet { color: #4a453f; }
+[data-glass="frosted"] .pw-text { color: #3a3632; }
+[data-glass="frosted"] .pw-strong { color: var(--stone-ink); }
+/* the owner's messages in Henk's Signal chat: white on Signal's blue bubble */
+[data-glass="frosted"] .pw-me { color: #FFFFFF; }
 
 /* ---- type on stone: the homepage's sections of rows (Projects, Experience, Writing) ---- */
 .stone-section {

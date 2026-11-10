@@ -1,5 +1,5 @@
 // The glass as site code (openspec stone-glass-homepage, glass-material): what may be glass, the
-// one-moment check, the slow-device guard's decision, the shared inks on glass, the no-WebGL
+// pointer as a light, the slow-device guard's decision, the shared inks on glass, the no-WebGL
 // fallback. The model's own tests (unlit pane, lit seam, loop closes, distance 1) stay in
 // tests/glass-hero.test.mjs.
 //
@@ -8,7 +8,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { glassMoments, glassCards, fallbackFor, windowGlows } from '../src/config/glass.ts';
-import { momentsOverlap, visibleShare } from './lib/moments.mjs';
+import { leanToward, LEAN } from '../src/scripts/glass/pointer.js';
 import { slowFrom, busyFrom, BUSY_MAX } from '../src/scripts/glass/guard.js';
 import { parseColor, contrast } from './lib/contrast.mjs';
 import * as home from '../src/config/home.ts';
@@ -20,8 +20,9 @@ const list = (dir, ext) => (existsSync(new URL(dir, root)) ? readdirSync(new URL
 
 // ---- what may be glass ----
 
-test('the list in config: exactly the hero, ANNA and the terminal, in that order', () => {
-  assert.deepEqual(glassMoments, ['hero', 'anna', 'terminal']);
+test('the list in config: the hero, ANNA, the three project windows and the terminal, in page order', () => {
+  assert.deepEqual(glassMoments, ['hero', 'anna', 'henk', 'sandbox', 'bible', 'terminal']);
+  assert.deepEqual(glassMoments.slice(2, 5), [...home.projectChapters], 'the project windows, in their chapters\' order');
 });
 
 test('the shipped picks: each card at Ezra\'s distance, Homelab\'s sun nearer still', () => {
@@ -31,25 +32,23 @@ test('the shipped picks: each card at Ezra\'s distance, Homelab\'s sun nearer st
   for (const c of glassCards) assert.ok(c.distance >= 0 && c.distance <= 1.5, `${c.id} within 0..1.5`);
 });
 
-// ---- one moment per screen ----
+// ---- the pointer as a light (B1, 2026-11-11) ----
 
-test('the overlap check itself: a window close under the hero shares the screen, one far enough does not', () => {
-  assert.equal(momentsOverlap([200, 530], [630, 1230], 900), true);
-  assert.equal(momentsOverlap([200, 530], [1150, 1750], 900), false);
-  // order does not matter: the upper box is found from the offsets
-  assert.equal(momentsOverlap([630, 1230], [200, 530], 900), true);
-  assert.equal(momentsOverlap([1150, 1750], [200, 530], 900), false);
-  // the edge: (b0 + hB/3) - (a1 - hA/3) equal to the viewport still overlaps
-  // a = [0, 300] (a1 - hA/3 = 200), b = [1000, 1300] (b0 + hB/3 = 1100): 900 apart
-  assert.equal(momentsOverlap([0, 300], [1000, 1300], 900), true);
-  assert.equal(momentsOverlap([0, 300], [1000.5, 1300.5], 900), false);
-});
-
-test('the visible share of a glass box, for the scroll walk', () => {
-  assert.equal(visibleShare([200, 530], 0, 900), 1);
-  assert.equal(visibleShare([1000, 1300], 0, 900), 0);
-  assert.ok(Math.abs(visibleShare([800, 1100], 0, 900) - 1 / 3) < 1e-9);
-  assert.equal(visibleShare([0, 2000], 500, 900), 900 / 2000);
+test('the lean, as a function: none without a pointer, near on the card, toward a pointer within reach, none far away', () => {
+  const box = { left: 100, top: 100, width: 300, height: 360 };
+  const cx = 250, cy = 280;
+  assert.deepEqual(leanToward(null, box), { x: 0, y: 0, near: 0 });
+  const on = leanToward([cx, cy], box);
+  assert.equal(on.near, 1);
+  assert.ok(Math.abs(on.x) < 1e-9 && Math.abs(on.y) < 1e-9, `no lean at the centre: ${JSON.stringify(on)}`);
+  const right = leanToward([cx + 200, cy], box);
+  assert.ok(right.x > 0 && right.x <= LEAN.x, `leans right: ${right.x}`);
+  assert.ok(Math.abs(right.y) <= LEAN.y);
+  assert.equal(right.near, 0);
+  const below = leanToward([cx, cy + 200], box);
+  assert.ok(below.y > 0 && below.y <= LEAN.y && Math.abs(below.x) < 1e-9, `leans down: ${JSON.stringify(below)}`);
+  assert.deepEqual(leanToward([cx + 2000, cy], box), { x: 0, y: 0, near: 0 });
+  assert.deepEqual(LEAN, { x: 52, y: 32 });
 });
 
 // ---- the slow-device guard's decision ----
@@ -167,7 +166,7 @@ function inksFor(target) {
 }
 
 test('the texts the lab coloured with alpha inks, and the terminal\'s dim text, use --glass-ink-quiet', () => {
-  for (const target of ['.glass-title', '.aw-replay', '.msg .who', '.sources', '.rec-head', '.terminal-dim']) {
+  for (const target of ['.glass-title', '.aw-replay', '.msg .who', '.terminal-dim', '.aw-work.settled']) {
     const inks = inksFor(target);
     assert.ok(inks.length, `${target} has a colour on glass`);
     for (const ink of inks) assert.equal(ink, 'var(--glass-ink-quiet)', `${target}: ${ink}`);
@@ -182,9 +181,12 @@ test('the terminal\'s prompt and error use --glass-ink-red', () => {
   }
 });
 
-test('texts already in a darker opaque ink keep it: the steps and the record\'s items', () => {
-  assert.deepEqual(inksFor('.steps').map((c) => c.toLowerCase()), ['#4a453f']);
-  assert.deepEqual(inksFor('.record ul').map((c) => c.toLowerCase()), ['#3a3632']);
+test('texts in a darker opaque ink keep it: ANNA\'s work line while she works, the projects\' artefacts', () => {
+  assert.deepEqual(inksFor('.aw-work').map((c) => c.toLowerCase()), ['#4a453f']);
+  assert.deepEqual(inksFor('.pw-quiet').map((c) => c.toLowerCase()), ['#4a453f'], 'over the projects\' brighter glows');
+  assert.deepEqual(inksFor('.pw-text').map((c) => c.toLowerCase()), ['#3a3632']);
+  // the steps list and the record left the window (Ezra, 2026-11-11): no ink kept for them
+  for (const gone of ['.steps', '.record ul', '.rec-head', '.sources']) assert.deepEqual(inksFor(gone), [], gone);
 });
 
 test('no text inside a glass object is set in an alpha-blended colour', () => {
@@ -215,8 +217,18 @@ test('each card\'s no-WebGL ground is a soft radial gradient of its own light\'s
 
 // ---- the frosted windows' glows ----
 
-test('each window has a glow of soft radial lights in config: the flame for ANNA, two card lights for the terminal', () => {
-  assert.deepEqual(Object.keys(windowGlows).sort(), ['cards', 'flame']);
+test('each window has a glow of soft radial lights in config: the flame for ANNA, two card lights for the terminal, each project its own', () => {
+  assert.deepEqual(Object.keys(windowGlows).sort(), ['bible', 'cards', 'flame', 'henk', 'sandbox']);
+  // the projects' windows: two lights each, near high on the left, deep low on the right
+  for (const id of home.projectChapters) {
+    const g = windowGlows[id];
+    assert.equal(g.lights.length, 2, id);
+    assert.ok(g.lights[0].at[0] < g.lights[1].at[0] && g.lights[0].at[1] < g.lights[1].at[1], `${id}: diagonal`);
+  }
+  // Henk's and the sandbox's are their cards' own lights
+  const deep = (id) => glassCards.find((c) => c.id === id).tune.find((t) => t?.set?.color2).set.color2.join();
+  assert.equal(windowGlows.henk.lights[1].color.join(), deep('henk'));
+  assert.equal(windowGlows.sandbox.lights[1].color.join(), deep('sandbox'));
   assert.equal(windowGlows.flame.lights.length, 3);
   assert.ok(windowGlows.cards.lights.length >= 1 && windowGlows.cards.lights.length <= 2, `the terminal's glow: ${windowGlows.cards.lights.length} lights`);
   for (const g of Object.values(windowGlows)) {
@@ -291,12 +303,20 @@ test('GlassCard: ribbed, its canvas hidden from readers, its text real HTML', ()
   assert.match(src, /\{card\.readout\}/);
 });
 
-test('GlassWindow: frosted, a title bar, a hidden glow beneath it', () => {
+test('GlassWindow: frosted, a title bar, a hidden glow beneath it, grain in its frost, a sheen the pointer can move', () => {
   const src = read('src/components/stone/GlassWindow.astro');
   assert.match(src, /data-glass="frosted"/);
   assert.match(src, /data-glow aria-hidden="true"/);
   assert.match(src, /class="glass-title"/);
   assert.match(src, /backdrop-filter/);
+  // B2: the grain is the window's ::after, two noise layers, letting the pointer through
+  const after = rules(styleBlocks(src)).find((r) => r.selector === '.glass-window::after');
+  assert.ok(after, 'a .glass-window::after rule');
+  assert.equal((after.body.match(/feTurbulence/g) || []).length, 2, 'two noise layers');
+  assert.match(after.body, /pointer-events:\s*none/);
+  // B1: the sheen sits where --sx/--sy say
+  assert.match(src, /var\(--sx/);
+  assert.match(src, /var\(--sy/);
 });
 
 test('panes.js mounts every ribbed pane and drops the lab\'s dial, look and hooks', () => {
@@ -404,6 +424,10 @@ test('nothing on the homepage imports the four levels: glass.ts', () => {
 
 test('AnnaSection: one frosted window from config, the moment named, the window driver reused', () => {
   const src = read('src/components/stone/AnnaSection.astro');
+  // one line of work (Ezra, 2026-11-11): no steps list, no record
+  assert.match(src, /annaCalls\.work/);
+  assert.doesNotMatch(src, /annaDemo\.(steps|record|recordHeading)/);
+  assert.doesNotMatch(src, /class="(steps|record|rec-head)"/);
   assert.match(src, /data-glass-moment="anna"/);
   assert.match(src, /<GlassWindow /);
   assert.match(src, /title=\{annaCalls\.window\}/);
@@ -511,9 +535,13 @@ test('a new post: first in Writing, at most five, each with its line, never a dr
 
 test('Projects, Experience and Writing: type on stone from their sources, no glass, after ANNA in the page', () => {
   const read_ = (n) => read(`src/components/stone/${n}.astro`);
+  for (const n of ['Experience', 'Writing']) assert.doesNotMatch(read_(n), /data-glass|GlassWindow|GlassCard|<canvas|backdrop-filter/, `${n} has no glass`);
+  // Projects: glass only in its three chapters, each its own moment; the rows hold none
+  assert.match(read_('Projects'), /data-glass-moment=\{/);
+  assert.match(read_('Projects'), /projectChapters/);
+  assert.doesNotMatch(read_('Projects'), /GlassCard|<canvas|backdrop-filter|data-glass="/);
   for (const n of ['Projects', 'Experience', 'Writing']) {
     const src = read_(n);
-    assert.doesNotMatch(src, /data-glass|GlassWindow|GlassCard|<canvas|backdrop-filter/, `${n} has no glass`);
     assert.doesNotMatch(src, /\.sort\(/, `${n} sorts nothing of its own`);
     assert.match(src, /homeSections\.headings\./, `${n}'s heading from config`);
   }
@@ -529,6 +557,19 @@ test('Projects, Experience and Writing: type on stone from their sources, no gla
   for (const tag of ['AnnaSection', 'Projects', 'Experience', 'Writing']) assert.ok(at(tag) > 0, `${tag} on the page`);
   assert.ok(at('AnnaSection') < at('Projects') && at('Projects') < at('Experience') && at('Experience') < at('Writing'), 'in order');
   assert.ok(experience.length >= 1);
+});
+
+test('the projects\' windows in config: Henk\'s chat, the sandbox\'s report, bible-tui\'s reader, in that order', () => {
+  const w = home.projectWindows;
+  assert.deepEqual([...home.projectChapters], ['henk', 'sandbox', 'bible']);
+  for (const id of home.projectChapters) assert.ok(w[id].title.length > 3, `${id} has a window title`);
+  assert.ok(w.henk.alert.text && w.henk.messages.length >= 3);
+  assert.ok(w.henk.messages.every((m) => m.from === 'henk' || m.from === 'me'));
+  assert.ok(w.sandbox.command && w.sandbox.lines.length >= 3 && w.sandbox.risk.score);
+  assert.equal(w.bible.verses.length, 5);
+  assert.equal(w.bible.verses[0], 'In the beginning God created the heaven and the earth.');
+  // each chapter is a project with a listing, and none is ANNA or hidden
+  for (const id of home.projectChapters) assert.ok(details.some((d) => d.id === id), id);
 });
 
 // ---- Experience, newest first (Ezra, 2026-11-10) ----

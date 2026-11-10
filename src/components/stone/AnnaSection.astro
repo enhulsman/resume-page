@@ -7,12 +7,15 @@
 // driver never loads) the whole conversation shows; with it, the inline script below hides the beats
 // as they are parsed (no flash of the finished chat) and the driver shows each as it lands. The
 // driver is src/scripts/glass/anna-window.js, which keys on the class names here (.anna-window,
-// .aw-*, [data-beat]) and sets .aw-live; the text-on-glass colours in stone.css key on .msg .who,
-// .sources, .rec-head. The transcript is a named region the keyboard can reach and scroll back.
+// .aw-*, [data-beat]) and sets .aw-live; the text-on-glass colours in stone.css key on .msg .who
+// and .aw-work. The transcript is a named region.
 //
-// One moment per screen: the window starts beside the second rule, below the heading, the lead and
-// the first rule, so the stone and copy above it keep it apart from the hero's cards. The copy and
-// its rules share the section's rows (subgrid), so the window's top follows the first rule's bottom.
+// Sketch round 2 (Ezra, 2026-11-11): her work is one line under her answer (C2), what she read and
+// then each step replacing the last, settling into a summary; no steps list and no record. The
+// window is as tall as the finished conversation from the first frame (every beat laid out, hidden
+// until it lands), so nothing in it scrolls and its size never changes; the work line is one line
+// at a fixed height (an ellipsis is the fallback, the copy in config fits). The window's top stands
+// level with the index "01", beside the heading, after today's stone under the hero.
 import "../../styles/stone.css";
 import GlassWindow from "./GlassWindow.astro";
 import { glassCards } from "../../config/glass.ts";
@@ -45,18 +48,14 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
   </div>
   <GlassWindow title={annaCalls.window} glow="flame" class="aw-stage" windowClass="aw-window">
     <button slot="bar" type="button" class="aw-replay">{annaCalls.replay}</button>
-    <div class="aw-chat" tabindex="0" role="region" aria-label={annaCalls.chat}>
+    <div class="aw-chat" role="region" aria-label={annaCalls.chat}>
       <div class="aw-log">
         <div class="msg joris" data-beat="person"><span class="who">{annaDemo.who}</span><p class="text">{annaDemo.person}</p></div>
         <div class="msg anna" data-beat="answer"><span class="who">{annaLead.title}</span><p class="text">{annaDemo.answer}</p></div>
-        <div class="work">
-          <p class="sources" data-beat="sources"><span class="read">{annaCalls.read}</span> {annaDemo.sources.join(" · ")}</p>
-          <ol class="steps">{annaDemo.steps.map((s, i) => <li data-beat={`step-${i}`}>{s}</li>)}</ol>
-        </div>
+        <p class="aw-work" data-beat="sources" data-lines={JSON.stringify(annaCalls.work.lines)} data-done={annaCalls.work.done}><i class="aw-dot" aria-hidden="true"></i><span class="aw-work-t">{annaCalls.work.done}</span></p>
         <div class="msg anna" data-beat="question"><p class="text">{annaDemo.question}</p></div>
         <div class="msg joris" data-beat="reply"><span class="who">{annaDemo.who}</span><p class="text">{annaDemo.reply}</p></div>
         <div class="msg anna" data-beat="result"><span class="who">{annaLead.title}</span><p class="text">{annaDemo.result}</p></div>
-        <div class="record" data-beat="record"><p class="rec-head">{annaDemo.recordHeading}</p><ul>{annaDemo.record.map((r) => <li>{r}</li>)}</ul></div>
       </div>
     </div>
     <div class="aw-compose" aria-hidden="true"><span class="aw-field"><span class="aw-typed"></span><i class="aw-caret"></i></span></div>
@@ -64,10 +63,9 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
 </section>
 
 <style>
-  /* rows: the head, the three rules, the closing line, the link, then what the window needs more */
+  /* desktop: the copy on the left; the window on the right, its top level with the index "01" */
   .anna-window {
-    display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-    grid-template-rows: repeat(6, auto) 1fr;
+    display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: start;
     column-gap: clamp(24px, 5vw, 96px);
     padding: clamp(120px, 22svh, 220px) var(--stone-gutter) clamp(72px, 12svh, 140px);
     font-family: var(--stone-sans); color: var(--stone-ink);
@@ -75,14 +73,7 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
     /* the glow reaches past the window's sides; it never widens the page */
     overflow-x: clip;
   }
-  .aw-copy {
-    grid-column: 1; grid-row: 1 / -1; max-width: 480px;
-    display: grid; grid-template-rows: subgrid; align-content: start;
-  }
-  .aw-head { grid-row: 1; }
-  .aw-rules { grid-row: 2 / span 3; display: grid; grid-template-rows: subgrid; }
-  .aw-closing { grid-row: 5; }
-  .more { grid-row: 6; justify-self: start; }
+  .aw-copy { grid-column: 1; grid-row: 1; max-width: 480px; }
 
   .aw-idx {
     display: block; margin-bottom: 0.6em;
@@ -102,10 +93,11 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
 
   /* the window's column: the stage is the window's own width, so the glow sits around the window */
   .anna-window :global(.aw-stage) {
-    grid-column: 2; grid-row: 3 / -1; align-self: start; justify-self: center;
+    grid-column: 2; grid-row: 1; align-self: start; justify-self: center;
     width: min(100%, 620px);
   }
-  .anna-window :global(.aw-window) { height: min(600px, 74svh); }
+  /* no fixed height: as tall as the finished conversation from the first frame, nothing scrolls */
+  .anna-window :global(.aw-window) { height: auto; }
   .anna-window :global(.aw-window .glass-bar) { display: grid; grid-template-columns: 1fr auto 1fr; }
   .anna-window :global(.aw-window .glass-bar > .glass-title) { grid-column: 2; }
   .aw-replay {
@@ -115,14 +107,8 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
   .aw-replay:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 2px; }
   /* Replay needs the driver */
   .anna-window:not(.aw-live) .aw-replay { display: none; }
-  .aw-chat {
-    position: relative; z-index: 3; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
-    scrollbar-width: thin; scrollbar-color: rgb(17 17 16 / 0.16) transparent;
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 18px); mask-image: linear-gradient(to bottom, transparent, black 18px);
-  }
-  /* the keyboard's ring, inside the chat's edge; the top fade goes while it shows, so the ring is whole */
-  .aw-chat:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: -2px; -webkit-mask-image: none; mask-image: none; }
-  .aw-log { display: flex; flex-direction: column; padding: 22px 22px 18px; font-size: 15px; line-height: 1.45; }
+  .aw-chat { position: relative; z-index: 3; }
+  .aw-log { display: flex; flex-direction: column; padding: 22px 22px 6px; font-size: 15px; line-height: 1.45; }
   .aw-log p { margin: 0; }
   /* each beat is in the page from the start; with a script running, it shows when it lands */
   [data-beat] { transition: opacity 0.45s ease, transform 0.5s cubic-bezier(.2,.7,.2,1); }
@@ -136,19 +122,21 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
   .msg.joris .text { background: rgb(17 17 16 / 0.055); }
   .msg.anna { align-self: flex-start; }
   .msg.anna .text { background: rgb(255 255 255 / 0.34); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35); }
-  .msg + .msg, .msg + .work, .work + .msg { margin-top: 6px; }
-  .msg.joris + .msg.anna, .msg.anna + .msg.joris { margin-top: 18px; }
-  /* her steps: read from the sources named above them, each ticking in */
-  .work { align-self: flex-start; max-width: 86%; margin-top: 10px; padding: 2px 14px 6px; }
-  .sources { margin: 0 0 8px; font-size: 12.5px; line-height: 1.4; }
-  .sources .read { font-weight: 600; }
-  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; font-size: 13.5px; line-height: 1.4; }
-  .steps li { position: relative; padding-left: 20px; }
-  .steps li::before { content: "✓" / ""; position: absolute; left: 0; top: 0; font-size: 12px; font-weight: 700; color: var(--glass-ink-red); }
-  /* what she did: under her report, a quiet record */
-  .record { align-self: flex-start; max-width: 86%; margin-top: 8px; padding: 10px 14px 12px; border-radius: 12px; box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.07); }
-  .rec-head { font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
-  .record ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .msg + .msg { margin-top: 6px; }
+  .msg.joris + .msg.anna, .msg.anna + .msg.joris, .aw-work + .msg { margin-top: 18px; }
+
+  /* her work: one line under her answer, a dot that pulses while she works; one line, fixed height */
+  .aw-work {
+    display: flex; align-items: baseline; gap: 9px; margin: 8px 0 0 14px; max-width: calc(100% - 14px);
+    height: 1.45em; font-size: 13px; line-height: 1.45; white-space: nowrap; overflow: hidden;
+  }
+  .aw-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--glass-ink-red); transform: translateY(-1px); }
+  .aw-work.working .aw-dot { animation: aw-pulse 1.1s ease-in-out infinite; }
+  .aw-work.settled .aw-dot { background: rgb(17 17 16 / 0.25); }
+  .aw-work-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; transition: opacity 0.4s ease; }
+  .aw-work-t.out { opacity: 0; transition-duration: 0.25s; }
+  @keyframes aw-pulse { 50% { opacity: 0.35; } }
+
   /* the box Joris types into: his reply goes in here first, then is sent */
   .aw-compose { position: relative; z-index: 3; flex: none; padding: 10px 14px 14px; opacity: 0.4; transition: opacity 0.4s ease; }
   .aw-compose.typing { opacity: 1; }
@@ -162,19 +150,17 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
 
   @media (prefers-reduced-motion: reduce) {
     [data-beat], .anna-window:is(.aw-pending, .aw-live) [data-beat]:not(.on) { transition: none; transform: none; }
-    .aw-compose { transition: none; }
+    .aw-compose, .aw-work-t { transition: none; }
+    .aw-work.working .aw-dot { animation: none; }
     .aw-replay { display: none; }
   }
 
   /* a phone: the copy, then the window under it */
   @media (max-width: 760px) {
     .anna-window { display: block; padding-block: 96px 72px; }
-    .aw-copy { display: block; }
-    .aw-rules { display: block; }
     h2 { font-size: 56px; }
     .anna-window :global(.aw-stage) { width: 100%; margin-top: 40px; }
-    .anna-window :global(.aw-window) { height: min(560px, 78svh); }
-    .aw-log { padding: 18px 14px 14px; font-size: 14.5px; }
-    .msg, .work, .record { max-width: 92%; }
+    .aw-log { padding: 18px 14px 4px; font-size: 14.5px; }
+    .msg { max-width: 92%; }
   }
 </style>

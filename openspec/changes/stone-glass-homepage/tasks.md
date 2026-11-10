@@ -43,7 +43,7 @@ decision behind it.
 ## 4. ANNA's section (anna-section)
 
 - [x] 4.1 Tests from: the copy in order, the link to anna-site, written in config only, no run line or levels, one glass object, all there before it plays, plays once to the end, Replay, the reader scrolls back, reduced motion (from the start, switched on before and during play), no focus trap, phone, not on the homepage, on /projects, nothing on the homepage imports them; also the page matches the list and something behind every window for the hero and ANNA so far. Port `tests/glass-anna-window.e2e.mjs` to `/` (its `?chat=` tests too); keep `tests/glass-anna-window.test.mjs` as is
-- [x] 4.2 `src/components/stone/AnnaSection.astro`: copy from `annaLead` and `annaCalls`, index `01`, message names from `annaLead.title` and `annaDemo.who`, `GlassWindow` titled `annaCalls.window` holding `annaDemo`'s beats, flame glow beneath, `data-glass-moment="anna"`; the window starts below the heading, lead and first rule (design 2); reuse `anna-window.js` and `anna-window-model.js` unchanged unless a selector must widen
+- [x] 4.2 `src/components/stone/AnnaSection.astro`: copy from `annaLead` and `annaCalls`, index `01`, message names from `annaLead.title` and `annaDemo.who`, `GlassWindow` titled `annaCalls.window` holding `annaDemo`'s beats, flame glow beneath, `data-glass-moment="anna"`; the window starts below the heading, lead and first rule (design 2; changed 2026-11-11, task 11.4: level with the heading); reuse `anna-window.js` and `anna-window-model.js` unchanged unless a selector must widen
 - [x] 4.3 Run all test commands
 
 ## 5. Projects, Experience, Writing (stone-homepage)
@@ -60,8 +60,8 @@ decision behind it.
 
 ## 7. The whole page (stone-homepage; glass-material)
 
-- [x] 7.1 Tests from: section order, the overlap computed from the layout (three sizes, on load and after play), scrolling the whole page (three sizes), the page matches the list, the kinds, no glass anywhere else and no colour panels over the whole page, the rendered page is all config, the check catches a typed-in word (unit, on the covering checker with all five fixtures), reduced motion from the start and no running animations, phone width over the whole page, retired files are gone
-- [x] 7.2 Adjust spacing and placement until the overlap checks pass (never fading or hiding glass)
+- [x] 7.1 Tests from: section order, the page matches the list, the kinds, no glass anywhere else and no colour panels over the whole page, the rendered page is all config, the check catches a typed-in word (unit, on the covering checker with all five fixtures), reduced motion from the start and no running animations, phone width over the whole page, retired files are gone
+- [x] 7.2 (Retired 2026-11-11 with the one-moment rule: the overlap computed from the layout, the one-moment scroll walk and the spacing they asked for; see 11.1)
 - [x] 7.3 Delete the files only the old homepage used: the homepage `main.js`, `YouSheet`, the overzicht `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`, `NotesSheet`, `ContactSheet`; for `depth.js`, `span.js` and the name glyphs, grep inner pages first and delete only what nothing imports, with its unit test from `npm test`. Keep `AnnaPlate` and `plate.js` (and so `scene.js`, which `plate.js` draws, and `depth.js`, which `scene.js` imports)
 - [x] 7.4 Run all test commands
 
@@ -84,3 +84,17 @@ decision behind it.
 - [x] 10.1 Experience newest first: `byRecency` in `src/lib/experience.ts` (current jobs, then end year, then start year, descending), used by `Experience.astro`; /resume keeps the résumé order (it groups under Anamata). Unit tests in `tests/glass-home.test.mjs`, rendered order in `tests/glass-home.e2e.mjs`
 - [x] 10.2 The terminal's reflection calmer: two hues (ANNA warm, Henk cool), `terminalReflection` in `glass.ts`, two soft oval panes placed off-centre, the glow's two lights diagonal; tests for at most two hues and no straight hard edge (`tests/glass-home.test.mjs`, `tests/glass-terminal.e2e.mjs`); the four-mini and four-colour assertions updated
 - [x] 10.3 Run all test commands and `openspec validate stone-glass-homepage --strict`
+
+## 11. Sketch round 2 decisions, 2026-11-11
+
+Ezra's verdicts on the sketches (`~/.local/state/handoffs/threads-saved/2026-11-11-sketches/brainstorm.md`,
+"Ezra's verdict, round 2 -> build"); the sketches themselves are saved there under `src/`.
+
+- [x] 11.1 The glass rule: remove "At most one glass moment per screen" and its tests (`the overlap check itself` and `the visible share` in `tests/glass-home.test.mjs`, `tests/lib/moments.mjs`, the three `one glass moment per screen` and three `scrolling the whole page` tests in `tests/glass-home.e2e.mjs`), replaced by "Glass wherever it holds something" (every glass object holds something; no glass faded or hidden on scroll; two moments may share a screen); `glassMoments` gains `henk`, `sandbox`, `bible`
+- [x] 11.2 Tests first from the new and changed scenarios (glass-material: holds something, the pointer, grain, text at 4.5:1 over every window; anna-section: the beats, the pacing, the work line, the window's fixed size, level with the heading, no record; stone-homepage: the projects in order, the artefacts, two offset columns, tight phone chapters, the bar's weight and glow); retire with this decision the tests of what left: ANNA's steps and record (`BEATS` without `record`), the chat's own scroll (`the transcript is a labelled stop ... scrolls back`, `the reader can scroll back mid-play`, the three `the newest beat stays wholly in view` tests), the steps and record inks in `tests/glass-home.test.mjs`; the old rows tests become the chapters-and-rows tests
+- [x] 11.3 ANNA's work line (C2): `annaCalls.work` in `home.ts`; `timeline({ lines, reply })` in `anna-window-model.js` (dwell 1.1 s + 25 ms a character); `AnnaSection.astro` with one `.aw-work` line, no steps list, no record, a window as tall as its finished conversation; `anna-window.js` without the scroll follow, with the line's crossfade
+- [x] 11.4 ANNA's window level with her "01" and heading, the section's top padding as before (sketch `?gap=today`)
+- [x] 11.5 Projects (A2 tight): `projectWindows` in `home.ts`, glows in `windowGlows`, `Projects.astro` with three chapters and the rows, `src/scripts/glass/artefacts.js`
+- [x] 11.6 B1, the pointer as a light: `src/scripts/glass/pointer.js` (`leanToward`, the sheen), wired into `panes.js` (`__glass.lean`); B2, grain in every frosted window (`GlassWindow.astro`)
+- [x] 11.7 B3 b + c: the current page in weight in the bar, a glow on hover (`overzicht.css`)
+- [x] 11.8 Run all test commands and `openspec validate stone-glass-homepage --strict`; screenshots at 1440, 1280 and 390 to the sketches' `shots/build-*.png`

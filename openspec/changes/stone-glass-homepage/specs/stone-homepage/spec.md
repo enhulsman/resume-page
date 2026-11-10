@@ -36,18 +36,18 @@ The hero SHALL show the name (`site.name`) as a real `h1` in plain type, set on 
 - **WHEN** the hero is laid out
 - **THEN** the cards scroll sideways in their own row and the page itself has no sideways scroll
 
-### Requirement: Other projects as rows of type
-The Projects section SHALL list, as rows of type on stone with no glass, every project in `details` and `register` except ANNA and those marked `hideOnHome`: first the hero-card projects in card order, each with its card index (02 Henk, 03 Homelab, 04 Claude Sandbox), then the others in `home.ts` order. A row SHALL show the project's title, its `what` line, its status from the project page's frontmatter (joined by `src/lib/projects.ts`), its homepage number set large in tabular figures with that dimension's label, and link to its project page; a register entry has no number. The homepage number is `dims[homeDim]`, where `homeDim` is an optional index on a `DetailListing` in `home.ts` (default 0); pytaiga-mcp sets `homeDim: 2` so its row shows "50 → 5", and the order of `dims` (which /projects reads) does not change. The section SHALL end with a link to /projects.
+### Requirement: Projects: three in their own windows, the rest as rows
+The Projects section SHALL show every project in `details` and `register` except ANNA and those marked `hideOnHome`, each once. Three of them, Henk, Claude Sandbox and bible-tui (`projectWindows` in `src/config/home.ts`, in that order), SHALL each be a chapter: its card index if it has one (02 Henk, 04 Claude Sandbox), its title linking to its project page, its `what` line, its homepage number set large in tabular figures with that dimension's label, its status, and a frosted window holding a real artefact of the project (Ezra, 2026-11-11, sketch A2 tight): Henk's Signal chat (an alert carrying an injection, Henk refusing it), the sandbox's session report, and bible-tui's reader on Genesis 1 (KJV). Every word and number in the artefacts SHALL come from `projectWindows`. The others SHALL be rows of type on stone with no glass: first the remaining hero-card project with its index (03 Homelab), then the rest in `home.ts` order (Finance Bot, pytaiga-mcp, Encrypted Chat TUI); a row shows the title, `what`, status and number (a register entry has none), and links to its page. The homepage number is `dims[homeDim]`, where `homeDim` is an optional index on a `DetailListing` in `home.ts` (default 0); pytaiga-mcp sets `homeDim: 2` so its row shows "50 → 5", and the order of `dims` (which /projects reads) does not change. Wider than 760 px the chapters SHALL stand in two offset columns: Henk then bible-tui on the left, Claude Sandbox on the right starting lower, the rows under it; at 760 px and below one column: Henk, Claude Sandbox, bible-tui, then the rows. The page order of the chapters and rows SHALL be the same at every width (Henk, Claude Sandbox, bible-tui, rows). Each artefact lands once, line by line, when it is well in view; with reduced motion, or without JavaScript, it shows finished. The section SHALL end with a link to /projects.
 
-#### Scenario: The rows
+#### Scenario: The projects, in order
 - **GIVEN** the homepage loaded
-- **WHEN** the Projects rows are read
-- **THEN** their titles are, in order, Henk's, Homelab's and Claude Sandbox's listing titles, then Finance Bot, bible-tui, pytaiga-mcp and Encrypted Chat TUI; the first three carry 02, 03, 04; "This site" is absent
+- **WHEN** the Projects section's chapters and rows are read in page order
+- **THEN** their titles are Henk's, Claude Sandbox's and bible-tui's listing titles (chapters), then Homelab's, Finance Bot, pytaiga-mcp and Encrypted Chat TUI (rows); Henk carries 02, Claude Sandbox 04 and Homelab 03; "This site" and ANNA are absent; each links to its page with its line and status
 
 #### Scenario: The number is the project's
 - **GIVEN** the homepage loaded
-- **WHEN** each detail row's large number is read
-- **THEN** it equals that project's `dims[homeDim ?? 0].value` in `home.ts` (Henk "4", Homelab "4", Claude Sandbox "3,700", Finance Bot "0.75", bible-tui "102", pytaiga-mcp "50 → 5"), and its label equals that dimension's label
+- **WHEN** each chapter's and row's large number is read
+- **THEN** it equals that project's `dims[homeDim ?? 0].value` in `home.ts` (Henk "4", Claude Sandbox "3,700", bible-tui "102", Homelab "4", Finance Bot "0.75", pytaiga-mcp "50 → 5"), and its label equals that dimension's label; Encrypted Chat TUI has none
 
 #### Scenario: /projects keeps its numbers
 - **GIVEN** `home.ts` with `homeDim` added
@@ -58,6 +58,26 @@ The Projects section SHALL list, as rows of type on stone with no glass, every p
 - **GIVEN** the row builder in a unit test with a project whose `dims[homeDim]` is changed
 - **WHEN** the rows are built
 - **THEN** the row shows the new value with no other edit
+
+#### Scenario: Each chapter holds its artefact
+- **GIVEN** the homepage loaded with every artefact landed
+- **WHEN** each chapter's window is read
+- **THEN** it is one frosted window titled from `projectWindows`, Henk's holds the alert and his messages, the sandbox's the report's command, lines and risk, bible-tui's the book, translation, five verses and its keys, all as in `projectWindows`
+
+#### Scenario: Two offset columns on a desktop
+- **GIVEN** the homepage at 1440x900 and 1280x720
+- **WHEN** the chapters and rows are measured
+- **THEN** Henk and bible-tui share the left column (bible-tui under Henk), Claude Sandbox stands in the right column starting at least 120 px lower than Henk, the rows stand under it in the right column, and the stone between two chapters in a column is at most 120 px
+
+#### Scenario: Tight chapters on a phone
+- **GIVEN** the homepage at 390x844
+- **WHEN** the chapters and rows are measured
+- **THEN** they stand in one column in page order, the stone between two chapters is at most 96 px, every box lies within 0..390 px and the page has no sideways scroll
+
+#### Scenario: The artefacts land once
+- **GIVEN** the homepage loaded
+- **WHEN** a project window is out of view, then scrolled well into view
+- **THEN** its lines are hidden until then and all shown after; with reduced motion, or with JavaScript off, every line shows at once
 
 ### Requirement: Experience, Writing, About and Contact keep their sources
 Experience SHALL list every entry in `resume.ts` `experience` newest first (entries without an `endDate` first, then by `endDate`, then by `startDate`, each descending; a full tie keeps the résumé's order), as years (`startDate`–`endDate`, or `startDate`– and the word for now from config), `role` and the company (`client`), divided by hairline rules, ending with a link to /resume. The order SHALL be computed in code (`byRecency` in `src/lib/experience.ts`), not by reordering `resume.ts`, whose order /resume keeps. Writing SHALL list the first five of `diaryEntries` from `src/lib/frontmatter.ts` (published posts, newest first), each with its `title`, date `label` and one-line `line` (the post's `diary` line, or its description when it has none), ending with a link to /blog. About SHALL show `notes` from `home.ts`, the site photo as a plain image with its alt text from config, and the terminal in a frosted window. Contact SHALL show `site.social.email` set large as a `mailto:` link, then links to /contact, LinkedIn and GitHub from `site.ts`, as type with no glass.
@@ -202,3 +222,16 @@ After the homepage carries the hero, ANNA's window and the terminal window, `/he
 - **GIVEN** the homepage loaded
 - **WHEN** the Contact section is inspected
 - **THEN** it holds no `canvas`, no `[data-glass]` and no element with a `backdrop-filter`
+
+### Requirement: The current page is set in weight, and a link glows under the pointer
+In the bar, the link of the page you are on SHALL be set in the name's heavy weight (`font-weight` 700 or more) with no underline, keeping `aria-current="page"`; the other links stay in their regular weight (500 or less). Hovering any of the four page links SHALL light a small soft glow of the hero's warm light behind the word (a radial gradient that fades to nothing, no hard edge), which is gone when the pointer leaves. On the homepage no link is current. (Ezra, 2026-11-11, sketch B3 b with c on hover; B3 a, the travelling full stop, is parked.)
+
+#### Scenario: The current page in weight
+- **GIVEN** `/projects`, `/blog`, `/resume` and `/contact` loaded at 1440x900
+- **WHEN** the bar's four links are read
+- **THEN** exactly one has `aria-current="page"`, the one for that page; its computed weight is at least 700 and it has no underline; the others weigh 500 or less
+
+#### Scenario: A glow under the pointer
+- **GIVEN** `/projects` loaded at 1440x900
+- **WHEN** the mouse rests on the "Blog" link, then moves away
+- **THEN** while it rests there the link's `::before` shows a radial-gradient glow (opacity above 0.5) and no other link's does; after it moves away the glow is gone (opacity 0)

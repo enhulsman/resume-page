@@ -401,7 +401,8 @@ test('the page matches the list: the hero, ANNA, the terminal; every canvas and 
   assert.deepEqual(errors, []);
 });
 
-for (const moment of ['anna', 'terminal']) {
+const WINDOWS = ['anna', 'henk', 'sandbox', 'bible', 'terminal'];
+for (const moment of WINDOWS) {
   test(`something behind every window (${moment}): a glow beneath it, and the area it covers is not flat stone`, async () => {
     const W = `[data-glass-moment="${moment}"] [data-glass="frosted"]`;
     const { context, page, errors } = await open('?t=2.4');
@@ -473,28 +474,34 @@ test('the sections in order: ANNA, Projects, Experience, Writing, About, Contact
   assert.deepEqual(errors, []);
 });
 
-test('the rows: Henk, Homelab and Claude Sandbox first with 02 to 04, then the rest; each links to its page with its line and status', async () => {
+/** The Projects section's chapters and rows, in page order, as their words. */
+const ENTRY_ORDER = ['henk', 'sandbox', 'bible', 'homelab', 'finance', 'pytaiga', null];
+const byId = (id) => (id ? homeConfig.details.find((d) => d.id === id) : homeConfig.register.find((r) => r.title === 'Encrypted Chat TUI'));
+const rowOf = (id) => ROWS.find((r) => r.href === byId(id).href);
+
+test('the projects, in order: Henk, Claude Sandbox and bible-tui in their windows, then Homelab, Finance Bot, pytaiga-mcp and Encrypted Chat TUI as rows', async () => {
   const { context, page, errors } = await open();
-  const rows = await page.$$eval(`${SECTION.projects} li.row`, (lis) => lis.map((li) => ({
-    title: li.querySelector('.title')?.textContent.trim(),
-    href: li.querySelector('a')?.getAttribute('href'),
-    idx: li.querySelector('.idx')?.textContent.trim() || null,
-    what: li.querySelector('.what')?.textContent.trim(),
-    status: li.querySelector('.since')?.textContent.trim(),
+  const entries = await page.$$eval(`${SECTION.projects} .pj-entry`, (els) => els.map((el) => ({
+    chapter: el.classList.contains('pj-chapter'),
+    moment: el.closest('[data-glass-moment]')?.dataset.glassMoment ?? null,
+    title: el.querySelector('.title')?.textContent.trim(),
+    href: el.querySelector('.title a')?.getAttribute('href'),
+    idx: el.querySelector('.idx')?.textContent.trim() || null,
+    what: el.querySelector('.what')?.textContent.trim(),
+    status: el.querySelector('.since')?.textContent.trim(),
   })));
   const more = await page.$eval(`${SECTION.projects} a.more`, (a) => [a.getAttribute('href'), a.textContent.replace(/→/, '').trim()]);
   await context.close();
-  assert.deepEqual(rows.map((r) => r.title), [
-    homeConfig.details.find((d) => d.id === 'henk').title, homeConfig.details.find((d) => d.id === 'homelab').title, homeConfig.details.find((d) => d.id === 'sandbox').title,
-    'Finance Bot', 'bible-tui', 'pytaiga-mcp', 'Encrypted Chat TUI',
-  ]);
-  assert.deepEqual(rows.slice(0, 3).map((r) => r.idx), ['02', '03', '04']);
-  assert.ok(rows.slice(3).every((r) => r.idx === null), 'only the card projects carry an index');
-  assert.ok(!rows.some((r) => r.title === 'This site' || r.title === annaLead.title));
-  for (const [i, r] of rows.entries()) {
-    assert.equal(r.href, ROWS[i].href);
-    assert.equal(r.what, ROWS[i].what);
-    assert.equal(r.status, ROWS[i].status);
+  assert.deepEqual(entries.map((e) => e.title), ENTRY_ORDER.map((id) => byId(id).title));
+  assert.deepEqual(entries.map((e) => e.chapter), [true, true, true, false, false, false, false], 'three chapters, then rows');
+  assert.deepEqual(entries.map((e) => e.moment), ['henk', 'sandbox', 'bible', null, null, null, null], 'each chapter its own glass moment');
+  assert.deepEqual(entries.map((e) => e.idx), ['02', '04', null, '03', null, null, null], 'the card projects keep their card\'s index');
+  assert.ok(!entries.some((e) => e.title === 'This site' || e.title === annaLead.title));
+  for (const [i, e] of entries.entries()) {
+    const r = rowOf(ENTRY_ORDER[i]);
+    assert.equal(e.href, r.href);
+    assert.equal(e.what, r.what);
+    assert.equal(e.status, r.status);
   }
   assert.deepEqual(more, ['/projects', homeSections.links.projects]);
   assert.deepEqual(errors, []);
@@ -502,7 +509,7 @@ test('the rows: Henk, Homelab and Claude Sandbox first with 02 to 04, then the r
 
 test('the number is the project\'s: set large in tabular figures, its label beside it; the register\'s entry has none', async () => {
   const { context, page, errors } = await open();
-  const rows = await page.$$eval(`${SECTION.projects} li.row`, (lis) => lis.map((li) => {
+  const rows = await page.$$eval(`${SECTION.projects} .pj-entry`, (lis) => lis.map((li) => {
     const v = li.querySelector('.num .value'), l = li.querySelector('.num .label'), w = li.querySelector('.what');
     if (!v) return { title: li.querySelector('.title').textContent.trim(), value: null };
     const vs = getComputedStyle(v), vb = v.getBoundingClientRect(), lb = l.getBoundingClientRect();
@@ -514,10 +521,10 @@ test('the number is the project\'s: set large in tabular figures, its label besi
     };
   }));
   await context.close();
-  assert.deepEqual(rows.map((r) => r.value), ['4', '4', '3,700', '0.75', '102', '50 → 5', null]);
+  assert.deepEqual(rows.map((r) => r.value), ['4', '3,700', '102', '4', '0.75', '50 → 5', null]);
   for (const [i, r] of rows.entries()) {
     if (!r.value) continue;
-    const d = homeConfig.details.find((x) => x.href === ROWS[i].href);
+    const d = byId(ENTRY_ORDER[i]);
     assert.equal(r.value, d.dims[d.homeDim ?? 0].value, r.title);
     assert.equal(r.label, d.dims[d.homeDim ?? 0].label, r.title);
     assert.match(r.tabular, /tabular-nums/, `${r.title}: tabular figures`);
@@ -585,16 +592,19 @@ test('Projects, Experience, Writing and Contact are written in config only', asy
   assert.deepEqual(errors, []);
 });
 
-test('no glass anywhere else: the bar, Projects, Experience, Writing and Contact hold no canvas, no glass, no blur', async () => {
+test('no glass anywhere else: the bar, Projects\' rows, Experience, Writing and Contact hold no canvas, no glass, no blur', async () => {
   const { context, page, errors } = await open();
   const found = await page.evaluate((sels) => sels.map((s) => {
     const root = document.querySelector(s);
     if (!root) return [s, 'missing'];
     const bad = [root, ...root.querySelectorAll('*')].filter((el) => el.tagName === 'CANVAS' || el.hasAttribute('data-glass') || getComputedStyle(el).backdropFilter !== 'none');
     return [s, bad.map((el) => el.tagName)];
-  }), ['header.bar', ...Object.values(SECTION)]);
+  }), ['header.bar', `${SECTION.projects} .pj-rows`, SECTION.experience, SECTION.writing, SECTION.contact]);
+  // in Projects, every glass object lies inside one of its three chapters
+  const loose = await page.$$eval(`${SECTION.projects} *`, (els) => els.filter((el) => (el.tagName === 'CANVAS' || el.hasAttribute('data-glass') || getComputedStyle(el).backdropFilter !== 'none') && !el.closest('[data-glass-moment]')).length);
   await context.close();
   for (const [s, bad] of found) assert.deepEqual(bad, [], s);
+  assert.equal(loose, 0, 'Projects\' glass is all in its chapters');
   assert.deepEqual(errors, []);
 });
 
@@ -630,7 +640,6 @@ test('phone: Projects, Experience, Writing, About and Contact stay within the sc
 
 // ---- About and Contact (chunk 6): the terminal's frosted window, then the address ----
 
-import { momentsOverlap } from './lib/moments.mjs';
 
 const CONTACT = SECTION.contact;
 const TERM = '[data-glass-moment="terminal"]';
@@ -737,13 +746,13 @@ async function windowContrast(page, moment, sels) {
     const w = document.querySelector(W), wb = w.getBoundingClientRect();
     return sels.flatMap((sel) => [...w.querySelectorAll(sel)].map((el) => {
       const r = el.getBoundingClientRect();
-      const clip = el.closest('.term-body, .aw-chat')?.getBoundingClientRect() ?? wb;
+      const clip = el.closest('.term-body')?.getBoundingClientRect() ?? wb;
       const inside = r.width > 0 && r.height > 0 && el.textContent.trim()
         && r.top >= Math.max(0, clip.top, wb.top) && r.bottom <= Math.min(innerHeight, clip.bottom, wb.bottom);
       return inside ? { sel, color: getComputedStyle(el).color, box: { x: r.x, y: r.y, w: r.width, h: r.height } } : null;
     }).filter(Boolean));
   }, [W, sels]);
-  const tag = await page.addStyleTag({ content: `${W}, ${W} * { color: transparent !important; text-shadow: none !important; } ${W} .steps li::before { content: none !important; } ${W} .terminal-cursor { visibility: hidden !important; }` });
+  const tag = await page.addStyleTag({ content: `${W}, ${W} * { color: transparent !important; text-shadow: none !important; } ${W} .aw-dot { visibility: hidden !important; } ${W} .terminal-cursor { visibility: hidden !important; }` });
   await frames(page, 2);
   const png = (await page.screenshot()).toString('base64');
   await tag.evaluate((t) => t.remove());
@@ -767,18 +776,26 @@ async function windowContrast(page, moment, sels) {
   }, [png, items]);
 }
 
-test('window text reads at 4.5:1, measured: both windows, their titles, ANNA\'s steps and record, the terminal\'s prompt, dim text and errors after ls', async () => {
+/** Scroll the projects' windows into view one by one and wait until every artefact has landed. */
+async function artefactsDone(page) {
+  for (const id of homeConfig.projectChapters) {
+    await page.$eval(`[data-glass-moment="${id}"] [data-glass="frosted"]`, (w) => w.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await page.waitForFunction((id) => document.querySelector(`[data-glass-moment="${id}"] [data-play]`)?.classList.contains('done'), id, { timeout: 20000 });
+  }
+}
+
+test('window text reads at 4.5:1, measured: every window, its title, ANNA\'s work line, the artefacts, the terminal\'s prompt, dim text and errors after ls, the grain on', async () => {
   const { context, page, errors } = await open('?t=2.4');
-  // ANNA's window: her conversation finished, measured with the chat at its top and at its end
   await annaDone(page);
   await frames(page, 4);
-  const ANNA_SEL = ['.glass-title', '.aw-replay', '.msg .who', '.msg .text', '.sources', '.steps li', '.rec-head', '.record li'];
-  await page.$eval('.anna-window .aw-chat', (c) => { c.scrollTop = 0; });
-  await frames(page, 2);
-  const annaTop = await windowContrast(page, 'anna', ANNA_SEL);
-  await page.$eval('.anna-window .aw-chat', (c) => { c.scrollTop = c.scrollHeight; });
-  await frames(page, 2);
-  const annaEnd = await windowContrast(page, 'anna', ANNA_SEL);
+  const anna = await windowContrast(page, 'anna', ['.glass-title', '.aw-replay', '.msg .who', '.msg .text', '.aw-work-t']);
+  await artefactsDone(page);
+  const projects = [];
+  for (const id of homeConfig.projectChapters) {
+    await page.$eval(`[data-glass-moment="${id}"] [data-glass="frosted"]`, (w) => w.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await frames(page, 4);
+    projects.push(...(await windowContrast(page, id, ['.glass-title', '.pw-text', '.pw-quiet', '.pw-strong', '.pw-me'])).map((w) => ({ ...w, id })));
+  }
   // the terminal: help (its dim descriptions), a command it does not know (an error), then ls
   await termReady(page);
   for (const cmd of ['help', 'nosuchcommand', 'ls']) await termRun(page, cmd);
@@ -786,12 +803,13 @@ test('window text reads at 4.5:1, measured: both windows, their titles, ANNA\'s 
   await frames(page, 4);
   const term = await windowContrast(page, 'terminal', ['.glass-title', '.terminal-user', '.terminal-separator', '.terminal-path', '.terminal-dollar', '.terminal-cmd', '.terminal-accent', '.terminal-dim', '.terminal-error', '.term-body > div']);
   await context.close();
-  const all = [...annaTop, ...annaEnd, ...term];
+  const all = [...anna, ...projects, ...term];
   const seen = (list, sel) => list.filter((w) => w.sel === sel);
-  for (const sel of ['.glass-title', '.steps li', '.record li']) assert.ok(seen([...annaTop, ...annaEnd], sel).length, `ANNA's window: ${sel} measured`);
+  for (const sel of ['.glass-title', '.aw-work-t', '.msg .who']) assert.ok(seen(anna, sel).length, `ANNA's window: ${sel} measured`);
+  for (const id of homeConfig.projectChapters) for (const sel of ['.glass-title', '.pw-text', '.pw-quiet']) assert.ok(projects.some((w) => w.id === id && w.sel === sel), `${id}'s window: ${sel} measured`);
   for (const sel of ['.glass-title', '.terminal-user', '.terminal-dollar', '.terminal-dim', '.terminal-error', '.terminal-accent']) assert.ok(seen(term, sel).length, `the terminal: ${sel} measured`);
   // the window titles are the one shared quiet ink (the 0.55 and 0.66 alpha inks are gone)
-  for (const t of [...seen(annaTop, '.glass-title'), ...seen(term, '.glass-title')]) {
+  for (const t of all.filter((w) => w.sel === '.glass-title')) {
     assert.equal(parseColor(t.color)[3], 1, `title ink is opaque: ${t.color}`);
     assert.ok(t.ratio >= 4.5, `title: ${t.ratio}:1`);
   }
@@ -804,7 +822,7 @@ test('a window\'s glow has no edge: a line through the middle of each window, wi
   const { context, page, errors } = await open('?t=2.4');
   await page.addStyleTag({ content: '[data-glass="frosted"] { visibility: hidden !important; }' });
   const worst = {};
-  for (const moment of ['anna', 'terminal']) {
+  for (const moment of WINDOWS) {
     const W = `[data-glass-moment="${moment}"] [data-glass="frosted"]`;
     await page.$eval(W, (w) => w.scrollIntoView({ block: 'center' }));
     await frames(page, 2);
@@ -829,7 +847,7 @@ test('a window\'s glow has no edge: a line through the middle of each window, wi
   assert.deepEqual(errors, []);
 });
 
-test('no WebGL: both windows still show their content; the reflections keep their soft ground', async () => {
+test('no WebGL: every window still shows its content; the reflections keep their soft ground', async () => {
   const { context, page, errors } = await open('', { init: [noGL] });
   await annaDone(page);
   const anna = await page.$eval('[data-glass-moment="anna"] [data-glass="frosted"]', (w) => ({
@@ -837,6 +855,9 @@ test('no WebGL: both windows still show their content; the reflections keep thei
     title: w.querySelector('.glass-title').textContent,
     beats: [...w.querySelectorAll('[data-beat]')].every((b) => b.classList.contains('on')),
   }));
+  await artefactsDone(page);
+  const projects = await page.$$eval('[data-glass-moment] .pj-window', (ws) => ws.map((w) => ({ shown: getComputedStyle(w).visibility === 'visible' && w.getBoundingClientRect().height > 100, done: w.querySelector('[data-play]').classList.contains('done') })));
+  assert.equal(projects.length, 3);
   await termReady(page);
   const term = await page.$eval(`${TERM} [data-glass="frosted"]`, (w) => ({
     shown: getComputedStyle(w).visibility === 'visible' && w.getBoundingClientRect().height > 100,
@@ -846,6 +867,7 @@ test('no WebGL: both windows still show their content; the reflections keep thei
   }));
   await context.close();
   assert.deepEqual(anna, { shown: true, title: annaCalls.window, beats: true });
+  for (const p of projects) assert.deepEqual(p, { shown: true, done: true }, 'a project window');
   assert.equal(term.shown, true);
   assert.equal(term.title, homeSections.terminalTitle);
   assert.ok(term.cmds >= 6, `the intro typed (${term.cmds} commands)`);
@@ -853,29 +875,6 @@ test('no WebGL: both windows still show their content; the reflections keep thei
   for (const m of term.minis) { assert.equal(m.lit, false); assert.match(m.bg, /radial-gradient/); }
   assert.deepEqual(errors, []);
 });
-
-for (const [width, height] of [[1440, 900], [1280, 720], [390, 844]]) {
-  test(`one glass moment per screen at ${width} x ${height}: no two neighbouring moments can share the screen, on load and after both windows have played`, async () => {
-    const { context, page, errors } = await open('', { width, height });
-    const boxes = () => page.evaluate(() => [...document.querySelectorAll('[data-glass-moment]')].map((m) => {
-      const rs = [...m.querySelectorAll('[data-glass]')].map((g) => g.getBoundingClientRect());
-      return { id: m.dataset.glassMoment, box: [Math.min(...rs.map((r) => r.top)) + scrollY, Math.max(...rs.map((r) => r.bottom)) + scrollY] };
-    }));
-    const check = (list, when) => {
-      assert.deepEqual(list.map((m) => m.id), glassMoments, when);
-      for (let i = 1; i < list.length; i++) {
-        const [a, b] = [list[i - 1], list[i]];
-        assert.equal(momentsOverlap(a.box, b.box, height), false, `${when}: ${a.id} [${a.box.map(Math.round)}] and ${b.id} [${b.box.map(Math.round)}] can share a ${height}px screen`);
-      }
-    };
-    check(await boxes(), 'on load');
-    await annaDone(page);
-    await termReady(page);
-    check(await boxes(), 'after play');
-    await context.close();
-    assert.deepEqual(errors, []);
-  });
-}
 
 // ---- the whole page (chunk 7): every section together ----
 
@@ -896,39 +895,7 @@ async function bothPlayed(page) {
   await page.waitForFunction(() => !document.querySelector('.terminal-hint'), null, { timeout: 10000 });
 }
 
-for (const [width, height] of SIZES) {
-  test(`scrolling the whole page at ${width} x ${height}: in steps of a tenth of the screen, never two moments with a third on screen`, async () => {
-    const { context, page, errors } = await open('', { width, height });
-    const walk = () => page.evaluate(async (fn) => {
-      const boxes = new Function(`return (${fn})`)();
-      const next = () => new Promise((r) => requestAnimationFrame(() => r()));
-      const max = document.documentElement.scrollHeight - innerHeight;
-      const step = innerHeight / 10, out = [];
-      for (let y = 0; ; y = Math.min(max, y + step)) {
-        scrollTo({ top: y, behavior: 'instant' });
-        await next();
-        const on = boxes().filter((b) => (Math.min(b.bottom, innerHeight) - Math.max(b.top, 0)) / (b.bottom - b.top) >= 1 / 3).map((b) => b.id);
-        out.push({ y: Math.round(scrollY), on });
-        if (y >= max) break;
-      }
-      return out;
-    }, glassBoxesFn.toString());
-    const first = await walk();
-    await bothPlayed(page);
-    const second = await walk();
-    await context.close();
-    for (const [when, steps] of [['on load', first], ['after play', second]]) {
-      assert.ok(steps.length > 20, `${when}: ${steps.length} steps`);
-      const seen = new Set(steps.flatMap((s) => s.on));
-      assert.deepEqual([...seen].sort(), [...glassMoments].sort(), `${when}: every moment is seen on its own somewhere`);
-      const two = steps.filter((s) => s.on.length > 1);
-      assert.deepEqual(two, [], `${when}: two moments on one screen`);
-    }
-    assert.deepEqual(errors, []);
-  });
-}
-
-test('the kinds: four ribbed cards in the hero, one frosted window for ANNA, one for the terminal with its ribbed reflections hidden from readers', async () => {
+test('the kinds: four ribbed cards in the hero, one frosted window for ANNA and each project, one for the terminal with its ribbed reflections hidden from readers', async () => {
   const { context, page, errors } = await open();
   const kinds = await page.$$eval('[data-glass-moment]', (ms) => ms.map((m) => {
     const own = [...m.querySelectorAll('[data-glass]')].filter((g) => !g.parentElement.closest('[data-glass]'));
@@ -940,10 +907,9 @@ test('the kinds: four ribbed cards in the hero, one frosted window for ANNA, one
     };
   }));
   await context.close();
-  assert.deepEqual(kinds.map((k) => [k.id, k.own]), [['hero', ['ribbed', 'ribbed', 'ribbed', 'ribbed']], ['anna', ['frosted']], ['terminal', ['frosted']]]);
-  assert.deepEqual(kinds[0].inner, []);
-  assert.deepEqual(kinds[1].inner, []);
-  assert.deepEqual(kinds[2].inner, Array(terminalReflection.panes.length).fill({ kind: 'ribbed', hidden: true }), 'the reflection minis inside the terminal\'s window');
+  assert.deepEqual(kinds.map((k) => [k.id, k.own]), [['hero', ['ribbed', 'ribbed', 'ribbed', 'ribbed']], ['anna', ['frosted']], ['henk', ['frosted']], ['sandbox', ['frosted']], ['bible', ['frosted']], ['terminal', ['frosted']]]);
+  for (const k of kinds.slice(0, 5)) assert.deepEqual(k.inner, [], k.id);
+  assert.deepEqual(kinds[5].inner, Array(terminalReflection.panes.length).fill({ kind: 'ribbed', hidden: true }), 'the reflection minis inside the terminal\'s window');
   assert.deepEqual(errors, []);
 });
 
@@ -1019,6 +985,8 @@ test('reduced motion from the start: the hero, ANNA\'s window and the terminal e
     still[name] = a.equals(b);
   }
   const anna = await page.$$eval('.anna-window [data-beat]', (els) => els.map((e) => +getComputedStyle(e).opacity));
+  const lines = await page.$$eval('[data-play] .b', (els) => els.map((e) => +getComputedStyle(e).opacity));
+  assert.ok(lines.length > 10 && lines.every((o) => o === 1), `every artefact line shown at once: ${lines}`);
   const term = await page.$eval(TERM_BODY, (b) => ({
     cmds: [...b.querySelectorAll('.text-theme-primary')].map((e) => e.textContent),
     intro: JSON.parse(b.dataset.lines).filter((l) => l.type === 'cmd').map((l) => l.text),
@@ -1073,4 +1041,230 @@ test('phone width over the whole page: at 390 x 844, in steps of half a screen, 
     assert.deepEqual(wide, [], `${when}: wider than the screen`);
   }
   assert.deepEqual(errors, []);
+});
+
+// ---- Sketch round 2 decisions (2026-11-11): glass wherever it holds something, the projects'
+// windows, the pointer as a light, grain in the frost ----
+
+test('every glass object holds something: each ribbed pane lit, each frosted window with words and a glow beneath', async () => {
+  const { context, page, errors } = await open('?t=2.4');
+  const r = await page.evaluate(() => ({
+    ribbed: [...document.querySelectorAll('[data-glass="ribbed"]')].map((p) => p.classList.contains('lit')),
+    frosted: [...document.querySelectorAll('[data-glass="frosted"]')].map((w) => ({
+      moment: w.closest('[data-glass-moment]')?.dataset.glassMoment,
+      words: w.textContent.replace(/\s+/g, ' ').trim().length,
+      glow: !!w.parentElement.querySelector(':scope > [data-glow]'),
+    })),
+  }));
+  await context.close();
+  assert.ok(r.ribbed.length >= 4 && r.ribbed.every(Boolean), `every ribbed pane lit: ${r.ribbed}`);
+  assert.deepEqual(r.frosted.map((w) => w.moment), ['anna', 'henk', 'sandbox', 'bible', 'terminal']);
+  for (const w of r.frosted) assert.ok(w.words > 20 && w.glow, `${w.moment}: ${JSON.stringify(w)}`);
+  assert.deepEqual(errors, []);
+});
+
+for (const [width, height] of SIZES) {
+  test(`no glass is faded or hidden on scroll at ${width} x ${height}; two moments may share a screen`, async () => {
+    const { context, page, errors } = await open('', { width, height });
+    const steps = await page.evaluate(async () => {
+      const next = () => new Promise((r) => requestAnimationFrame(() => r()));
+      const max = document.documentElement.scrollHeight - innerHeight, out = [];
+      for (let y = 0; ; y = Math.min(max, y + innerHeight / 10)) {
+        scrollTo({ top: y, behavior: 'instant' });
+        await next();
+        const glass = [...document.querySelectorAll('[data-glass]')].filter((g) => !g.closest('[aria-hidden="true"]')).map((g) => {
+          const r = g.getBoundingClientRect(), cs = getComputedStyle(g);
+          return { m: g.closest('[data-glass-moment]').dataset.glassMoment, onScreen: r.bottom > 0 && r.top < innerHeight, whole: r.top >= 0 && r.bottom <= innerHeight, op: +cs.opacity, vis: cs.visibility };
+        });
+        out.push({ y, faded: glass.filter((g) => g.onScreen && (g.op < 1 || g.vis !== 'visible')), wholeProjects: glass.filter((g) => g.whole && ['henk', 'sandbox', 'bible'].includes(g.m)).length });
+        if (y >= max) break;
+      }
+      return out;
+    });
+    await context.close();
+    assert.ok(steps.length > 20, `${steps.length} steps`);
+    assert.deepEqual(steps.filter((s) => s.faded.length), [], 'glass faded or hidden on screen');
+    if (width === 1440) assert.ok(steps.some((s) => s.wholeProjects >= 2), 'two project windows on one screen, as one group');
+    assert.deepEqual(errors, []);
+  });
+}
+
+/** The chapters' and rows' boxes in page coordinates: text and window together for a chapter. */
+const projectBoxes = (page) => page.$$eval(`${SECTION.projects} .pj-chapter, ${SECTION.projects} .pj-rows`, (els) => els.map((el) => {
+  const r = el.getBoundingClientRect();
+  return { id: el.dataset.glassMoment ?? 'rows', left: r.left, right: r.right, top: r.top + scrollY, bottom: r.bottom + scrollY };
+}));
+
+for (const [width, height] of [[1440, 900], [1280, 720]]) {
+  test(`two offset columns at ${width} x ${height}: Henk and bible-tui left, Claude Sandbox right and lower, the rows under it`, async () => {
+    const { context, page, errors } = await open('', { width, height });
+    const b = Object.fromEntries((await projectBoxes(page)).map((x) => [x.id, x]));
+    await context.close();
+    assert.ok(b.henk.right <= b.sandbox.left && b.bible.right <= b.sandbox.left, 'Henk and bible-tui in the left column');
+    assert.ok(Math.abs(b.henk.left - b.bible.left) < 1, 'one column');
+    assert.ok(Math.abs(b.sandbox.left - b.rows.left) < 1, 'the sandbox and the rows share the right column');
+    assert.ok(b.sandbox.top >= b.henk.top + 120, `the sandbox starts lower (${Math.round(b.sandbox.top - b.henk.top)}px)`);
+    assert.ok(b.bible.top > b.henk.bottom && b.rows.top > b.sandbox.bottom, 'each under the one before');
+    assert.ok(b.bible.top - b.henk.bottom <= 120, `stone between Henk and bible-tui: ${Math.round(b.bible.top - b.henk.bottom)}px`);
+    assert.ok(b.rows.top - b.sandbox.bottom <= 120, `stone between the sandbox and the rows: ${Math.round(b.rows.top - b.sandbox.bottom)}px`);
+    assert.deepEqual(errors, []);
+  });
+}
+
+test('tight chapters on a phone: one column in page order, at most 96 px of stone between chapters, within the screen', async () => {
+  const { context, page, errors } = await open('', { width: 390, height: 844 });
+  const list = await projectBoxes(page);
+  const over = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+  await context.close();
+  assert.deepEqual(list.map((x) => x.id), ['henk', 'sandbox', 'bible', 'rows']);
+  for (let i = 1; i < list.length; i++) {
+    assert.ok(list[i].top > list[i - 1].bottom, `${list[i].id} under ${list[i - 1].id}`);
+    if (i < 3) assert.ok(list[i].top - list[i - 1].bottom <= 96, `${list[i].id}: ${Math.round(list[i].top - list[i - 1].bottom)}px of stone`);
+  }
+  for (const x of list) assert.ok(x.left >= -0.5 && x.right <= 390.5, `${x.id}: ${x.left}..${x.right}`);
+  assert.ok(over <= 0, `${over}px sideways`);
+  assert.deepEqual(errors, []);
+});
+
+test('each chapter holds its artefact, every word from projectWindows', async () => {
+  const { context, page, errors } = await open();
+  await artefactsDone(page);
+  const w = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.pj-chapter')].map((c) => [c.dataset.glassMoment, {
+    windows: c.querySelectorAll('[data-glass="frosted"]').length,
+    title: c.querySelector('.glass-title').textContent.trim(),
+    text: c.querySelector('[data-play]').textContent.replace(/\s+/g, ' ').trim(),
+  }])));
+  const texts = await page.evaluate((fn) => new Function(`return (${fn})`)()(document.querySelector('section[aria-labelledby="projects-h"]')), textsUnder.toString());
+  await context.close();
+  const pw = homeConfig.projectWindows;
+  const n = (x) => x.replace(/\s+/g, ' ').trim();
+  for (const id of homeConfig.projectChapters) {
+    assert.equal(w[id].windows, 1, id);
+    assert.equal(w[id].title, pw[id].title, id);
+  }
+  for (const s of [pw.henk.alert.from, pw.henk.alert.text, ...pw.henk.messages.map((m) => m.text)]) assert.ok(w.henk.text.includes(n(s)), `Henk: ${s}`);
+  for (const s of [pw.sandbox.command, ...pw.sandbox.lines.map((l) => l.value), pw.sandbox.risk.score, ...pw.sandbox.risk.why]) assert.ok(w.sandbox.text.includes(n(s)), `sandbox: ${s}`);
+  for (const s of [pw.bible.book, pw.bible.translation, ...pw.bible.verses, pw.bible.keys]) assert.ok(w.bible.text.includes(n(s)), `bible: ${s}`);
+  const left = texts.map(coverer(strings(homeConfig, site, joined.details, joined.register))).filter(Boolean);
+  assert.deepEqual(left, [], `typed into the markup: ${JSON.stringify(left)}`);
+  assert.deepEqual(errors, []);
+});
+
+test('the artefacts land once: hidden out of view, all shown once well in view, and not again', async () => {
+  const { context, page, errors } = await open();
+  const before = await page.$$eval('[data-play]', (ps) => ps.map((p) => [...p.querySelectorAll('.b')].filter((b) => +getComputedStyle(b).opacity > 0).length));
+  assert.deepEqual(before, [0, 0, 0], 'nothing shown before they are in view');
+  await artefactsDone(page);
+  const after = await page.$$eval('[data-play]', (ps) => ps.map((p) => [...p.querySelectorAll('.b')].every((b) => b.classList.contains('on'))));
+  assert.deepEqual(after, [true, true, true]);
+  await page.evaluate(() => scrollTo(0, 0));
+  await frames(page, 4);
+  await page.$eval('[data-glass-moment="henk"] [data-play]', (p) => p.scrollIntoView({ block: 'center' }));
+  await frames(page, 4);
+  assert.ok(await page.$eval('[data-glass-moment="henk"] [data-play]', (p) => [...p.querySelectorAll('.b')].every((b) => b.classList.contains('on'))), 'still all shown, not replayed');
+  await context.close();
+  assert.deepEqual(errors, []);
+});
+
+test('without JavaScript every artefact shows whole', async () => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto(`${BASE}/`, { waitUntil: 'load' });
+  const ops = await page.$$eval('[data-play] .b', (els) => els.map((e) => +getComputedStyle(e).opacity));
+  await context.close();
+  assert.ok(ops.length > 10 && ops.every((o) => o === 1), `${ops}`);
+});
+
+test('the pointer is a light: a mouse on Henk\'s card brings its light nearer, ANNA\'s leans toward it; gone when the mouse leaves', async () => {
+  const { context, page, errors } = await open('?guard=off');
+  const box = await page.locator(CARDS).nth(1).boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 4 });
+  await page.waitForFunction(() => window.__glass.lean[1].near > 0.9 && window.__glass.lean[0].x > 5, null, { timeout: 10000 }).catch(() => {});
+  const on = await page.evaluate(() => window.__glass.lean);
+  assert.ok(on[1].near > 0.9, `Henk's light nearer: ${JSON.stringify(on[1])}`);
+  assert.ok(on[0].x > 5, `ANNA's light leans right, toward the pointer: ${JSON.stringify(on[0])}`);
+  // the mouse leaves the page
+  await page.mouse.move(box.x + box.width / 2, -20);
+  await page.dispatchEvent('html', 'pointerleave');
+  await page.waitForFunction(() => window.__glass.lean.every((l) => Math.abs(l.x) < 0.5 && Math.abs(l.y) < 0.5 && l.near < 0.05), null, { timeout: 10000 }).catch(() => {});
+  const off = await page.evaluate(() => window.__glass.lean);
+  await context.close();
+  assert.ok(off.every((l) => Math.abs(l.x) < 0.5 && Math.abs(l.y) < 0.5 && l.near < 0.05), `back to rest: ${JSON.stringify(off)}`);
+  assert.deepEqual(errors, []);
+});
+
+test('a phone is unaffected: tapping a card leans no light, and the sheen stays put', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await page.goto(`${BASE}/?guard=off`, { waitUntil: 'load' });
+  await page.waitForFunction(() => window.__glassReady === true);
+  await page.evaluate(() => document.querySelector('[data-glass-moment="hero"] .cards').addEventListener('click', (e) => e.preventDefault(), true));
+  const box = await page.locator(CARDS).first().boundingBox();
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+  await frames(page, 30);
+  const lean = await page.evaluate(() => window.__glass.lean);
+  const sheen = await page.$eval('[data-glass-moment="anna"] [data-glass="frosted"]', (w) => [w.style.getPropertyValue('--sx'), w.style.getPropertyValue('--sy')]);
+  await context.close();
+  assert.ok(lean.every((l) => l.x === 0 && l.y === 0 && l.near === 0), JSON.stringify(lean));
+  assert.deepEqual(sheen, ['', ''], 'the sheen is where it rests');
+  assert.deepEqual(errors, []);
+});
+
+test('reduced motion: the mouse leans no light and the card holds its still frame', async () => {
+  const { context, page, errors } = await open('', { reducedMotion: 'reduce' });
+  const a = await shots(page);
+  const box = await page.locator(CARDS).nth(1).boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 4 });
+  await frames(page, 30);
+  const b = await shots(page);
+  const lean = await page.evaluate(() => window.__glass.lean);
+  await context.close();
+  assert.ok(lean.every((l) => l.x === 0 && l.y === 0 && l.near === 0), JSON.stringify(lean));
+  assert.deepEqual(a, b, 'the cards did not change');
+  assert.deepEqual(errors, []);
+});
+
+test('the sheen follows the mouse over a frosted window', async () => {
+  const { context, page, errors } = await open();
+  const W = '[data-glass-moment="anna"] [data-glass="frosted"]';
+  await page.$eval(W, (w) => w.scrollIntoView({ block: 'center' }));
+  const b = await page.locator(W).boundingBox();
+  await page.mouse.move(b.x + b.width * 0.25, b.y + b.height * 0.6, { steps: 3 });
+  await page.waitForFunction((W) => document.querySelector(W).style.getPropertyValue('--sx') !== '', W, { timeout: 5000 }).catch(() => {});
+  const v = await page.$eval(W, (w) => [w.style.getPropertyValue('--sx'), w.style.getPropertyValue('--sy')].map(parseFloat));
+  await context.close();
+  assert.ok(Math.abs(v[0] - 25) <= 2 && Math.abs(v[1] - 60) <= 2, `the sheen at ${v}`);
+  assert.deepEqual(errors, []);
+});
+
+test('grain in the frost: every frosted window carries noise under its text; the stone carries none', async () => {
+  const { context, page, errors } = await open();
+  const r = await page.evaluate(() => ({
+    windows: [...document.querySelectorAll('[data-glass="frosted"]')].map((w) => {
+      const a = getComputedStyle(w, '::after');
+      const kids = [...w.children].map((k) => +getComputedStyle(k).zIndex).filter((z) => !Number.isNaN(z));
+      return { noise: /feTurbulence/.test(a.backgroundImage), z: +a.zIndex, under: kids.length > 0 && kids.some((z) => z > +a.zIndex), events: a.pointerEvents };
+    }),
+    stone: [...document.body.querySelectorAll('*')].filter((el) => !el.closest('[data-glass="frosted"]'))
+      .filter((el) => /feTurbulence/.test(getComputedStyle(el).backgroundImage) || /feTurbulence/.test(getComputedStyle(el, '::before').backgroundImage) || /feTurbulence/.test(getComputedStyle(el, '::after').backgroundImage))
+      .map((el) => el.tagName + '.' + el.className),
+  }));
+  await context.close();
+  assert.equal(r.windows.length, 5);
+  for (const w of r.windows) assert.deepEqual([w.noise, w.under, w.events], [true, true, 'none'], JSON.stringify(w));
+  assert.deepEqual(r.stone, []);
+  assert.deepEqual(errors, []);
+});
+
+test('with JavaScript on but the artefacts\' script never loading, every artefact still shows after load', async () => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage();
+  await page.route('**/*', (r) => (r.request().resourceType() === 'script' ? r.abort() : r.continue()));
+  await page.goto(`${BASE}/`, { waitUntil: 'load' });
+  await page.waitForFunction(() => [...document.querySelectorAll('[data-play] .b')].every((e) => +getComputedStyle(e).opacity === 1), null, { timeout: 10000 }).catch(() => {});
+  const ops = await page.$$eval('[data-play] .b', (els) => els.map((e) => +getComputedStyle(e).opacity));
+  await context.close();
+  assert.ok(ops.length > 10 && ops.every((o) => o === 1), `${ops}`);
 });

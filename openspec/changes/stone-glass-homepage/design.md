@@ -29,25 +29,17 @@ hero card (benched in config, can return as 05); usage or adoption facts for ANN
 ## Decisions
 
 1. **What may be glass is a list in config.** `glass.ts` exports
-   `glassMoments = ['hero', 'anna', 'terminal']`. Each moment's root element carries
+   `glassMoments = ['hero', 'anna', 'henk', 'sandbox', 'bible', 'terminal']` (the three project windows added 2026-11-11). Each moment's root element carries
    `data-glass-moment="<id>"`; each glass object carries `data-glass="ribbed"` or
    `data-glass="frosted"`. Tests compare the page against the list, so a new object is one config
    line plus the same tests. *Why:* Ezra keeps the list open; the test is the gate, not memory.
 
-2. **One moment per screen, measured on the glass.** A moment's glass box is the union of its
-   `[data-glass]` elements (the four cards; ANNA's window; the terminal window, minis inside it), not
-   the section around it. A moment is on screen when a third of its glass box's height is in the
-   viewport. Because the visible share is piecewise linear in the scroll position, whether two
-   neighbouring moments A above B can ever both be on screen is closed form: they can exactly when
-   `(b0 + hB/3) - (a1 - hA/3) <= viewport height`. A pure function in `tests/lib/moments.mjs`
-   computes it from element offsets at 1440x900, 1280x720 and 390x844, on load and again after
-   ANNA's conversation and the terminal's intro finish; a scroll walk in tenths of the viewport
-   stays as the visible proof. The cost, measured on the built page: 641 px of non-glass between the
-   card bottoms and the window top at 1440x900 and 566 px at 1280x720, where the rule alone needs
-   about 580 and 446 (the viewport less a third of each object's height). The
-   layout pays it with placement: ANNA's window starts below her heading, lead and first rule, beside
-   the rules. *Alternative rejected:* fading glass in and out on scroll; that is motion used to
-   explain.
+2. **Glass wherever it holds something (Ezra, 2026-11-11; replaces the one-moment rule).** Glass
+   goes on any object that genuinely holds something: a light (ribbed) or a window's content
+   (frosted). There is no per-screen limit: the projects' three windows share a screen as one group,
+   and ANNA's window stands beside her heading with today's stone under the hero. The tests no longer
+   compute overlaps; they check that every glass object holds something and that no glass is faded,
+   hidden or moved on scroll. `tests/lib/moments.mjs` went with the overlap check.
 
 3. **Ribbed panes: one driver, from the lab.** `hero.js` is copied to `panes.js`, which mounts
    every `[data-glass="ribbed"]` on the page through the one shared WebGL context, keeps the 10 s
@@ -85,9 +77,12 @@ hero card (benched in config, can return as 05); usage or adoption facts for ANN
 
 5. **One shared contrast fix: opaque inks on glass.** `stone.css` defines `--glass-ink-quiet`, an
    opaque warm grey (start `#5C5650`: about 7.2:1 on white, 6.0:1 on stone), and it replaces exactly
-   the inks that were alpha-blended in the lab (window titles 0.55 and 0.66, Replay, message names,
-   sources, record heading) plus the terminal's dim `#8a8278` (about 3.8:1 even on white). Inks that
-   are already opaque and darker (steps `#4a453f`, record items `#3a3632`, body ink) stay. The
+   the inks that were alpha-blended in the lab (window titles 0.55 and 0.66, Replay, message names)
+   plus the terminal's dim `#8a8278` (about 3.8:1 even on white) and ANNA's settled work line. Inks
+   that are opaque and darker (the work line while she works and the artefacts' quiet text
+   `#4a453f`, which measured 4.0:1 in the shared quiet ink over the projects' brighter glows; the
+   artefacts `#3a3632`; body ink) stay. (The steps and record left on
+   2026-11-11.) The
    terminal's red prompt and error text take `--glass-ink-red` (start `#8F3320`), because `#B4432B`
    is likely about 3.5:1 over the terminal's glow and turning it grey would lose the prompt. If the
    measured test fails, the failing token darkens in its one place; nothing else changes. The hero
@@ -172,8 +167,12 @@ hero card (benched in config, can return as 05); usage or adoption facts for ANN
 
 ## Risks / Trade-offs
 
-- **The one-moment rule costs space** between the hero and ANNA's window; on a 1280x720 screen the
-  stretch may look empty → the copy column fills it; Ezra judges it on the real page.
+- **More glass on the page** (six moments, up to three project windows on one screen): glass that
+  is everywhere stops feeling rare → only objects that hold something are glass; Ezra judges the
+  real page.
+- **The artefacts' texts (Henk's chat, the sandbox's report) are placeholders** written from the
+  project pages' facts → they live in `projectWindows` in config, listed for Ezra before anything
+  ships; bible-tui's verses are KJV.
 - **Contrast over a glow is measured, not computed** → the e2e test samples real pixels for every
   text on glass; the opaque token makes the result stable across lights.
 - **Shader cost on phones** (four cards and four minis) → one shared context, DPR cap 2, off-screen
@@ -192,7 +191,7 @@ previous deploy. `/hero-lab` lives on in the branch history.
 
 ## Open Questions
 
-None block the build. For Ezra's morning look: the space the one-moment rule leaves under the hero,
+None block the build. For Ezra's morning look:
 whether the three hero projects should also be rows, whether the terminal's reflection stays, the
 phone menu versus a row of links, and the footer's wording (all in the proposal's For Ezra list).
 
@@ -200,7 +199,7 @@ phone menu versus a row of links, and the footer's wording (all in the proposal'
 
 All seven should-fix findings were right and are applied; none declined.
 
-- M1: the one-moment rule is measured on each moment's glass box, computed from offsets and walked, before and after play; the cost is in For Ezra item 13.
+- M1: the one-moment rule is measured on each moment's glass box, computed from offsets and walked, before and after play; the cost is in For Ezra item 13. (Retired 2026-11-11: decision 2.)
 - M2: the old homepage and arrival leave in chunk 2 with their suites; chunk 3 names every `sheets.e2e.mjs` test it rewrites or retires and why.
 - M3: `homeDim` (option a) keeps `dims`' order for /projects; pytaiga shows "50 → 5"; For Ezra item 3.
 - M4: phones keep today's menu, restyled (pick, For Ezra item 10); footer text in config, verbatim in For Ezra item 11; tests on seven pages.
@@ -223,3 +222,42 @@ All seven should-fix findings were right and are applied; none declined.
 - S9: the hero-fit scenario moves to chunk 3, after the old frame and bar are gone.
 - Minors: the corpus names `diaryEntries`, `buildProjects` and `pageFacts`; the footer's full stop is markup.
 
+
+## Sketch round 2 decisions (2026-11-11)
+
+14. **ANNA's window: one line of work, no scroll, fixed size.** The window is as tall as the
+    finished conversation from the first frame (every beat laid out, hidden until it lands), so
+    nothing scrolls and "Close my week" stays at the top. Under her answer, one line (`.aw-work`, the
+    `sources` beat) shows her work: a pulsing dot and `annaCalls.work.lines` in turn (the sources,
+    then four steps short enough for one line on a phone; anna-demo.ts keeps anna-site's full steps
+    and record, unrendered), settling into `annaCalls.work.done` when her question lands. The line is
+    `white-space: nowrap` at a fixed height with an ellipsis as the fallback, so it can never change
+    the window's size. `anna-window-model.js`'s `timeline({ lines, reply })` gives each line a dwell
+    of 1.1 s plus 25 ms a character: with today's copy her question lands at 13.9 s and the play ends
+    at 20.5 s (round 1: 7.8 s and 15.8 s; round 2: 22.4 s and 29 s). The crossfade is 0.25 s out,
+    0.4 s in. Reduced motion and no JavaScript show the settled line. The chat's own scroll (follow,
+    reader scroll-back, a focusable transcript) goes with the scroll; the transcript stays a named
+    region. The window's top is level with the index "01" (grid row 1), and the section keeps
+    today's top padding.
+
+15. **Projects: three windows, two offset columns.** `projectWindows` in `home.ts` holds the three
+    artefacts (Henk's Signal chat, the sandbox's report, bible-tui's reader) and their window titles.
+    `Projects.astro` renders the chapters in page order Henk, Claude Sandbox, bible-tui, then the
+    rows, in one grid: wider than 760 px, two columns, Henk (column 1, row 1), the sandbox (column 2,
+    row 1, padded down so it starts lower), bible-tui (column 1, row 2) and the rows (column 2, row
+    2); at 760 px and below, one column in page order, so the reading order never differs from the
+    visual order. Each chapter is its own glass moment (`henk`, `sandbox`, `bible`), its glow in its
+    project's colours (`windowGlows`: the tide and the moss from the cards, a new amber for
+    bible-tui). A small driver (`src/scripts/glass/artefacts.js`) lands each artefact's lines once
+    when it is half in view; reduced motion and no JavaScript show them finished.
+
+16. **The pointer is a light; grain in the frost.** `pointer.js` holds the pure `leanToward` and the
+    sheen; `panes.js` eases each pane toward its lean (0.35 s) and draws it shifted, with the pointed
+    card's distance scaled by 0.3, only while the loop runs (never on touch, reduced motion, the
+    guard's still frame or `?t=`). The sheen on every frosted window is a radial highlight at
+    `--sx`/`--sy`, moved by a mouse only. The grain is `GlassWindow`'s `::after`: two SVG
+    `feTurbulence` layers at 0.55 opacity, under the text, above the glow, on every frosted window.
+
+17. **The bar: weight for the current page, a glow on hover.** `nav a[aria-current="page"]` takes
+    weight 800 at 86% width with no underline; every page link has a `::before` radial glow of the
+    hero's warm light at opacity 0, raised to 1 on hover. B3 a is parked.

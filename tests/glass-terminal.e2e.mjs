@@ -122,8 +122,9 @@ test('the reflection and the glow behind the window use at most two hues', async
 for (const [width, height] of [[1440, 900], [390, 844]]) test(`the reflection has no straight hard edge at ${width} x ${height}: the window's top half, its words hidden, changes softly everywhere`, async () => {
   const { context, page, errors } = await open('?t=2.4', { width, height });
   await intoView(page);
-  // the reflection and the glow alone: the title bar, its rule and the terminal's text hidden
-  await page.addStyleTag({ content: `${WIN} .glass-bar, ${WIN} .term { visibility: hidden !important; }` });
+  // the reflection and the glow alone: the title bar, its rule and the terminal's text hidden, and
+  // the frost's grain (2026-11-11, B2: fine noise over the whole window, not an edge of the reflection)
+  await page.addStyleTag({ content: `${WIN} .glass-bar, ${WIN} .term { visibility: hidden !important; } ${WIN}::after { content: none !important; }` });
   await frames(page, 3);
   // inside the window's rim (its light inset edge), down to half its height
   const b = await page.$eval(WIN, (w) => { const r = w.getBoundingClientRect(); return { x: Math.ceil(r.left) + 14, y: Math.ceil(r.top) + 6, w: Math.floor(r.width) - 28, h: Math.floor(r.height / 2) }; });

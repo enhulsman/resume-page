@@ -153,3 +153,57 @@ test('keyboard order: on /projects at 390 x 844, Enter on the menu button, then 
   await context.close();
   assert.deepEqual(focused, { text: 'Projects', href: '/projects', inNav: true });
 });
+
+// ---- the current page in weight, a glow under the pointer (Ezra, 2026-11-11: sketch B3 b with c on hover) ----
+
+for (const [path, label] of LINKS.map(([l, p]) => [p, l])) {
+  test(`${path}: its own link is set in weight, not underlined, still aria-current; the others regular`, async () => {
+    const { context, page } = await open(path);
+    const links = await page.$$eval('.bar nav a', (as) => as.map((a) => ({ text: a.textContent.trim(), current: a.getAttribute('aria-current'), weight: +getComputedStyle(a).fontWeight, line: getComputedStyle(a).textDecorationLine })));
+    await context.close();
+    assert.deepEqual(links.filter((l) => l.current).map((l) => [l.text, l.current]), [[label, 'page']]);
+    const cur = links.find((l) => l.current);
+    assert.ok(cur.weight >= 700, `${label}: weight ${cur.weight}`);
+    assert.equal(cur.line, 'none', `${label}: no underline`);
+    for (const l of links.filter((x) => !x.current)) assert.ok(l.weight <= 500, `${l.text}: weight ${l.weight}`);
+  });
+}
+
+test('the homepage marks no link as current', async () => {
+  const { context, page } = await open('/');
+  const n = await page.locator('.bar nav a[aria-current]').count();
+  await context.close();
+  assert.equal(n, 0);
+});
+
+test('a glow under the pointer: resting on "Blog" lights a soft glow behind it alone; it goes when the pointer leaves', async () => {
+  const { context, page } = await open('/projects');
+  const glows = () => page.$$eval('.bar nav a', (as) => as.map((a) => { const b = getComputedStyle(a, '::before'); return { text: a.textContent.trim(), op: +b.opacity, img: b.backgroundImage }; }));
+  const rest = await glows();
+  assert.ok(rest.every((g) => g.op === 0), `none at rest: ${JSON.stringify(rest)}`);
+  await page.hover('.bar nav a[href="/blog"]');
+  await page.waitForFunction(() => +getComputedStyle(document.querySelector('.bar nav a[href="/blog"]'), '::before').opacity > 0.5, null, { timeout: 3000 }).catch(() => {});
+  const on = await glows();
+  const blog = on.find((g) => g.text === 'Blog');
+  assert.ok(blog.op > 0.5, `Blog glows: ${blog.op}`);
+  assert.match(blog.img, /radial-gradient/);
+  assert.ok(on.filter((g) => g.text !== 'Blog').every((g) => g.op === 0), 'no other link glows');
+  // the glow fades to nothing: its last stop is transparent
+  assert.match(blog.img, /(transparent|rgba\([^)]*,\s*0\))\)?\s*\)?$/);
+  await page.mouse.move(700, 600);
+  await page.waitForFunction(() => +getComputedStyle(document.querySelector('.bar nav a[href="/blog"]'), '::before').opacity === 0, null, { timeout: 3000 }).catch(() => {});
+  const off = await glows();
+  await context.close();
+  assert.ok(off.every((g) => g.op === 0), `gone: ${JSON.stringify(off)}`);
+});
+
+test('as a real phone (mobile viewport) every page keeps its 390 px layout: nothing in the chrome, the menu\'s glows included, widens it', async () => {
+  for (const path of PAGES) {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const page = await context.newPage();
+    await page.goto(BASE + path, { waitUntil: 'load' });
+    const w = await page.evaluate(() => [innerWidth, document.documentElement.scrollWidth]);
+    await context.close();
+    assert.deepEqual(w, [390, 390], path);
+  }
+});

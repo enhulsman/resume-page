@@ -61,7 +61,21 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .sig-dot { color: var(--red); }
 .sig::after { content: ""; display: inline-block; width: 1px; height: 18px; background: var(--hair); margin: 0 12px; vertical-align: -3px; }
 .bar nav { display: flex; gap: clamp(16px, 2.6vw, 40px); }
-.bar nav a[aria-current="page"] { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: .3em; }
+/* the page you are on, in the name's heavy, narrow Archivo; a soft glow of the hero's warm light
+   behind a link under the pointer (Ezra, 2026-11-11: sketch B3 b, with c on hover) */
+.bar nav { isolation: isolate; }
+.bar nav a { position: relative; }
+.bar nav a[aria-current="page"] { font-weight: 800; font-stretch: 86%; letter-spacing: -.01em; }
+.bar nav a::before {
+  content: ""; position: absolute; z-index: -1; left: -14px; right: -14px; top: -10px; bottom: -12px; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(242 168 112 / .55), rgb(255 196 96 / .18) 60%, transparent);
+  filter: blur(6px); opacity: 0; transition: opacity .25s ease;
+}
+.bar nav a:hover { color: inherit; }
+.bar nav a:hover::before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .bar nav a::before { transition: none; } }
+/* phones: the links fold into the menu and nothing hovers; the glow would only reach past the screen */
+@media (max-width: 860px) { .bar nav a::before { display: none; } }
 .bar-cta {
   display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
   padding: 9px 18px; border-radius: 999px; background: var(--ink); color: var(--sheet); font-weight: 500;

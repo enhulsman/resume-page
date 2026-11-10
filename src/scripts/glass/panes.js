@@ -8,10 +8,16 @@
 // Test hooks: ?t=<seconds> freezes the light; ?guard=off switches the guard off; ?busy=<ms> adds
 // busy work to every frame's draw (finite, at most 50 ms: guard.js busyFrom; it ships, so it can
 // never freeze a tab). window.__glass: at(t), count, draws (per pane), slow, guard(on), busy(ms).
-// window.__glassReady once the panes are fitted and drawn.
+// window.__glassReady once the panes are fitted and drawn. __glass.lean: each pane's lean toward
+// the pointer (pointer.js), in page order.
+//
+// The pointer is a light (2026-11-11): while the loop runs, each hero card's light eases (0.35 s)
+// toward its lean from pointer.js, and the pointed card's light comes nearer the glass. A mouse only;
+// reduced motion, the guard's still frame and ?t= hold every lean at zero.
 import { cardState, GLASS, PERIOD, REF, toRef } from './model.js';
 import { createRenderer } from './shader.js';
 import { slowFrom, busyFrom } from './guard.js';
+import { leanToward, pointer, NEAR } from './pointer.js';
 
 const params = new URLSearchParams(location.search);
 const still = matchMedia('(prefers-reduced-motion: reduce)');
@@ -42,6 +48,9 @@ const panes = [...document.querySelectorAll('[data-glass="ribbed"]')].map((el) =
     distance: +(el.dataset.distance ?? 1),
     wash: el.dataset.wash ? JSON.parse(el.dataset.wash) : undefined,
     visible: true, size: null, draws: 0,
+    // only the hero's cards answer the pointer; the terminal's reflections stay put
+    leans: !!el.closest('[data-glass-moment="hero"]'),
+    off: { x: 0, y: 0, near: 0 },
   };
 }).filter(Boolean);
 
@@ -68,7 +77,11 @@ function fit(c) {
 function drawPane(c, t) {
   if (!c.size) fit(c);
   if (!c.size) return false;
-  const state = cardState(c.light, t, c.base, c.tune, c.distance, c.wash);
+  const { x, y, near } = c.off;
+  const leaning = Math.abs(x) > 0.01 || Math.abs(y) > 0.01 || near > 0.001;
+  // the light moved by its lean: every layer shifted alike, the card's own tune kept
+  const tune = leaning ? Array.from({ length: 8 }, (_, j) => ({ ...(c.tune?.[j] ?? {}), dx: (c.tune?.[j]?.dx ?? 0) + x, dy: (c.tune?.[j]?.dy ?? 0) + y })) : c.tune;
+  const state = cardState(c.light, t, c.base, tune, c.distance * (1 - NEAR * near), c.wash);
   state.quiet = c.quiet;
   const w = c.canvas.width, h = c.canvas.height;
   r.draw(state, { size: c.size, radius: c.radius, px: c.px, glass: GLASS, target: { w, h } });
@@ -85,7 +98,21 @@ function drawAll(t = now()) { for (const c of panes) drawPane(c, t); }
 
 const busy = (ms) => { const end = performance.now() + ms; while (performance.now() < end); };
 
+/** Ease every pane toward its lean (dt in s); zero whenever the loop is not running. */
+function aim(dt) {
+  const run = looping();
+  const ease = 1 - Math.exp(-dt / 0.35);
+  for (const c of panes) {
+    const want = run && c.leans && pointer ? leanToward(pointer, c.el.getBoundingClientRect()) : { x: 0, y: 0, near: 0 };
+    for (const k of ['x', 'y', 'near']) {
+      c.off[k] = run ? c.off[k] + (want[k] - c.off[k]) * ease : 0;
+      if (Math.abs(c.off[k] - want[k]) < 1e-3) c.off[k] = want[k];
+    }
+  }
+}
+
 function tick(stamp) {
+  aim(lastFrame == null ? 0 : Math.min(0.1, (stamp - lastFrame) / 1000));
   if (looping()) {
     const t = now();
     const start = performance.now();
@@ -130,6 +157,8 @@ window.__glass = {
   get slow() { return slow; },
   /** Switch the slow-device guard on or off; off also lets a held loop run again. */
   guard(on) { guardOn = !!on; samples = []; if (!on) slow = false; },
+  /** Each pane's lean toward the pointer, in page order: x, y (study px), near (0..1). */
+  get lean() { return panes.map((c) => ({ ...c.off })); },
   /** Add this much busy work (ms, finite, at most 50) to every frame's draw; returns what it took. */
   busy(ms) { busyMs = busyFrom(ms); return busyMs; },
 };
