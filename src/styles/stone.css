@@ -1,0 +1,49 @@
+/* Stone (openspec stone-glass-homepage): warm stone ground, black type in Archivo, hairlines,
+   and the inks for text on glass. Tokens carry a stone- prefix while the drawing-sheet sheet
+   (overzicht.css) still defines --ink and --hair for the inner pages. */
+@font-face { font-family: "Archivo"; src: url(/fonts/Archivo.woff2) format("woff2-variations"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+
+:root {
+  --stone: #EEEAE3;
+  --stone-ink: #111110;
+  --stone-ink-2: #2a2826;
+  --stone-hair: #D3CCC1;
+  --stone-sans: "Archivo", system-ui, sans-serif;
+  --stone-gutter: clamp(16px, 2.2vw, 32px);
+
+  /* the Archivo scale */
+  --stone-t-name: clamp(64px, min(13.6vw, 21svh), 212px);
+  --stone-t-h2: clamp(48px, 6.4vw, 104px);
+  --stone-t-h3: clamp(20px, 1.75vw, 26px);
+  --stone-t-lead: clamp(18px, 1.6vw, 23px);
+  --stone-t-body: clamp(15px, 1.1vw, 16.5px);
+  --stone-t-small: 13px;
+
+  /* The one shared fix for text on glass: opaque inks, never alpha-blended, so a light behind
+     the glass can never pull them under 4.5:1. If the measured test fails, darken here only. */
+  --glass-ink-quiet: #5C5650;
+  --glass-ink-red: #8F3320;
+}
+
+/* ---- text on glass: every colour a text inside a frosted window takes ---- */
+[data-glass="frosted"] { color: var(--stone-ink); }
+/* the lab's alpha inks (window titles 0.55 and 0.66, Replay, message names, sources, the record's
+   heading) and the terminal's dim text (#8a8278, about 3.8:1 even on white) */
+[data-glass="frosted"] .glass-title,
+[data-glass="frosted"] .aw-replay,
+[data-glass="frosted"] .msg .who,
+[data-glass="frosted"] .sources,
+[data-glass="frosted"] .rec-head,
+[data-glass="frosted"] .terminal-dim { color: var(--glass-ink-quiet); }
+[data-glass="frosted"] .aw-replay:hover { color: var(--stone-ink); }
+/* the terminal's prompt and errors: a darker red, so they read over the four-colour glow */
+[data-glass="frosted"] .terminal-user,
+[data-glass="frosted"] .terminal-separator,
+[data-glass="frosted"] .terminal-path,
+[data-glass="frosted"] .terminal-dollar,
+[data-glass="frosted"] .terminal-error { color: var(--glass-ink-red); }
+[data-glass="frosted"] .terminal-cmd,
+[data-glass="frosted"] .terminal-accent { color: var(--stone-ink); }
+/* already opaque and darker: kept */
+[data-glass="frosted"] .steps { color: #4a453f; }
+[data-glass="frosted"] .record ul { color: #3a3632; }

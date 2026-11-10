@@ -89,6 +89,7 @@ export function cardState(i, t, base, tune, blur = 0, wash) {
 const Phi = (x0) => { const x = Math.min(6, Math.max(-6, x0)); return 0.5 * (1 + Math.tanh(0.7978845608 * (x + 0.044715 * x * x * x))); };
 const soft = (sd, s) => Phi(-sd / Math.max(s, 1e-4));
 
+// Ink, eight layers, slide (ox) and turn (rot): used by the retired ANNA stagings, kept with their tests, not wired to anything.
 /** Where the sample lands in the light's own frame: slid by `ox`, turned by `rot` (radians, clockwise on screen) about (px, py), its centre by default. */
 export function layerFrame(L, X0, Y0) {
   let X = X0 - (L.ox ?? 0), Y = Y0;
@@ -141,6 +142,7 @@ export function fieldAt(state, X, Y, clip = true) {
     P = P.map((p, j) => p * (1 - cov) + col[j] * cov);
     A = A * (1 - cov) + cov;
   }
+  // Ink, eight layers, slide (ox) and turn (rot): used by the retired ANNA stagings, kept with their tests, not wired to anything.
   // ink: a drawing behind the glass, over the lights. `sample(X, Y)` is its coverage 0..1 (the
   // shader reads a texture's alpha instead, blurred by mip level for distance)
   const ink = state.ink;

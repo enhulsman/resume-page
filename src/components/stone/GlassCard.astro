@@ -1,0 +1,79 @@
+---
+// A ribbed glass card (glass-material): one of the hero's lights behind [04] glass, drawn by
+// src/scripts/glass/panes.js into the canvas. Every word on it is HTML over the glass; the canvas is
+// decoration. Without WebGL the card keeps its ground and a soft gradient of its light (--fallback).
+// `mini`: a small unlabelled pane (the terminal's reflection of the cards), decoration only.
+import "../../styles/stone.css";
+import { fallbackFor, type GlassCard } from "../../config/glass.ts";
+
+interface Props { card: GlassCard; index?: number; mini?: boolean }
+const { card, index, mini = false } = Astro.props;
+const light = {
+  "data-glass": "ribbed",
+  "data-light": card.light,
+  "data-base": JSON.stringify(card.base),
+  "data-tune": card.tune && JSON.stringify(card.tune),
+  // a reflection sits further behind, softer than the card it mirrors
+  "data-distance": mini ? Math.max(1, card.distance) : card.distance,
+  "data-wash": JSON.stringify(card.wash),
+  "data-quiet": mini ? "off" : undefined,
+  style: `--base: rgb(${card.base.join(" ")}); --fallback: ${fallbackFor(card)}`,
+};
+const idx = index != null ? String(index).padStart(2, "0") : null;
+---
+{mini ? (
+  <span class="glass-card mini" aria-hidden="true" {...light}><canvas aria-hidden="true"></canvas></span>
+) : (
+  <a class="glass-card" href={card.href} {...light}>
+    <canvas aria-hidden="true"></canvas>
+    <span class="title">{card.title}</span>
+    {idx && <span class="idx" aria-hidden="true">{idx}</span>}
+    <span class="readout">{card.readout}</span>
+    <span class="go" aria-hidden="true">→</span>
+  </a>
+)}
+
+<style is:global>
+  .glass-card {
+    position: relative; display: block; aspect-ratio: 296 / 340;
+    border-radius: clamp(12px, 1.3vw, 18px);
+    /* no WebGL: the ground and a soft gradient of the light; panes.js swaps in the light (.lit) */
+    background: var(--fallback, none), var(--base);
+    color: var(--stone-ink);
+    transition: transform 0.35s cubic-bezier(.2,.7,.2,1);
+    box-shadow: 0 1px 1px rgb(70 50 30 / 0.06), 0 14px 28px -18px rgb(70 50 30 / 0.35);
+  }
+  .glass-card.lit { background: var(--base); }
+  .glass-card canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: inherit; }
+  /* the glass edge: a light rim above the light */
+  .glass-card::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.85),
+      inset 1px 0 0 rgb(255 255 255 / 0.6), inset -1px 0 0 rgb(255 255 255 / 0.6),
+      inset 0 -1px 0 rgb(80 60 40 / 0.12),
+      inset 0 0 0 1px rgb(255 255 255 / 0.18),
+      inset 0 0 9px 1px rgb(255 255 255 / 0.22);
+  }
+  /* the title, index and readout stay full ink */
+  .glass-card > span { position: absolute; z-index: 1; color: var(--stone-ink); }
+  .glass-card .title { left: 7%; top: 6.5%; font-weight: 680; font-size: clamp(15px, 1.5vw, 22px); letter-spacing: -0.02em; line-height: 1.1; }
+  .glass-card .idx { right: 7%; top: 7.2%; font-weight: 450; font-size: clamp(11px, 0.9vw, 13px); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+  .glass-card .readout { left: 7%; bottom: 6.5%; font-weight: 480; font-size: clamp(12px, 1.05vw, 15px); font-variant-numeric: tabular-nums; }
+  .glass-card .go {
+    right: 7%; bottom: 6.5%; font-weight: 500; font-size: clamp(13px, 1.1vw, 16px); line-height: 1;
+    transition: transform 0.35s cubic-bezier(.2,.7,.2,1);
+  }
+  a.glass-card:hover, a.glass-card:focus-visible { transform: translateY(-3px); }
+  .glass-card:hover .go, .glass-card:focus-visible .go { transform: translateX(4px); }
+  .glass-card:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; }
+
+  /* a reflection: a plain pane, no rim, no lift */
+  .glass-card.mini { width: auto; height: 100%; aspect-ratio: auto; border-radius: 10px; box-shadow: none; transition: none; }
+  .glass-card.mini::after { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glass-card, .glass-card .go { transition: none; }
+    a.glass-card:hover, a.glass-card:focus-visible, .glass-card:hover .go, .glass-card:focus-visible .go { transform: none; }
+  }
+</style>

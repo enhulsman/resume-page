@@ -1,4 +1,4 @@
-// The glass hero prototype's cards (/hero-lab): one [04] light per project.
+// The glass: the hero's cards (one [04] light per project), what may be glass, and the frosted windows' glows.
 // Titles and links come from home.ts; each readout's number is one of the project's own
 // dimensions there, so a number changed on the homepage changes here too.
 import { details, annaLead, annaLevels, type DetailListing } from './home.ts';
@@ -80,6 +80,55 @@ export const glassCards: GlassCard[] = [
     { scale: 1.12, dy: 10, set: { color: [214, 234, 150], color2: [86, 140, 50], g0: 140, g1: 290, sigma: 0.07, opacity: 1 } },
   ]),
 ];
+
+// What may be glass (Ezra, 2026-11-10): only an object with something behind it, never to explain
+// anything, at most one on any screen. Each id is a `data-glass-moment` on the page, top to bottom;
+// a new glass object is one line here and passes the same tests (tests/glass-home.*).
+export const glassMoments = ['hero', 'anna', 'terminal'] as const;
+export type GlassMoment = (typeof glassMoments)[number];
+
+const rgba = (c: RGB, a: number) => `rgb(${c.join(' ')} / ${a})`;
+
+/**
+ * A card without WebGL: its ground (--base) under a soft radial gradient of its own light, the
+ * layer with the hard contour (the flame's tongue, the tide, the sun, the pod) over its wash.
+ * Computed at build time; every gradient fades to nothing, so there is no edge.
+ */
+export function fallbackFor(c: GlassCard): string {
+  const tune = c.tune ?? [];
+  const layer = tune.find((t) => t?.set?.color2) ?? tune.find((t) => t?.set?.color);
+  const col = (layer?.set?.color ?? c.wash.color) as RGB;
+  return [
+    `radial-gradient(ellipse 52% 44% at 50% 58%, ${rgba(col, 0.62)} 0%, ${rgba(col, 0)} 100%)`,
+    `radial-gradient(ellipse 80% 75% at 50% 52%, ${rgba(c.wash.color, 0.5)} 0%, ${rgba(c.wash.color, 0)} 100%)`,
+  ].join(', ');
+}
+
+/** A frosted window's glow: soft radial lights beneath it, blurred, for the window to frost. */
+export interface WindowGlow {
+  /** Where the glow sits around its window, as CSS `inset`. */
+  inset: string;
+  blur: number;
+  lights: { at: [number, number]; color: RGB; opacity: number }[];
+}
+// As tuned in the lab (/hero-lab): ANNA's flame, red at its foot, yellow at its heart, amber
+// around; the terminal's, the hero's four lights as one soft field.
+export const windowGlows: Record<'flame' | 'cards', WindowGlow> = {
+  flame: { inset: '14% -7% 10%', blur: 28, lights: [
+    { at: [28, 66], color: [214, 58, 34], opacity: 0.5 },
+    { at: [52, 42], color: [255, 196, 96], opacity: 0.6 },
+    { at: [78, 58], color: [240, 160, 118], opacity: 0.55 },
+  ] },
+  cards: { inset: '6% -8% 10%', blur: 28, lights: [
+    { at: [22, 40], color: [236, 120, 70], opacity: 0.55 },
+    { at: [46, 62], color: [110, 150, 214], opacity: 0.45 },
+    { at: [70, 38], color: [240, 150, 120], opacity: 0.45 },
+    { at: [86, 64], color: [150, 190, 110], opacity: 0.42 },
+  ] },
+};
+/** The glow's CSS background: one soft radial gradient per light, each fading to nothing. */
+export const glowBackground = (g: WindowGlow) =>
+  g.lights.map((l) => `radial-gradient(closest-side at ${l.at[0]}% ${l.at[1]}%, ${rgba(l.color, l.opacity)}, ${rgba(l.color, 0)})`).join(', ');
 
 // Off the hero for now (Ezra, 2026-11-09: he barely uses it); it can come back as 05.
 export const benched: GlassCard[] = [
