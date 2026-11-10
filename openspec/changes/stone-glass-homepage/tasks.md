@@ -42,9 +42,9 @@ decision behind it.
 
 ## 4. ANNA's section (anna-section)
 
-- [ ] 4.1 Tests from: the copy in order, the link to anna-site, written in config only, no run line or levels, one glass object, all there before it plays, plays once to the end, Replay, the reader scrolls back, reduced motion (from the start, switched on before and during play), no focus trap, phone, not on the homepage, on /projects, nothing on the homepage imports them; also the page matches the list and something behind every window for the hero and ANNA so far. Port `tests/glass-anna-window.e2e.mjs` to `/` (its `?chat=` tests too); keep `tests/glass-anna-window.test.mjs` as is
-- [ ] 4.2 `src/components/stone/AnnaSection.astro`: copy from `annaLead` and `annaCalls`, index `01`, message names from `annaLead.title` and `annaDemo.who`, `GlassWindow` titled `annaCalls.window` holding `annaDemo`'s beats, flame glow beneath, `data-glass-moment="anna"`; the window starts below the heading, lead and first rule (design 2); reuse `anna-window.js` and `anna-window-model.js` unchanged unless a selector must widen
-- [ ] 4.3 Run all test commands
+- [x] 4.1 Tests from: the copy in order, the link to anna-site, written in config only, no run line or levels, one glass object, all there before it plays, plays once to the end, Replay, the reader scrolls back, reduced motion (from the start, switched on before and during play), no focus trap, phone, not on the homepage, on /projects, nothing on the homepage imports them; also the page matches the list and something behind every window for the hero and ANNA so far. Port `tests/glass-anna-window.e2e.mjs` to `/` (its `?chat=` tests too); keep `tests/glass-anna-window.test.mjs` as is
+- [x] 4.2 `src/components/stone/AnnaSection.astro`: copy from `annaLead` and `annaCalls`, index `01`, message names from `annaLead.title` and `annaDemo.who`, `GlassWindow` titled `annaCalls.window` holding `annaDemo`'s beats, flame glow beneath, `data-glass-moment="anna"`; the window starts below the heading, lead and first rule (design 2); reuse `anna-window.js` and `anna-window-model.js` unchanged unless a selector must widen
+- [x] 4.3 Run all test commands
 
 ## 5. Projects, Experience, Writing (stone-homepage)
 

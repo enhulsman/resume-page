@@ -1,0 +1,166 @@
+---
+// ANNA's section (openspec stone-glass-homepage, anna-section): what she may do, and for whom, as
+// type on stone; beside it (below it on a phone) a frosted Teams window where anna-site's "Close my
+// week" plays once as it comes into view, with Replay. The second glass moment.
+// Every word comes from config: annaLead, annaCalls (home.ts) and annaDemo (anna-demo.ts); the index
+// is ANNA's card's. Every beat is in the page from the start, hidden until it lands; the driver is
+// src/scripts/glass/anna-window.js, which keys on the class names here (.anna-window, .aw-*,
+// [data-beat]); the text-on-glass colours in stone.css key on .msg .who, .sources, .rec-head.
+//
+// One moment per screen: the window starts beside the second rule, below the heading, the lead and
+// the first rule, so the stone and copy above it keep it apart from the hero's cards. The copy and
+// its rules share the section's rows (subgrid), so the window's top follows the first rule's bottom.
+import "../../styles/stone.css";
+import GlassWindow from "./GlassWindow.astro";
+import { glassCards } from "../../config/glass.ts";
+import { annaLead, annaCalls } from "../../config/home.ts";
+import { annaDemo } from "../../config/anna-demo.ts";
+
+const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padStart(2, "0");
+---
+
+<section class="anna-window" data-glass-moment="anna" aria-labelledby="anna-h">
+  <div class="aw-copy">
+    <header class="aw-head">
+      <span class="aw-idx">{idx}</span>
+      <h2 id="anna-h">{annaLead.title}</h2>
+      <p class="aw-lead">{annaLead.text}.</p>
+      <h3>{annaCalls.heading}</h3>
+    </header>
+    <ol class="aw-rules">
+      {annaCalls.rules.map((r) => <li><strong class="rule">{r.rule}</strong> <span class="why">{r.why}</span> <span class="how">{r.how}</span></li>)}
+    </ol>
+    <p class="aw-closing">{annaCalls.closing}</p>
+    <a class="more" href={annaCalls.more.href}>{annaCalls.more.label} <span aria-hidden="true">→</span></a>
+  </div>
+  <GlassWindow title={annaCalls.window} glow="flame" class="aw-stage" windowClass="aw-window">
+    <button slot="bar" type="button" class="aw-replay">{annaCalls.replay}</button>
+    <div class="aw-chat">
+      <div class="aw-log">
+        <div class="msg joris" data-beat="person"><span class="who">{annaDemo.who}</span><p class="text">{annaDemo.person}</p></div>
+        <div class="msg anna" data-beat="answer"><span class="who">{annaLead.title}</span><p class="text">{annaDemo.answer}</p></div>
+        <div class="work">
+          <p class="sources" data-beat="sources"><span class="read">{annaCalls.read}</span> {annaDemo.sources.join(" · ")}</p>
+          <ol class="steps">{annaDemo.steps.map((s, i) => <li data-beat={`step-${i}`}>{s}</li>)}</ol>
+        </div>
+        <div class="msg anna" data-beat="question"><p class="text">{annaDemo.question}</p></div>
+        <div class="msg joris" data-beat="reply"><span class="who">{annaDemo.who}</span><p class="text">{annaDemo.reply}</p></div>
+        <div class="msg anna" data-beat="result"><span class="who">{annaLead.title}</span><p class="text">{annaDemo.result}</p></div>
+        <div class="record" data-beat="record"><p class="rec-head">{annaDemo.recordHeading}</p><ul>{annaDemo.record.map((r) => <li>{r}</li>)}</ul></div>
+      </div>
+    </div>
+    <div class="aw-compose" aria-hidden="true"><span class="aw-field"><span class="aw-typed"></span><i class="aw-caret"></i></span></div>
+  </GlassWindow>
+</section>
+
+<style>
+  /* rows: the head, the three rules, the closing line, the link, then what the window needs more */
+  .anna-window {
+    display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    grid-template-rows: repeat(6, auto) 1fr;
+    column-gap: clamp(24px, 5vw, 96px);
+    padding: clamp(120px, 22svh, 220px) var(--stone-gutter) clamp(72px, 12svh, 140px);
+    font-family: var(--stone-sans); color: var(--stone-ink);
+    -webkit-font-smoothing: antialiased;
+    /* the glow reaches past the window's sides; it never widens the page */
+    overflow-x: clip;
+  }
+  .aw-copy {
+    grid-column: 1; grid-row: 1 / -1; max-width: 480px;
+    display: grid; grid-template-rows: subgrid; align-content: start;
+  }
+  .aw-head { grid-row: 1; }
+  .aw-rules { grid-row: 2 / span 3; display: grid; grid-template-rows: subgrid; }
+  .aw-closing { grid-row: 5; }
+  .more { grid-row: 6; justify-self: start; }
+
+  .aw-idx {
+    display: block; margin-bottom: 0.6em;
+    font-size: var(--stone-t-small); font-weight: 600; letter-spacing: 0.06em; font-variant-numeric: tabular-nums;
+    color: var(--stone-ink-2);
+  }
+  h2 { margin: 0; font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; }
+  .aw-lead { margin: 0.8em 0 0; font-size: var(--stone-t-lead); line-height: 1.34; color: var(--stone-ink-2); text-wrap: pretty; }
+  h3 { margin: 1.7em 0 0; font-weight: 700; font-size: var(--stone-t-h3); letter-spacing: -0.02em; line-height: 1.15; }
+  .aw-rules { list-style: none; margin: 0; padding: 0; }
+  .aw-rules li { padding-top: 1.05em; font-size: var(--stone-t-body); line-height: 1.4; color: var(--stone-ink-2); text-wrap: pretty; }
+  .aw-rules li:first-child { padding-top: 0.9em; }
+  .aw-rules .rule { display: block; font-weight: 680; font-size: clamp(17px, 1.3vw, 19.5px); letter-spacing: -0.012em; color: var(--stone-ink); margin-bottom: 0.15em; }
+  .aw-rules .how { display: block; margin-top: 0.2em; font-size: 0.88em; font-style: italic; color: #645c53; }
+  .aw-closing { margin: 1.5em 0 0; font-size: var(--stone-t-body); line-height: 1.4; color: var(--stone-ink-2); }
+  .more { display: inline-block; margin-top: 1em; font-weight: 600; color: var(--stone-ink); }
+
+  /* the window's column: the stage is the window's own width, so the glow sits around the window */
+  .anna-window :global(.aw-stage) {
+    grid-column: 2; grid-row: 3 / -1; align-self: start; justify-self: center;
+    width: min(100%, 620px);
+  }
+  .anna-window :global(.aw-window) { height: min(600px, 74svh); }
+  .anna-window :global(.aw-window .glass-bar) { display: grid; grid-template-columns: 1fr auto 1fr; }
+  .anna-window :global(.aw-window .glass-bar > .glass-title) { grid-column: 2; }
+  .aw-replay {
+    grid-column: 3; justify-self: end; border: 0; background: none; padding: 4px 2px; cursor: pointer;
+    font: 500 12.5px/1 var(--stone-sans); border-radius: 6px;
+  }
+  .aw-replay:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 2px; }
+  .aw-chat {
+    position: relative; z-index: 3; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: thin; scrollbar-color: rgb(17 17 16 / 0.16) transparent;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 18px); mask-image: linear-gradient(to bottom, transparent, black 18px);
+  }
+  .aw-log { display: flex; flex-direction: column; padding: 22px 22px 18px; font-size: 15px; line-height: 1.45; }
+  .aw-log p { margin: 0; }
+  /* each beat is in the page from the start; it shows when it lands */
+  [data-beat] { opacity: 0; transform: translateY(6px); transition: opacity 0.45s ease, transform 0.5s cubic-bezier(.2,.7,.2,1); }
+  [data-beat].on { opacity: 1; transform: none; }
+  .msg { max-width: 86%; text-wrap: pretty; }
+  .msg .who { display: block; margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.01em; }
+  .msg .text { padding: 10px 14px; border-radius: 14px; }
+  /* Joris: to the right, a faint ink tint; ANNA: on the left, lifted a little lighter than the glass */
+  .msg.joris { align-self: flex-end; text-align: left; }
+  .msg.joris .who { text-align: right; }
+  .msg.joris .text { background: rgb(17 17 16 / 0.055); }
+  .msg.anna { align-self: flex-start; }
+  .msg.anna .text { background: rgb(255 255 255 / 0.34); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35); }
+  .msg + .msg, .msg + .work, .work + .msg { margin-top: 6px; }
+  .msg.joris + .msg.anna, .msg.anna + .msg.joris { margin-top: 18px; }
+  /* her steps: read from the sources named above them, each ticking in */
+  .work { align-self: flex-start; max-width: 86%; margin-top: 10px; padding: 2px 14px 6px; }
+  .sources { margin: 0 0 8px; font-size: 12.5px; line-height: 1.4; }
+  .sources .read { font-weight: 600; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; font-size: 13.5px; line-height: 1.4; }
+  .steps li { position: relative; padding-left: 20px; }
+  .steps li::before { content: "✓" / ""; position: absolute; left: 0; top: 0; font-size: 12px; font-weight: 700; color: var(--glass-ink-red); }
+  /* what she did: under her report, a quiet record */
+  .record { align-self: flex-start; max-width: 86%; margin-top: 8px; padding: 10px 14px 12px; border-radius: 12px; box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.07); }
+  .rec-head { font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .record ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  /* the box Joris types into: his reply goes in here first, then is sent */
+  .aw-compose { position: relative; z-index: 3; flex: none; padding: 10px 14px 14px; opacity: 0.4; transition: opacity 0.4s ease; }
+  .aw-compose.typing { opacity: 1; }
+  .aw-field {
+    display: flex; align-items: center; height: 40px; padding: 0 14px; border-radius: 12px;
+    background: rgb(255 255 255 / 0.3); box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.07);
+    font-size: 15px; white-space: nowrap; overflow: hidden;
+  }
+  .aw-caret { display: none; width: 1.5px; height: 1.15em; margin-left: 1px; background: var(--stone-ink); }
+  .aw-compose.typing .aw-caret { display: inline-block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-beat] { transition: none; transform: none; }
+    .aw-compose { transition: none; }
+    .aw-replay { display: none; }
+  }
+
+  /* a phone: the copy, then the window under it */
+  @media (max-width: 760px) {
+    .anna-window { display: block; padding-block: 96px 72px; }
+    .aw-copy { display: block; }
+    .aw-rules { display: block; }
+    h2 { font-size: 56px; }
+    .anna-window :global(.aw-stage) { width: 100%; margin-top: 40px; }
+    .anna-window :global(.aw-window) { height: min(560px, 78svh); }
+    .aw-log { padding: 18px 14px 14px; font-size: 14.5px; }
+    .msg, .work, .record { max-width: 92%; }
+  }
+</style>

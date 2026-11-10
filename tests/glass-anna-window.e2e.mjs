@@ -1,27 +1,31 @@
-// ANNA in a glass window (/hero-lab?lab=1, the default staging; ?anna=window), in a real browser.
-// Left: what she may do, and for whom. Right: a frosted window where the site's 'week' conversation
-// plays once as it comes into view. The timeline itself: tests/glass-anna-window.test.mjs.
-// Needs a running site:
+// ANNA in a glass window, in a real browser. Her section's own tests run on the homepage (`/`),
+// where it shipped (openspec stone-glass-homepage, chunk 4): left, what she may do and for whom;
+// right, a frosted window where anna-site's 'week' conversation plays once as it comes into view.
+// The lab's staging switch stays on /hero-lab until the lab goes (chunk 8). The timeline itself:
+// tests/glass-anna-window.test.mjs. Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/glass-anna-window.e2e.mjs
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { annaDemo } from '../src/config/anna-demo.ts';
-import { annaLead } from '../src/config/home.ts';
+import { annaLead, annaCalls } from '../src/config/home.ts';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
 const BEATS = ['person', 'answer', 'sources', 'step-0', 'step-1', 'step-2', 'step-3', 'question', 'typing', 'reply', 'result', 'record'];
+/** The sizes the spec names: two desktops and a phone. */
+const SIZES = [[1440, 900], [1280, 720], [390, 844]];
 let browser;
 before(async () => { browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); });
 after(async () => { await browser?.close(); });
 
-async function open(q = '', { width = 1440, height = 900, reducedMotion = 'no-preference', lab = true } = {}) {
+/** The homepage (or `path`); `q` is the query string without its "?". */
+async function open(q = '', { width = 1440, height = 900, reducedMotion = 'no-preference', path = '/' } = {}) {
   const context = await browser.newContext({ viewport: { width, height }, reducedMotion });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  await page.goto(`${BASE}/hero-lab?${lab ? 'lab=1' : ''}${q}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}${path}${q ? `?${q}` : ''}`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__glassReady === true);
   return { context, page, errors };
 }
@@ -36,23 +40,36 @@ const norm = (s) => s.replace(/\s+/g, ' ').trim();
 /** Let the page render `n` more frames (observers and rAF callbacks run in between). */
 const frames = (page, n = 2) => page.evaluate((n) => new Promise((done) => { const f = (k) => (k ? requestAnimationFrame(() => f(k - 1)) : done()); f(n); }), n);
 const gapToEnd = (page) => page.$eval('.anna-window .aw-chat', (c) => c.scrollHeight - c.clientHeight - c.scrollTop);
+/** Wait until the chat has stopped moving for ten frames. */
+const settled = (page) => page.waitForFunction(() => {
+  const y = document.querySelector('.anna-window .aw-chat').scrollTop, w = window;
+  w.__calm = y === w.__calmY ? (w.__calm || 0) + 1 : 0; w.__calmY = y;
+  return w.__calm >= 10;
+}, null, { polling: 'raf', timeout: 10000 });
+/** The newest shown beat against the chat's visible area: how far its bottom sits above the chat's. */
+const newestInView = (page) => page.evaluate(() => {
+  const chat = document.querySelector('.anna-window .aw-chat');
+  const on = [...chat.querySelectorAll('[data-beat].on')];
+  const newest = on.at(-1), c = chat.getBoundingClientRect(), r = newest.getBoundingClientRect();
+  return { beat: newest.dataset.beat, above: c.bottom - r.bottom, belowTop: r.top - c.top, gap: chat.scrollHeight - chat.clientHeight - chat.scrollTop };
+});
 
-test('?lab=1 shows the window staging by default; turn, journey and stack stay on the switch', async () => {
+test('lab: ?lab=1 shows the window staging by default; turn, journey and stack stay on the switch', async () => {
   for (const [q, want] of [['', 'window'], ['&anna=window', 'window'], ['&anna=turn', 'turn'], ['&anna=journey', 'journey'], ['&anna=stack', 'stack']]) {
-    const { context, page, errors } = await open(q);
+    const { context, page, errors } = await open(`lab=1${q}`, { path: '/hero-lab' });
     for (const [sel, name] of [['.anna-window', 'window'], ['.anna-turn', 'turn'], ['.anna-journey', 'journey'], ['.anna-x', 'stack']]) {
       assert.equal(await page.isVisible(sel), want === name, `${q || 'default'}: ${name}`);
     }
     await context.close();
     assert.deepEqual(errors, []);
   }
-  const { context, page } = await open('');
+  const { context, page } = await open('lab=1', { path: '/hero-lab' });
   const seg = await page.$$eval('.lab a[data-key="anna"]', (as) => as.map((a) => a.dataset.val));
   assert.deepEqual(seg, ['window', 'turn', 'journey', 'stack'], 'window first in the lab bar');
   const active = await page.$eval('.lab a[data-key="anna"][data-val="window"]', (a) => getComputedStyle(a).backgroundColor);
   assert.equal(active, 'rgb(238, 234, 227)', 'and marked as the one showing');
   await context.close();
-  const bare = await open('', { lab: false });
+  const bare = await open('', { path: '/hero-lab' });
   assert.equal(await bare.page.isVisible('.anna-window'), false, 'none without ?lab=1');
   await bare.context.close();
 });
@@ -79,6 +96,15 @@ test('the left copy, verbatim', async () => {
   assert.equal(norm(copy.link.text), 'See ANNA at work →');
   assert.equal(copy.link.href, 'https://anna-site.anamata.ai');
   assert.equal(copy.link.arrow, '→');
+  // the index of ANNA's card beside her heading, and the copy in order, top to bottom
+  assert.equal(await page.$eval('.anna-window .aw-idx', (e) => e.textContent.trim()), '01');
+  const text = norm(await page.$eval('.anna-window .aw-copy', (el) => el.textContent));
+  let from = 0;
+  for (const s of [annaLead.title, `${annaLead.text}.`, annaCalls.heading, ...annaCalls.rules.flatMap((r) => [r.rule, r.why, r.how]), annaCalls.closing, annaCalls.more.label]) {
+    const i = text.indexOf(s, from);
+    assert.ok(i >= 0, `in order: ${s}`);
+    from = i + s.length;
+  }
   await context.close();
   assert.deepEqual(errors, []);
 });
@@ -101,7 +127,7 @@ test('before it plays: the whole conversation is already in the page, in order, 
   }
   assert.equal(await page.locator('.anna-window [aria-live]').count(), 0, 'nothing announces itself');
   assert.equal(await page.getAttribute('.anna-window .aw-compose', 'aria-hidden'), 'true', 'the typing box is decoration; the sent reply is the text');
-  assert.equal(norm(await page.textContent('.anna-window .aw-bar .aw-title')), 'Teams · ANNA');
+  assert.equal(norm(await page.textContent('.anna-window .aw-window .glass-title')), 'Teams · ANNA');
   // in the site's language, not a chat widget's: the sources as one plain line, even corners, no chips
   assert.equal(norm(await page.textContent('.anna-window .aw-log .sources')), `Read: ${annaDemo.sources.join(' · ')}`);
   const corners = await page.$$eval('.anna-window .msg .text, .anna-window .record', (els) => els.map((e) => { const cs = getComputedStyle(e); return new Set([cs.borderTopLeftRadius, cs.borderTopRightRadius, cs.borderBottomLeftRadius, cs.borderBottomRightRadius]).size; }));
@@ -131,11 +157,13 @@ test('scrolled into view it plays once to the end: every beat in order, the repl
   assert.deepEqual(await onBeats(page), BEATS.filter((b) => b !== 'typing'), 'all shown');
   assert.equal(await page.textContent('.anna-window .aw-typed'), '', 'the box is empty once sent');
   assert.equal(norm(await page.textContent('.anna-window [data-beat="reply"] .text')), annaDemo.reply);
-  // the window keeps its height and has scrolled itself to the newest beat
-  await page.waitForFunction(() => { const c = document.querySelector('.anna-window .aw-chat'); return c.scrollHeight - c.clientHeight - c.scrollTop < 4; }, null, { timeout: 5000 }).catch(() => {});
-  const chat = await page.$eval('.anna-window .aw-chat', (c) => ({ over: c.scrollHeight > c.clientHeight, gap: c.scrollHeight - c.clientHeight - c.scrollTop }));
-  assert.ok(chat.over, 'more conversation than window: it has to scroll');
-  assert.ok(chat.gap < 4, `newest in view (${chat.gap}px left)`);
+  // the window keeps its height and has scrolled itself to the newest beat, all of it in view
+  await settled(page);
+  assert.ok(await page.$eval('.anna-window .aw-chat', (c) => c.scrollHeight > c.clientHeight), 'more conversation than window: it has to scroll');
+  const v = await newestInView(page);
+  assert.equal(v.beat, 'record');
+  assert.ok(v.gap <= 1, `scrolled to the end (${v.gap}px left; 1 px is layout rounding)`);
+  assert.ok(v.above >= 8, `the newest beat's bottom sits ${v.above}px inside the chat`);
   assert.equal(await page.evaluate(() => scrollY), y0, 'following the chat never scrolls the page');
   // it does not play again by itself
   await page.evaluate(() => scrollTo(0, 0));
@@ -166,7 +194,7 @@ test('Replay plays it again from the start', async () => {
 });
 
 test('?chat=<seconds> holds one moment', async () => {
-  const { context, page, errors } = await open('&chat=8.4');
+  const { context, page, errors } = await open('chat=8.4');
   await intoView(page);
   const s = await until(page, (s) => s.beat === 'question');
   assert.equal(s.beat, 'question');
@@ -265,27 +293,40 @@ test('the reader can scroll back mid-play; it is not pulled down again, nor on c
   assert.deepEqual(errors, []);
 });
 
-test('a smaller window still shows the newest beat', async () => {
-  const { context, page, errors } = await open('');
-  await intoView(page);
-  await until(page, (s) => s.done);
-  await page.waitForFunction(() => { const c = document.querySelector('.anna-window .aw-chat'); return c.scrollHeight - c.clientHeight - c.scrollTop < 4; }, null, { timeout: 5000 }).catch(() => {});
-  const h0 = await page.$eval('.anna-window .aw-chat', (c) => c.clientHeight);
-  await page.setViewportSize({ width: 1440, height: 640 });
-  await page.waitForFunction((h0) => document.querySelector('.anna-window .aw-chat').clientHeight < h0 - 40, h0, { timeout: 5000 }).catch(() => {});
-  await page.waitForFunction(() => { const c = document.querySelector('.anna-window .aw-chat'); return c.scrollHeight - c.clientHeight - c.scrollTop < 4; }, null, { timeout: 5000 }).catch(() => {});
-  assert.ok(await page.$eval('.anna-window .aw-chat', (c) => c.clientHeight) < h0 - 40, 'the window got shorter');
-  assert.ok(await gapToEnd(page) < 4, `newest in view (${await gapToEnd(page)}px left)`);
-  await context.close();
-  assert.deepEqual(errors, []);
-});
+// At every size the spec names, the finished conversation ends with its newest beat wholly in
+// view, and a window made shorter afterwards scrolls to keep it there. The follow eases towards
+// its target in sub-pixel steps; the browser rounds scrollTop, so it must never stall a few
+// pixels short (the lab's flaky 4-5 px).
+for (const [width, height] of SIZES) {
+  test(`${width} x ${height}: the newest beat stays wholly in view, also in a shorter window`, async () => {
+    const { context, page, errors } = await open('', { width, height });
+    await intoView(page);
+    assert.equal((await until(page, (s) => s.done, undefined, 40000)).done, true);
+    await settled(page);
+    const v = await newestInView(page);
+    assert.equal(v.beat, 'record');
+    assert.ok(v.gap <= 1, `scrolled to the end (${v.gap}px left; 1 px is layout rounding)`);
+    assert.ok(v.above >= 8 && v.belowTop >= 0, `wholly inside the chat (${v.belowTop}px below its top, ${v.above}px above its bottom)`);
+    const h0 = await page.$eval('.anna-window .aw-chat', (c) => c.clientHeight);
+    await page.setViewportSize({ width, height: Math.round(height * 0.72) });
+    await page.waitForFunction((h0) => document.querySelector('.anna-window .aw-chat').clientHeight < h0 - 40, h0, { timeout: 5000 }).catch(() => {});
+    assert.ok(await page.$eval('.anna-window .aw-chat', (c) => c.clientHeight) < h0 - 40, 'the window got shorter');
+    await page.waitForFunction(() => { const c = document.querySelector('.anna-window .aw-chat'); return c.scrollHeight - c.clientHeight - c.scrollTop <= 1; }, null, { timeout: 5000 }).catch(() => {});
+    await settled(page);
+    const w = await newestInView(page);
+    assert.ok(w.gap <= 1, `scrolled to the end again (${w.gap}px left)`);
+    assert.ok(w.above >= 8, `the newest beat's bottom sits ${w.above}px inside the chat`);
+    await context.close();
+    assert.deepEqual(errors, []);
+  });
+}
 
 test('the quiet text is readable: at least 4.5:1 against what is behind it', async () => {
-  const { context, page, errors } = await open('&chat=16');
+  const { context, page, errors } = await open('chat=16');
   await intoView(page);
   await until(page, (s) => s.done);
   await frames(page, 4);
-  const SEL = ['.anna-window .msg .who', '.anna-window .rec-head', '.anna-window .aw-replay', '.anna-window .aw-rules .how', '.anna-window .aw-log .sources', '.anna-window .steps li', '.anna-window .record li', '.anna-window .aw-title'];
+  const SEL = ['.anna-window .msg .who', '.anna-window .rec-head', '.anna-window .aw-replay', '.anna-window .aw-rules .how', '.anna-window .aw-log .sources', '.anna-window .steps li', '.anna-window .record li', '.anna-window .glass-title'];
   // each text's own colour, then the same boxes with the text hidden: the pixels behind it
   const items = await page.evaluate((SEL) => SEL.flatMap((sel) => [...document.querySelectorAll(sel)].map((el) => {
     const r = el.getBoundingClientRect();

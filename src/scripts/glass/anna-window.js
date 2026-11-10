@@ -1,8 +1,9 @@
-// ANNA in a glass window (/hero-lab?lab=1, the default staging): the site's 'week' conversation plays
-// once when the window is about 40% in view; Replay plays it again. Every beat is in the page from
-// the start (anna-window-model.js says when each shows). The window keeps its height and scrolls
-// itself to the newest beat, unless the reader has scrolled it themselves. ?chat=<seconds> holds one
-// moment; reduced motion (also when switched on later) shows the end at once.
+// ANNA in a glass window (the homepage's ANNA section; /hero-lab?lab=1 until the lab goes): the
+// site's 'week' conversation plays once when the window is about 40% in view; Replay plays it again.
+// Every beat is in the page from the start (anna-window-model.js says when each shows). The window
+// keeps its height and scrolls itself to the newest beat, unless the reader has scrolled it
+// themselves. ?chat=<seconds> holds one moment; reduced motion (also when switched on later) shows
+// the end at once.
 import { timeline, moment, held } from './anna-window-model.js';
 
 const section = document.querySelector('.anna-window');
@@ -45,7 +46,12 @@ if (section) {
     if (!playing) sy = chat.scrollTop;
     const to = target();
     if (instant || Math.abs(to - sy) < 1) sy = to;
-    else sy += (to - sy) * (1 - Math.exp(-dt / 0.16));
+    else {
+      // at least a whole pixel a frame: the browser rounds scrollTop, and once idle sy is read back
+      // from it, so a sub-pixel step would be undone every frame and stall a few pixels short
+      const step = (to - sy) * (1 - Math.exp(-dt / 0.16));
+      sy += Math.sign(step) * Math.max(1, Math.abs(step));
+    }
     chat.scrollTop = sy;
     setTo = chat.scrollTop;
     return sy === to;

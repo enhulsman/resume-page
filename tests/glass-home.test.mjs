@@ -308,3 +308,45 @@ test('the arrival is gone: no html.intro in the layout or the sheet, no intro.js
   assert.equal(existsSync(new URL('tests/overzicht.e2e.mjs', root)), false);
   assert.doesNotMatch(JSON.parse(read('package.json')).scripts['test:e2e'], /intro\.e2e|overzicht\.e2e/);
 });
+
+// ---- ANNA's section (chunk 4, anna-section) ----
+
+import { coverer, strings } from './lib/copy.mjs';
+
+test('the copy check covers joined config values and catches a typed-in word', () => {
+  const check = coverer(['Made in Utrecht by', 'Ezra Hulsman', 'Blog', 'Proverbs 3:5-7', home.annaLead.text]);
+  assert.equal(check('Projects'), 'Projects', 'a heading typed into the markup');
+  assert.equal(check('See all'), 'See all', 'a link label typed inside a mapped list');
+  assert.equal(check('Blogs about'), 'Blogs about', 'a corpus value inside a longer word is not removed');
+  assert.equal(check('Made in Utrecht by Ezra Hulsman.'), null, 'the footer line, joined with a full stop');
+  assert.equal(check(`${home.annaLead.text}.`), null, 'the lead and its full stop');
+  assert.equal(check('Ezra Hulsman · Blog'), null, 'values joined by punctuation');
+  assert.equal(check('01 → 4'), null, 'no letters, nothing to cover');
+  assert.deepEqual(strings({ a: 'x', b: ['y', { c: 'z' }], n: 3 }), ['x', 'y', 'z']);
+});
+
+test('nothing on the homepage imports the four levels: the page and the stone components', () => {
+  const files = ['src/pages/index.astro', ...list('src/components/stone/', '.astro')];
+  assert.ok(files.length >= 4, files.join());
+  for (const f of files) assert.doesNotMatch(read(f), /annaLevels/, f);
+});
+
+// glass.ts still feeds the lab's exploded stack (annaExploded) from annaLevels; that export leaves
+// with the lab in chunk 8, and this test then passes: drop the todo there.
+test('nothing on the homepage imports the four levels: glass.ts', { todo: 'annaExploded leaves glass.ts in chunk 8' }, () => {
+  assert.doesNotMatch(read('src/config/glass.ts'), /annaLevels/);
+});
+
+test('AnnaSection: one frosted window from config, the moment named, the window driver reused', () => {
+  const src = read('src/components/stone/AnnaSection.astro');
+  assert.match(src, /data-glass-moment="anna"/);
+  assert.match(src, /<GlassWindow /);
+  assert.match(src, /title=\{annaCalls\.window\}/);
+  assert.match(src, /glow="flame"/);
+  assert.match(src, /\{annaLead\.title\}/, 'the heading and her message name');
+  assert.match(src, /\{annaDemo\.who\}/, 'his message name');
+  assert.doesNotMatch(src, /data-glass="/, 'the one glass object is GlassWindow\'s');
+  const index = read('src/pages/index.astro');
+  assert.match(index, /import AnnaSection from "\.\.\/components\/stone\/AnnaSection\.astro"/);
+  assert.match(index, /scripts\/glass\/anna-window\.js/);
+});

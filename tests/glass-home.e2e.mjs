@@ -1,13 +1,16 @@
 // The stone homepage in a real browser (openspec stone-glass-homepage): the hero and its ribbed
-// glass, the arrival gone. Later chunks add ANNA, the rows, About and Contact here.
+// glass, the arrival gone, ANNA's section and its one frosted window (her conversation itself:
+// tests/glass-anna-window.e2e.mjs). Later chunks add the rows, About and Contact here.
 // Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/glass-home.e2e.mjs
 // Every wait is on state (__glassReady, __glass.slow, animation frames), never a fixed sleep.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { glassCards } from '../src/config/glass.ts';
-import { homeSections } from '../src/config/home.ts';
+import { glassCards, glassMoments } from '../src/config/glass.ts';
+import { homeSections, annaLead, annaCalls, annaLevels } from '../src/config/home.ts';
+import { annaDemo } from '../src/config/anna-demo.ts';
+import { coverer, strings, textsUnder } from './lib/copy.mjs';
 import site from '../src/config/site.ts';
 import { parseColor, contrast } from './lib/contrast.mjs';
 
@@ -292,4 +295,119 @@ test('arrival: the hero shows in the first painted frame, no intro class ever, t
   assert.equal(after_.saw, false, 'the document never got an intro class');
   assert.ok(!['hidden', 'clip'].includes(after_.oy), `body overflow ${after_.oy}`);
   assert.ok(after_.h >= after_.sh - 1, `the body holds all it has (${after_.h} of ${after_.sh})`);
+});
+
+// ---- ANNA's section (chunk 4) ----
+
+const ANNA = '[data-glass-moment="anna"]';
+/** Scroll ANNA's window into view and wait for her conversation to finish. */
+async function annaDone(page) {
+  await page.evaluate(() => document.querySelector('.anna-window .aw-window').scrollIntoView({ block: 'center' }));
+  await page.waitForFunction(() => window.__annaWindow?.state().done === true, null, { timeout: 40000 });
+}
+
+test('ANNA is written in config only: every text in her section, the message names too, is covered by annaLead, annaCalls and annaDemo', async () => {
+  const { context, page, errors } = await open();
+  await annaDone(page);
+  const texts = await page.evaluate(([fn, sel]) => new Function(`return (${fn})`)()(document.querySelector(sel)), [textsUnder.toString(), ANNA]);
+  const names = await page.$$eval(`${ANNA} .msg .who`, (els) => [...new Set(els.map((e) => e.textContent))]);
+  await context.close();
+  assert.deepEqual(names.sort(), [annaDemo.who, annaLead.title].sort(), 'the message names');
+  assert.ok(texts.length > 20, `${texts.length} texts read`);
+  const check = coverer(strings(annaLead, annaCalls, annaDemo));
+  const left = texts.map(check).filter(Boolean);
+  assert.deepEqual(left, [], `typed into the markup: ${JSON.stringify(left)}`);
+  assert.deepEqual(errors, []);
+});
+
+test('ANNA: no run line and no levels in her section, one glass object, a frosted window', async () => {
+  const { context, page, errors } = await open();
+  const s = await page.$eval(ANNA, (el) => ({
+    text: el.textContent,
+    glass: [...el.querySelectorAll('[data-glass]')].map((g) => g.dataset.glass),
+    stagings: el.querySelectorAll('.anna-turn, .anna-journey, .anna-x, .slab').length,
+  }));
+  await context.close();
+  for (const re of [/\bv\d+\.\d+/, /\breleases?\b/i, /\btests\b/i]) assert.doesNotMatch(s.text, re);
+  for (const l of annaLevels) assert.ok(!s.text.includes(l.name), `level ${l.name}`);
+  assert.deepEqual(s.glass, ['frosted']);
+  assert.equal(s.stagings, 0);
+  assert.deepEqual(errors, []);
+});
+
+test('the four levels are not on the homepage', async () => {
+  const { context, page } = await open();
+  await annaDone(page);
+  const text = await page.evaluate(() => document.body.textContent.replace(/\s+/g, ' '));
+  await context.close();
+  for (const l of annaLevels) {
+    assert.ok(!text.includes(l.name), `name: ${l.name}`);
+    assert.ok(!text.includes(l.text), `text: ${l.text}`);
+  }
+});
+
+test('the four levels live on /projects: ANNA\'s plate shows each name with its text, in order', async () => {
+  const { context, page, errors } = await open('projects', { ready: false });
+  const levels = await page.$$eval('.anna-plate .plate-levels li', (lis) => lis.map((li) => [li.querySelector('b').textContent, li.querySelector('span').textContent]));
+  await context.close();
+  assert.deepEqual(levels, annaLevels.map((l) => [l.name, l.text]));
+  assert.deepEqual(errors, []);
+});
+
+test('the page matches the list so far: the hero, then ANNA; every canvas and every blur in main inside a moment', async () => {
+  const { context, page, errors } = await open();
+  const r = await page.evaluate(() => {
+    const main = document.querySelector('main');
+    const moments = [...main.querySelectorAll('[data-glass-moment]')].map((m) => m.dataset.glassMoment);
+    const loose = [...main.querySelectorAll('*')]
+      .filter((el) => el.tagName === 'CANVAS' || getComputedStyle(el).backdropFilter !== 'none')
+      .filter((el) => !el.closest('[data-glass-moment]'))
+      .map((el) => el.tagName + (el.className ? `.${String(el.className).split(' ').join('.')}` : ''));
+    return { moments, loose };
+  });
+  await context.close();
+  // the terminal joins in chunk 6, with About
+  assert.deepEqual(r.moments, glassMoments.slice(0, 2));
+  assert.deepEqual(r.loose, []);
+  assert.deepEqual(errors, []);
+});
+
+test('something behind ANNA\'s window: a glow beneath it, and the area it covers is not flat stone', async () => {
+  const { context, page, errors } = await open('?t=2.4');
+  const win = page.locator(`${ANNA} [data-glass="frosted"]`);
+  await win.scrollIntoViewIfNeeded();
+  const under = await page.$eval(`${ANNA} [data-glass="frosted"]`, (w) => {
+    const glow = w.parentElement.querySelector(':scope > [data-glow]');
+    if (!glow) return null;
+    const a = w.getBoundingClientRect(), b = glow.getBoundingClientRect();
+    const ix = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+    const iy = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+    return {
+      hidden: glow.getAttribute('aria-hidden'),
+      before: !!(glow.compareDocumentPosition(w) & Node.DOCUMENT_POSITION_FOLLOWING),
+      z: [+getComputedStyle(glow).zIndex, +getComputedStyle(w).zIndex],
+      cover: (ix * iy) / (a.width * a.height),
+    };
+  });
+  assert.ok(under, 'a [data-glow] beside the window, in its stage');
+  assert.equal(under.hidden, 'true');
+  assert.ok(under.before && under.z[0] < under.z[1], `painted beneath it (z ${under.z})`);
+  assert.ok(under.cover > 0.6, `it lies behind most of the window (${under.cover.toFixed(2)})`);
+  // the window's box, then the window hidden: what is left there is what it frosts
+  const clip = await win.boundingBox();
+  await page.addStyleTag({ content: `${ANNA} [data-glass="frosted"] { visibility: hidden !important; }` });
+  await frames(page, 2);
+  const png = (await page.screenshot({ clip })).toString('base64');
+  const spread_ = await page.evaluate(async (b64) => {
+    const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
+    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, img.width, img.height).data;
+    let out = 0;
+    for (let ch = 0; ch < 3; ch++) { let lo = 255, hi = 0; for (let k = ch; k < d.length; k += 4) { lo = Math.min(lo, d[k]); hi = Math.max(hi, d[k]); } out = Math.max(out, hi - lo); }
+    return out;
+  }, png);
+  await context.close();
+  assert.ok(spread_ > 20, `the covered area varies by ${spread_} levels`);
+  assert.deepEqual(errors, []);
 });

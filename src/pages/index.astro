@@ -1,8 +1,9 @@
 ---
 // The homepage in stone and glass (openspec stone-glass-homepage). The sections arrive in order,
-// one change at a time: the hero now; ANNA, Projects, Experience, Writing, About and Contact next.
+// one change at a time: the hero and ANNA now; Projects, Experience, Writing, About and Contact next.
 import OverzichtLayout from "../layouts/OverzichtLayout.astro";
 import Hero from "../components/stone/Hero.astro";
+import AnnaSection from "../components/stone/AnnaSection.astro";
 import site from "../config/site";
 
 const title = `${site.name}, ${site.role}`;
@@ -15,8 +16,10 @@ const description = `${site.name} is a ${site.role} at ${site.company}, building
   keywords={`${site.seo.keywords}, resume, portfolio, Utrecht, ${site.company}`}
 >
   <Hero />
+  <AnnaSection />
 </OverzichtLayout>
 
 <script>
   import '../scripts/glass/panes.js';
+  import '../scripts/glass/anna-window.js';
 </script>
