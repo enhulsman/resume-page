@@ -119,9 +119,10 @@ export const experience: Experience[] = [
     role: 'Pega DevOps Engineer',
     client: 'Anamata',
     startDate: '2023',
+    endDate: '2025',
     stack: ['Pega', 'PDC', 'CPSA 8.8', 'CPBA 8.8', 'PSM I'],
-    summary: 'Joined Anamata as a Pega DevOps Engineer, still my title on paper. The bank, regulator and staffing company roles above are that work. Earned the Pega Certified System Architect and Business Architect certifications in 2023.',
-    homeSummary: 'Joined Anamata as a Pega DevOps Engineer, still my title on paper. The bank, regulator and staffing company roles above are that work. Pega Certified System Architect and Business Architect, 2023.',
+    summary: 'Joined Anamata as a Pega DevOps Engineer, still technically also my title on paper, though not active anymore since 2025. The bank, regulator and staffing company roles above are that work. Earned the Pega Certified System Architect and Business Architect certifications in 2023.',
+    homeSummary: 'Joined Anamata as a Pega DevOps Engineer, still technically also my title on paper, though not active anymore since 2025. The bank, regulator and staffing company roles above are that work. Pega Certified System Architect and Business Architect, 2023.',
     group: 'consulting',
   },
   {

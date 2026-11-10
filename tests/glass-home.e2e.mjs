@@ -560,7 +560,7 @@ test('Experience: one row per résumé entry, newest first, years, role and comp
   const ends = rows.filter((r, i) => !nowRows[i]).map((r) => +r.years.slice(-4));
   assert.deepEqual(ends, [...ends].sort((a, b) => b - a), `end years descending: ${ends}`);
   assert.equal(rows[0].role, 'Forward Deployed Engineer');
-  assert.ok(rows.findIndex((r) => r.role === 'Pega DevOps Engineer') < rows.findIndex((r) => r.role === 'DevOps Engineer'), 'Pega DevOps Engineer (2023 to now) above DevOps Engineer (2023 to 2024)');
+  assert.ok(rows.findIndex((r) => r.role === 'Pega DevOps Engineer') < rows.findIndex((r) => r.role === 'DevOps Engineer'), 'Pega DevOps Engineer (2023 to 2025) above DevOps Engineer (2023 to 2024)');
   for (const [i, e] of ordered.entries()) {
     assert.equal(rows[i].role, e.role);
     assert.equal(rows[i].client, e.client);

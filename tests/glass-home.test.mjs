@@ -619,13 +619,13 @@ test('Experience newest first: current jobs first, then by end year, then by sta
   assert.deepEqual(byRecency([e('b', '2025'), e('a', '2025')]).map((x) => x.role), ['b', 'a']);
 });
 
-test('Experience newest first, on the real résumé: the three jobs without an end year lead, Pega DevOps above the jobs that ended', () => {
+test('Experience newest first, on the real résumé: the two jobs without an end year lead, then by end year (Pega DevOps ended 2025, started before the regulator job)', () => {
   const rows = byRecency(experience).map((x) => `${x.role} @ ${x.client}`);
   assert.deepEqual(rows, [
     'Forward Deployed Engineer @ Anamata',
     'DevOps & Software Engineer @ Major European bank',
-    'Pega DevOps Engineer @ Anamata',
     'Platform & Software Engineer @ Nordic financial regulator',
+    'Pega DevOps Engineer @ Anamata',
     'DevOps Engineer @ European staffing company',
     'Junior Support Engineer @ MovingMedia BV',
     'Tutoring Teacher @ Self-employed',
