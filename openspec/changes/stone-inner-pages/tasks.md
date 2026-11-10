@@ -84,10 +84,10 @@ windows and the Homelab texts; (b) pytaiga-mcp's pane and ANNA's page.
 
 ## 7. /blog and /resume with their lights (stone-blog: /blog; stone-resume; stone-inner-pages: one light per page)
 
-- [ ] 7.1 Tests (`tests/inner-blog.e2e.mjs`, `tests/inner-resume.e2e.mjs`): /blog "Every post, newest first", "On a phone", "The head light is the tide", "A title's light on hover", "By keyboard, and still"; /resume "The head", "The sunset behind the name", "The rows", "On a phone" (both), "The rows from config", "One column on a phone", "Headings a screen reader can jump to", "Print"; stone-inner-pages "Lights in config", "Soft, behind, silent", "Text over the light"
-- [ ] 7.2 Rewrite or retire in `tests/sheets.e2e.mjs` (decisions 2026-11-10: /blog BI2, /resume R3, no revision letters): rewrite line 275 ("/blog is the site diary") to BI2's list; line 295 ("/resume: every role as a revision, skills and schooling as schedules") to the spine rows and the three row sections; line 307 ("/resume prints on white with no chrome") to the print scenario, the page light included; keep line 475 (every section a heading), adjusting selectors only
-- [ ] 7.3 `src/pages/blog/index.astro` (BI2, the head light, per-title hover lights from `projectLights`); `src/pages/resume.astro` (R3, the head light, labels from `pageWords`, print rules); the head light as one small component (`src/components/stone/PageLight.astro`)
-- [ ] 7.4 Run all test commands
+- [x] 7.1 Tests (`tests/inner-blog.e2e.mjs`, `tests/inner-resume.e2e.mjs`): /blog "Every post, newest first", "On a phone", "The head light is the tide", "A title's light on hover", "By keyboard, and still"; /resume "The head", "The sunset behind the name", "The rows", "On a phone" (both), "The rows from config", "One column on a phone", "Headings a screen reader can jump to", "Print"; stone-inner-pages "Lights in config", "Soft, behind, silent", "Text over the light"
+- [x] 7.2 Rewrite or retire in `tests/sheets.e2e.mjs` (decisions 2026-11-10: /blog BI2, /resume R3, no revision letters): rewrite line 275 ("/blog is the site diary") to BI2's list; line 295 ("/resume: every role as a revision, skills and schooling as schedules") to the spine rows and the three row sections; line 307 ("/resume prints on white with no chrome") to the print scenario, the page light included; keep line 475 (every section a heading), adjusting selectors only
+- [x] 7.3 `src/pages/blog/index.astro` (BI2, the head light, per-title hover lights from `projectLights`); `src/pages/resume.astro` (R3, the head light, labels from `pageWords`, print rules); the head light as one small component (`src/components/stone/PageLight.astro`)
+- [x] 7.4 Run all test commands
 
 ## 8. /contact (stone-contact)
 

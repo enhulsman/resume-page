@@ -213,3 +213,100 @@ main.page:has(> .art) { padding-inline: 0; }
   .art-title { font-size: clamp(40px, 11vw, 56px); }
   .art .prose { font-size: 16.5px; }
 }
+
+/* ---- a page's head light (openspec stone-inner-pages, "One light per page"): /blog's tide and
+   /resume's sunset, far behind the heading. Two radial gradients that fade to nothing under a wide
+   blur, beneath the head's text in an isolated head; the page clips it at the screen's sides. ---- */
+main.page:has(> .bl), main.page:has(> .cv) { padding-inline: 0; }
+.page-head { position: relative; isolation: isolate; }
+.page-light {
+  position: absolute; z-index: -1; pointer-events: none;
+  /* its box starts at the screen's edge, where both gradients have faded to nothing: the light
+     never tints the page's sides on a desktop (glass-chrome "no sheet frame") */
+  left: calc(var(--stone-gutter) * -1); top: -30%; width: min(78vw, 980px); height: 150%;
+  background:
+    radial-gradient(closest-side at 32% 46%, rgb(var(--l1) / 0.42), rgb(var(--l1) / 0)),
+    radial-gradient(closest-side at 64% 62%, rgb(var(--l2) / 0.3), rgb(var(--l2) / 0));
+  filter: blur(36px);
+}
+@media (max-width: 760px) { .page-light { left: -30%; width: 150%; } }
+.page-head .page-title {
+  margin: 0; padding-bottom: 0.1em;
+  font: 900 var(--stone-t-h2)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; color: var(--stone-ink); text-wrap: balance;
+}
+
+/* ---- /blog (stone-blog, BI2): the titles, large, each between hairlines; a title lights up in its
+   project's light on hover or focus ---- */
+.bl, .cv {
+  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
+  overflow-x: clip; /* the lights reach past the sides; never the page */
+}
+.bl :focus-visible, .cv :focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
+.bl-head .page-title { font-size: clamp(64px, 9vw, 150px); }
+.bl-line { margin: 0.6em 0 0; font-size: var(--stone-t-body); color: var(--stone-ink-2); }
+.bl-list { list-style: none; margin: clamp(56px, 8svh, 104px) 0 0; padding: 0; }
+.bl-list > li { padding: clamp(32px, 4svh, 56px) 0; border-top: 1px solid var(--stone-hair); }
+.bl-list > li:last-child { border-bottom: 1px solid var(--stone-hair); }
+.bl-list time { font-size: var(--stone-t-small); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--stone-ink-2); }
+.bl-list h2 {
+  margin: 0.35em 0 0; max-width: 20ch;
+  font: 900 clamp(36px, 4vw, 64px)/0.98 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.035em; color: var(--stone-ink); text-wrap: balance;
+  overflow-wrap: break-word;
+}
+.bl-list h2 a { position: relative; isolation: isolate; color: inherit; text-decoration: none; }
+.bl-list h2 a:hover { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+.bl-list .lit h2 a::before {
+  content: ""; position: absolute; z-index: -1; inset: -30% -8%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(var(--light) / 0.4), rgb(var(--light) / 0));
+  filter: blur(20px); opacity: 0; transition: opacity 0.6s ease;
+}
+.bl-list .lit h2 a:hover::before, .bl-list .lit h2 a:focus-visible::before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .bl-list .lit h2 a::before { transition: none !important; } }
+.bl-lead { margin: 0.6em 0 0; max-width: 40em; font-size: var(--stone-t-lead); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
+
+/* ---- /resume (stone-resume, R3): the head, then the years as the spine, then rows of type ---- */
+.cv a { color: var(--stone-ink); }
+.cv-top .cv-name { font-size: clamp(56px, 8.4vw, 140px); }
+.cv-role { margin: 0.9em 0 0; font-weight: 700; font-size: var(--stone-t-h3); letter-spacing: -0.015em; color: var(--stone-ink); }
+.cv-summary { margin: 0.9em 0 0; max-width: 38em; font-size: var(--stone-t-lead); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
+.cv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin: 1.8em 0 0; font-weight: 600; font-size: var(--stone-t-body); }
+.cv-actions .cv-main { padding: 11px 20px; border-radius: 999px; background: var(--stone-ink); color: var(--stone); text-decoration: none; }
+.cv-actions .cv-main:hover { background: var(--stone-ink-2); color: var(--stone); }
+.cv-h2 { margin: 0; font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; color: var(--stone-ink); }
+.cv-exp { margin-top: clamp(72px, 11svh, 132px); }
+.cv-group { margin: 2.2em 0 0.8em; font-size: var(--stone-t-small); font-weight: 700; letter-spacing: 0.01em; color: var(--stone-ink-2); }
+.cv-row { display: grid; grid-template-columns: minmax(6.5em, 0.32fr) minmax(0, 1fr); column-gap: clamp(16px, 2.6vw, 44px); align-items: baseline; padding: clamp(18px, 1.8vw, 26px) 0; }
+.cv-years { display: flex; flex-direction: column; font-size: var(--stone-t-small); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--stone-ink-2); }
+.cv-years b { font: 800 clamp(40px, 4vw, 64px)/0.95 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--stone-ink); }
+.cv-years span { margin-top: 0.3em; }
+.cv-row h4 { margin: 0; font-weight: 700; font-size: var(--stone-t-lead); letter-spacing: -0.015em; line-height: 1.2; color: var(--stone-ink); }
+.cv-client { font-weight: 450; color: var(--stone-ink-2); }
+.cv-row p { margin: 0.5em 0 0; max-width: 44em; font-size: var(--stone-t-body); line-height: 1.5; color: var(--stone-ink-2); text-wrap: pretty; }
+.cv-more { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(32px, 5vw, 96px); align-items: start; margin-top: clamp(72px, 10svh, 120px); }
+.cv-h3 { margin: 0 0 0.6em; font: 900 clamp(32px, 3vw, 48px)/0.95 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.035em; color: var(--stone-ink); }
+.cv-more section + section { margin-top: 1.6em; }
+.cv-table { margin: 0; }
+.cv-table > div { display: grid; grid-template-columns: 9em minmax(0, 1fr); column-gap: 20px; padding: 13px 0; border-top: 1px solid var(--stone-hair); font-size: var(--stone-t-body); line-height: 1.45; }
+.cv-table dt { font-weight: 650; }
+.cv-table dd { margin: 0; color: var(--stone-ink-2); }
+.cv-note { display: block; font-size: var(--stone-t-small); color: #5C5650; }
+@media (max-width: 760px) {
+  .bl-head .page-title { font-size: 64px; }
+  .cv-top .cv-name { font-size: clamp(44px, 12vw, 56px); }
+  .cv-row { grid-template-columns: 1fr; row-gap: 6px; }
+  .cv-years { flex-direction: row; align-items: baseline; gap: 0.6em; }
+  .cv-years span { margin-top: 0; }
+  .cv-more { grid-template-columns: 1fr; }
+  .cv-more > div { margin-top: 1.6em; }
+  .cv-table > div { grid-template-columns: 1fr; row-gap: 2px; }
+}
+
+/* ---- print: the résumé on white, black type; no actions, no light ---- */
+@media print {
+  .page-light, .cv-actions { display: none !important; }
+  .bl, .cv { padding: 0; overflow: visible; }
+  .cv, .cv a, .cv h1, .cv h2, .cv h3, .cv h4, .cv-years, .cv-years b, .cv-client, .cv-row p, .cv-summary, .cv-role, .cv-group, .cv-table dd, .cv-note { color: #000; }
+  .cv-row, .cv-table > div { break-inside: avoid; }
+  .cv-exp, .cv-more { margin-top: 28px; }
+}

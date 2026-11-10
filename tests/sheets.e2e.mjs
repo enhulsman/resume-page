@@ -239,12 +239,15 @@ test('reduced motion: every plate arrives drawn', async () => {
 
 // ---------- the blog: the site diary, then a post ----------
 
-test('/blog is the site diary: every post, newest first, dated', async () => {
+// (openspec stone-inner-pages 7.2, decision 2026-11-10: /blog BI2, the titles large)
+test('/blog lists every post, newest first, dated, each title a large link', async () => {
   const { context, page } = await open('/blog');
-  const rows = page.locator('.diary li');
+  const rows = page.locator('.bl-list > li');
   assert.equal(await rows.count(), POSTS.length);
   const dates = await rows.locator('time').evaluateAll(ts => ts.map(t => t.getAttribute('datetime')));
   assert.deepEqual(dates, [...dates].sort().reverse());
+  assert.equal(await rows.locator('h2 > a').count(), POSTS.length);
+  assert.equal(await page.locator('.diary').count(), 0, 'no diary table left');
   assert.equal(await page.locator('a[href="/rss.xml"]').count(), 0, 'no new links nobody asked for');
   await context.close();
 });
@@ -259,24 +262,28 @@ test('a post opens with its date in the side\'s facts and reads at a sane measur
   await context.close();
 });
 
-// ---------- the résumé: revisions and schedules, and it still prints ----------
+// ---------- the résumé: the years as the spine, rows of type, and it still prints ----------
 
-test('/resume: every role as a revision, skills and schooling as schedules', async () => {
+// (openspec stone-inner-pages 7.2, decision 2026-11-10: /resume R3, no revision letters)
+test('/resume: every role a row on the years\' spine, skills and schooling as rows', async () => {
   const src = readFileSync(new URL('../src/config/resume.ts', import.meta.url), 'utf8');
   const roles = (src.match(/^\s+role: '/gm) || []).length;
   const { context, page } = await open('/resume');
-  assert.equal(await page.locator('.revs li').count(), roles);
-  assert.deepEqual(await page.locator('.schedule caption').allInnerTexts(), ['SKILLS', 'EDUCATION', 'CERTIFICATIONS']);
+  assert.equal(await page.locator('.cv-row').count(), roles);
+  assert.equal(await page.locator('.cv-row .cv-years b').count(), roles, 'each row\'s start year set large');
+  assert.equal(await page.locator('main .revs, main .rev, main .schedule').count(), 0, 'no revisions, no schedules');
+  assert.deepEqual((await page.locator('.cv-more h2').allInnerTexts()).map(t => t.trim()), ['Skills', 'Education', 'Certifications']);
+  assert.ok(await page.locator('.cv-more dl > div').count() > 0, 'their rows');
   // one says the form, the other says mail
-  assert.equal(await page.locator('.actions a', { hasText: 'Request my full CV' }).getAttribute('href'), '/contact');
-  assert.match(await page.locator('.actions a', { hasText: 'Email me' }).getAttribute('href'), /^mailto:/);
+  assert.equal(await page.locator('.cv-actions a', { hasText: 'Request my full CV' }).getAttribute('href'), '/contact');
+  assert.match(await page.locator('.cv-actions a', { hasText: 'Email me' }).getAttribute('href'), /^mailto:/);
   await context.close();
 });
 
-test('/resume prints on white with no chrome', async () => {
+test('/resume prints on white with no chrome, no actions and no page light', async () => {
   const { context, page } = await open('/resume');
   await page.emulateMedia({ media: 'print' });
-  for (const sel of ['.bar', '.foot', '.skip']) {
+  for (const sel of ['.bar', '.foot', '.skip', '.cv-actions', '[data-page-light]']) {
     assert.equal(await page.locator(sel).evaluate(el => getComputedStyle(el).display), 'none', `${sel} is hidden in print`);
   }
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(255, 255, 255)');

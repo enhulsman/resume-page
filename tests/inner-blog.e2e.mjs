@@ -1,7 +1,8 @@
 // A post in the stone article, in a real browser (openspec stone-inner-pages, chunk 6: stone-blog "a
 // post" and stone-article-layout on posts): the head, the facts, the window per post, the code in
 // frosted windows, the post's project or "Other writing" ending the sticky block, and the phone
-// order. Needs a running site:
+// order. And /blog itself (chunk 7: stone-blog "/blog is the titles, large" and "/blog's lights",
+// stone-inner-pages "One light per page"). Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/inner-blog.e2e.mjs
 //
 // Test cost: each route loads once per motion setting and is reused across widths with
@@ -12,10 +13,11 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
-import { innerGlass, glassCards, hueInk, projectLights } from '../src/config/glass.ts';
-import { projectWindows } from '../src/config/home.ts';
+import { innerGlass, glassCards, hueInk, projectLights, pageLights } from '../src/config/glass.ts';
+import { projectWindows, siteNav } from '../src/config/home.ts';
 import { pageWords } from '../src/config/pages.ts';
-import { readFrontmatter } from '../src/lib/frontmatter.ts';
+import { readFrontmatter, diaryEntries } from '../src/lib/frontmatter.ts';
+import { colours, lightOf, lightStep, textOverLight } from './lib/page-light.mjs';
 import { readingMinutes } from '../src/lib/post.ts';
 import { buildProjects } from '../src/lib/projects.ts';
 
@@ -420,4 +422,124 @@ test('It stops at the article\'s end: on successor-scoreboard at the bottom the 
   const footer = await box(page, 'footer');
   assert.ok(stick.bottom <= art.bottom + 0.5, `the block's bottom ${stick.bottom}, the article's ${art.bottom}`);
   assert.ok(stick.bottom <= footer.top + 0.5, 'it does not overlap the footer');
+});
+
+// ---------- /blog: the titles, large, and its lights (chunk 7) ----------
+
+const BLOG = '/blog';
+const blogSources = Object.fromEntries(POSTS.concat(readdirSync(new URL('../src/pages/blog/', import.meta.url))
+  .filter((f) => f.endsWith('.mdx') && f.startsWith('_')).map((f) => `/blog/${f.slice(0, -4)}`))
+  .map((r) => [`./${r.split('/').pop()}.mdx`, read(`src/pages${r}.mdx`)]));
+const LIST = '.bl-list > li';
+
+test('/blog, every post, newest first: "Blog", its line, then each published post: date, a large 900 h2 link, its description', async () => {
+  const page = await at(BLOG);
+  const r = await page.evaluate((LIST) => ({
+    h1: document.querySelector('main h1')?.textContent.trim(),
+    line: document.querySelector('main h1 + p')?.textContent.trim(),
+    entries: [...document.querySelectorAll(LIST)].map((li) => {
+      const a = li.querySelector('h2 > a'), cs = getComputedStyle(li.querySelector('h2'));
+      return {
+        iso: li.querySelector('time')?.getAttribute('datetime'), date: li.querySelector('time')?.textContent.trim(),
+        href: a?.getAttribute('href'), title: a?.textContent.trim(),
+        weight: +cs.fontWeight, size: parseFloat(cs.fontSize), family: cs.fontFamily,
+        lead: li.querySelector('h2 + p')?.textContent.trim(),
+        hairline: getComputedStyle(li).borderTopStyle,
+      };
+    }),
+  }), LIST);
+  assert.equal(r.h1, siteNav.links.find((l) => l.id === 'blog').label);
+  assert.equal(r.line, pageWords.blog.line);
+  assert.equal(r.line, 'Notes on infrastructure, tooling, and the occasional detour.');
+  assert.deepEqual(r.entries.map((e) => e.href), [WATCHDOG, BIBLE, ONCE, SCORE, SPEC], 'five, newest first');
+  const diary = diaryEntries(blogSources);
+  assert.equal(diary.length, POSTS.length, 'no draft');
+  r.entries.forEach((e, i) => {
+    assert.equal(e.iso, diary[i].iso);
+    assert.equal(e.date, diary[i].label);
+    assert.equal(e.title, diary[i].title);
+    assert.equal(e.lead, fmOf(e.href).description, `${e.href}: its description`);
+    assert.equal(e.weight, 900, `${e.href}: weight ${e.weight}`);
+    assert.ok(e.size >= 36 && e.size <= 64, `${e.href}: ${e.size}px`);
+    assert.match(e.family, /^"?Archivo/);
+    assert.equal(e.hairline, 'solid', `${e.href}: a hairline above`);
+  });
+});
+
+test('/blog, the head light is the tide: one [data-page-light] behind the h1, aria-hidden, no pointer, only pageLights.blog\'s colours, still', async () => {
+  const page = await at(BLOG);
+  const l = await lightOf(page);
+  assert.equal(l.count, 1);
+  assert.ok(l.inMain && l.h1InHead && l.h1After, 'in the head, before the h1');
+  assert.equal(l.ariaHidden, 'true');
+  assert.equal(l.pointer, 'none');
+  assert.ok(+l.zIndex < 0 && l.headIsolated === 'isolate', `z-index ${l.zIndex} in an isolated head (${l.headIsolated})`);
+  assert.match(l.background, /radial-gradient/);
+  assert.doesNotMatch(l.background, /linear-gradient|url\(/);
+  assert.deepEqual(colours(l.background).sort(), [pageLights.blog.near, pageLights.blog.deep].map((c) => c.join(',')).sort());
+  assert.match(l.filter, /blur\(/, 'a wide blur');
+  assert.equal(l.animations, 0, 'still');
+});
+
+test('/blog: the light soft, behind, silent and the text over it at 4.5:1, at 1440 and 390; on a phone every entry fits and titles wrap', async () => {
+  const page = await at(BLOG);
+  for (const width of [1440, 390]) {
+    const p = await at(BLOG, { width, height: width === 390 ? 844 : 900 });
+    const { step, spread } = await lightStep(p);
+    assert.ok(step <= 6, `${width}: neighbouring pixels differ by ${step}`);
+    assert.ok(spread > 3, `${width}: the light shows (${spread})`);
+    for (const t of await textOverLight(p, ['main h1', 'main h1 + p'])) assert.ok(t.ratio >= 4.5, `${width} ${t.sel}: ${t.ratio}`);
+    assert.ok(await sideways(p) <= 0, `${width}: no sideways scroll`);
+  }
+  // on a phone (the page is at 390 now): each entry within 0..390, titles wrap
+  const fit = await page.evaluate((LIST) => [...document.querySelectorAll(LIST)].map((li) => {
+    const r = li.getBoundingClientRect(), h = li.querySelector('h2');
+    const parts = [...li.querySelectorAll('*')].map((e) => e.getBoundingClientRect());
+    return { href: li.querySelector('a').getAttribute('href'), left: Math.min(r.left, ...parts.map((b) => b.left)), right: Math.max(r.right, ...parts.map((b) => b.right)), over: h.scrollWidth - h.clientWidth };
+  }), LIST);
+  assert.equal(fit.length, POSTS.length);
+  for (const f of fit) {
+    assert.ok(f.left >= 0 && f.right <= 390, `${f.href}: ${f.left}..${f.right}`);
+    assert.ok(f.over <= 0, `${f.href}: the title overflows by ${f.over}`);
+  }
+});
+
+/** A title's glow (its link's ::before): opacity and background. */
+const glowOf = (page, href) => page.locator(`${LIST} h2 > a[href="${href}"]`).evaluate((a) => {
+  const b = getComputedStyle(a, '::before');
+  return { content: b.content, opacity: +b.opacity, background: b.backgroundImage, duration: b.transitionDuration };
+});
+
+test('/blog, a title\'s light on hover: Henk\'s tide on "Is he asleep?", none on a post without a project, gone after leaving', async () => {
+  const page = await at(BLOG, { motion: 'no-preference' });
+  await page.locator(`${LIST} h2 > a[href="${WATCHDOG}"]`).hover();
+  await page.waitForFunction((sel) => +getComputedStyle(document.querySelector(sel), '::before').opacity > 0.5, `${LIST} h2 > a[href="${WATCHDOG}"]`);
+  const henk = await glowOf(page, WATCHDOG);
+  assert.ok(colours(henk.background).includes(projectLights.henk.near.join(',')), henk.background);
+  await page.locator(`${LIST} h2 > a[href="${SCORE}"]`).hover();
+  const score = await glowOf(page, SCORE);
+  assert.ok(score.content === 'none' || score.opacity === 0, `no glow on a post without a project: ${score.content} ${score.opacity}`);
+  await page.mouse.move(2, 880);
+  // a title without a project has no glow at all (no ::before content); every glow there is fades out
+  await page.waitForFunction((LIST) => [...document.querySelectorAll(`${LIST} h2 > a`)]
+    .map((a) => getComputedStyle(a, '::before')).every((b) => b.content === 'none' || +b.opacity === 0), LIST);
+  assert.equal((await glowOf(page, SCORE)).content, 'none');
+});
+
+test('/blog, by keyboard, and still: Tab onto bible-tui\'s title lights its amber; with reduced motion without a transition', async () => {
+  for (const motion of ['no-preference', 'reduce']) {
+    const page = await at(BLOG, { motion });
+    await page.locator(`${LIST} h2 > a[href="${WATCHDOG}"]`).focus();
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('href')), BIBLE, `${motion}: Tab reaches the bible-tui post`);
+    if (motion === 'reduce') {
+      const g = await glowOf(page, BIBLE);
+      assert.equal(g.duration, '0s');
+      assert.ok(g.opacity > 0.5, `shows at once: ${g.opacity}`);
+    }
+    await page.waitForFunction((sel) => +getComputedStyle(document.querySelector(sel), '::before').opacity > 0.5, `${LIST} h2 > a[href="${BIBLE}"]`);
+    const g = await glowOf(page, BIBLE);
+    assert.ok(colours(g.background).includes(projectLights.bible.near.join(',')), `${motion}: ${g.background}`);
+    await page.evaluate(() => document.activeElement?.blur());
+  }
 });

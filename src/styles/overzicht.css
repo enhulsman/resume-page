@@ -212,33 +212,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .side a { font: 400 13px/1.2 var(--mono); justify-self: start; }
 .side span { font-size: 14px; color: var(--ink-2); line-height: 1.4; }
 
-.revs { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--ink); }
-.revs li { display: grid; grid-template-columns: 56px 120px minmax(0, 46em) minmax(150px, 1fr); gap: 0 18px; padding: 18px 0; border-bottom: .75px solid var(--hair); }
-/* on a wide screen the table keeps the column the programme chart had */
-@media (min-width: 1800px) {
-  .revs > li { grid-template-columns: 56px 120px minmax(0, 46em) minmax(150px, 210px) minmax(0, 1fr); }
-}
-.rev { font: 700 11.5px/1 var(--sans); width: 34px; height: 30px; display: grid; place-items: center; position: relative; }
-.rev { padding-top: 7px; }
-.rev::before {
-  /* the revision triangle, drawn as an outline in the current ink */
-  content: ""; position: absolute; inset: 0; background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 26'%3E%3Cpath d='M15 1.5 L28.5 24.5 H1.5 Z' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
-          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 26'%3E%3Cpath d='M15 1.5 L28.5 24.5 H1.5 Z' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
-}
-.revs li:first-child .rev { color: var(--red); }
-.when { font: 400 12px/1.6 var(--mono); color: var(--ink-2); }
-.revs h3 { font-size: 18px; font-stretch: 92%; margin-bottom: 4px; }
-.revs h3 i { font-style: normal; font-weight: 400; color: var(--ink-2); margin-left: 8px; }
-.revs p { margin: 0; color: var(--ink-2); font-size: 15px; max-width: 46em; }
-
-.schedules { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gutter); margin-top: 64px; }
-.schedule { border-collapse: collapse; width: 100%; font-size: 14.5px; align-self: start; }
-.schedule caption { text-align: left; font: 700 12px/1 var(--sans); font-stretch: 80%; letter-spacing: .1em; text-transform: uppercase; padding-bottom: 12px; }
-.schedule caption h2 { font: inherit; letter-spacing: inherit; margin: 0; }
-.schedule th, .schedule td { border: .75px solid var(--ink); padding: 9px 12px; text-align: left; vertical-align: top; }
-.schedule th { font: 400 10.5px/1.5 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); width: 30%; }
-
 .term { border: 1.5px solid var(--ink); background: color-mix(in srgb, var(--ink) 4%, var(--sheet)); align-self: start; font: 400 13px/1.55 var(--mono); }
 /* the real terminal (src/scripts/interactive-terminal.ts); About's frosted window restyles it */
 .term { position: relative; }
@@ -255,12 +228,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .terminal-error { color: var(--red); }
 .terminal-cursor { display: inline-block; min-width: 8px; height: 1.1em; vertical-align: text-bottom; background: var(--red); color: var(--sheet); animation: blink 1s steps(1) infinite; }
 .terminal-cursor.typing { animation: none; }
-
-.diary { list-style: none; margin: 0; padding: 0; border-top: .75px solid var(--ink); }
-.diary li { display: grid; grid-template-columns: 120px minmax(0, 22em) minmax(0, 1fr); gap: 4px 22px; padding: 14px 0; border-bottom: .75px solid var(--hair); align-items: baseline; }
-.diary time { font: 400 11.5px/1 var(--mono); color: var(--ink-2); }
-.diary a { font-weight: 650; text-decoration: none; justify-self: start; }
-.diary span { color: var(--ink-2); font-size: 14.5px; }
 
 .stamp {
   position: absolute; right: calc(var(--gutter) + min(2vw, 38.4px) + var(--wide)); top: clamp(60px, 12vh, 120px);
@@ -364,20 +331,7 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .prose th, .prose td { border: .75px solid var(--ink); padding: 6px 10px; text-align: left; }
 .prose .dims-strip { grid-template-columns: repeat(3, minmax(0, auto)); gap: 18px 28px; margin: 0 0 2em; }
 
-/* the blog index: the diary, with room for each post's description */
-.diary-full li { grid-template-columns: 140px minmax(0, 20em) minmax(0, 1fr); padding: 18px 0; }
-.diary-full a { font-size: 18px; font-stretch: 94%; }
-
-/* the CV */
-.cv-head .role { font-size: clamp(19px, 1.6vw, 24px); font-weight: 600; font-stretch: 92%; color: var(--ink); margin: 0 0 .6em; }
-.cv-head .sheet-head p { max-width: 36em; }
-.cv-head .actions { margin: 0 !important; }
-.revs h4 { font-size: 18px; font-stretch: 92%; margin: 0 0 4px; }
-.revs h4 i { font-style: normal; font-weight: 400; color: var(--ink-2); margin-left: 8px; }
-.revs + .sub { margin-top: 48px; }
 .sub a { text-decoration-color: var(--faint); }
-.schedule-stack { display: grid; gap: 40px; align-content: start; }
-.sched-note { display: block; font: 400 11px/1.4 var(--mono); color: var(--label); margin-top: 3px; }
 
 /* contact: the form as a transmittal */
 .sheet-transmittal { padding-bottom: clamp(60px, 10vh, 120px); }
@@ -435,12 +389,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
   .register .reg-title { font-size: 18px; }
   .status-group { margin-top: 56px; }
   .side { grid-template-columns: 1fr 1fr; }
-  .revs li { grid-template-columns: 40px minmax(0, 1fr); }
-  .revs .when { grid-column: 2; }
-  .revs li > div { grid-column: 2; }
-  .revs h3 i { display: block; margin: 2px 0 0; }
-  .schedules { grid-template-columns: 1fr; }
-  .diary li { grid-template-columns: 1fr; }
   .stamp { position: static; justify-self: start; align-self: flex-start; margin-bottom: 36px; }
   .foot { flex-direction: column; }
   /* inner sheets */
@@ -455,14 +403,11 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
   /* the sheets close up on a phone: a screen of blank paper reads as the end of the page */
   .sheet:not(.sheet-first) { padding-top: 56px; }
   .sub { margin-top: 44px; }
-  .schedules { margin-top: 44px; }
   .prose { grid-template-columns: 1fr; }
   .prose > *, .prose > h2 { grid-column: 1; }
   .prose > h2 + :not(h2) { margin-top: 0; padding-top: 0; }
   .prose > h2 { margin: 40px 0 14px; }
   .prose .dims-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .diary-full li { grid-template-columns: 1fr; }
-  .schedules-cv { margin-top: 48px; }
   .tm-wrap { grid-template-columns: 1fr; }
   .sheet-transmittal .stamp { grid-row: 1; justify-self: end; margin: -8px 4px 0 0; }
   .tm-row { grid-template-columns: 1fr; }
@@ -519,7 +464,7 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
   .sheet-first { padding-top: 0; }
   .sheet-head { margin-bottom: 18px; }
   .sheet-head h1, .sheet-head h2 { font-size: 26pt; }
-  .revs li, .schedule tr, .detail { break-inside: avoid; }
+  .detail { break-inside: avoid; }
   .actions .act { border: 0; padding: 0; background: none; color: #000; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
