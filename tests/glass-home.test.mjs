@@ -10,6 +10,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { glassMoments, glassCards, fallbackFor, windowGlows } from '../src/config/glass.ts';
 import { leanToward, LEAN } from '../src/scripts/glass/pointer.js';
 import { slowFrom, busyFrom, BUSY_MAX } from '../src/scripts/glass/guard.js';
+import { speedFrom, SPEED_MAX } from '../src/scripts/glass/speed.js';
 import { parseColor, contrast } from './lib/contrast.mjs';
 import * as home from '../src/config/home.ts';
 import site from '../src/config/site.ts';
@@ -102,6 +103,28 @@ test('the busy-work hook takes only a small finite number of ms: anything else i
   assert.equal(busyFrom(51), 50, 'clamped to 50 ms a frame');
   assert.equal(busyFrom('1e9'), 50);
   assert.equal(BUSY_MAX, 50);
+});
+
+// ---- the play-speed test hook (?speed=): it ships too, so it only ever speeds a play up, a little ----
+
+test('the play-speed hook is a small finite factor from 1 to 10: anything else plays at 1, more is 10', () => {
+  for (const v of ['Infinity', Infinity, '-Infinity', -Infinity, 'abc', NaN, null, undefined, '', ' ', 0, '0', -5, '-5', '1e999', 0.5, '0.5', 1])
+    assert.equal(speedFrom(v), 1, `${String(v)} plays at normal speed`);
+  assert.equal(speedFrom('4'), 4);
+  assert.equal(speedFrom(4), 4);
+  assert.equal(speedFrom('2.5'), 2.5);
+  assert.equal(speedFrom(10), 10);
+  assert.equal(speedFrom(11), 10, 'clamped to 10x');
+  assert.equal(speedFrom('1e9'), 10);
+  assert.equal(SPEED_MAX, 10);
+});
+
+test('the play-speed hook is read by every play: ANNA\'s conversation, the artefacts, the terminal\'s intro and its hint', () => {
+  for (const f of ['src/scripts/glass/anna-window.js', 'src/scripts/glass/artefacts.js', 'src/scripts/terminal-animation.ts', 'src/scripts/interactive-terminal.ts'])
+    assert.match(read(f), /pageSpeed\(\)/, `${f} reads ?speed=`);
+  // the light's loop and the guard keep real time: the hook never touches them
+  for (const f of ['src/scripts/glass/panes.js', 'src/scripts/glass/guard.js', 'src/scripts/glass/pointer.js'])
+    assert.doesNotMatch(read(f), /speed/i, `${f} keeps real time`);
 });
 
 // ---- the shared inks on glass ----

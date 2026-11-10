@@ -23,7 +23,10 @@ async function open(path, { width = 1440, height = 900, colorScheme = 'light', s
   const context = await browser.newContext({ viewport: { width, height }, colorScheme });
   if (storage) await context.addInitScript((s) => { for (const [k, v] of Object.entries(s)) localStorage.setItem(k, v); }, storage);
   const page = await context.newPage();
-  await page.goto(BASE + path, { waitUntil: 'load' });
+  // the homepage's light held still (?t=): these checks are about the chrome, and a screenshot or a
+  // click under swiftshader waits on every frame of a running light (a 3 px screenshot: ~1.4 s
+  // against ~0.1 s; the whole screen: ~20 s against ~0.4 s, measured 2026-11-10)
+  await page.goto(BASE + path + (path === '/' ? '?t=2.4' : ''), { waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: 'astro-dev-toolbar{display:none!important}' });
   return { context, page };

@@ -6,6 +6,7 @@
 // into a summary when her question lands. ?chat=<seconds> holds one moment; reduced motion (also when
 // switched on later) shows the end at once.
 import { timeline, moment, held, workText } from './anna-window-model.js';
+import { pageSpeed } from './speed.js';
 
 const section = document.querySelector('.anna-window');
 if (section) {
@@ -22,6 +23,7 @@ if (section) {
   const tl = timeline({ lines, reply });
   const still = matchMedia('(prefers-reduced-motion: reduce)');
   const hold = held(new URLSearchParams(location.search).get('chat'));
+  const speed = pageSpeed(); // ?speed=<n>, a test hook: the play runs n times faster (1..10)
 
   let cur = moment(tl, 0), seen = [], t0 = 0, playing = false, played = false;
 
@@ -33,7 +35,7 @@ if (section) {
     clearTimeout(swap);
     if (instant) { workT.classList.remove('out'); workT.textContent = text; return; }
     workT.classList.add('out');
-    swap = setTimeout(() => { workT.textContent = line; workT.classList.remove('out'); }, 250);
+    swap = setTimeout(() => { workT.textContent = line; workT.classList.remove('out'); }, 250 / speed);
   }
 
   function apply(m) {
@@ -56,7 +58,7 @@ if (section) {
     // reduced motion switched on mid-play: reading .matches every frame (apply does) updates the
     // query's state, so Chromium may never fire its change event; check here instead
     if (still.matches) { finish(); return; }
-    const m = moment(tl, Math.min(tl.done, (now - t0) / 1000));
+    const m = moment(tl, Math.min(tl.done, ((now - t0) / 1000) * speed));
     apply(m);
     if (m.done) playing = false; else requestAnimationFrame(frame);
   }

@@ -11,6 +11,7 @@ import { chromium } from 'playwright';
 import { glassCards, glassMoments, terminalReflection } from '../src/config/glass.ts';
 import { homeSections, annaLead, annaCalls, annaLevels } from '../src/config/home.ts';
 import { annaDemo } from '../src/config/anna-demo.ts';
+import { timeline } from '../src/scripts/glass/anna-window-model.js';
 import { coverer, strings, textsUnder } from './lib/copy.mjs';
 import site from '../src/config/site.ts';
 import { parseColor, contrast } from './lib/contrast.mjs';
@@ -330,6 +331,13 @@ test('arrival: the hero shows in the first painted frame, no intro class ever, t
 // ---- ANNA's section (chunk 4) ----
 
 const ANNA = '[data-glass-moment="anna"]';
+/**
+ * The end of ANNA's play: `?chat=${END}` holds her finished conversation, the same page her play
+ * leaves (Ezra, 2026-11-11: held at done is done). Her play itself, in real time and to the end, is
+ * tests/glass-anna-window.e2e.mjs's "plays once to the end". `?speed=10` plays the artefacts and the
+ * terminal's intro ten times faster (src/scripts/glass/speed.js).
+ */
+const END = timeline({ lines: annaCalls.work.lines, reply: annaDemo.reply }).done;
 /** Scroll ANNA's window into view and wait for her conversation to finish. */
 async function annaDone(page) {
   await page.evaluate(() => document.querySelector('.anna-window .aw-window').scrollIntoView({ block: 'center' }));
@@ -337,7 +345,7 @@ async function annaDone(page) {
 }
 
 test('ANNA is written in config only: every text in her section, the message names too, is covered by annaLead, annaCalls and annaDemo', async () => {
-  const { context, page, errors } = await open();
+  const { context, page, errors } = await open(`?chat=${END}`);
   await annaDone(page);
   const texts = await page.evaluate(([fn, sel]) => new Function(`return (${fn})`)()(document.querySelector(sel)), [textsUnder.toString(), ANNA]);
   const names = await page.$$eval(`${ANNA} .msg .who`, (els) => [...new Set(els.map((e) => e.textContent))]);
@@ -366,7 +374,7 @@ test('ANNA: no run line and no levels in her section, one glass object, a froste
 });
 
 test('the four levels are not on the homepage', async () => {
-  const { context, page } = await open();
+  const { context, page } = await open(`?chat=${END}`);
   await annaDone(page);
   const text = await page.evaluate(() => document.body.textContent.replace(/\s+/g, ' '));
   await context.close();
@@ -711,7 +719,7 @@ test('no contact strip: Contact holds no canvas, no glass and no blur', async ()
 });
 
 test('About is written in config only (the terminal\'s own output aside)', async () => {
-  const { context, page, errors } = await open();
+  const { context, page, errors } = await open('?speed=10');
   await termReady(page);
   const texts = await page.evaluate(([fn, sel]) => new Function(`return (${fn})`)()(document.querySelector(sel), '.term-body'), [textsUnder.toString(), ABOUT]);
   await context.close();
@@ -785,7 +793,7 @@ async function artefactsDone(page) {
 }
 
 test('window text reads at 4.5:1, measured: every window, its title, ANNA\'s work line, the artefacts, the terminal\'s prompt, dim text and errors after ls, the grain on', async () => {
-  const { context, page, errors } = await open('?t=2.4');
+  const { context, page, errors } = await open(`?t=2.4&chat=${END}&speed=10`);
   await annaDone(page);
   await frames(page, 4);
   const anna = await windowContrast(page, 'anna', ['.glass-title', '.aw-replay', '.msg .who', '.msg .text', '.aw-work-t']);
@@ -848,7 +856,7 @@ test('a window\'s glow has no edge: a line through the middle of each window, wi
 });
 
 test('no WebGL: every window still shows its content; the reflections keep their soft ground', async () => {
-  const { context, page, errors } = await open('', { init: [noGL] });
+  const { context, page, errors } = await open(`?chat=${END}&speed=10`, { init: [noGL] });
   await annaDone(page);
   const anna = await page.$eval('[data-glass-moment="anna"] [data-glass="frosted"]', (w) => ({
     shown: getComputedStyle(w).visibility === 'visible' && w.getBoundingClientRect().height > 100,
@@ -930,7 +938,7 @@ test('no glass anywhere else on the whole page: every canvas, glass object and b
 
 for (const [width, height] of [[1440, 900], [390, 844]]) {
   test(`no colour panels on the whole page at ${width} x ${height}: outside the glass and its glows, every ground is stone, ink or nothing`, async () => {
-    const { context, page, errors } = await open('', { width, height });
+    const { context, page, errors } = await open(`?chat=${END}&speed=10`, { width, height });
     await bothPlayed(page);
     const all = await page.evaluate(() => [...document.body.querySelectorAll('*')].filter((el) => !el.closest('[data-glass-moment], [data-glow]')).map((el) => {
       const b = el.getBoundingClientRect(), s = getComputedStyle(el);
@@ -947,7 +955,7 @@ for (const [width, height] of [[1440, 900], [390, 844]]) {
 }
 
 test('the rendered page is all config: every text, alt, title and aria-label in main and the footer (the terminal\'s own output aside)', async () => {
-  const { context, page, errors } = await open();
+  const { context, page, errors } = await open(`?chat=${END}&speed=10`);
   await bothPlayed(page);
   const texts = await page.evaluate((fn) => {
     const under = new Function(`return (${fn})`)();
@@ -1016,7 +1024,7 @@ test('no running animations with reduced motion: after load, and after the page 
 });
 
 test('phone width over the whole page: at 390 x 844, in steps of half a screen, before and after play, nothing wider than the screen', async () => {
-  const { context, page, errors } = await open('', { width: 390, height: 844 });
+  const { context, page, errors } = await open('?speed=10', { width: 390, height: 844 });
   const walk = () => page.evaluate(async () => {
     const next = () => new Promise((r) => requestAnimationFrame(() => r()));
     const max = document.documentElement.scrollHeight - innerHeight, out = [];
@@ -1127,7 +1135,7 @@ test('tight chapters on a phone: one column in page order, at most 96 px of ston
 });
 
 test('each chapter holds its artefact, every word from projectWindows', async () => {
-  const { context, page, errors } = await open();
+  const { context, page, errors } = await open('?speed=10');
   await artefactsDone(page);
   const w = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.pj-chapter')].map((c) => [c.dataset.glassMoment, {
     windows: c.querySelectorAll('[data-glass="frosted"]').length,
@@ -1151,7 +1159,7 @@ test('each chapter holds its artefact, every word from projectWindows', async ()
 });
 
 test('the artefacts land once: hidden out of view, all shown once well in view, and not again', async () => {
-  const { context, page, errors } = await open();
+  const { context, page, errors } = await open('?speed=10');
   const before = await page.$$eval('[data-play]', (ps) => ps.map((p) => [...p.querySelectorAll('.b')].filter((b) => +getComputedStyle(b).opacity > 0).length));
   assert.deepEqual(before, [0, 0, 0], 'nothing shown before they are in view');
   await artefactsDone(page);

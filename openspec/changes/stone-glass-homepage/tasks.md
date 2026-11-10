@@ -98,3 +98,16 @@ Ezra's verdicts on the sketches (`~/.local/state/handoffs/threads-saved/2026-11-
 - [x] 11.6 B1, the pointer as a light: `src/scripts/glass/pointer.js` (`leanToward`, the sheen), wired into `panes.js` (`__glass.lean`); B2, grain in every frosted window (`GlassWindow.astro`)
 - [x] 11.7 B3 b + c: the current page in weight in the bar, a glow on hover (`overzicht.css`)
 - [x] 11.8 Run all test commands and `openspec validate stone-glass-homepage --strict`; screenshots at 1440, 1280 and 390 to the sketches' `shots/build-*.png`
+
+## 12. A faster browser suite, 2026-11-10
+
+`npm run test:e2e` took 694 s against the dev server and 680 s against the build (CI's commands),
+mostly waiting out ANNA's 20.5 s conversation and the terminal's intro in real time
+(`~/.local/state/handoffs/threads-saved/2026-11-11-test-speed/plan.md`).
+
+- [x] 12.1 `speedFrom` and `pageSpeed` in `src/scripts/glass/speed.js` (`?speed=<n>`: a finite factor from 1 to 10, anything else 1, never slower), unit-tested in `tests/glass-home.test.mjs`; read by `anna-window.js`, `artefacts.js`, `terminal-animation.ts` and the terminal's hint; the light's loop and its guard keep real time; e2e: `?speed=` only speeds a play up, at most ten times
+- [x] 12.2 Tests that need ANNA at `done` hold her there (`?chat=` at the timeline's end, Ezra 2026-11-10: held at done is done; the ANNA phone test and the phone walk's "after play" too); "plays once to the end" still plays in real time; Replay starts from the held end and replays at `?speed=4`
+- [x] 12.3 "The window never changes size" holds the conversation with `?chat=` at the spec's moments (start, each line of work, her question, mid-reply, end) at all three sizes, a fresh tab per moment; "the line of work, held at each moment" merged into it at every width
+- [x] 12.4 Tests that need the artefacts landed or the terminal's intro finished load with `?speed=10`; the chrome tests on `/` hold the light (`?t=2.4`): a screenshot under swiftshader waits on every frame of a running light; `tests/sheets.e2e.mjs` waits on the plate's ink and on frames, not on sleeps
+- [x] 12.5 `panes.js`: when the loop stops (reduced motion switched on) every pane goes to the still frame, off screen too, whether or not the query's change event fires (the flaky "reduced motion switched on mid-typing")
+- [x] 12.6 Run all test commands: `npm run test:e2e` 297 s against the dev server, 274 s against the build

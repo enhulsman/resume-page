@@ -111,9 +111,16 @@ function aim(dt) {
   }
 }
 
+let ran = false; // whether the loop ran last frame
 function tick(stamp) {
   aim(lastFrame == null ? 0 : Math.min(0.1, (stamp - lastFrame) / 1000));
-  if (looping()) {
+  const run = looping();
+  // the loop just stopped (reduced motion switched on): every pane to the still frame, in view or
+  // not. The query's change event is not enough: reading .matches every frame (looping() does) can
+  // keep Chromium from firing it, and an off-screen pane would keep a moment of the loop
+  if (ran && !run) drawAll();
+  ran = run;
+  if (run) {
     const t = now();
     const start = performance.now();
     let drawn = 0;

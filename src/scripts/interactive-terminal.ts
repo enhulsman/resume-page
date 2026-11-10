@@ -6,6 +6,7 @@ import { VirtualFS, SENTINEL_EXPERIENCE, SENTINEL_SKILLS, SENTINEL_EDUCATION, SE
 import { ShellEnv } from './shell-env';
 import { parseLine } from './shell-parser';
 import type { ParsedCommand } from './shell-parser';
+import { pageSpeed } from './glass/speed.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -176,8 +177,10 @@ export class InteractiveTerminal {
     hint.textContent = 'this is a real shell \u2014 type help for more';
     const inputLine = this.getInputLineEl();
     if (inputLine) inputLine.appendChild(hint);
-    setTimeout(() => { hint.style.opacity = '0'; }, 1000);
-    setTimeout(() => { if (hint.parentNode) hint.remove(); }, 1500);
+    // ?speed=<n>, a test hook: the hint passes n times faster (1..10)
+    const speed = pageSpeed();
+    setTimeout(() => { hint.style.opacity = '0'; }, 1000 / speed);
+    setTimeout(() => { if (hint.parentNode) hint.remove(); }, 1500 / speed);
   }
 
   // ─── Hidden input (mobile support) ──────────────────────────────────────

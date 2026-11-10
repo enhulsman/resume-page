@@ -11,6 +11,7 @@
  */
 
 import { esc, makePromptHtml, makeCursorHtml, scrollToBottom, updateTitleDimensions } from './terminal-utils';
+import { pageSpeed } from './glass/speed.js';
 
 interface Line {
   type: 'cmd' | 'out';
@@ -80,11 +81,13 @@ export function initTerminalAnimation(body: HTMLElement): void {
 
   const pendingTimeouts: Set<ReturnType<typeof setTimeout>> = new Set();
 
+  // ?speed=<n>, a test hook: the intro types n times faster (1..10)
+  const speed = pageSpeed();
   function track(fn: () => void, delay: number): ReturnType<typeof setTimeout> {
     const id = setTimeout(() => {
       pendingTimeouts.delete(id);
       fn();
-    }, delay);
+    }, delay / speed);
     pendingTimeouts.add(id);
     return id;
   }

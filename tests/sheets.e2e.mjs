@@ -31,13 +31,26 @@ async function open(path, { width = 1440, height = 900, scale = 1, reducedMotion
   return { context, page, errors, res };
 }
 
-const inked = page => page.evaluate(() => {
+/** In the page: how much of the section drawing is inked. */
+function inkedIn() {
   const c = document.querySelector('canvas.drawing');
   if (!c || !c.width) return 0;
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   let n = 0; for (let i = 3; i < d.length; i += 4 * 16) if (d[i] > 0) n++;
   return n;
-});
+}
+const inked = page => page.evaluate(inkedIn);
+/** Wait (on state, not a sleep) until the section drawing has plotted; the test asserts after. */
+const untilInked = page => page.waitForFunction(`(${inkedIn})() > 500`, null, { timeout: 15000 }).catch(() => {});
+/** Let the page render `n` more frames. */
+const frames = (page, n = 2) => page.evaluate(n => new Promise(done => { const f = k => (k ? requestAnimationFrame(() => f(k - 1)) : done()); f(n); }), n);
+/** In the page: true once ANNA's model on her case study is at least `min` px tall. */
+function modelHeight(min) {
+  const c = document.querySelector('.plate-stage canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  let y0 = 1e9, y1 = -1;
+  for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 4) if (d[(y * c.width + x) * 4 + 3] > 20) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  return (y1 - y0) / devicePixelRatio >= min;
+}
 
 // ---------- every inner page is a sheet in the set ----------
 
@@ -66,9 +79,9 @@ for (const path of INNER) {
 
   test(`${path} has no sideways scroll at 390px`, async () => {
     const { context, page } = await open(path, { width: 390, height: 844 });
-    await page.waitForTimeout(500);
+    await page.evaluate(() => document.fonts.ready);
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(300);
+    await frames(page, 2);
     const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     assert.ok(over <= 0, `page is ${over}px wider than the viewport`);
     await context.close();
@@ -165,7 +178,7 @@ test('/projects leads with ANNA, then every project under its status: running, p
   assert.ok(await page.locator('.side li').count() >= 3);
   assert.equal(await page.locator('.side a[href="https://bible.hulsman.dev"]').count(), 0);
   await page.locator('#anna').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(3000);
+  await untilInked(page);
   assert.ok(await inked(page) > 500, 'the ANNA plate plotted');
   await context.close();
 });
@@ -173,7 +186,7 @@ test('/projects leads with ANNA, then every project under its status: running, p
 test('the ANNA plate turns by hand and by its buttons', async () => {
   const { context, page } = await open('/projects');
   await page.locator('#anna').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(2500);
+  await untilInked(page);
   const spin = () => page.evaluate(() => window.__plate?.state.spin);
   const before = await spin();
   assert.equal(typeof before, 'number', 'the plate exposes its scene in tests');
@@ -185,7 +198,7 @@ test('the ANNA plate turns by hand and by its buttons', async () => {
 test('ANNA\'s project page draws the model large: most of its box is model', async () => {
   const { context, page } = await open('/projects/AnnaAssistant', { reducedMotion: 'reduce' });
   await page.locator('.plate-stage').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(1200);
+  await page.waitForFunction(modelHeight, 480, { timeout: 10000 }).catch(() => {});
   const h = await page.evaluate(() => {
     const c = document.querySelector('.plate-stage canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
     let y0 = 1e9, y1 = -1;
@@ -200,7 +213,7 @@ test('turning the ANNA plate by hand draws no pencil line on the page', async ()
   const { context, page } = await open('/projects/AnnaAssistant');
   const stage = page.locator('.plate-stage');
   await stage.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(1500);
+  await untilInked(page);
   const b = await stage.boundingBox();
   await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
   await page.mouse.down();
@@ -213,10 +226,10 @@ test('turning the ANNA plate by hand draws no pencil line on the page', async ()
 
 test('reduced motion: every plate arrives drawn', async () => {
   const { context, page } = await open('/projects', { reducedMotion: 'reduce' });
-  await page.waitForTimeout(400);
+  await page.waitForFunction(() => !document.querySelector('.dwg:not(.drawn)'), null, { timeout: 5000 }).catch(() => {});
   assert.equal(await page.locator('.dwg:not(.drawn)').count(), 0);
   await page.locator('#anna').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(400);
+  await untilInked(page);
   assert.ok(await inked(page) > 500);
   await context.close();
 });
@@ -247,7 +260,7 @@ test('ANNA\'s case study carries the section drawing; a project without a drawin
   // tall enough to draw the exploded model large, never the whole screen (2026-10-09: was 60%)
   assert.ok(h <= 900 * 0.75, `the model is ${Math.round(h)}px tall on a 900px screen`);
   await page.locator('.plate').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(3000);
+  await untilInked(page);
   assert.ok(await inked(page) > 500);
   await context.close();
 
@@ -391,7 +404,7 @@ test('clicking a project\'s drawing opens its case study, on /projects', async (
     const { context, page } = await open('/projects');
     const dwg = page.locator('#henk .dwg');
     await dwg.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(300);
+    await frames(page, 2);
     const r = await dwg.boundingBox();
     await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
     await page.waitForURL(/\/projects\/Henk\/?$/); // the live site adds a trailing slash

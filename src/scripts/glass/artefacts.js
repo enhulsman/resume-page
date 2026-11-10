@@ -4,7 +4,10 @@
 // screen. Every line is in the page from the start: without this script they all show; with
 // reduced motion (also when switched on later) they show at once and nothing steps. `.done` on an
 // artefact once every line has landed (tests wait on it).
+import { pageSpeed } from './speed.js';
+
 const still = matchMedia('(prefers-reduced-motion: reduce)');
+const speed = pageSpeed(); // ?speed=<n>, a test hook: the lines land n times faster (1..10)
 
 for (const el of document.querySelectorAll('[data-play]')) {
   const beats = [...el.querySelectorAll('.b')];
@@ -20,7 +23,7 @@ for (const el of document.querySelectorAll('[data-play]')) {
     timers = beats.map((b, k) => setTimeout(() => {
       b.classList.add('on');
       if (k === beats.length - 1) el.classList.add('done');
-    }, 300 + k * gap));
+    }, (300 + k * gap) / speed));
   }, { threshold: 0.5 });
   io.observe(el);
   still.addEventListener('change', () => { if (still.matches) finish(); });

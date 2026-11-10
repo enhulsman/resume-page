@@ -32,6 +32,7 @@ async function open(q = '', { width = 1440, height = 900, reducedMotion = 'no-pr
 const frames = (page, n = 2) => page.evaluate((n) => new Promise((done) => { const f = (k) => (k ? requestAnimationFrame(() => f(k - 1)) : done()); f(n); }), n);
 const intoView = (page) => page.$eval(WIN, (w) => w.scrollIntoView({ block: 'center' }));
 /** Wait for the intro to finish: the terminal's first input line. */
+// the intro itself types at ?speed=10 where a test only needs it finished (src/scripts/glass/speed.js)
 const ready = (page) => page.waitForFunction((sel) => document.querySelector(`${sel} .terminal-input-line`), BODY, { timeout: 90000 });
 /** The commands the intro types, from the terminal's own data. */
 const introCmds = (page) => page.$eval(BODY, (b) => JSON.parse(b.dataset.lines).filter((l) => l.type === 'cmd').map((l) => l.text));
@@ -158,7 +159,7 @@ for (const [width, height] of [[1440, 900], [390, 844]]) test(`the reflection ha
 });
 
 test('the terminal still runs: it types its intro, then ls lists the project directories and whoami answers "ezra"', async () => {
-  const { context, page, errors } = await open();
+  const { context, page, errors } = await open('?speed=10');
   await intoView(page);
   await ready(page);
   const home = await run(page, 'ls');
@@ -174,7 +175,7 @@ test('the terminal still runs: it types its intro, then ls lists the project dir
 });
 
 test('theme answers plainly that there is one theme, and changes nothing', async () => {
-  const { context, page, errors } = await open();
+  const { context, page, errors } = await open('?speed=10');
   await intoView(page);
   await ready(page);
   for (const cmd of ['theme', 'theme dark', 'theme toggle']) {

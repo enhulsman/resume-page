@@ -163,7 +163,12 @@ hero card (benched in config, can return as 05); usage or adoption facts for ANN
     `__glassReady`, on the window's `done` state, on terminal output, on `fonts.ready`, on frame
     counts, never on a fixed sleep. Frame-sensitive checks freeze the light with `?t=` or
     `__glass.at(t)`; tests of the running loop load with `?guard=off`. `?chat=` stays on `/` as a
-    test hook, like `?t=`.
+    test hook, like `?t=`. A test that needs ANNA's conversation at `done` holds it there
+    (`?chat=<the timeline's end>`, the same page her play leaves; Ezra, 2026-11-10), and one desktop
+    test plays it in real time to the end. `?speed=<n>` (`src/scripts/glass/speed.js`) plays ANNA's
+    conversation, the projects' artefacts and the terminal's intro and hint n times faster for the
+    tests that need them played; like `?busy=` it ships, so only a finite factor from 1 to 10
+    counts and it never slows a play down; the light's loop and its guard keep real time.
 
 ## Risks / Trade-offs
 

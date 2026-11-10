@@ -18,6 +18,8 @@ const BEATS = ['person', 'answer', 'sources', 'question', 'reply', 'result'];
 const SEEN = ['person', 'answer', 'sources', ...annaCalls.work.lines.slice(1).map((_, i) => `step-${i}`), 'question', 'typing', 'reply', 'result'];
 const TL = timeline({ lines: annaCalls.work.lines, reply: annaDemo.reply });
 const AT = (id) => TL.beats.find((b) => b.id === id).at;
+/** The end of the play: `?chat=${END}` holds the finished conversation, the same page a play leaves. */
+const END = TL.done;
 /** The sizes the spec names: two desktops and a phone. */
 const SIZES = [[1440, 900], [1280, 720], [390, 844]];
 let browser;
@@ -154,10 +156,11 @@ test('scrolled into view it plays once to the end: every beat in order, the repl
   assert.deepEqual(errors, []);
 });
 
+// One desktop play runs in real time, above; Replay starts from the held end and plays at ?speed=4
 test('Replay plays it again from the start', async () => {
-  const { context, page, errors } = await open('');
+  const { context, page, errors } = await open(`chat=${END}&speed=4`);
   await intoView(page);
-  await until(page, (s) => s.done);
+  assert.equal((await until(page, (s) => s.done)).done, true);
   await page.click('.anna-window .aw-replay');
   const again = await until(page, (s) => !s.done && s.t < 3);
   assert.equal(again.done, false);
@@ -184,45 +187,93 @@ test('?chat=<seconds> holds one moment: her question, the work line settled', as
   assert.deepEqual(errors, []);
 });
 
-test('the line of work, held at each moment: what she read, each step in turn, then the summary', async () => {
-  const ids = ['sources', ...annaCalls.work.lines.slice(1).map((_, i) => `step-${i}`)];
-  const holds = [...ids.map((id, i) => [+(AT(id) + 0.9).toFixed(2), annaCalls.work.lines[i]]), [+(AT('question') + 0.9).toFixed(2), annaCalls.work.done]];
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  const page = await context.newPage();
-  const got = [];
-  for (const [t] of holds) {
-    await page.goto(`${BASE}/?chat=${t}`, { waitUntil: 'load' });
-    await page.waitForFunction(() => window.__annaWindow);
-    got.push(await workLine(page));
+// The play-speed test hook ships with the page (CI tests the production build), so, like ?busy=,
+// it only ever speeds a play up, and only a little: a factor from 1 to 10, anything else is 1 (the
+// parsing itself: tests/glass-home.test.mjs). Timeline seconds against wall seconds, on the frame
+// clock the play itself reads, over seconds of play. The play may read the clock a frame before or
+// after this test does, so a slow frame at either end shifts the figure: the bounds allow for that,
+// and still tell 1x from 0.5x, 10x from 1x, and a capped factor from an uncapped one (which would
+// end the play in its first frame, measuring 0).
+test('?speed= only speeds a play up, and at most ten times: Infinity and 0.5 play at their own pace', async () => {
+  const measure = async (q, ms) => {
+    const { context, page, errors } = await open(q);
+    try {
+      const r = await page.evaluate(([ms, end]) => new Promise((done) => {
+        document.querySelector('.anna-window .aw-window').scrollIntoView({ block: 'center' });
+        let a = null, t0 = 0;
+        const f = (stamp) => {
+          const s = window.__annaWindow.state();
+          if (a == null) { if (s.t > 0) { a = s.t; t0 = stamp; } return requestAnimationFrame(f); }
+          // to the end of the play, or for `ms` of it
+          if (!(ms ? stamp - t0 >= ms : s.done)) return requestAnimationFrame(f);
+          done({ rate: ((s.done ? end : s.t) - a) / ((stamp - t0) / 1000), done: s.done });
+        };
+        requestAnimationFrame(f);
+      }), [ms, END]);
+      assert.deepEqual(errors, []);
+      return r;
+    } finally { await context.close(); }
+  };
+  for (const v of ['Infinity', '0.5']) {
+    const r = await measure(`speed=${v}`, 3000);
+    assert.equal(r.done, false, `?speed=${v}: still playing after 3 s`);
+    assert.ok(r.rate > 0.7 && r.rate < 1.5, `?speed=${v}: ${r.rate.toFixed(2)} timeline s a second`);
   }
-  await context.close();
-  assert.deepEqual(got, holds.map(([, text]) => text));
+  // the whole play at ?speed=1e9: about 2 s, ten times its pace; unclamped it would end in a frame
+  const fast = await measure('speed=1e9', 0);
+  assert.ok(fast.rate > 6 && fast.rate < 20, `?speed=1e9 is clamped to 10x: ${fast.rate.toFixed(2)} timeline s a second`);
 });
 
+// The spec's own moments (anna-section, "The window never changes size", "One line at every width"
+// and "The line of work, in order"): the conversation held with ?chat= at its start, at each line of
+// work, at her question, while the reply is typed, and at its end. At every width the line held at
+// each line of work reads that line, and at her question the summary (the line of work, held at
+// each moment, was its own test at 1440 x 900 until 2026-11-10; it is part of this one now).
+const HOLDS = [
+  0,
+  ...['sources', ...annaCalls.work.lines.slice(1).map((_, i) => `step-${i}`), 'question'].map((id) => +(AT(id) + 0.9).toFixed(2)),
+  +((TL.typing.from + TL.typing.to) / 2).toFixed(2),
+  END,
+];
 for (const [width, height] of SIZES) {
-  test(`${width} x ${height}: the window never changes size while she works, and her work is one line that fits`, async () => {
-    const { context, page, errors } = await open('', { width, height });
-    await intoView(page);
-    // every frame of the play: the window's size, the work line's height and text, and whether it fits
-    const log = await page.evaluate(() => new Promise((done) => {
-      const win = document.querySelector('.anna-window .aw-window'), line = document.querySelector('.anna-window .aw-work'), t = line.querySelector('.aw-work-t');
-      const out = [];
-      const f = () => {
+  test(`${width} x ${height}: the window never changes size while she works, her work is one line that fits, and held at each moment it reads what she read, each step in turn, then the summary`, async () => {
+    const context = await browser.newContext({ viewport: { width, height } });
+    const errors = [];
+    const log = [];
+    let page;
+    for (const t of HOLDS) {
+      // a fresh tab for each moment: leaving the homepage for another URL costs seconds under swiftshader
+      await page?.close();
+      page = await context.newPage();
+      page.on('pageerror', (e) => errors.push(String(e)));
+      page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+      await page.goto(`${BASE}/?chat=${t}`, { waitUntil: 'load' });
+      await page.waitForFunction(() => window.__glassReady === true && window.__annaWindow);
+      await page.evaluate(() => document.fonts.ready);
+      log.push(await page.evaluate(() => {
+        const win = document.querySelector('.anna-window .aw-window'), line = document.querySelector('.anna-window .aw-work'), t = line.querySelector('.aw-work-t');
+        // a scroll box inside the window: anything that scrolls its overflow and has some
+        const scrolls = [win, ...win.querySelectorAll('*')].filter((el) => /auto|scroll/.test(getComputedStyle(el).overflowY + getComputedStyle(el).overflowX) && (el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1)).map((el) => el.className);
         const w = win.getBoundingClientRect(), l = line.getBoundingClientRect();
-        out.push({ w: w.width, h: w.height, lh: l.height, text: t.textContent.trim(), fits: t.scrollWidth <= t.clientWidth + 0.5, shown: line.classList.contains('on'), state: window.__annaWindow.state() });
-        if (out.at(-1).state.done) done(out.map(({ state, ...r }) => ({ ...r, t: state.t }))); else requestAnimationFrame(f);
-      };
-      requestAnimationFrame(f);
-    }));
+        const s = window.__annaWindow.state();
+        return { w: w.width, h: w.height, lh: l.height, text: t.textContent.trim(), fits: t.scrollWidth <= t.clientWidth + 0.5, shown: line.classList.contains('on'), scrolls, t: s.t, typed: s.typed, done: s.done };
+      }));
+    }
     const one = await page.$eval('.anna-window .aw-work', (e) => parseFloat(getComputedStyle(e).lineHeight));
     await context.close();
-    assert.ok(log.length > 30, `${log.length} frames`);
+    assert.deepEqual(log.map((r) => r.t), HOLDS, 'held at each moment');
+    assert.ok(log.some((r) => r.typed > 0 && !r.done), 'one moment while the reply is typed');
+    assert.equal(log.at(-1).done, true, 'and its end');
     const ws = new Set(log.map((r) => Math.round(r.w))), hs = new Set(log.map((r) => Math.round(r.h)));
     assert.equal(ws.size, 1, `the window's width: ${[...ws]}`);
     assert.equal(hs.size, 1, `the window's height: ${[...hs]}`);
+    assert.deepEqual(log.filter((r) => r.scrolls.length).map((r) => [r.t, r.scrolls]), [], 'nothing inside it scrolls');
     const lhs = new Set(log.map((r) => Math.round(r.lh)));
     assert.equal(lhs.size, 1, `the line's height: ${[...lhs]}`);
     assert.ok(Math.abs([...lhs][0] - one) <= 1, `one line high (${[...lhs][0]}px against a ${one}px line)`);
+    // held at each line of work, the line reads that line; held at her question, the summary
+    const L = annaCalls.work.lines.length;
+    assert.deepEqual(log.slice(1, L + 2).map((r) => r.text), [...annaCalls.work.lines, annaCalls.work.done], 'the line of work, held at each moment');
     // the texts it showed, in order, and each fits without an ellipsis
     const shown = log.filter((r) => r.shown).map((r) => r.text).filter((x, i, a) => x && x !== a[i - 1]);
     assert.deepEqual(shown, [...annaCalls.work.lines, annaCalls.work.done], 'what she read, each step, then the summary');
@@ -285,7 +336,7 @@ test('the window is no focus trap: tabbing goes in, then out to the next section
 });
 
 test('the transcript is a region named from config, and nothing in it scrolls (so it needs no keyboard stop of its own)', async () => {
-  const { context, page, errors } = await open('chat=30');
+  const { context, page, errors } = await open(`chat=${END}`);
   const chat = await page.$eval('.anna-window .aw-chat', (c) => ({ role: c.getAttribute('role'), label: c.getAttribute('aria-label'), tabindex: c.getAttribute('tabindex'), over: c.scrollHeight - c.clientHeight, overflow: getComputedStyle(c).overflowY }));
   await context.close();
   assert.equal(chat.role, 'region');
@@ -384,7 +435,7 @@ test('reduced motion switched on mid-play: it stops and shows the end', async ()
 });
 
 test('the quiet text is readable: at least 4.5:1 against what is behind it', async () => {
-  const { context, page, errors } = await open('chat=30');
+  const { context, page, errors } = await open(`chat=${END}`);
   await intoView(page);
   await until(page, (s) => s.done);
   await frames(page, 4);
@@ -422,8 +473,9 @@ test('the quiet text is readable: at least 4.5:1 against what is behind it', asy
   assert.deepEqual(errors, []);
 });
 
+// The conversation held at its end (?chat=), the same page its play leaves (Ezra, 2026-11-11)
 test('phone 390 x 844: copy first, window below, no sideways scroll', async () => {
-  const { context, page, errors } = await open('', { width: 390, height: 844 });
+  const { context, page, errors } = await open(`chat=${END}`, { width: 390, height: 844 });
   const geo = await page.evaluate(() => {
     const c = document.querySelector('.anna-window .aw-copy').getBoundingClientRect();
     const w = document.querySelector('.anna-window .aw-window').getBoundingClientRect();
