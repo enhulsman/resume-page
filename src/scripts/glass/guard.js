@@ -25,3 +25,16 @@ export function slowFrom(samples) {
   const mean = recent.reduce((a, s) => a + s.draw, 0) / recent.length;
   return mean > LIMIT;
 }
+
+/** The most busy work (ms) the test hook may add to a frame: enough to trip the guard, never a frozen tab. */
+export const BUSY_MAX = 50;
+
+/**
+ * The busy-work test hook's value (?busy=<ms>, window.__glass.busy(ms)) as ms per frame. The hook
+ * ships with the page (CI runs the browser tests against the production build), so only a finite,
+ * positive number counts, at most BUSY_MAX; anything else (Infinity, text, a negative) adds none.
+ */
+export function busyFrom(v) {
+  const ms = typeof v === 'string' ? (v.trim() === '' ? NaN : Number(v)) : typeof v === 'number' ? v : NaN;
+  return Number.isFinite(ms) && ms > 0 ? Math.min(ms, BUSY_MAX) : 0;
+}

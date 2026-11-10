@@ -201,6 +201,32 @@ test('the guard is wired: with ?guard=off the same work never trips it, and the 
   assert.ok(a.some((x, i) => x !== b[i]), 'the light still moves');
 });
 
+// The busy-work hook ships with the page (the e2e suite runs against the production build in CI),
+// so it must never freeze a tab: only a small finite value counts, at both entry points.
+test('?busy=Infinity freezes nothing: the page gets ready and keeps drawing frames', { timeout: 60000 }, async () => {
+  const { context, page } = await open('?guard=off&busy=Infinity', { ready: false });
+  try {
+    await page.waitForFunction(() => window.__glassReady === true, null, { timeout: 20000 });
+    const t0 = Date.now();
+    await frames(page, 10);
+    assert.ok(Date.now() - t0 < 15000, `ten frames took ${Date.now() - t0} ms`);
+  } finally { await context.close(); }
+});
+
+test('__glass.busy takes only a small finite number of ms, and says what it took', { timeout: 60000 }, async () => {
+  const { context, page } = await open('?guard=off');
+  try {
+    assert.equal(await page.evaluate(() => window.__glass.busy(Infinity)), 0, 'Infinity adds none');
+    assert.equal(await page.evaluate(() => window.__glass.busy('abc')), 0, 'not a number adds none');
+    assert.equal(await page.evaluate(() => window.__glass.busy(-10)), 0, 'a negative adds none');
+    assert.equal(await page.evaluate(() => window.__glass.busy(30)), 30);
+    assert.equal(await page.evaluate(() => window.__glass.busy(1e9)), 50, 'clamped to 50 ms a frame');
+    const t0 = Date.now();
+    await frames(page, 10);
+    assert.ok(Date.now() - t0 < 15000, `ten frames took ${Date.now() - t0} ms`);
+  } finally { await context.close(); }
+});
+
 test('no WebGL: no error, every card keeps its link and a soft gradient of its light', async () => {
   const { context, page, errors } = await open('', { init: [noGL] });
   const hrefs = await page.$$eval(CARDS, (as) => as.map((a) => a.getAttribute('href')));

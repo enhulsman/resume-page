@@ -61,6 +61,8 @@ export const annaCalls = {
   /** Before the sources she read, in the window. */
   read: 'Read:',
   replay: 'Replay',
+  /** The transcript's name for a screen reader (a scrollable region the keyboard can reach). */
+  chat: 'Conversation with ANNA',
 };
 
 /**

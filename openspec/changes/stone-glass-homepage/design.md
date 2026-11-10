@@ -42,8 +42,9 @@ hero card (benched in config, can return as 05); usage or adoption facts for ANN
    `(b0 + hB/3) - (a1 - hA/3) <= viewport height`. A pure function in `tests/lib/moments.mjs`
    computes it from element offsets at 1440x900, 1280x720 and 390x844, on load and again after
    ANNA's conversation and the terminal's intro finish; a scroll walk in tenths of the viewport
-   stays as the visible proof. The cost, estimated: about 550-600 px of non-glass between the card
-   bottoms and the window top at 1440x900 (900 - 600/3 - 330/3), about 440 px at 1280x720. The
+   stays as the visible proof. The cost, measured on the built page: 641 px of non-glass between the
+   card bottoms and the window top at 1440x900 and 566 px at 1280x720, where the rule alone needs
+   about 580 and 446 (the viewport less a third of each object's height). The
    layout pays it with placement: ANNA's window starts below her heading, lead and first rule, beside
    the rules. *Alternative rejected:* fading glass in and out on scroll; that is motion used to
    explain.

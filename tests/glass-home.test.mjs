@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { glassMoments, glassCards, fallbackFor, windowGlows } from '../src/config/glass.ts';
 import { momentsOverlap, visibleShare } from './lib/moments.mjs';
-import { slowFrom } from '../src/scripts/glass/guard.js';
+import { slowFrom, busyFrom, BUSY_MAX } from '../src/scripts/glass/guard.js';
 import { parseColor, contrast } from './lib/contrast.mjs';
 import * as home from '../src/config/home.ts';
 import site from '../src/config/site.ts';
@@ -89,6 +89,20 @@ test('no verdict before a full window', () => {
   assert.equal(slowFrom(run(0, 2.9, 16, 60)), false, 'never before t = 3 s');
   assert.equal(slowFrom(run(2, 3.5, 16, 60)), false, 'eligible samples must span 2 s, not just reach t = 3 s');
   assert.equal(slowFrom([]), false);
+});
+
+// ---- the busy-work test hook (?busy=, __glass.busy): a test hook that ships, so it cannot freeze a tab ----
+
+test('the busy-work hook takes only a small finite number of ms: anything else is none, more is 50', () => {
+  for (const v of ['Infinity', Infinity, '-Infinity', -Infinity, 'abc', NaN, null, undefined, '', -5, '-5', '1e999'])
+    assert.equal(busyFrom(v), 0, `${String(v)} adds no work`);
+  assert.equal(busyFrom('30'), 30);
+  assert.equal(busyFrom(30), 30);
+  assert.equal(busyFrom('0.5'), 0.5);
+  assert.equal(busyFrom(50), 50);
+  assert.equal(busyFrom(51), 50, 'clamped to 50 ms a frame');
+  assert.equal(busyFrom('1e9'), 50);
+  assert.equal(BUSY_MAX, 50);
 });
 
 // ---- the shared inks on glass ----

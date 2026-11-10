@@ -52,9 +52,10 @@ real page; you judge the real page instead.
     "Ezra Hulsman, photographed from below" (the current alt, moved). The hero's role and intro
     lines move from the lab page into config unchanged.
 13. **"One glass moment per screen" is measured on the glass itself:** never two glass objects
-    with a third or more of their height on screen together. The cost: roughly 550 to 600 px
-    between the bottom of the cards and the top of ANNA's window on a 1440x900 screen, about 440 px
-    at 1280x720, filled by ANNA's heading, lead and first rule plus stone. Her window therefore
+    with a third or more of their height on screen together. The cost, measured on the built page:
+    641 px between the bottom of the cards and the top of ANNA's window on a 1440x900 screen, 566 px
+    at 1280x720 (the rule alone needs about 580 and 446), filled by ANNA's heading, lead and first
+    rule plus stone. Her window therefore
     starts beside her rules, below her heading, lead and first rule.
 14. **The drawing-sheet frame (the border with A–F letters) and its green table leave every page,**
     not only the homepage, with the stone bar and footer. The bar keeps "EH." with your name

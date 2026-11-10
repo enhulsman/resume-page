@@ -3,9 +3,12 @@
 // type on stone; beside it (below it on a phone) a frosted Teams window where anna-site's "Close my
 // week" plays once as it comes into view, with Replay. The second glass moment.
 // Every word comes from config: annaLead, annaCalls (home.ts) and annaDemo (anna-demo.ts); the index
-// is ANNA's card's. Every beat is in the page from the start, hidden until it lands; the driver is
-// src/scripts/glass/anna-window.js, which keys on the class names here (.anna-window, .aw-*,
-// [data-beat]); the text-on-glass colours in stone.css key on .msg .who, .sources, .rec-head.
+// is ANNA's card's. Every beat is in the page from the start. Without JavaScript (or when the
+// driver never loads) the whole conversation shows; with it, the inline script below hides the beats
+// as they are parsed (no flash of the finished chat) and the driver shows each as it lands. The
+// driver is src/scripts/glass/anna-window.js, which keys on the class names here (.anna-window,
+// .aw-*, [data-beat]) and sets .aw-live; the text-on-glass colours in stone.css key on .msg .who,
+// .sources, .rec-head. The transcript is a named region the keyboard can reach and scroll back.
 //
 // One moment per screen: the window starts beside the second rule, below the heading, the lead and
 // the first rule, so the stone and copy above it keep it apart from the hero's cards. The copy and
@@ -20,6 +23,13 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
 ---
 
 <section class="anna-window" data-glass-moment="anna" aria-labelledby="anna-h">
+  <script is:inline>
+    // hide the beats before they are parsed; if the driver has not taken over by load, show them
+    (function (s) {
+      s.classList.add('aw-pending');
+      addEventListener('load', function () { if (!s.classList.contains('aw-live')) s.classList.remove('aw-pending'); });
+    })(document.currentScript.parentElement);
+  </script>
   <div class="aw-copy">
     <header class="aw-head">
       <span class="aw-idx">{idx}</span>
@@ -35,7 +45,7 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
   </div>
   <GlassWindow title={annaCalls.window} glow="flame" class="aw-stage" windowClass="aw-window">
     <button slot="bar" type="button" class="aw-replay">{annaCalls.replay}</button>
-    <div class="aw-chat">
+    <div class="aw-chat" tabindex="0" role="region" aria-label={annaCalls.chat}>
       <div class="aw-log">
         <div class="msg joris" data-beat="person"><span class="who">{annaDemo.who}</span><p class="text">{annaDemo.person}</p></div>
         <div class="msg anna" data-beat="answer"><span class="who">{annaLead.title}</span><p class="text">{annaDemo.answer}</p></div>
@@ -103,16 +113,20 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
     font: 500 12.5px/1 var(--stone-sans); border-radius: 6px;
   }
   .aw-replay:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 2px; }
+  /* Replay needs the driver */
+  .anna-window:not(.aw-live) .aw-replay { display: none; }
   .aw-chat {
     position: relative; z-index: 3; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
     scrollbar-width: thin; scrollbar-color: rgb(17 17 16 / 0.16) transparent;
     -webkit-mask-image: linear-gradient(to bottom, transparent, black 18px); mask-image: linear-gradient(to bottom, transparent, black 18px);
   }
+  /* the keyboard's ring, inside the chat's edge; the top fade goes while it shows, so the ring is whole */
+  .aw-chat:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: -2px; -webkit-mask-image: none; mask-image: none; }
   .aw-log { display: flex; flex-direction: column; padding: 22px 22px 18px; font-size: 15px; line-height: 1.45; }
   .aw-log p { margin: 0; }
-  /* each beat is in the page from the start; it shows when it lands */
-  [data-beat] { opacity: 0; transform: translateY(6px); transition: opacity 0.45s ease, transform 0.5s cubic-bezier(.2,.7,.2,1); }
-  [data-beat].on { opacity: 1; transform: none; }
+  /* each beat is in the page from the start; with a script running, it shows when it lands */
+  [data-beat] { transition: opacity 0.45s ease, transform 0.5s cubic-bezier(.2,.7,.2,1); }
+  .anna-window:is(.aw-pending, .aw-live) [data-beat]:not(.on) { opacity: 0; transform: translateY(6px); }
   .msg { max-width: 86%; text-wrap: pretty; }
   .msg .who { display: block; margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.01em; }
   .msg .text { padding: 10px 14px; border-radius: 14px; }
@@ -147,7 +161,7 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
   .aw-compose.typing .aw-caret { display: inline-block; }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-beat] { transition: none; transform: none; }
+    [data-beat], .anna-window:is(.aw-pending, .aw-live) [data-beat]:not(.on) { transition: none; transform: none; }
     .aw-compose { transition: none; }
     .aw-replay { display: none; }
   }

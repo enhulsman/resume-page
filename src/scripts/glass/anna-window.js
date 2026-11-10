@@ -2,8 +2,8 @@
 // site's 'week' conversation plays once when the window is about 40% in view; Replay plays it again.
 // Every beat is in the page from the start (anna-window-model.js says when each shows). The window
 // keeps its height and scrolls itself to the newest beat, unless the reader has scrolled it
-// themselves. ?chat=<seconds> holds one moment; reduced motion (also when switched on later) shows
-// the end at once.
+// themselves (wheel, touch, or the keyboard: the transcript is a focusable region). ?chat=<seconds>
+// holds one moment; reduced motion (also when switched on later) shows the end at once.
 import { timeline, moment, held } from './anna-window-model.js';
 
 const section = document.querySelector('.anna-window');
@@ -103,6 +103,10 @@ if (section) {
   ro.observe(chat); ro.observe(section.querySelector('.aw-log'));
 
   section.querySelector('.aw-replay').addEventListener('click', play);
+
+  // the driver has the beats: until now they were hidden by the section's inline script (or, with
+  // no script at all, all shown)
+  section.classList.add('aw-live');
 
   // for tests: the moment now, and the beats in the order they showed
   window.__annaWindow = { state: () => ({ t: cur.t, beat: cur.beat, done: cur.done, typed: cur.typed, seen: [...seen] }) };

@@ -6,11 +6,12 @@
 // (guard.js decides). Without WebGL a pane keeps its CSS ground and soft gradient, and its text.
 //
 // Test hooks: ?t=<seconds> freezes the light; ?guard=off switches the guard off; ?busy=<ms> adds
-// busy work to every frame's draw. window.__glass: at(t), count, draws (per pane), slow,
-// guard(on), busy(ms). window.__glassReady once the panes are fitted and drawn.
+// busy work to every frame's draw (finite, at most 50 ms: guard.js busyFrom; it ships, so it can
+// never freeze a tab). window.__glass: at(t), count, draws (per pane), slow, guard(on), busy(ms).
+// window.__glassReady once the panes are fitted and drawn.
 import { cardState, GLASS, PERIOD, REF, toRef } from './model.js';
 import { createRenderer } from './shader.js';
-import { slowFrom } from './guard.js';
+import { slowFrom, busyFrom } from './guard.js';
 
 const params = new URLSearchParams(location.search);
 const still = matchMedia('(prefers-reduced-motion: reduce)');
@@ -18,7 +19,7 @@ const frozen = params.has('t') ? +params.get('t') : null;
 const STILL_T = 2.4; // a moment where every light is well inside its card
 
 let guardOn = params.get('guard') !== 'off';
-let busyMs = params.has('busy') ? +params.get('busy') : 0;
+let busyMs = busyFrom(params.get('busy'));
 let slow = false;
 let readyAt = null; // performance.now() at __glassReady
 let samples = [];
@@ -129,8 +130,8 @@ window.__glass = {
   get slow() { return slow; },
   /** Switch the slow-device guard on or off; off also lets a held loop run again. */
   guard(on) { guardOn = !!on; samples = []; if (!on) slow = false; },
-  /** Add this much busy work (ms) to every frame's draw. */
-  busy(ms) { busyMs = +ms || 0; },
+  /** Add this much busy work (ms, finite, at most 50) to every frame's draw; returns what it took. */
+  busy(ms) { busyMs = busyFrom(ms); return busyMs; },
 };
 document.fonts.ready.then(() => {
   panes.forEach(fit);

@@ -74,7 +74,7 @@ decision behind it.
 
 ## 9. Check, not close
 
-- [ ] 9.1 Fresh-eyes review of the whole homepage at 1440, 1280 and phone width; screenshots for Ezra
-- [ ] 9.2 Codex adversarial review of the branch; fix MUST findings; rerun all test commands
-- [ ] 9.3 Follow-ups to file: inner page bodies in stone; dark mode after the light redesign; frame time on a mid Android phone
-- [ ] 9.4 Do not archive: Ezra reviews the real page first
+- [x] 9.1 Fresh-eyes review of the whole homepage at 1440, 1280 and phone width; screenshots for Ezra
+- [x] 9.2 Codex adversarial review of the branch; fix MUST findings; rerun all test commands
+- [x] 9.3 Follow-ups to file: inner page bodies in stone; dark mode after the light redesign; frame time on a mid Android phone (listed in the 2026-11-11 morning handoff)
+- [x] 9.4 Do not archive: Ezra reviews the real page first (not archived)

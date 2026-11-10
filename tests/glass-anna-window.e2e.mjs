@@ -219,6 +219,137 @@ test('the window is no focus trap: tabbing goes in, then out to the next section
   assert.deepEqual(errors, []);
 });
 
+// The transcript scrolls itself to its end; a keyboard user must be able to reach it and read back.
+/** The chat's focus ring against what is behind it: the ring's colour vs the pixels along its edge, focus taken away. */
+async function ringContrast(page) {
+  const ring = await page.$eval('.anna-window .aw-chat', (c) => {
+    const cs = getComputedStyle(c), r = c.getBoundingClientRect();
+    return { style: cs.outlineStyle, width: parseFloat(cs.outlineWidth), offset: parseFloat(cs.outlineOffset), color: cs.outlineColor, box: { x: r.x, y: r.y, w: r.width, h: r.height } };
+  });
+  await page.evaluate(() => document.activeElement.blur());
+  await frames(page, 2);
+  const png = (await page.screenshot()).toString('base64');
+  const min = await page.evaluate(async ([png, ring]) => {
+    const img = new Image(); img.src = `data:image/png;base64,${png}`; await img.decode();
+    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    const L = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    const [r, g, b] = ring.color.match(/[\d.]+/g).map(Number);
+    // the middle of the ring's line, all four sides
+    const o = ring.offset + ring.width / 2, { x: bx, y: by, w, h } = ring.box;
+    const pts = [];
+    for (let k = 0.1; k <= 0.9; k += 0.05) pts.push([bx + k * w, by - o], [bx + k * w, by + h + o - 1], [bx - o, by + k * h], [bx + w + o - 1, by + k * h]);
+    let m = 99;
+    for (const [px, py] of pts) {
+      const d = x.getImageData(Math.round(px), Math.round(py), 1, 1).data;
+      const [hi, lo] = [L([d[0], d[1], d[2]]), L([r, g, b])].sort((p, q) => q - p);
+      m = Math.min(m, (hi + 0.05) / (lo + 0.05));
+    }
+    return m;
+  }, [png, ring]);
+  return { ...ring, contrast: +min.toFixed(2) };
+}
+
+for (const reducedMotion of ['no-preference', 'reduce']) {
+  test(`the transcript is a labelled stop for the keyboard, with a visible ring, and scrolls back to the start (motion: ${reducedMotion})`, async () => {
+    const { context, page, errors } = await open(reducedMotion === 'reduce' ? '' : 'chat=16', { reducedMotion });
+    await intoView(page);
+    assert.equal((await until(page, (s) => s.done)).done, true);
+    await settled(page);
+    assert.ok(await gapToEnd(page) < 4, 'it opens on its end');
+    const chat = await page.$eval('.anna-window .aw-chat', (c) => ({ tabindex: c.getAttribute('tabindex'), role: c.getAttribute('role'), label: c.getAttribute('aria-label') }));
+    assert.deepEqual(chat, { tabindex: '0', role: 'region', label: annaCalls.chat }, 'a focusable region, named from config');
+    assert.ok(annaCalls.chat?.length > 3, 'the name is in config');
+    // from the link before the window, by keyboard: Replay (when there is one), then the transcript
+    await page.focus('.anna-window .aw-copy a.more');
+    await page.keyboard.press('Tab');
+    if (reducedMotion !== 'reduce') await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.matches('.anna-window .aw-chat')), true, 'the transcript takes focus');
+    assert.equal(await page.evaluate(() => document.activeElement.matches(':focus-visible')), true);
+    // back to the start with the keyboard, and it stays there
+    await page.keyboard.press('Home');
+    await page.waitForFunction(() => document.querySelector('.anna-window .aw-chat').scrollTop === 0, null, { timeout: 5000 }).catch(() => {});
+    await settled(page);
+    await frames(page, 10);
+    const first = await page.evaluate(() => {
+      const c = document.querySelector('.anna-window .aw-chat'), f = c.querySelector('[data-beat]');
+      const cr = c.getBoundingClientRect(), fr = f.getBoundingClientRect();
+      return { top: c.scrollTop, beat: f.dataset.beat, inView: fr.top >= cr.top - 1 && fr.bottom <= cr.bottom + 1 };
+    });
+    assert.equal(first.top, 0, 'scrolled back to the start');
+    assert.deepEqual([first.beat, first.inView], ['person', true], 'the first message is in view');
+    // and down again with the keyboard
+    await page.keyboard.press('End');
+    await page.waitForFunction(() => { const c = document.querySelector('.anna-window .aw-chat'); return c.scrollHeight - c.clientHeight - c.scrollTop < 4; }, null, { timeout: 5000 }).catch(() => {});
+    assert.ok(await gapToEnd(page) < 4, 'End reaches the end');
+    // the ring: a solid line at least 2 px wide, 3:1 against what is behind it
+    const ring = await ringContrast(page); // focus is still on the transcript, from the keyboard
+    assert.equal(ring.style, 'solid', JSON.stringify(ring));
+    assert.ok(ring.width >= 2, `ring width ${ring.width}`);
+    assert.ok(ring.contrast >= 3, `ring contrast ${ring.contrast}:1`);
+    await context.close();
+    assert.deepEqual(errors, []);
+  });
+}
+
+test('without JavaScript the whole conversation shows, from its first message, and no dead Replay', async () => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto(`${BASE}/`, { waitUntil: 'load' });
+  await page.locator('.anna-window .aw-window').scrollIntoViewIfNeeded();
+  const beats = await page.$$eval('.anna-window [data-beat]', (els) => els.map((e) => ({ id: e.dataset.beat, op: +getComputedStyle(e).opacity })));
+  assert.deepEqual(beats.map((b) => b.id), BEATS.filter((b) => b !== 'typing'));
+  assert.ok(beats.every((b) => b.op === 1), `all shown: ${JSON.stringify(beats)}`);
+  const first = await page.evaluate(() => {
+    const c = document.querySelector('.anna-window .aw-chat'), f = c.querySelector('[data-beat]');
+    const cr = c.getBoundingClientRect(), fr = f.getBoundingClientRect();
+    return fr.top >= cr.top - 1 && fr.bottom <= cr.bottom + 1;
+  });
+  assert.equal(first, true, 'the first message is in view');
+  assert.equal(await page.isVisible('.anna-window .aw-replay'), false, 'Replay needs the script');
+  await context.close();
+});
+
+test('with JavaScript the transcript never shows before playback: hidden from the moment its messages are parsed', async () => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  // before any page script: note the section's state the moment each message enters the page
+  await context.addInitScript(() => {
+    window.__beatsSeen = [];
+    const once = new WeakSet();
+    new MutationObserver((ms) => {
+      for (const m of ms) for (const n of m.addedNodes) {
+        if (n.nodeType !== 1) continue;
+        for (const b of [n, ...n.querySelectorAll('*')].filter((e) => e.matches('.anna-window [data-beat]') && !once.has(e))) {
+          once.add(b);
+          window.__beatsSeen.push({ id: b.dataset.beat, op: +getComputedStyle(b).opacity, cls: b.closest('.anna-window')?.className ?? '' });
+        }
+      }
+    }).observe(document, { childList: true, subtree: true });
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await page.goto(`${BASE}/`, { waitUntil: 'load' });
+  await page.waitForFunction(() => window.__glassReady === true);
+  const seen = await page.evaluate(() => window.__beatsSeen);
+  assert.equal(seen.length, BEATS.length - 1, 'every message observed');
+  assert.ok(seen.every((s) => s.op === 0), `hidden as parsed: ${JSON.stringify(seen)}`);
+  await context.close();
+  assert.deepEqual(errors, []);
+});
+
+test('with JavaScript on but the window\'s script never loading, the conversation still shows after load', async () => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage();
+  // every script file fails (a blocked or broken bundle); the page's inline scripts still run
+  await page.route('**/*', (r) => (r.request().resourceType() === 'script' ? r.abort() : r.continue()));
+  await page.goto(`${BASE}/`, { waitUntil: 'load' });
+  await page.waitForFunction(() => [...document.querySelectorAll('.anna-window [data-beat]')].every((e) => +getComputedStyle(e).opacity === 1), null, { timeout: 10000 }).catch(() => {});
+  const ops = await page.$$eval('.anna-window [data-beat]', (els) => els.map((e) => +getComputedStyle(e).opacity));
+  assert.ok(ops.every((o) => o === 1), `all shown: ${ops}`);
+  await context.close();
+});
+
 test('reduced motion switched on after load, before the window is in view: the finished conversation, no replay', async () => {
   const { context, page, errors } = await open('');
   await page.emulateMedia({ reducedMotion: 'reduce' });
