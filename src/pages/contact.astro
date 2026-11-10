@@ -68,8 +68,8 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
       window.__turnstileWidgetId = window.turnstile.render('#turnstile-container', {
         sitekey: sitekey,
         action: 'contact',
-        // follow the sheet's chosen theme, not just the system's
-        theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : document.documentElement.dataset.theme === 'light' ? 'light' : 'auto',
+        // the site is light stone in every system theme
+        theme: 'light',
         size: 'flexible',
       });
     };

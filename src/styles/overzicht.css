@@ -1,51 +1,34 @@
-/* Overzicht: hulsman.dev as a drawing set. Tokens and rationale: resume-lab/design/DESIGN.md. */
+/* Overzicht: the inner pages' drawing-sheet layout, in stone (openspec stone-glass-homepage).
+   The chrome (bar, footer) is stone on every page; the sheet frame, the green table, the paper
+   grain and the dark theme are gone. The page bodies keep their layout, their colour variables
+   mapped onto the stone tokens in stone.css. Original rationale: resume-lab/design/DESIGN.md. */
 
 @font-face { font-family: "Archivo"; src: url(/fonts/Archivo.woff2) format("woff2-variations"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
 @font-face { font-family: "B612 Mono"; src: url(/fonts/B612Mono.woff2) format("woff2"); font-weight: 400; font-display: swap; }
 
 :root {
-  --sheet: #EFEDF3;
-  --ink: #2B2766;
-  --ink-2: #57528C;
-  --faint: #8A86AE;
-  --hair: #C9C5DA;
+  /* the sheet's colours, mapped to stone: ground, black type, warm greys; red stays the mark */
+  --sheet: var(--stone);
+  --ink: var(--stone-ink);
+  --ink-2: #4A453F;
+  --faint: #A39B90;
+  --hair: var(--stone-hair);
   --red: #B8301A;
-  --label: #67639A;
-  --grain-blend: multiply;
-  --grain-a: 0.055;
-  /* the drafting board the sheet lies on: its green vinyl cover. Under a drawn panel or
-     card the whiteprint stays flat */
-  --table: #C9D1C6;
+  --label: #5C5650;
   --panel: transparent;
   --gutter: clamp(16px, 3.2vw, 44px);
-  --frame: clamp(8px, 1.1vw, 14px);
-  --bar: 52px;
+  --bar: 64px;
   /* past 1920 the set keeps its 1920 layout, centred on the table */
   --wide: max(0px, (100vw - 1920px) / 2);
-  --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg stroke='%232B2766' stroke-width='1.4' stroke-linejoin='round' fill='none'%3E%3Cpath d='M2 30 5 22 24 3 29 8 10 27Z' fill='%23EFEDF3'/%3E%3Cpath d='M5 22l5 5M21 6l5 5'/%3E%3C/g%3E%3Cpath d='M2 30 3.5 25.8 6.2 28.5Z' fill='%232B2766'/%3E%3C/svg%3E") 2 30, crosshair;
+  --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg stroke='%23111110' stroke-width='1.4' stroke-linejoin='round' fill='none'%3E%3Cpath d='M2 30 5 22 24 3 29 8 10 27Z' fill='%23EEEAE3'/%3E%3Cpath d='M5 22l5 5M21 6l5 5'/%3E%3C/g%3E%3Cpath d='M2 30 3.5 25.8 6.2 28.5Z' fill='%23111110'/%3E%3C/svg%3E") 2 30, crosshair;
   --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --mono: "B612 Mono", ui-monospace, Menlo, monospace;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --sheet: #16141D; --ink: #D8D4F0; --ink-2: #A9A4CC; --faint: #6E6992; --hair: #34304A; --red: #FF6247; --label: #8A85B0;
-    --grain-blend: screen; --grain-a: 0.05; color-scheme: dark;
-    --table: #0E0D13; --panel: #1B1923;
-    --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg stroke='%23D8D4F0' stroke-width='1.4' stroke-linejoin='round' fill='none'%3E%3Cpath d='M2 30 5 22 24 3 29 8 10 27Z' fill='%2316141D'/%3E%3Cpath d='M5 22l5 5M21 6l5 5'/%3E%3C/g%3E%3Cpath d='M2 30 3.5 25.8 6.2 28.5Z' fill='%23D8D4F0'/%3E%3C/svg%3E") 2 30, crosshair;
-  }
-}
-:root[data-theme="dark"] {
-  --sheet: #16141D; --ink: #D8D4F0; --ink-2: #A9A4CC; --faint: #6E6992; --hair: #34304A; --red: #FF6247; --label: #8A85B0;
-  --grain-blend: screen; --grain-a: 0.05; color-scheme: dark;
-  --table: #0E0D13; --panel: #1B1923;
-  --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg stroke='%23D8D4F0' stroke-width='1.4' stroke-linejoin='round' fill='none'%3E%3Cpath d='M2 30 5 22 24 3 29 8 10 27Z' fill='%2316141D'/%3E%3Cpath d='M5 22l5 5M21 6l5 5'/%3E%3C/g%3E%3Cpath d='M2 30 3.5 25.8 6.2 28.5Z' fill='%23D8D4F0'/%3E%3C/svg%3E") 2 30, crosshair;
-}
-
 *, *::before, *::after { box-sizing: border-box; }
 /* the scrollbar's room is always kept: a newer Chrome leaves it out of 100vw only while it is
-   kept, and --wide centres on 100vw, so the page would move sideways when the arrival ends */
-html { scrollbar-gutter: stable; -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--frame) + 6px + var(--bar) + 12px); }
+   kept, and --wide centres on 100vw, so the page would move sideways */
+html { scrollbar-gutter: stable; -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--bar) + 12px); color-scheme: light; }
 body {
   margin: 0;
   background: var(--sheet);
@@ -53,20 +36,6 @@ body {
   font: 400 17px/1.55 var(--sans);
   font-stretch: 100%;
   overflow-x: clip;
-  transition: background-color .5s ease, color .5s ease;
-}
-body::before {
-  /* the whiteprint's grain: paper, not decoration */
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 60;
-  background: url(/tex/grain.jpg) 0 0 / 512px 512px repeat;
-  mix-blend-mode: var(--grain-blend); opacity: var(--grain-a);
-}
-body::after {
-  /* the paper past the bar and the frame's lines: scrolled content never shows there */
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 49;
-  border: calc(var(--frame) + 6px) solid var(--sheet); transition: border-color .5s ease;
-  /* 1px under the bar, so at fractional pixel ratios no seam of page shows between the two */
-  border-top-width: calc(var(--frame) + 7px);
 }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .2em; }
 a:hover { color: var(--red); }
@@ -75,51 +44,37 @@ a:hover { color: var(--red); }
 .skip:focus { left: 16px; }
 h1, h2, h3 { margin: 0; font-weight: 700; }
 
-/* ---------- the sheet frame ---------- */
-.frame {
-  position: fixed; inset: var(--frame); border: 1.5px solid var(--ink); pointer-events: none; z-index: 50;
-  /* the light table the sheet lies on, past the frame's outer line */
-  box-shadow: 0 0 0 100vmax var(--table); transition: box-shadow .5s ease;
-}
-.frame::after { content: ""; position: absolute; inset: 5px; border: .75px solid var(--ink); opacity: .55; }
-.frame-refs { position: absolute; left: 0; right: 0; bottom: -1px; display: flex; justify-content: space-around; transform: translateY(100%); }
-.frame-refs span { font: 400 9px/1 var(--mono); color: var(--label); padding-top: 2px; }
-
+/* ---------- the stone bar, on every page ----------
+   In the flow and stuck to the top: it takes its own height, so no page pads for it. */
 .bar {
-  position: fixed; z-index: 55; top: calc(var(--frame) + 6px); left: calc(var(--frame) + 6px); right: calc(var(--frame) + 6px);
-  height: var(--bar); display: flex; align-items: center; gap: 24px; padding: 0 calc(var(--gutter) - 6px + var(--wide));
-  border-bottom: .75px solid var(--hair);
-  background: var(--sheet);
-  font: 600 12px/1 var(--sans); font-stretch: 78%; letter-spacing: .1em; text-transform: uppercase;
-  transition: background-color .5s ease;
+  position: sticky; top: 0; z-index: 55;
+  height: var(--bar); display: flex; align-items: center; gap: clamp(16px, 2.4vw, 36px);
+  padding: 0 var(--stone-gutter);
+  background: var(--sheet); color: var(--ink);
+  border-bottom: 1px solid var(--hair);
+  font: 450 16px/1 var(--sans); word-spacing: .06em;
+  -webkit-font-smoothing: antialiased;
 }
 .bar a { text-decoration: none; }
-.bar-name { font-stretch: 100%; letter-spacing: .04em; margin-right: auto; display: inline-flex; align-items: center; white-space: nowrap; }
-.sig { font: 820 15px/1 var(--sans); font-stretch: 125%; letter-spacing: -.02em; }
+.bar-name { margin-right: auto; display: inline-flex; align-items: center; white-space: nowrap; font-weight: 500; word-spacing: normal; }
+.sig { font: 900 22px/1 var(--sans); letter-spacing: -.04em; }
 .sig-dot { color: var(--red); }
-.sig::after { content: ""; display: inline-block; width: .75px; height: 14px; background: var(--hair); margin: 0 12px; vertical-align: -2px; }
-/* on the smallest phones the signature and the full name keep their line: the lamp button
-   shows its lamp alone (its label stays for screen readers) */
-@media (max-width: 360px) {
-  .theme-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.sig::after { content: ""; display: inline-block; width: 1px; height: 18px; background: var(--hair); margin: 0 12px; vertical-align: -3px; }
+.bar nav { display: flex; gap: clamp(16px, 2.6vw, 40px); }
+.bar nav a[aria-current="page"] { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: .3em; }
+.bar-cta {
+  display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+  padding: 9px 18px; border-radius: 999px; background: var(--ink); color: var(--sheet); font-weight: 500;
 }
-.bar nav { display: flex; gap: 22px; }
-.theme {
-  appearance: none; border: .75px solid var(--ink); background: none; color: inherit; cursor: pointer;
-  font: inherit; letter-spacing: inherit; text-transform: inherit; padding: 7px 10px; border-radius: 0;
-  display: inline-flex; align-items: center; gap: 7px;
-}
-.lamp { width: 13px; height: 13px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: round; stroke-linecap: round; }
-:root[data-theme="dark"] .lamp .shade { fill: currentColor; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lamp .shade { fill: currentColor; } }
-.theme:hover { color: var(--red); border-color: var(--red); }
+.bar a.bar-cta:hover { color: var(--sheet); background: var(--stone-ink-2); }
 
-main { padding: 0 calc(var(--frame) + 6px); }
+/* inner pages keep a margin of stone at the screen's edges; the homepage sets its own */
+main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 
 /* ---------- sheet 0: the person, with his photo and the terminal ---------- */
 .sheet-you {
   min-height: 100svh; display: grid; grid-template-columns: minmax(340px, 38fr) 62fr; align-items: end; align-content: center;
-  padding: calc(var(--frame) + var(--bar) + 40px) var(--wide) calc(var(--frame) + 40px); position: relative;
+  padding: 40px var(--wide); position: relative;
 }
 .you-text { padding: 0 var(--gutter); }
 .you-text p { margin: 0 0 1em; color: var(--ink); }
@@ -140,9 +95,6 @@ main { padding: 0 calc(var(--frame) + 6px); }
 .site-photo:hover .photo { background-color: transparent; }
 .site-photo:hover img { filter: none; }
 .site-photo:hover .photo::after { opacity: 0; }
-/* on the light table the inks swap: the paper is dark, the lines are light */
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .site-photo .photo { --photo-dark: var(--sheet); --photo-light: var(--ink); } }
-:root[data-theme="dark"] .site-photo .photo { --photo-dark: var(--sheet); --photo-light: var(--ink); }
 .site-photo .clip { position: absolute; z-index: 2; left: 18px; top: -16px; width: 13px; height: 34px; fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; }
 .site-photo figcaption { font: 400 11px/1.4 var(--mono); color: var(--label); margin-top: 8px; }
 
@@ -154,8 +106,9 @@ main { padding: 0 calc(var(--frame) + 6px); }
 
 /* ---------- the pointer layer: crosshair, pencil marks, registration marks ---------- */
 /* a mouse draws with a pencil whose tip sits where the crosshair meets; links and fields keep their own */
+/* only on the drawing sheets (the inner pages); the stone homepage keeps the system's cursor */
 @media (hover: hover) and (pointer: fine) {
-  html { cursor: var(--pencil); }
+  html:has(main.page) { cursor: var(--pencil); }
   a, button, summary, label, select, [role="button"] { cursor: pointer; }
   input, textarea, [contenteditable] { cursor: text; }
 }
@@ -434,13 +387,14 @@ kbd { font: inherit; color: var(--red); }
 .stamp::before { content: ""; position: absolute; inset: 3px; border: 1px solid var(--red); }
 .stamp b { font: 800 26px/1 var(--sans); font-stretch: 112%; letter-spacing: .02em; }
 
-.foot { padding: 28px calc(var(--frame) + 6px + var(--gutter) + var(--wide)) calc(var(--frame) + 40px); display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font: 400 11.5px/1.5 var(--mono); color: var(--ink-2); border-top: .75px solid var(--hair); margin: 0 calc(var(--frame) + 6px); }
+/* ---------- the stone footer, on every page ---------- */
+/* its rule stops at the gutters, so the stone runs to the screen's edges */
+.foot { margin: 0 var(--stone-gutter); padding: 28px 0 40px; font: 400 14px/1.5 var(--sans); color: var(--ink-2); border-top: 1px solid var(--hair); -webkit-font-smoothing: antialiased; }
 .foot p { margin: 0; }
 
 /* the dimension line under a pointed-at or focused link: it draws out from its middle, then the ticks */
 .dim-hl { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; z-index: 40; }
 .dim-hl path { fill: none; stroke: var(--red); stroke-width: 1; stroke-linecap: round; }
-.dim-hl.in-bar { z-index: 56; }
 .dim-line { transform-box: fill-box; transform-origin: center; transform: scaleX(0); }
 .dim-tick { opacity: 0; }
 .dim-hl.on .dim-line { transform: none; transition: transform .35s cubic-bezier(.4,0,.2,1); }
@@ -448,8 +402,7 @@ kbd { font: inherit; color: var(--red); }
 
 
 /* ---------- the inner sheets: /projects, the case studies, the blog, the CV, contact ---------- */
-.bar nav a[aria-current="page"] { color: var(--red); }
-.sheet-first { border-top: 0; padding-top: calc(var(--frame) + var(--bar) + clamp(56px, 10vh, 112px)); }
+.sheet-first { border-top: 0; padding-top: clamp(56px, 10vh, 112px); }
 .sheet-head h1 { font-size: clamp(40px, 5vw, 80px); line-height: .9; font-stretch: 112%; font-weight: 780; letter-spacing: -.03em; }
 .detail-text h2 { font-size: 22px; font-stretch: 90%; letter-spacing: -.005em; margin-bottom: .45em; }
 .detail-status { font: 400 11.5px/1.3 var(--mono) !important; color: var(--ink) !important; }
@@ -528,10 +481,8 @@ kbd { font: inherit; color: var(--red); }
    it never reads as a line of its own (each source line is a .line from the highlighter) */
 .prose pre code { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
 .prose pre .line { display: inline-block; width: 100%; padding-left: 2ch; text-indent: -2ch; }
-/* highlighted code (astro.config.mjs) in the theme's colours, on the sheet */
+/* highlighted code (astro.config.mjs) in its light colours, on the sheet */
 .prose pre, .prose pre * { color: var(--shiki-light, var(--ink)); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .prose :is(pre, pre *) { color: var(--shiki-dark, var(--ink)); } }
-:root[data-theme="dark"] .prose :is(pre, pre *) { color: var(--shiki-dark, var(--ink)); }
 .prose img { max-width: 100%; height: auto; border: .75px solid var(--ink); }
 .prose table { border-collapse: collapse; font-size: 15px; }
 .prose th, .prose td { border: .75px solid var(--ink); padding: 6px 10px; text-align: left; }
@@ -577,58 +528,32 @@ kbd { font: inherit; color: var(--red); }
 #statusMessage[data-kind="error"] { color: var(--red); }
 .hp-field { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 
-/* ---------- the phone menu: the section links, folded into the bar ---------- */
+/* ---------- the phone menu: the page links, folded into the stone bar ---------- */
 .menu-btn { display: none; }
 
 /* ---------- phone ---------- */
 @media (max-width: 860px) {
-  :root { --bar: 46px; }
+  :root { --bar: 56px; }
   .bar nav { display: none; }
-  .bar { gap: 12px; }
-  .js .bar nav {
-    display: flex; flex-direction: column; gap: 0; position: absolute; top: 100%; left: -1px; right: -1px;
-    background: var(--sheet); border: 1.5px solid var(--ink); border-top-width: .75px;
-    visibility: hidden; clip-path: inset(0 0 100% 0); transition: clip-path .28s cubic-bezier(.4,0,.2,1), visibility 0s .28s;
-  }
-  .js .bar.open nav { visibility: visible; clip-path: inset(0 0 -2px 0); transition: clip-path .28s cubic-bezier(.4,0,.2,1); }
-  .js .bar nav a { padding: 15px calc(var(--gutter) - 6px); font-size: 13px; border-bottom: .75px solid var(--hair); }
-  .js .bar nav a:last-child { border-bottom: 0; }
+  .bar { gap: 10px; }
+  /* drawn after the name: "Get in touch", then the menu button */
+  .bar-cta { order: 1; }
   .js .menu-btn {
-    order: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 34px; height: 28px; padding: 0 10px;
-    appearance: none; border: .75px solid var(--ink); border-radius: 0; background: none; color: inherit; cursor: pointer;
-    font: inherit; letter-spacing: inherit; text-transform: inherit;
+    order: 2; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0; flex: none;
+    appearance: none; border: 0; border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--ink); background: none; color: var(--ink); cursor: pointer;
   }
-  /* hover only where there is one: a tap must not leave the button red */
-  @media (hover: hover) { .menu-btn:hover { color: var(--red); border-color: var(--red); } }
-
-  /* the drawn button: three strokes lift off like a pen, then a red cross plots in;
-     closing runs it backwards. Each path has pathLength 1, so one dash is the whole stroke. */
-  .menu-lines { width: 18px; height: 14px; display: block; overflow: visible; }
-  .menu-lines path { fill: none; stroke-width: 1.5; stroke-dasharray: 1 1; transition: stroke-dashoffset .2s cubic-bezier(.4,0,.2,1); }
-  .menu-lines .ml { stroke: currentColor; stroke-dashoffset: 0; }
-  .menu-lines .mx { stroke: var(--red); stroke-dashoffset: 1; }
-  .menu-lines .ml:nth-child(1) { transition-delay: .26s; }
-  .menu-lines .ml:nth-child(2) { transition-delay: .21s; }
-  .menu-lines .ml:nth-child(3) { transition-delay: .16s; }
-  .menu-lines .mx:nth-child(5) { transition-delay: .06s; }
-  .bar.open .menu-lines .ml { stroke-dashoffset: -1; }
-  .bar.open .menu-lines .mx { stroke-dashoffset: 0; }
-  .bar.open .menu-lines .ml:nth-child(1) { transition-delay: 0s; }
-  .bar.open .menu-lines .ml:nth-child(2) { transition-delay: .05s; }
-  .bar.open .menu-lines .ml:nth-child(3) { transition-delay: .1s; }
-  .bar.open .menu-lines .mx:nth-child(4) { transition-delay: .22s; }
-  .bar.open .menu-lines .mx:nth-child(5) { transition-delay: .32s; }
-
-  /* the dropdown plots like a table: each rule draws across, then its lettering */
-  .js .bar nav a { position: relative; border-bottom: 0; color: transparent; transition: color .25s ease; }
-  .js .bar nav a::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: .75px; background: var(--hair);
-    transform: scaleX(0); transform-origin: left; transition: transform .1s ease;
+  .menu-lines { width: 16px; height: 13px; display: block; overflow: visible; }
+  .menu-lines path { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; transition: opacity .15s ease; }
+  .menu-lines .mx { opacity: 0; }
+  .bar.open .menu-lines .ml { opacity: 0; }
+  .bar.open .menu-lines .mx { opacity: 1; }
+  .js .bar nav {
+    display: flex; flex-direction: column; gap: 0; position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--sheet); border-bottom: 1px solid var(--hair);
+    visibility: hidden; clip-path: inset(0 0 100% 0); transition: clip-path .22s cubic-bezier(.4,0,.2,1), visibility 0s .22s;
   }
-  .js .bar nav a:last-child::after { display: none; }
-  .js .bar.open nav a { color: var(--ink); transition-delay: calc(.2s + var(--i, 0) * 55ms); }
-  .js .bar.open nav a::after { transform: scaleX(1); transition: transform .35s cubic-bezier(.4,0,.2,1) calc(.1s + var(--i, 0) * 55ms); }
-  .js .bar.open nav a:hover { color: var(--red); transition-delay: 0s; }
+  .js .bar.open nav { visibility: visible; clip-path: inset(0 0 -2px 0); transition: clip-path .22s cubic-bezier(.4,0,.2,1); }
+  .js .bar nav a { padding: 16px var(--stone-gutter); font-size: 18px; border-top: 1px solid var(--hair); }
   .titleblock { max-width: none; }
   /* the title block restacks as label and value pairs, so no value breaks mid-word */
   .titleblock { display: grid; grid-template-columns: auto minmax(0, 1fr); }
@@ -693,6 +618,18 @@ kbd { font: inherit; color: var(--red); }
 }
 /* a portrait tablet has the room for a face you can see */
 @media (min-width: 600px) and (max-width: 860px) { .site-photo { grid-template-columns: 200px 1fr; } }
+/* small phones: the mark, the name, "Get in touch" and the menu keep one line */
+@media (max-width: 420px) {
+  .bar { font-size: 14px; }
+  .sig { font-size: 19px; }
+  .sig::after { height: 15px; margin: 0 8px; }
+  .bar-cta { padding: 7px 12px; }
+}
+@media (max-width: 340px) {
+  .bar { font-size: 13px; gap: 8px; }
+  .bar-cta { padding: 7px 10px; }
+  .js .menu-btn { width: 34px; height: 34px; }
+}
 
 
 /* stacked layout: portrait phones, and tall portrait screens (tablets, portrait monitors) */
@@ -700,7 +637,7 @@ kbd { font: inherit; color: var(--red); }
   .scrolly { display: flex; flex-direction: column; }
   .copy { display: contents; }
   .step { order: 2; min-height: 0; padding: 28px var(--gutter) 44px; justify-content: flex-start; position: relative; z-index: 1; }
-  .stage { order: 1; height: 40svh; top: calc(var(--frame) + 6px + var(--bar)); z-index: 4; background: var(--sheet); border-bottom: 1.5px solid var(--ink); }
+  .stage { order: 1; height: 40svh; top: var(--bar); z-index: 4; background: var(--sheet); border-bottom: 1.5px solid var(--ink); }
   /* the text scrolling under the drawing fades out instead of meeting a hard cut */
   .stage::after { content: ""; position: absolute; left: 0; right: 0; top: calc(100% + 1.5px); height: 20px; background: linear-gradient(var(--sheet), transparent); pointer-events: none; }
   .step:first-of-type { margin-top: 0; }
@@ -752,11 +689,11 @@ kbd { font: inherit; color: var(--red); }
 @media print {
   .js .dwg path { stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
   .js .dwg text, .js .dwg .fill { opacity: 1 !important; }
-  :root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+  :root {
     --sheet: #fff; --ink: #000; --ink-2: #222; --label: #444; --faint: #777; --hair: #bbb; --red: #B8301A; color-scheme: light;
   }
   body { background: #fff; color: #000; font-size: 11pt; transition: none; }
-  body::before, body::after, .bar, .frame, .foot, .skip, .dim-hl, .replay, .turn, .xhair, .pencil-mark, .pencil-line { display: none !important; }
+  body::before, body::after, .bar, .foot, .skip, .dim-hl, .replay, .turn, .xhair, .pencil-mark, .pencil-line { display: none !important; }
   main { padding: 0; }
   .sheet { padding: 18px 0 0; border-top: 0; min-height: 0; }
   .sheet-first { padding-top: 0; }

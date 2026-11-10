@@ -1,6 +1,7 @@
-// End-to-end checks for the inner pages, drawn as "sheets in the set": same frame, bar,
-// tokens and type. The homepage left the set (openspec stone-glass-homepage: it is stone and
-// glass now, tested in tests/glass-*.e2e.mjs). Needs a running site:
+// End-to-end checks for the inner pages: their drawing-sheet bodies under the stone chrome
+// (openspec stone-glass-homepage: the stone bar and footer on every page, no sheet frame, no dark
+// theme). The homepage is stone and glass, tested in tests/glass-*.e2e.mjs, and so is the chrome
+// itself, in tests/glass-chrome.e2e.mjs. Needs a running site:
 //
 //   BASE=http://localhost:4321 node --test tests/sheets.e2e.mjs
 import { test, before, after } from 'node:test';
@@ -41,10 +42,12 @@ const inked = page => page.evaluate(() => {
 // ---------- every inner page is a sheet in the set ----------
 
 for (const path of INNER) {
-  test(`${path} is drawn on the sheet: frame, bar, tokens, no old stylesheet, no errors`, async () => {
+  test(`${path} sits on the stone: the stone bar and footer, no frame, no old stylesheet, no errors`, async () => {
     const { context, page, errors, res } = await open(path);
     assert.equal(res.status(), 200);
-    assert.equal(await page.locator('.frame').count(), 1, 'the sheet frame');
+    assert.equal(await page.locator('header.bar').count(), 1, 'the stone bar');
+    assert.equal(await page.locator('.bar .bar-cta').count(), 1, 'its "Get in touch"');
+    assert.equal(await page.locator('.frame').count(), 0, 'no sheet frame');
     assert.equal(await page.locator('.foot').count(), 1, 'the foot');
     // main h1: Playwright also sees into the dev toolbar's shadow DOM, which has its own
     assert.equal(await page.locator('main h1').count(), 1, 'one h1');
@@ -52,8 +55,9 @@ for (const path of INNER) {
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-bg-primary')), '');
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--tw-ring-color')), '');
     assert.equal(await page.evaluate(() => document.documentElement.classList.contains('lenis')), false);
-    // the sheet's own ground and type
-    assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(239, 237, 243)');
+    // the stone ground and the sheet's type
+    assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(238, 234, 227)');
+    assert.equal(await page.locator('.bar').evaluate(b => getComputedStyle(b).backgroundColor), 'rgb(238, 234, 227)');
     assert.match(await page.evaluate(() => getComputedStyle(document.body).fontFamily), /^"?Archivo/);
     await page.waitForTimeout(400);
     assert.deepEqual(ours(errors), []);
@@ -71,11 +75,11 @@ for (const path of INNER) {
   });
 }
 
-test('one bar on every page: EH. | Ezra Hulsman, Projects, Blog, Résumé, Contact, and the theme button', async () => {
-  for (const [path, current] of [['/projects', 'PROJECTS'], ['/projects/Henk', 'PROJECTS'], ['/blog', 'BLOG'], [`/blog/${POSTS[0]}`, 'BLOG'], ['/resume', 'RÉSUMÉ'], ['/contact', 'CONTACT']]) {
+test('one stone bar on every page: EH. | Ezra Hulsman, Projects, Blog, Résumé, Contact, Get in touch, no theme button', async () => {
+  for (const [path, current] of [['/projects', 'Projects'], ['/projects/Henk', 'Projects'], ['/blog', 'Blog'], [`/blog/${POSTS[0]}`, 'Blog'], ['/resume', 'Résumé'], ['/contact', 'Contact']]) {
     const { context, page } = await open(path);
     // the signature from the old site, then the name in full; read out as the name alone
-    assert.equal((await page.locator('.bar-name').innerText()).replace(/\s+/g, ' ').trim(), 'EH. EZRA HULSMAN');
+    assert.equal((await page.locator('.bar-name').innerText()).replace(/\s+/g, ' ').trim(), 'EH. Ezra Hulsman');
     assert.equal(await page.locator('.bar-name .sig').getAttribute('aria-hidden'), 'true');
     const [dot, red] = await page.locator('.bar-name .sig-dot').evaluate(e => {
       const i = document.body.appendChild(document.createElement('i'));
@@ -86,43 +90,36 @@ test('one bar on every page: EH. | Ezra Hulsman, Projects, Blog, Résumé, Conta
     });
     assert.equal(dot, red, 'the full stop in red');
     assert.equal(await page.getByRole('link', { name: 'Ezra Hulsman', exact: true }).count(), 1);
-    assert.equal(await page.locator('.bar-name').getAttribute('href'), path === '/' ? '#top' : '/');
-    assert.deepEqual(await page.locator('.bar nav a').allInnerTexts(), ['PROJECTS', 'BLOG', 'RÉSUMÉ', 'CONTACT']);
+    assert.equal(await page.locator('.bar-name').getAttribute('href'), '/');
+    assert.deepEqual(await page.locator('.bar nav a').allInnerTexts(), ['Projects', 'Blog', 'Résumé', 'Contact']);
     assert.deepEqual(await page.locator('.bar nav a').evaluateAll(as => as.map(a => a.getAttribute('href'))), ['/projects', '/blog', '/resume', '/contact']);
     assert.equal(await page.locator('.bar nav').getAttribute('aria-label'), 'Site');
     // the page you are on is marked, for eyes and for screen readers
     assert.deepEqual(await page.locator('.bar nav a[aria-current="page"]').allInnerTexts(), current ? [current] : [], `${path} marks ${current}`);
-    assert.equal(await page.locator('.theme').isVisible(), true);
+    // "Get in touch" goes to the contact page; the theme button is gone with the dark theme
+    const cta = page.locator('.bar .bar-cta');
+    assert.equal((await cta.innerText()).trim(), 'Get in touch');
+    assert.equal(await cta.getAttribute('href'), '/contact');
+    assert.equal(await cta.isVisible(), true);
+    assert.equal(await page.locator('.theme').count(), 0, 'no theme button');
     await context.close();
   }
 });
 
-test('inner pages share the stored theme and the toggle', async () => {
-  const { context, page } = await open('/blog', { storage: { theme: 'light' } });
-  const html = page.locator('html');
-  assert.equal(await html.getAttribute('data-theme'), 'light');
-  await page.locator('.theme').click();
-  assert.equal(await html.getAttribute('data-theme'), 'dark');
-  assert.equal(await page.locator('.theme').innerText(), 'WHITEPRINT');
-  await page.waitForTimeout(700); // the sheet fades over half a second
-  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(22, 20, 29)');
-  await page.goto(BASE + '/projects');
-  assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
-  assert.equal(await page.locator('.theme').getAttribute('aria-pressed'), 'true');
-  await context.close();
-});
-
-test('phones reach every page through the drawn menu', async () => {
+test('phones reach every page through the stone menu', async () => {
   const { context, page } = await open('/resume', { width: 390, height: 844 });
   const btn = page.locator('.menu-btn');
   const links = page.locator('.bar nav a');
   assert.equal(await btn.isVisible(), true);
   assert.equal(await btn.getAttribute('aria-label'), 'Menu');
   assert.equal(await links.first().isVisible(), false);
+  // the mark and "Get in touch" stay in the bar beside the button
+  assert.equal(await page.locator('.bar-name .sig').isVisible(), true);
+  assert.equal(await page.locator('.bar .bar-cta').isVisible(), true);
   await btn.click();
   assert.equal(await btn.getAttribute('aria-expanded'), 'true');
-  await page.waitForTimeout(700);
-  assert.deepEqual(await links.allInnerTexts(), ['PROJECTS', 'BLOG', 'RÉSUMÉ', 'CONTACT']);
+  await links.last().waitFor({ state: 'visible' });
+  assert.deepEqual(await links.allInnerTexts(), ['Projects', 'Blog', 'Résumé', 'Contact']);
   await links.filter({ hasText: 'Blog' }).click();
   await page.waitForURL(/\/blog\/?$/); // the live site adds a trailing slash
   await context.close();
@@ -297,20 +294,13 @@ test('/resume: every role as a revision, skills and schooling as schedules', asy
 test('/resume prints on white with no chrome', async () => {
   const { context, page } = await open('/resume');
   await page.emulateMedia({ media: 'print' });
-  for (const sel of ['.bar', '.frame', '.foot', '.skip']) {
+  for (const sel of ['.bar', '.foot', '.skip']) {
     assert.equal(await page.locator(sel).evaluate(el => getComputedStyle(el).display), 'none', `${sel} is hidden in print`);
   }
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(255, 255, 255)');
   assert.equal(await page.evaluate(() => getComputedStyle(document.body, '::before').display), 'none', 'no paper grain');
   const pdf = await page.pdf({ format: 'A4' });
   assert.ok(pdf.length > 10000, 'a real PDF comes out');
-  await context.close();
-});
-
-test('/resume prints on white from the dark theme too', async () => {
-  const { context, page } = await open('/resume', { storage: { theme: 'dark' } });
-  await page.emulateMedia({ media: 'print' });
-  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(255, 255, 255)');
   await context.close();
 });
 
@@ -353,66 +343,45 @@ test('/contact reports a failed send in the sheet\'s red, without Tailwind', asy
   await context.close();
 });
 
-// ---------- the paper: nothing shows past the frame ----------
+// ---------- the bar: scrolled content never shows above or through it ----------
 
-// Paints the whole document green under the chrome, then counts green pixels in the strips
-// between the screen's edge and the bar or frame. Scrolled content must never show there.
-async function greenAtTheEdges(page) {
+// Paints the whole document green under the chrome, scrolls, then counts green pixels from the
+// top of the screen to the bottom of the bar. The stone bar is stuck to the top of the screen,
+// opaque and above the page, so scrolled content must never show there.
+async function greenAboveTheBar(page) {
   await page.evaluate(() => {
     const g = document.createElement('div');
     g.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${document.documentElement.scrollHeight}px;background:#00c800;z-index:30;pointer-events:none`;
     document.body.append(g);
     scrollTo(0, Math.min(1200, document.documentElement.scrollHeight - innerHeight));
   });
-  await page.waitForTimeout(300);
-  const { w, h, barTop, frame } = await page.evaluate(() => ({
-    w: innerWidth, h: innerHeight,
-    barTop: Math.floor(document.querySelector('.bar').getBoundingClientRect().top),
-    frame: Math.floor(document.querySelector('.frame').getBoundingClientRect().left),
-  }));
-  const strips = [
-    { x: 0, y: 0, width: w, height: barTop },
-    { x: 0, y: h - frame - 5, width: w, height: frame + 5 },
-    { x: 0, y: 0, width: frame + 5, height: h },
-    { x: w - frame - 5, y: 0, width: frame + 5, height: h },
-  ];
-  let n = 0;
-  for (const clip of strips) {
-    const png = (await page.screenshot({ clip })).toString('base64');
-    n += await page.evaluate(async b64 => {
-      const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
-      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
-      const x = c.getContext('2d'); x.drawImage(img, 0, 0);
-      const d = x.getImageData(0, 0, c.width, c.height).data;
-      // any green tint counts, so a half-covered seam pixel is caught too
-      let k = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 1] - Math.max(d[i], d[i + 2]) > 30) k++;
-      return k;
-    }, png);
-  }
-  return n;
+  await page.waitForFunction(() => scrollY > 0);
+  const { w, barTop, barBottom } = await page.evaluate(() => {
+    const r = document.querySelector('.bar').getBoundingClientRect();
+    return { w: innerWidth, barTop: r.top, barBottom: Math.floor(r.bottom) };
+  });
+  assert.equal(barTop, 0, 'the bar stays at the top of the screen');
+  const png = (await page.screenshot({ clip: { x: 0, y: 0, width: w, height: barBottom } })).toString('base64');
+  return page.evaluate(async b64 => {
+    const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, c.width, c.height).data;
+    // any green tint counts, so a half-covered seam pixel is caught too
+    let k = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 1] - Math.max(d[i], d[i + 2]) > 30) k++;
+    return k;
+  }, png);
 }
 
 for (const path of ['/projects', '/projects/Henk', '/resume']) {
   for (const [width, height] of [[1440, 900], [390, 844]]) {
-    test(`${path} at ${width}px: scrolled content never shows above the bar or past the frame`, async () => {
+    test(`${path} at ${width}px: scrolled content never shows above the bar`, async () => {
       const { context, page } = await open(path, { width, height });
       await page.addStyleTag({ content: 'astro-dev-toolbar{display:none!important}' });
-      assert.equal(await greenAtTheEdges(page), 0);
+      assert.equal(await greenAboveTheBar(page), 0);
       await context.close();
     });
   }
-}
-
-// Phones draw at fractional pixel ratios, where the paper's edge and the bar's edge can both
-// land mid-pixel and leave a seam of page between them. 408x912 is whole device pixels at
-// each ratio, as a real screen is, so the screenshot has no half pixel past its edge.
-for (const scale of [2.625, 2.75, 3]) {
-  test(`at a ${scale}x phone screen no seam of scrolled content shows above the bar`, async () => {
-    const { context, page } = await open('/projects', { width: 408, height: 912, scale });
-    await page.addStyleTag({ content: 'astro-dev-toolbar{display:none!important}' });
-    assert.equal(await greenAtTheEdges(page), 0);
-    await context.close();
-  });
 }
 
 // ---------- a drawn project is one target: drawing, title or link ----------
@@ -477,14 +446,15 @@ test('/projects on a wide screen: the text sits beside each drawing, and ANNA is
 
 // ---------- keyboard and screen-reader paths ----------
 
-test('on a phone the opened menu\'s links come next in keyboard order', async () => {
+test('on a phone the opened stone menu\'s links come next in keyboard order', async () => {
   for (const path of ['/projects']) {
     const { context, page } = await open(path, { width: 390, height: 844 });
     await page.locator('.menu-btn').focus();
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(400);
+    await page.waitForFunction(() => document.querySelector('.bar').classList.contains('open'));
     await page.keyboard.press('Tab');
-    assert.ok(await page.evaluate(() => !!document.activeElement.closest('.bar nav')), `${path}: Tab after opening lands in the menu`);
+    const at = await page.evaluate(() => ({ inMenu: !!document.activeElement.closest('.bar nav'), text: document.activeElement.textContent.trim() }));
+    assert.deepEqual(at, { inMenu: true, text: 'Projects' }, `${path}: Tab after opening lands on the menu's first link`);
     await context.close();
   }
 });

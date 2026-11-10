@@ -20,9 +20,3 @@ const description = `${site.name} is a ${site.role} at ${site.company}, building
 <script>
   import '../scripts/glass/panes.js';
 </script>
-
-<style is:global>
-  /* Until the stone bar (chunk 3): the drawing-sheet bar is fixed over the page, so the hero
-     starts below it. Goes with that bar. */
-  main:has(> .hero) { padding-top: calc(var(--frame) + 6px + var(--bar)); }
-</style>

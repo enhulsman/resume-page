@@ -1,7 +1,7 @@
 // The glass hero in a real browser. The H3 hero's own tests run on the homepage (`/`), where it
 // shipped (openspec stone-glass-homepage, chunk 2); the lab-only and H2 tests stay on /hero-lab
-// until the lab goes (chunk 8). The fit to one screen moves to `/` in chunk 3, once the
-// drawing-sheet frame and bar no longer take height above the hero. Needs a running site:
+// until the lab goes (chunk 8). The fit to one screen runs on `/` since chunk 3, when the
+// drawing-sheet frame and bar left and the stone bar took their place. Needs a running site:
 //   BASE=http://localhost:4399 node --test tests/glass-hero.e2e.mjs
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -48,10 +48,11 @@ test('H3: the name is real text, four cards link to their pages, every card is l
   await context.close();
 });
 
-// lab only until chunk 3 moves the fit to `/` (see the head of this file)
-for (const [w, h] of [[1440, 900], [1280, 720], [1920, 1080]]) test(`lab: H3 fits one ${w} x ${h} screen, cards included`, async () => {
-  const { context, page } = await open('', { width: w, height: h });
-  const bottom = await page.$eval('.h3 .cards', el => el.getBoundingClientRect().bottom);
+// the homepage under the stone bar: the name, the intro and the whole card row on the first screen
+for (const [w, h] of [[1280, 720], [1440, 900], [1920, 1080]]) test(`hero fits the first ${w} x ${h} screen, cards included`, async () => {
+  const { context, page } = await home('', { width: w, height: h });
+  await page.evaluate(() => document.fonts.ready);
+  const bottom = await page.$eval(`${HERO} .cards`, el => el.getBoundingClientRect().bottom);
   await context.close(); // before asserting: a context left open keeps animating and starves the next test
   assert.ok(bottom <= h, `cards end at ${bottom}`);
 });

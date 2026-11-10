@@ -194,3 +194,25 @@ export const notes = [
   'Builds side projects in spare time, like Henk, a homelab agent, and a terminal Bible reader in Rust, and contributes to open source.',
   'Formula 1 fan: well-tuned race cars and well-optimized code are satisfying in the same way.',
 ];
+
+/**
+ * The bar on every page (openspec stone-glass-homepage, shared chrome): the four page links,
+ * which fold into the menu on phones, and "Get in touch", which stays in the bar. The "EH."
+ * mark and the name beside it come from site.name.
+ */
+export const siteNav = {
+  links: [
+    { id: 'projects', href: '/projects', label: 'Projects' },
+    { id: 'blog', href: '/blog', label: 'Blog' },
+    { id: 'resume', href: '/resume', label: 'Résumé' },
+    { id: 'contact', href: '/contact', label: 'Contact' },
+  ] as const,
+  cta: { href: '/contact', label: 'Get in touch' },
+  menu: 'Menu',
+};
+
+/** The footer on every page: the line, then site.name and a full stop (markup), then the verse, a link to site.quoteUrl. */
+export const footer = {
+  line: 'Made in Utrecht by',
+  verse: 'Proverbs 3:5-7',
+};
