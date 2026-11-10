@@ -590,3 +590,56 @@ test('The diagram itself has no glass: no data-glass or backdrop-filter on it or
     for (const c of [...d.inks, ...d.caption]) assert.ok(OK.includes(c), `${route}: an ink ${c}`);
   }
 });
+
+// ---------- stone-project-pages: This site's page speaks stone (chunk 10) ----------
+
+test('The approved texts and no drawing sheet left: This site\'s lead, its five sections in the approved words, the description; no sheet words, no Claude', async () => {
+  const HOOK = 'A static-first portfolio at hulsman.dev, built with Astro: plain stone, glass only where something sits behind it, and a fully interactive terminal on the homepage.';
+  const IDEA = 'Most résumé sites look like résumé sites: a photo, a headline, a grid of skills. I wanted this one to stray from that and still hold everything a résumé should. The page is stone: warm grey, heavy type, nothing decorative. Glass only appears where something is really behind it: ANNA\'s conversation in Teams, Henk\'s chat in Signal, the homelab\'s own health check. Each project shows its own output instead of a screenshot, with a few soft lights far behind the glass. It started as a set of technical drawings; that version lives on in the git history.';
+  const BUILT = 'A site like this only works if it\'s exact, so it\'s tested like something in production. Over a hundred browser tests check what a visitor would notice: that nothing scrolls sideways on a phone, that every window stays readable at every width, that the motion stops when your system asks for less of it.';
+  const STACK = 'Astro over Next or Remix because this site has no client-side app state: pages are static HTML with small scripts where interactivity demands it. The glass is one small WebGL shader, about 700 lines with its pane logic, that draws the ribbed and frosted panes and the soft lights behind them; with reduced motion, or on a device too slow for it, every pane holds still. The windows themselves are plain HTML, so the site ships no animation library and no CSS framework (about [N] KB of JavaScript in total). The contact form runs server-side on Cloudflare Workers with the Resend API: no separate backend, no CORS proxy, just an edge function co-deployed with the static assets.';
+  const TERMINAL = 'In the homepage\'s About section, beside my notes, a terminal in a frosted window types out a short session as it scrolls into view. After the animation finishes, the blinking cursor is real, and you can type into it. It implements 42 commands in vanilla TypeScript: filesystem navigation over a virtual filesystem (ls, cd, cat resume), unix staples (grep, head, tail, wc, sort, env), fun stuff (cowsay, sl, matrix, neofetch), and routing commands that actually navigate the site. Pipes work end-to-end (cat resume | grep TypeScript | wc -l), alongside tab completion, command history, and aliases. Mobile input uses a transparent overlay with touch gesture detection to separate taps from scrolls. Reliably opening the software keyboard across Android and iOS was the hardest part of the build.';
+  const MISSED = [
+    'Each link in the top bar glows in its own light when you point at it: the same four lights that sit behind the glass cards at the top of the homepage, one per page.',
+    'In the terminal, ask for a dark mode with theme. There is one theme: light.',
+  ];
+  const DESCRIPTION = 'Astro portfolio in stone and glass: each project shows its own output behind frosted glass, with a 42-command interactive terminal';
+  const page = await at('/projects/ResumePage');
+  const t = await page.evaluate(() => {
+    const prose = document.querySelector('.art .prose');
+    const sections = {};
+    let cur = null;
+    for (const el of prose.children) {
+      if (el.tagName === 'H2') { cur = el.textContent.trim(); sections[cur] = []; } else if (cur && el.tagName === 'P') sections[cur].push(el.textContent);
+    }
+    return {
+      meta: document.querySelector('meta[name="description"]')?.getAttribute('content'),
+      lead: document.querySelector('.art-lead')?.textContent,
+      heads: [...prose.querySelectorAll(':scope > h2')].map((h) => h.textContent.trim()),
+      sections,
+      prose: prose.textContent,
+      facts: document.querySelector('.art-facts')?.textContent ?? '',
+      themeCode: [...prose.querySelectorAll('p code')].some((c) => c.textContent === 'theme'),
+    };
+  });
+  assert.equal(t.lead.replace(/[\u2018\u2019]/g, "'"), HOOK, 'the lead is the approved hook');
+  assert.equal(t.meta, DESCRIPTION);
+  assert.deepEqual(t.heads, ['The Idea', 'Built Like It Matters', 'Stack Choices', 'The Terminal', 'Two Things You Might Have Missed']);
+  // the build sets typographic apostrophes; the approved texts are typed with straight ones
+  const plain = (x) => norm(x).replace(/[\u2018\u2019]/g, "'");
+  const s = Object.fromEntries(Object.entries(t.sections).map(([k, v]) => [k, v.map(plain)]));
+  assert.deepEqual(s['The Idea'], [IDEA]);
+  assert.equal(s['Built Like It Matters'][0], BUILT, 'the approved opening');
+  assert.equal(s['Stack Choices'].length, 1);
+  assert.match(s['Stack Choices'][0], /about \d+ KB of JavaScript/, 'a measured number in place of [N]');
+  assert.equal(s['Stack Choices'][0].replace(/about \d+ KB of JavaScript/, 'about [N] KB of JavaScript'), STACK);
+  assert.deepEqual(s['The Terminal'], [TERMINAL]);
+  assert.deepEqual(s['Two Things You Might Have Missed'], MISSED);
+  assert.ok(t.themeCode, '`theme` set as code');
+  // No drawing sheet left: description, the Stack fact and the prose without the git-history line
+  const SHEET = /\b(drawn|drawing|drawings|sheet|sheets|title block|revision table|schedule|perspective|Canvas 2D)\b/i;
+  const rest = norm(t.prose).replace('It started as a set of technical drawings; that version lives on in the git history.', '');
+  for (const [what, text] of [['description', t.meta], ['facts', t.facts], ['prose', rest]]) assert.doesNotMatch(text, SHEET, what);
+  assert.match(t.facts, /WebGL/, 'WebGL in the Stack fact');
+  assert.doesNotMatch(t.prose, /Claude|prompt/i, 'the page leaves Claude out');
+});

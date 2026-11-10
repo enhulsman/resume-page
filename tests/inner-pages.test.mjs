@@ -397,3 +397,44 @@ test('introFromHook: This site\'s card reads its intro from ResumePage.mdx\'s ho
   const chat = built.register.find((r) => r.href === '/projects/EncryptedChatTUI');
   assert.equal(chat.text, undefined, 'Encrypted Chat TUI keeps its one-liner (`what`)');
 });
+
+// ---- stone-project-pages: This site's page speaks stone (chunk 10) ----
+
+const SITE_MDX = 'src/pages/projects/ResumePage.mdx';
+const SHEET_WORDS = /\b(drawn|drawing|drawings|sheet|sheets|title block|revision table|schedule|perspective|Canvas 2D)\b/i;
+const GIT_LINE = 'It started as a set of technical drawings; that version lives on in the git history.';
+/** The MDX body: everything after the frontmatter. */
+const bodyOf = (src) => src.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+
+test('No drawing sheet left (source): the approved description and tech, no sheet words outside the git-history line, no Claude', () => {
+  const src = read(SITE_MDX);
+  const fm = readFrontmatter(src);
+  assert.equal(fm.description, 'Astro portfolio in stone and glass: each project shows its own output behind frosted glass, with a 42-command interactive terminal');
+  const tech = JSON.parse(fm.tech);
+  assert.deepEqual(tech, ['Astro', 'TypeScript', 'WebGL', 'Cloudflare Workers', 'MDX', 'Playwright']);
+  assert.doesNotMatch(fm.description, SHEET_WORDS);
+  for (const t of tech) assert.doesNotMatch(t, SHEET_WORDS, t);
+  const body = bodyOf(src);
+  assert.ok(body.includes(GIT_LINE), 'the git-history line is there');
+  const rest = body.replace(GIT_LINE, '');
+  assert.doesNotMatch(rest, SHEET_WORDS);
+  assert.doesNotMatch(rest, /Claude|prompt/i, 'the page leaves Claude out');
+});
+
+test('The claim holds: more than a hundred browser tests written in tests/*.e2e.mjs', () => {
+  const files = readdirSync(new URL('tests/', root)).filter((f) => f.endsWith('.e2e.mjs'));
+  // a call written once counts once, also inside a loop
+  const n = files.reduce((sum, f) => sum + (read(`tests/${f}`).match(/(^|[^.\w$])test\(/gm) ?? []).length, 0);
+  assert.ok(n > 100, `${n} test( calls`);
+});
+
+test('This site\'s numbers hold: the terminal\'s command count and its theme answer are what the page says', () => {
+  const term = read('src/scripts/interactive-terminal.ts');
+  const count = (term.match(/this\.commands\.set\(/g) ?? []).length;
+  const src = read(SITE_MDX);
+  assert.equal(readFrontmatter(src).description.match(/a (\d+)-command/)?.[1], String(count), 'the description\'s count');
+  assert.equal(bodyOf(src).match(/It implements (\d+) commands/)?.[1], String(count), 'The Terminal\'s count');
+  const answer = term.match(/commands\.set\('theme',[\s\S]*?handler: \(\) => '([^']+)'/)?.[1];
+  assert.equal(answer, 'There is one theme: light.');
+  assert.ok(bodyOf(src).includes(`with \`theme\`. ${answer}`), 'the page quotes the answer');
+});

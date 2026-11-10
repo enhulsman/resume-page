@@ -105,10 +105,10 @@ windows and the Homelab texts; (b) pytaiga-mcp's pane and ANNA's page.
 
 ## 10. This site's page (stone-project-pages: This site's page speaks stone)
 
-- [ ] 10.1 Tests: "The approved texts", "No drawing sheet left", "The claim holds"; rewrite `tests/sheets.e2e.mjs` line 648 ("the site's own case study ... the two jokes worth pointing at", decision 2026-11-10: the drawing-sheet sections are rewritten) to the section headings Ezra approves and keep its "leaves Claude out" assertion
-- [ ] 10.2 Apply the approved texts verbatim to `ResumePage.mdx`: the hook, "The Idea", the opening of "Built Like It Matters"; check whether anything else in that section speaks the drawing sheet (today it is one paragraph, so nothing follows the opening)
-- [ ] 10.3 Draft, with numbers measured on the built site (the JavaScript shipped per page, the terminal's command count, how the glass is rendered), new text for "Stack Choices", "The Terminal" and "Two Things You Might Have Missed" (it describes the retired ANNA room), plus the page's `description` and `tech`; show every draft to Ezra verbatim through the coordinator before it ships. Never mark this task done on a draft: it is done when Ezra has approved the words. Until then the drafts sit in the page so the tests can run, and chunk 12 stops with them listed for his review
-- [ ] 10.4 Run all test commands
+- [x] 10.1 Tests: "The approved texts", "No drawing sheet left", "The claim holds"; rewrite `tests/sheets.e2e.mjs` line 648 ("the site's own case study ... the two jokes worth pointing at", decision 2026-11-10: the drawing-sheet sections are rewritten) to the section headings Ezra approves and keep its "leaves Claude out" assertion
+- [x] 10.2 Apply the approved texts verbatim to `ResumePage.mdx`: the hook, "The Idea", the opening of "Built Like It Matters"; check whether anything else in that section speaks the drawing sheet (today it is one paragraph, so nothing follows the opening)
+- [x] 10.3 Draft, with numbers measured on the built site (the JavaScript shipped per page, the terminal's command count, how the glass is rendered), new text for "Stack Choices", "The Terminal" and "Two Things You Might Have Missed" (it describes the retired ANNA room), plus the page's `description` and `tech`; show every draft to Ezra verbatim through the coordinator before it ships. Never mark this task done on a draft: it is done when Ezra has approved the words. Until then the drafts sit in the page so the tests can run, and chunk 12 stops with them listed for his review (Ezra approved the words, "all OK", 2026-11-10; the JavaScript total, 86 KB, measured on a sketch-free build at da1f400, is remeasured in chunk 12)
+- [x] 10.4 Run all test commands
 
 ## 11. Every inner page (stone-inner-pages; glass-material)
 

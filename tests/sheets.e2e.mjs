@@ -517,12 +517,14 @@ test('on a phone the post drawing fits the screen whole', async () => {
   await context.close();
 });
 
-test('the site\'s own case study says what it is, how it is checked, and the two jokes worth pointing at', async () => {
+// Rewritten for openspec stone-inner-pages chunk 10 (decision 2026-11-10: the drawing-sheet sections are
+// rewritten): the approved section headings, ANNA's room and its two jokes gone with it.
+test('the site\'s own case study says what it is, how it is checked and built, and two things worth pointing at', async () => {
   const { context, page } = await open('/projects/ResumePage');
   assert.deepEqual(await page.locator('.prose > h2').allInnerTexts(), ['The Idea', 'Built Like It Matters', 'Stack Choices', 'The Terminal', 'Two Things You Might Have Missed']);
   const text = await page.locator('.prose').innerText();
-  assert.match(text, /it['’]s mine: 2,00\./);
-  assert.match(text, /Dom tower/);
+  assert.doesNotMatch(text, /2,00|Dom tower/, 'the room\'s jokes left with the room');
+  assert.match(text, /There is one theme: light\./);
   assert.doesNotMatch(text, /Claude|prompt/i, 'the page leaves Claude out');
   await context.close();
 });

@@ -254,8 +254,10 @@ test('A card\'s contents: Henk\'s link holds its title, "02", status, text and t
   assert.equal(s.title, 'This site');
   assert.equal(s.idx, null, 'no card index');
   assert.equal(s.status, site_.status);
-  // the hook of ResumePage.mdx (its approved wording lands with chunk 10's texts)
-  assert.equal(s.intro, readFrontmatter(read('src/pages/projects/ResumePage.mdx')).hook);
+  // the approved hook of ResumePage.mdx, verbatim
+  const HOOK = 'A static-first portfolio at hulsman.dev, built with Astro: plain stone, glass only where something sits behind it, and a fully interactive terminal on the homepage.';
+  assert.equal(s.intro, HOOK);
+  assert.equal(readFrontmatter(read('src/pages/projects/ResumePage.mdx')).hook, HOOK, 'read from the page\'s hook');
   assert.deepEqual(s.nums, [], 'no figures');
   // Encrypted Chat TUI's intro is its one line
   const chat = await read_('/projects/EncryptedChatTUI');
