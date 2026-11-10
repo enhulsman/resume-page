@@ -293,29 +293,36 @@ test('/resume prints on white with no chrome, no actions and no page light', asy
   await context.close();
 });
 
-// ---------- /contact: the transmittal ----------
+// ---------- /contact: the form in a frosted window ----------
+// Rewritten (openspec stone-inner-pages 8.2, decision 2026-11-10: C2 wide; the stamp and the
+// transmittal go). tests/inner-contact.e2e.mjs checks the layout, the send and the contrast in full.
 
-test('/contact is a transmittal: stamp, labelled fields, honeypot, Turnstile', async () => {
+test('/contact: labelled fields, honeypot and Turnstile inside the frosted window, no stamp', async () => {
   const { context, page } = await open('/contact');
   assert.equal((await page.locator('main h1').innerText()).trim(), 'Get in touch');
-  assert.match(await page.locator('.stamp').innerText(), /ISSUED FOR\s+CONVERSATION\s+2026/);
+  assert.equal(await page.locator('.stamp').count(), 0, 'no stamp');
+  const win = page.locator('[data-glass-moment="compose"] [data-glass="frosted"]');
+  assert.equal(await win.count(), 1);
+  assert.equal(await win.locator('#contactForm').count(), 1, 'the form inside the window');
   for (const [id, label] of [['name', 'Name'], ['email', 'Email'], ['message', 'Message']]) {
-    assert.equal((await page.locator(`label[for="${id}"]`).innerText()).trim().toLowerCase(), label.toLowerCase());
+    assert.equal((await win.locator(`label[for="${id}"]`).innerText()).trim().toLowerCase(), label.toLowerCase());
     assert.equal(await page.locator(`#${id}`).getAttribute('required'), '');
   }
   // the honeypot stays off-screen, not display:none, so bots still see it
   const hp = await page.locator('.hp-field').evaluate(el => ({ d: getComputedStyle(el).display, l: el.getBoundingClientRect().left }));
   assert.notEqual(hp.d, 'none');
   assert.ok(hp.l < -1000);
-  assert.equal(await page.locator('#turnstile-container').count(), 1);
+  assert.equal(await win.locator('#turnstile-container').count(), 1);
   assert.equal((await page.locator('#submitButton').innerText()).trim().toLowerCase(), 'send message');
-  // fields are drawn as ruled lines, focus is still unmistakable
+  // focus is still unmistakable: a ring drawn by box-shadow or outline (read a frame later)
   await page.locator('#name').focus();
-  assert.notEqual(await page.locator('#name').evaluate(el => getComputedStyle(el).outlineStyle), 'none');
+  await frames(page);
+  const f = await page.locator('#name').evaluate(el => { const cs = getComputedStyle(el); return { o: cs.outlineStyle, s: cs.boxShadow }; });
+  assert.ok(f.o !== 'none' || /2px/.test(f.s), JSON.stringify(f));
   await context.close();
 });
 
-test('/contact reports a failed send in the sheet\'s red, without Tailwind', async () => {
+test('/contact reports a failed send in --glass-ink-red at 4.5:1, without Tailwind', async () => {
   const { context, page } = await open('/contact');
   await page.route('**/api/contact', r => r.fulfill({ status: 500, contentType: 'application/json', body: '{"success":false,"error":"Nope"}' }));
   // stand in for Turnstile, which a test cannot solve
@@ -328,7 +335,25 @@ test('/contact reports a failed send in the sheet\'s red, without Tailwind', asy
   await status.waitFor({ state: 'visible' });
   assert.equal((await status.innerText()).trim(), 'Nope');
   assert.equal(await status.getAttribute('role'), 'status');
-  assert.equal(await status.evaluate(el => getComputedStyle(el).color), 'rgb(184, 48, 26)');
+  assert.equal(await status.evaluate(el => getComputedStyle(el).color), 'rgb(143, 51, 32)', '--glass-ink-red');
+  // the text made transparent, the pixels behind its own box against that red
+  await page.mouse.move(2, 2);
+  await status.evaluate(el => el.scrollIntoView({ block: 'center' }));
+  const box = await status.evaluate(el => { const r = document.createRange(); r.selectNodeContents(el); const b = r.getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height }; });
+  await status.evaluate(el => { el.style.color = 'transparent'; });
+  await frames(page);
+  const png = (await page.screenshot({ clip: box })).toString('base64');
+  const min = await page.evaluate(async (png) => {
+    const img = new Image(); img.src = 'data:image/png;base64,' + png; await img.decode();
+    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, img.width, img.height).data;
+    const lin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    const L = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    const red = L([143, 51, 32]);
+    let m = 99; for (let i = 0; i < d.length; i += 4) m = Math.min(m, (L([d[i], d[i + 1], d[i + 2]]) + 0.05) / (red + 0.05));
+    return m;
+  }, png);
+  assert.ok(min >= 4.5, `the error at ${min.toFixed(2)}:1`);
   await context.close();
 });
 
@@ -544,15 +569,24 @@ test('the favicon is the EH. signature in one frame, its full stop red, with its
   await context.close();
 });
 
-test('/contact offers plain mail under the form', async () => {
+// Rewritten (openspec stone-inner-pages 8.2, decision 2026-11-10: C2 wide; the mail line goes and
+// the address is set large beside the form).
+test('/contact sets the address large: in the left column on a desktop, under the window on a phone', async () => {
   const { context, page } = await open('/contact');
-  const line = page.locator('.tm-mail');
-  assert.equal((await line.innerText()).trim(), 'Prefer your own mail app? Write to info@hulsman.dev.');
-  assert.equal(await line.locator('a').getAttribute('href'), 'mailto:info@hulsman.dev');
-  // under the form, not inside it
-  assert.equal(await line.evaluate(el => !!el.closest('form')), false);
-  const [form, mail] = await Promise.all([page.locator('#contactForm').boundingBox(), line.boundingBox()]);
-  assert.ok(mail.y >= form.y + form.height - 1, 'below the form');
+  assert.equal(await page.locator('.tm-mail').count(), 0, 'no mail line');
+  const mail = page.locator('main a[href^="mailto:"]');
+  assert.equal(await mail.count(), 1);
+  assert.equal((await mail.innerText()).trim(), 'info@hulsman.dev');
+  assert.equal(await mail.getAttribute('href'), 'mailto:info@hulsman.dev');
+  assert.equal(await mail.evaluate(el => !!el.closest('form')), false, 'not inside the form');
+  assert.ok(parseFloat(await mail.evaluate(el => getComputedStyle(el).fontSize)) >= 36, 'set large');
+  const win = '[data-glass-moment="compose"] [data-glass="frosted"]';
+  let [w, m] = await Promise.all([page.locator(win).boundingBox(), mail.boundingBox()]);
+  assert.ok(m.x + m.width <= w.x, 'left of the window on a desktop');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await frames(page);
+  [w, m] = await Promise.all([page.locator(win).boundingBox(), mail.boundingBox()]);
+  assert.ok(m.y >= w.y + w.height, 'under the window on a phone');
   await context.close();
 });
 

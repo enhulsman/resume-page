@@ -91,10 +91,10 @@ windows and the Homelab texts; (b) pytaiga-mcp's pane and ANNA's page.
 
 ## 8. /contact (stone-contact)
 
-- [ ] 8.1 Tests (`tests/inner-contact.e2e.mjs`): "Wide", "The 980 px boundary", "On a phone", "The fields", "A send, mocked", "A failed send", "Measured", "Focus", "Gone"
-- [ ] 8.2 Rewrite or retire in `tests/sheets.e2e.mjs` (decision 2026-11-10: C2 wide; the stamp and the transmittal go): rewrite line 322 ("/contact is a transmittal: stamp, labelled fields, honeypot, Turnstile") without the stamp, the form inside the frosted window; line 342 ("/contact reports a failed send in the sheet's red") to `--glass-ink-red` at 4.5:1; line 571 ("/contact offers plain mail under the form") to the address set large (left column on a desktop, under the window on a phone)
-- [ ] 8.3 `src/pages/contact.astro`: the C2-wide layout, `GlassWindow` "New message" with the flame glow, the form's markup, script and Turnstile unchanged except its words from `pageWords` and its styles on glass; no stamp, no transmittal, no mail line
-- [ ] 8.4 Run all test commands; darken the labels' or the status line's ink in one place if a measurement fails
+- [x] 8.1 Tests (`tests/inner-contact.e2e.mjs`): "Wide", "The 980 px boundary", "On a phone", "The fields", "A send, mocked", "A failed send", "Measured", "Focus", "Gone"
+- [x] 8.2 Rewrite or retire in `tests/sheets.e2e.mjs` (decision 2026-11-10: C2 wide; the stamp and the transmittal go): rewrite line 322 ("/contact is a transmittal: stamp, labelled fields, honeypot, Turnstile") without the stamp, the form inside the frosted window; line 342 ("/contact reports a failed send in the sheet's red") to `--glass-ink-red` at 4.5:1; line 571 ("/contact offers plain mail under the form") to the address set large (left column on a desktop, under the window on a phone)
+- [x] 8.3 `src/pages/contact.astro`: the C2-wide layout, `GlassWindow` "New message" with the flame glow, the form's markup, script and Turnstile unchanged except its words from `pageWords` and its styles on glass; no stamp, no transmittal, no mail line
+- [x] 8.4 Run all test commands; darken the labels' or the status line's ink in one place if a measurement fails
 
 ## 9. /projects (stone-projects-index; anna-section: on /projects)
 

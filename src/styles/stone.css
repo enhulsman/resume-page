@@ -302,6 +302,73 @@ main.page:has(> .bl), main.page:has(> .cv) { padding-inline: 0; }
   .cv-table > div { grid-template-columns: 1fr; row-gap: 2px; }
 }
 
+/* ---- /contact (stone-contact, C2 wide): the heading and the address set large on the left, the
+   form in a frosted "New message" window over the flame's glow on the right; from 980 px the
+   columns are 0.78 / 1.22 and the window as wide as its column up to 820 px. Below 980 px: heading
+   and lead, the window, then the address. ---- */
+main.page:has(> .ct) { padding-inline: 0; }
+.ct {
+  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
+  overflow-x: clip; /* the window's glow reaches past its sides; never the page */
+}
+.ct :focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
+.ct-title {
+  margin: 0; padding-bottom: 0.1em;
+  font: 900 clamp(56px, 6.6vw, 112px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; color: var(--stone-ink); text-wrap: balance;
+}
+.ct-lead { margin: 0.9em 0 0; max-width: 34em; font-size: clamp(19px, 1.7vw, 25px); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
+.ct-mail {
+  display: inline-block; max-width: 100%;
+  font: 850 clamp(36px, 5.6vw, 96px)/0.95 var(--stone-sans); font-stretch: 84%; letter-spacing: -0.035em;
+  color: var(--stone-ink); text-decoration: none; overflow-wrap: anywhere;
+}
+.ct-mail:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.12em; }
+.ct-links { list-style: none; display: flex; gap: 28px; margin: 18px 0 0; padding: 0; font-weight: 600; }
+.ct-links a { color: var(--stone-ink); }
+.ct-ways { margin-top: clamp(72px, 11svh, 132px); padding-top: 28px; border-top: 1px solid var(--stone-hair); }
+
+/* the form on glass: labels and typed text in the opaque artefact ink, the fields a light wash with
+   an ink outline (3:1 against the glass), a 2 px ink ring on focus */
+.ct-stage { width: 100%; }
+.ct-body { position: relative; z-index: 3; padding: 22px 24px 24px; }
+.ct-form { display: flex; flex-direction: column; gap: 22px; }
+.ct-row { display: flex; flex-direction: column; gap: 6px; }
+.ct-row label { font-size: var(--stone-t-small); font-weight: 650; color: #3a3632; }
+.ct-row input, .ct-row textarea {
+  appearance: none; width: 100%; min-width: 0; margin: 0; padding: 10px 12px; border: 0; border-radius: 10px;
+  background: rgb(255 255 255 / 0.45); box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.55);
+  font: 400 17px/1.45 var(--stone-sans); color: var(--stone-ink);
+}
+.ct-row textarea { resize: vertical; min-height: 9em; }
+.ct .ct-row input:focus-visible, .ct .ct-row textarea:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--stone-ink); }
+.ct-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 6px; }
+#turnstile-container { min-width: 0; flex: 1 1 260px; max-width: 320px; }
+.ct-send {
+  margin-left: auto; padding: 12px 24px; border: 0; border-radius: 999px; background: var(--stone-ink); color: var(--stone);
+  font: 600 16px/1 var(--stone-sans); cursor: pointer;
+}
+.ct-send:hover { background: var(--stone-ink-2); }
+.ct-send:disabled { cursor: progress; }
+.ct #statusMessage { margin: 0; font-size: 15px; line-height: 1.45; color: #3a3632; }
+.ct #statusMessage[data-kind="error"] { color: var(--glass-ink-red); }
+/* the honeypot: off-screen, never display none, so bots still see it */
+.hp-field { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+@media (min-width: 980px) {
+  .ct { display: grid; grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr); column-gap: clamp(40px, 5vw, 88px); align-items: start; }
+  .ct-head { grid-column: 1; grid-row: 1; }
+  .ct-ways { grid-column: 1; grid-row: 2; margin-top: 56px; padding-top: 0; border-top: 0; }
+  .ct-ways .ct-mail { font-size: clamp(36px, 4vw, 64px); }
+  .ct-formcol { grid-column: 2; grid-row: 1 / span 2; width: 100%; max-width: 820px; justify-self: end; }
+  .ct-body { padding: 28px 32px 32px; }
+  .ct-form { gap: 26px; }
+  .ct-row textarea { min-height: 13em; }
+}
+@media (max-width: 979px) {
+  .ct-formcol { margin-top: 48px; }
+}
+
 /* ---- print: the résumé on white, black type; no actions, no light ---- */
 @media print {
   .page-light, .cv-actions { display: none !important; }

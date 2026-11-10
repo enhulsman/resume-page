@@ -145,8 +145,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 
 .actions { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 0 0 2.2em !important; }
 .act { font: 600 13px/1 var(--sans); font-stretch: 82%; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; padding: 4px 0; border-bottom: 1px solid var(--faint); }
-.act-main { padding: 12px 16px; border: 1.5px solid var(--ink); background: var(--ink); color: var(--sheet); }
-.act-main:hover { background: var(--red); border-color: var(--red); color: #fff; }
 
 /* ANNA's plate (AnnaPlate.astro): its canvas fills the stage */
 .drawing { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -229,13 +227,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .terminal-cursor { display: inline-block; min-width: 8px; height: 1.1em; vertical-align: text-bottom; background: var(--red); color: var(--sheet); animation: blink 1s steps(1) infinite; }
 .terminal-cursor.typing { animation: none; }
 
-.stamp {
-  position: absolute; right: calc(var(--gutter) + min(2vw, 38.4px) + var(--wide)); top: clamp(60px, 12vh, 120px);
-  border: 2.5px solid var(--red); color: var(--red); padding: 10px 18px 12px; text-align: center; transform: rotate(-6deg);
-  font: 400 11px/1.3 var(--mono); text-transform: uppercase; letter-spacing: .12em; display: grid; gap: 2px;
-}
-.stamp::before { content: ""; position: absolute; inset: 3px; border: 1px solid var(--red); }
-.stamp b { font: 800 26px/1 var(--sans); font-stretch: 112%; letter-spacing: .02em; }
 
 /* ---------- the stone footer, on every page ---------- */
 /* its rule stops at the gutters, so the stone runs to the screen's edges */
@@ -333,25 +324,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 
 .sub a { text-decoration-color: var(--faint); }
 
-/* contact: the form as a transmittal */
-.sheet-transmittal { padding-bottom: clamp(60px, 10vh, 120px); }
-.tm-wrap { display: grid; grid-template-columns: minmax(0, 46rem) minmax(0, 1fr); align-items: center; gap: var(--gutter); }
-.sheet-transmittal .stamp { position: relative; right: auto; top: auto; justify-self: center; }
-.transmittal { border: 1.5px solid var(--ink); max-width: 46rem; }
-.tm-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); border-bottom: .75px solid var(--ink); }
-.tm-row label { font: 400 10px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--label); padding: 16px 10px; border-right: .75px solid var(--ink); }
-.tm-row input, .tm-row textarea {
-  appearance: none; border: 0; border-radius: 0; background: none; color: var(--ink); width: 100%;
-  font: 400 17px/1.5 var(--sans); padding: 11px 12px; resize: vertical; min-width: 0;
-}
-.tm-row input:focus-visible, .tm-row textarea:focus-visible, .tm-row input:focus, .tm-row textarea:focus { outline: 2px solid var(--red); outline-offset: -2px; }
-.tm-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 20px; padding: 14px 12px; }
-.tm-foot .act-main { font-family: var(--sans); cursor: pointer; }
-.tm-foot .act-main:disabled { cursor: progress; opacity: .7; }
-.tm-mail { margin: 14px 0 0; font-size: 15px; color: var(--ink-2); }
-#statusMessage { margin: 0; padding: 12px; border-top: .75px solid var(--ink); font: 400 12.5px/1.45 var(--mono); color: var(--ink); }
-#statusMessage[data-kind="error"] { color: var(--red); }
-.hp-field { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 
 /* ---------- the phone menu: the page links, folded into the stone bar ---------- */
 .menu-btn { display: none; }
@@ -389,7 +361,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
   .register .reg-title { font-size: 18px; }
   .status-group { margin-top: 56px; }
   .side { grid-template-columns: 1fr 1fr; }
-  .stamp { position: static; justify-self: start; align-self: flex-start; margin-bottom: 36px; }
   .foot { flex-direction: column; }
   /* inner sheets */
   .detail-lead { grid-template-columns: 1fr; }
@@ -408,11 +379,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
   .prose > h2 + :not(h2) { margin-top: 0; padding-top: 0; }
   .prose > h2 { margin: 40px 0 14px; }
   .prose .dims-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .tm-wrap { grid-template-columns: 1fr; }
-  .sheet-transmittal .stamp { grid-row: 1; justify-self: end; margin: -8px 4px 0 0; }
-  .tm-row { grid-template-columns: 1fr; }
-  .tm-row label { border-right: 0; padding: 12px 12px 0; }
-  .tm-row input, .tm-row textarea { padding-top: 6px; }
 }
 /* small phones: the mark, the name, "Get in touch" and the menu keep one line */
 @media (max-width: 420px) {
