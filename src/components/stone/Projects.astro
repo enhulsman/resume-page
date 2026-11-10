@@ -1,0 +1,66 @@
+---
+// Projects (openspec stone-glass-homepage, design 7): every project but ANNA as a row of type on
+// stone, no glass. The hero-card projects come first with their card's index, the index in its
+// card's hue (the only colour mark here); each row's strongest number is set large in tabular
+// figures, its label beside it. Rows come from src/lib/projects.ts (homeRows over buildProjects).
+import "../../styles/stone.css";
+import { details, register } from "../../lib/project-pages.ts";
+import { homeRows } from "../../lib/projects.ts";
+import { glassCards, hueInk } from "../../config/glass.ts";
+import { homeSections, siteNav } from "../../config/home.ts";
+
+const rows = homeRows(details, register, glassCards.map((c) => c.id));
+const ink = (id?: string) => {
+  const c = glassCards.find((x) => x.id === id);
+  return c ? `color: ${hueInk(c)}` : undefined;
+};
+const all = siteNav.links.find((l) => l.id === "projects")!;
+---
+
+<section class="stone-section projects" aria-labelledby="projects-h">
+  <h2 id="projects-h">{homeSections.headings.projects}</h2>
+  <ol class="stone-rows">
+    {rows.map((r) => (
+      <li class="row">
+        {r.index && <span class="idx" aria-hidden="true" style={ink(r.id)}>{r.index}</span>}
+        <div class="body">
+          <h3 class="title"><a href={r.href}>{r.title}</a></h3>
+          <p class="what">{r.what}</p>
+          <p class="since">{r.status}</p>
+        </div>
+        {r.number && (
+          <p class="num"><span class="value">{r.number.value}</span><span class="label">{r.number.label}</span></p>
+        )}
+      </li>
+    ))}
+  </ol>
+  <a class="stone-more more" href={all.href}>{homeSections.links.projects} <span aria-hidden="true">→</span></a>
+</section>
+
+<style>
+  .row {
+    display: grid; grid-template-columns: 6.5em minmax(0, 1.25fr) minmax(0, 1fr);
+    column-gap: clamp(16px, 2.6vw, 44px); align-items: baseline;
+    padding: clamp(12px, 1.2vw, 18px) 0 clamp(20px, 2vw, 28px);
+  }
+  .idx {
+    grid-column: 1; font-size: var(--stone-t-small); font-weight: 650; letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+  }
+  .body { grid-column: 2; max-width: 44em; }
+  .what { margin: 0.45em 0 0; font-size: var(--stone-t-body); line-height: 1.42; color: var(--stone-ink-2); text-wrap: pretty; }
+  .since { margin: 0.5em 0 0; font-size: var(--stone-t-small); line-height: 1.35; color: var(--stone-ink-2); }
+  .num { grid-column: 3; margin: 0; display: flex; align-items: baseline; gap: 0.9em; }
+  .value {
+    flex: none; font-weight: 800; font-size: clamp(36px, 3.4vw, 56px); line-height: 1; font-stretch: 88%;
+    letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
+  }
+  .label { max-width: 18em; font-size: var(--stone-t-small); line-height: 1.35; color: var(--stone-ink-2); text-wrap: pretty; }
+
+  /* a phone: the index beside the title, the number under the words */
+  @media (max-width: 760px) {
+    .row { grid-template-columns: 2.6em minmax(0, 1fr); row-gap: 14px; }
+    .num { grid-column: 2; }
+    .value { font-size: 36px; }
+  }
+</style>

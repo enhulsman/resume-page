@@ -350,3 +350,118 @@ test('AnnaSection: one frosted window from config, the moment named, the window 
   assert.match(index, /import AnnaSection from "\.\.\/components\/stone\/AnnaSection\.astro"/);
   assert.match(index, /scripts\/glass\/anna-window\.js/);
 });
+
+// ---- Projects, Experience, Writing (chunk 5): type on stone ----
+
+import { buildProjects, homeRows } from '../src/lib/projects.ts';
+import { diaryEntries, latestEntries } from '../src/lib/frontmatter.ts';
+import { hueInk } from '../src/config/glass.ts';
+import { experience } from '../src/config/resume.ts';
+
+const projectSources = Object.fromEntries(list('src/pages/projects/', '.mdx').map((p) => [p, read(p)]));
+const blogSources = Object.fromEntries(list('src/pages/blog/', '.mdx').map((p) => [p, read(p)]));
+const cardIds = glassCards.map((c) => c.id);
+const listing = (id) => details.find((d) => d.id === id);
+
+test('the rows: the hero-card projects first in card order with their index, then the rest in home.ts order; no ANNA, no hidden ones', () => {
+  const { details: joined, register } = buildProjects(projectSources);
+  const rows = homeRows(joined, register, cardIds);
+  assert.deepEqual(rows.map((r) => r.title), [
+    listing('henk').title, listing('homelab').title, listing('sandbox').title,
+    'Finance Bot', 'bible-tui', 'pytaiga-mcp', 'Encrypted Chat TUI',
+  ]);
+  assert.deepEqual(rows.map((r) => r.index ?? null), ['02', '03', '04', null, null, null, null]);
+  assert.ok(!rows.some((r) => r.title === 'This site' || r.title === home.annaLead.title));
+  // each row is its listing joined to its page: link, line and status, nothing rewritten
+  for (const r of rows) {
+    const src = [...joined, ...register].find((p) => p.href === r.href);
+    assert.ok(src, r.href);
+    assert.equal(r.title, src.title);
+    assert.equal(r.what, src.what);
+    assert.equal(r.status, src.status);
+    assert.match(r.status, /\d{4}/, `${r.title}: a status from its page's frontmatter`);
+  }
+});
+
+test('the number is the project\'s: dims[homeDim ?? 0] with its label; the register\'s entries have none', () => {
+  const { details: joined, register } = buildProjects(projectSources);
+  const rows = homeRows(joined, register, cardIds);
+  assert.deepEqual(rows.map((r) => r.number?.value ?? null), ['4', '4', '3,700', '0.75', '102', '50 → 5', null]);
+  for (const r of rows.filter((x) => x.number)) {
+    const d = details.find((x) => x.href === r.href);
+    assert.deepEqual(r.number, d.dims[d.homeDim ?? 0], r.title);
+  }
+});
+
+test('a number changes at its source: a changed dims[homeDim] shows in its row with no other edit', () => {
+  const { details: joined, register } = buildProjects(projectSources);
+  const changed = joined.map((d) => (d.id === 'pytaiga' || d.id === 'henk'
+    ? { ...d, dims: d.dims.map((x, i) => (i === (d.homeDim ?? 0) ? { ...x, value: d.id === 'henk' ? '5' : '60 → 6' } : x)) }
+    : d));
+  const rows = homeRows(changed, register, cardIds);
+  assert.equal(rows.find((r) => r.title === 'pytaiga-mcp').number.value, '60 → 6');
+  assert.equal(rows.find((r) => r.href === listing('henk').href).number.value, '5');
+  // and the untouched rows are as they were
+  assert.equal(rows.find((r) => r.title === 'bible-tui').number.value, '102');
+});
+
+test('the index mark\'s colour is its card\'s light, darkened only as far as 4.5:1 on stone', () => {
+  const hue = ([r, g, b]) => {
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    if (!d) return 0;
+    const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return (h * 60 + 360) % 360;
+  };
+  for (const c of glassCards.filter((x) => x.id !== 'anna')) {
+    const ink = parseColor(hueInk(c));
+    assert.ok(ink && ink[3] === 1, `${c.id}: ${hueInk(c)} is an opaque colour`);
+    const k = contrast(ink.slice(0, 3), '#EEEAE3');
+    assert.ok(k >= 4.5, `${c.id}: ${k.toFixed(2)}:1 on stone`);
+    assert.ok(k < 6.5, `${c.id}: not darkened past what it needs (${k.toFixed(2)}:1)`);
+    const layer = c.tune.find((t) => t?.set?.color2);
+    const from = layer.set.color2;
+    const dh = Math.abs(hue(from) - hue(ink));
+    assert.ok(Math.min(dh, 360 - dh) < 4, `${c.id}: hue ${hue(ink).toFixed(0)} keeps its light's ${hue(from).toFixed(0)}`);
+  }
+});
+
+test('a new post: first in Writing, at most five, each with its line, never a draft', () => {
+  const sources = {
+    ...blogSources,
+    './blog/a-new-post.mdx': '---\ntitle: "A new post"\ndescription: "described"\ndiary: "One line about it"\ndate: 2099-01-01\n---\nbody',
+    './blog/_a-newer-draft.mdx': '---\ntitle: "A newer draft"\ndiary: "not yet"\ndate: 2100-01-01\n---\nbody',
+  };
+  const list5 = latestEntries(sources);
+  assert.deepEqual(list5, diaryEntries(sources).slice(0, 5), 'Writing is diaryEntries(...).slice(0, 5), no sorting of its own');
+  assert.equal(list5[0].title, 'A new post');
+  assert.equal(list5[0].line, 'One line about it');
+  assert.ok(list5.length <= 5 && list5.length >= 1, `${list5.length} entries`);
+  for (const e of list5) {
+    assert.ok(e.line, `${e.title} has its line`);
+    assert.ok(!e.href.includes('/_'), `${e.href} is no draft`);
+  }
+  // the real list today: the five newest published posts
+  assert.deepEqual(latestEntries(blogSources), diaryEntries(blogSources).slice(0, 5));
+});
+
+test('Projects, Experience and Writing: type on stone from their sources, no glass, after ANNA in the page', () => {
+  const read_ = (n) => read(`src/components/stone/${n}.astro`);
+  for (const n of ['Projects', 'Experience', 'Writing']) {
+    const src = read_(n);
+    assert.doesNotMatch(src, /data-glass|GlassWindow|GlassCard|<canvas|backdrop-filter/, `${n} has no glass`);
+    assert.doesNotMatch(src, /\.sort\(/, `${n} sorts nothing of its own`);
+    assert.match(src, /homeSections\.headings\./, `${n}'s heading from config`);
+  }
+  assert.match(read_('Projects'), /homeRows\(/);
+  assert.match(read_('Projects'), /homeSections\.links\.projects/);
+  assert.match(read_('Experience'), /experience/);
+  assert.match(read_('Experience'), /homeSections\.now/);
+  assert.match(read_('Experience'), /homeSections\.links\.resume/);
+  assert.match(read_('Writing'), /latestEntries\(/);
+  assert.match(read_('Writing'), /homeSections\.links\.writing/);
+  const index = read('src/pages/index.astro');
+  const at = (tag) => index.indexOf(`<${tag} />`);
+  for (const tag of ['AnnaSection', 'Projects', 'Experience', 'Writing']) assert.ok(at(tag) > 0, `${tag} on the page`);
+  assert.ok(at('AnnaSection') < at('Projects') && at('Projects') < at('Experience') && at('Experience') < at('Writing'), 'in order');
+  assert.ok(experience.length >= 1);
+});

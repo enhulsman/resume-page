@@ -1,0 +1,39 @@
+---
+// Experience (openspec stone-glass-homepage, design 8): every résumé entry as years, role and
+// company, type on stone between hairlines, then a link to the full résumé. Years run from
+// startDate to endDate, or to the word for now (homeSections.now) for a current job.
+import "../../styles/stone.css";
+import { experience } from "../../config/resume.ts";
+import { homeSections, siteNav } from "../../config/home.ts";
+
+const resume = siteNav.links.find((l) => l.id === "resume")!;
+---
+
+<section class="stone-section experience" aria-labelledby="experience-h">
+  <h2 id="experience-h">{homeSections.headings.experience}</h2>
+  <ol class="stone-rows">
+    {experience.map((e) => (
+      <li class="row">
+        <span class="years">{e.startDate}–{e.endDate ?? homeSections.now}</span>
+        <h3 class="job">{e.role}</h3>
+        <span class="client">{e.client}</span>
+      </li>
+    ))}
+  </ol>
+  <a class="stone-more more" href={resume.href}>{homeSections.links.resume} <span aria-hidden="true">→</span></a>
+</section>
+
+<style>
+  .row {
+    display: grid; grid-template-columns: 6.5em minmax(0, 1.25fr) minmax(0, 1fr);
+    column-gap: clamp(16px, 2.6vw, 44px); align-items: baseline;
+    padding: clamp(14px, 1.3vw, 18px) 0;
+  }
+  .years { font-size: var(--stone-t-small); font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--stone-ink-2); }
+  .job { font-size: var(--stone-t-lead); }
+  .client { font-size: var(--stone-t-body); color: var(--stone-ink-2); }
+
+  @media (max-width: 760px) {
+    .row { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+  }
+</style>

@@ -48,9 +48,9 @@ decision behind it.
 
 ## 5. Projects, Experience, Writing (stone-homepage)
 
-- [ ] 5.1 Tests from: the rows, the number is the project's, /projects keeps its numbers, a number changes at its source (unit, on the row builder), Experience, a new post (unit, on `diaryEntries(...).slice(0, 5)`), no glass anywhere else and no colour panels for these sections
-- [ ] 5.2 Build on what exists: rows from `buildProjects` in `src/lib/projects.ts` (it already joins `status`) plus `homeDim`, in one small pure function; Writing from `diaryEntries` in `src/lib/frontmatter.ts`; no new date sorting. Then `Projects.astro`, `Experience.astro`, `Writing.astro` in `src/components/stone/`: type on stone, hairline rules, tabular figures, index numbers as the only colour mark
-- [ ] 5.3 Run all test commands
+- [x] 5.1 Tests from: the rows, the number is the project's, /projects keeps its numbers, a number changes at its source (unit, on the row builder), Experience, a new post (unit, on `diaryEntries(...).slice(0, 5)`), no glass anywhere else and no colour panels for these sections
+- [x] 5.2 Build on what exists: rows from `buildProjects` in `src/lib/projects.ts` (it already joins `status`) plus `homeDim`, in one small pure function; Writing from `diaryEntries` in `src/lib/frontmatter.ts`; no new date sorting. Then `Projects.astro`, `Experience.astro`, `Writing.astro` in `src/components/stone/`: type on stone, hairline rules, tabular figures, index numbers as the only colour mark
+- [x] 5.3 Run all test commands
 
 ## 6. About and Contact (stone-homepage; glass-material)
 

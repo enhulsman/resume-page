@@ -104,6 +104,27 @@ export function fallbackFor(c: GlassCard): string {
   ].join(', ');
 }
 
+const STONE_GROUND: RGB = [238, 234, 227]; // #EEEAE3
+const lum = (c: RGB) => {
+  const lin = (v: number) => { const x = v / 255; return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+};
+/**
+ * A card's hue as an ink on stone, for its index in the homepage's Projects rows (the only colour
+ * mark there): the deep end of its light's hard-edged layer, darkened (every channel scaled alike,
+ * so the hue stays) only as far as 4.5:1 on the stone ground needs.
+ */
+export function hueInk(c: GlassCard): string {
+  const layer = (c.tune ?? []).find((t) => t?.set?.color2);
+  const from = (layer?.set?.color2 ?? c.wash.color) as RGB;
+  const ground = lum(STONE_GROUND);
+  for (let k = 1; k > 0; k -= 0.01) {
+    const rgb = from.map((v) => Math.round(v * k)) as RGB;
+    if ((ground + 0.05) / (lum(rgb) + 0.05) >= 4.5) return `rgb(${rgb.join(' ')})`;
+  }
+  return 'rgb(0 0 0)';
+}
+
 /** A frosted window's glow: soft radial lights beneath it, blurred, for the window to frost. */
 export interface WindowGlow {
   /** Where the glow sits around its window, as CSS `inset`. */

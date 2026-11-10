@@ -8,7 +8,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { annaDemo } from '../src/config/anna-demo.ts';
-import { annaLead, annaCalls } from '../src/config/home.ts';
+import { annaLead, annaCalls, homeSections } from '../src/config/home.ts';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
 const BEATS = ['person', 'answer', 'sources', 'step-0', 'step-1', 'step-2', 'step-3', 'question', 'typing', 'reply', 'result', 'record'];
@@ -218,17 +218,24 @@ test('reduced motion: the finished conversation at once, nothing typed, no repla
   assert.deepEqual(errors, []);
 });
 
-test('the window is no focus trap: tabbing goes in and out again', async () => {
+test('the window is no focus trap: tabbing goes in, then out to the next section\'s first link', async () => {
   const { context, page, errors } = await open('');
   await page.focus('.anna-window .aw-copy a.more');
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(() => document.activeElement.matches('.anna-window .aw-replay')), true, 'the next stop is Replay');
   const path = ['in'];
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 4 && path.at(-1) === 'in'; i++) {
     await page.keyboard.press('Tab');
     path.push(await page.evaluate(() => (document.activeElement.closest('.aw-window') ? 'in' : 'out')));
   }
   assert.equal(path.at(-1), 'out', `and leaves: ${path}`);
+  // out of the window, focus lands on the next section's (Projects') first link
+  const landed = await page.evaluate(() => {
+    const next = document.querySelector('.anna-window').nextElementSibling;
+    return { next: next?.querySelector('h2')?.textContent.trim(), first: document.activeElement === next?.querySelector('a[href]'), at: document.activeElement.outerHTML.slice(0, 80) };
+  });
+  assert.equal(landed.next, homeSections.headings.projects, 'the section after ANNA is Projects');
+  assert.equal(landed.first, true, `focus is on its first link, not ${landed.at}`);
   await context.close();
   assert.deepEqual(errors, []);
 });

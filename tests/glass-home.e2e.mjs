@@ -411,3 +411,174 @@ test('something behind ANNA\'s window: a glow beneath it, and the area it covers
   assert.ok(spread_ > 20, `the covered area varies by ${spread_} levels`);
   assert.deepEqual(errors, []);
 });
+
+// ---- Projects, Experience, Writing (chunk 5): type on stone ----
+
+import { readFileSync, readdirSync } from 'node:fs';
+import * as homeConfig from '../src/config/home.ts';
+import * as resumeConfig from '../src/config/resume.ts';
+import { buildProjects, homeRows } from '../src/lib/projects.ts';
+import { latestEntries } from '../src/lib/frontmatter.ts';
+
+const sourcesIn = (dir) => {
+  const url = new URL(`../${dir}`, import.meta.url);
+  return Object.fromEntries(readdirSync(url).filter((f) => f.endsWith('.mdx')).map((f) => [`${dir}${f}`, readFileSync(new URL(f, url), 'utf8')]));
+};
+const joined = buildProjects(sourcesIn('src/pages/projects/'));
+const ROWS = homeRows(joined.details, joined.register, glassCards.map((c) => c.id));
+const POSTS = latestEntries(sourcesIn('src/pages/blog/'));
+const SECTION = { projects: 'section[aria-labelledby="projects-h"]', experience: 'section[aria-labelledby="experience-h"]', writing: 'section[aria-labelledby="writing-h"]' };
+
+test('the sections so far, in order: ANNA, Projects, Experience, Writing, each heading from config', async () => {
+  const { context, page, errors } = await open();
+  const h2s = await page.$$eval('main h2', (hs) => hs.map((h) => h.textContent.trim()));
+  await context.close();
+  assert.deepEqual(h2s.slice(0, 4), [annaLead.title, homeSections.headings.projects, homeSections.headings.experience, homeSections.headings.writing]);
+  assert.deepEqual(errors, []);
+});
+
+test('the rows: Henk, Homelab and Claude Sandbox first with 02 to 04, then the rest; each links to its page with its line and status', async () => {
+  const { context, page, errors } = await open();
+  const rows = await page.$$eval(`${SECTION.projects} li.row`, (lis) => lis.map((li) => ({
+    title: li.querySelector('.title')?.textContent.trim(),
+    href: li.querySelector('a')?.getAttribute('href'),
+    idx: li.querySelector('.idx')?.textContent.trim() || null,
+    what: li.querySelector('.what')?.textContent.trim(),
+    status: li.querySelector('.since')?.textContent.trim(),
+  })));
+  const more = await page.$eval(`${SECTION.projects} a.more`, (a) => [a.getAttribute('href'), a.textContent.replace(/→/, '').trim()]);
+  await context.close();
+  assert.deepEqual(rows.map((r) => r.title), [
+    homeConfig.details.find((d) => d.id === 'henk').title, homeConfig.details.find((d) => d.id === 'homelab').title, homeConfig.details.find((d) => d.id === 'sandbox').title,
+    'Finance Bot', 'bible-tui', 'pytaiga-mcp', 'Encrypted Chat TUI',
+  ]);
+  assert.deepEqual(rows.slice(0, 3).map((r) => r.idx), ['02', '03', '04']);
+  assert.ok(rows.slice(3).every((r) => r.idx === null), 'only the card projects carry an index');
+  assert.ok(!rows.some((r) => r.title === 'This site' || r.title === annaLead.title));
+  for (const [i, r] of rows.entries()) {
+    assert.equal(r.href, ROWS[i].href);
+    assert.equal(r.what, ROWS[i].what);
+    assert.equal(r.status, ROWS[i].status);
+  }
+  assert.deepEqual(more, ['/projects', homeSections.links.projects]);
+  assert.deepEqual(errors, []);
+});
+
+test('the number is the project\'s: set large in tabular figures, its label beside it; the register\'s entry has none', async () => {
+  const { context, page, errors } = await open();
+  const rows = await page.$$eval(`${SECTION.projects} li.row`, (lis) => lis.map((li) => {
+    const v = li.querySelector('.num .value'), l = li.querySelector('.num .label'), w = li.querySelector('.what');
+    if (!v) return { title: li.querySelector('.title').textContent.trim(), value: null };
+    const vs = getComputedStyle(v), vb = v.getBoundingClientRect(), lb = l.getBoundingClientRect();
+    return {
+      title: li.querySelector('.title').textContent.trim(),
+      value: v.textContent.trim(), label: l.textContent.trim(),
+      tabular: vs.fontVariantNumeric, size: parseFloat(vs.fontSize), whatSize: parseFloat(getComputedStyle(w).fontSize),
+      beside: lb.left >= vb.right - 1 && lb.top < vb.bottom,
+    };
+  }));
+  await context.close();
+  assert.deepEqual(rows.map((r) => r.value), ['4', '4', '3,700', '0.75', '102', '50 → 5', null]);
+  for (const [i, r] of rows.entries()) {
+    if (!r.value) continue;
+    const d = homeConfig.details.find((x) => x.href === ROWS[i].href);
+    assert.equal(r.value, d.dims[d.homeDim ?? 0].value, r.title);
+    assert.equal(r.label, d.dims[d.homeDim ?? 0].label, r.title);
+    assert.match(r.tabular, /tabular-nums/, `${r.title}: tabular figures`);
+    assert.ok(r.size >= 2 * r.whatSize, `${r.title}: set large (${r.size}px against ${r.whatSize}px)`);
+    assert.ok(r.beside, `${r.title}: the label beside the number`);
+  }
+  assert.deepEqual(errors, []);
+});
+
+test('Experience: one row per résumé entry in order, years, role and company, hairline rules, a link to /resume', async () => {
+  const { context, page, errors } = await open();
+  const rows = await page.$$eval(`${SECTION.experience} li.row`, (lis) => lis.map((li) => ({
+    years: li.querySelector('.years').textContent.replace(/\s+/g, ''),
+    role: li.querySelector('.job').textContent.trim(),
+    client: li.querySelector('.client').textContent.trim(),
+    rule: [getComputedStyle(li).borderTopWidth, getComputedStyle(li).borderTopStyle],
+  })));
+  const more = await page.$eval(`${SECTION.experience} a.more`, (a) => [a.getAttribute('href'), a.textContent.replace(/→/, '').trim()]);
+  await context.close();
+  assert.equal(rows.length, resumeConfig.experience.length);
+  for (const [i, e] of resumeConfig.experience.entries()) {
+    assert.equal(rows[i].role, e.role);
+    assert.equal(rows[i].client, e.client);
+    assert.ok(rows[i].years.startsWith(e.startDate), `${e.role}: ${rows[i].years}`);
+    assert.ok(rows[i].years.endsWith(e.endDate ?? homeSections.now), `${e.role}: ${rows[i].years}`);
+    assert.ok(parseFloat(rows[i].rule[0]) > 0 && parseFloat(rows[i].rule[0]) <= 1.5 && rows[i].rule[1] === 'solid', `a hairline above ${e.role}: ${rows[i].rule}`);
+  }
+  assert.deepEqual(more, ['/resume', homeSections.links.resume]);
+  assert.deepEqual(errors, []);
+});
+
+test('Writing: the five newest posts, each with its date and one line, then a link to /blog', async () => {
+  const { context, page, errors } = await open();
+  const posts = await page.$$eval(`${SECTION.writing} li.row`, (lis) => lis.map((li) => ({
+    title: li.querySelector('.title').textContent.trim(),
+    href: li.querySelector('a').getAttribute('href'),
+    label: li.querySelector('time').textContent.trim(),
+    iso: li.querySelector('time').getAttribute('datetime'),
+    line: li.querySelector('.line').textContent.trim(),
+  })));
+  const more = await page.$eval(`${SECTION.writing} a.more`, (a) => [a.getAttribute('href'), a.textContent.replace(/→/, '').trim()]);
+  await context.close();
+  assert.equal(posts.length, Math.min(5, POSTS.length));
+  assert.deepEqual(posts, POSTS.map((p) => ({ title: p.title, href: p.href, label: p.label, iso: p.iso, line: p.line })));
+  assert.deepEqual(more, ['/blog', homeSections.links.writing]);
+  assert.deepEqual(errors, []);
+});
+
+test('Projects, Experience and Writing are written in config only', async () => {
+  const { context, page, errors } = await open();
+  const texts = await page.evaluate(([fn, sels]) => sels.flatMap((s) => new Function(`return (${fn})`)()(document.querySelector(s))), [textsUnder.toString(), Object.values(SECTION)]);
+  await context.close();
+  assert.ok(texts.length > 30, `${texts.length} texts read`);
+  const check = coverer(strings(homeConfig, resumeConfig, site, joined.details, joined.register, POSTS));
+  const left = texts.map(check).filter(Boolean);
+  assert.deepEqual(left, [], `typed into the markup: ${JSON.stringify(left)}`);
+  assert.deepEqual(errors, []);
+});
+
+test('no glass anywhere else: the bar, Projects, Experience and Writing hold no canvas, no glass, no blur', async () => {
+  const { context, page, errors } = await open();
+  const found = await page.evaluate((sels) => sels.map((s) => {
+    const root = document.querySelector(s);
+    if (!root) return [s, 'missing'];
+    const bad = [root, ...root.querySelectorAll('*')].filter((el) => el.tagName === 'CANVAS' || el.hasAttribute('data-glass') || getComputedStyle(el).backdropFilter !== 'none');
+    return [s, bad.map((el) => el.tagName)];
+  }), ['header.bar', ...Object.values(SECTION)]);
+  await context.close();
+  for (const [s, bad] of found) assert.deepEqual(bad, [], s);
+  assert.deepEqual(errors, []);
+});
+
+test('no colour panels in Projects, Experience and Writing: every ground is stone, ink or nothing', async () => {
+  const { context, page, errors } = await open();
+  const panels = await page.evaluate((sels) => sels.flatMap((s) => [document.querySelector(s), ...document.querySelectorAll(`${s} *`)].map((el) => {
+    const b = el.getBoundingClientRect();
+    return { sel: `${s} ${el.tagName}.${el.className}`, bg: getComputedStyle(el).backgroundColor, img: getComputedStyle(el).backgroundImage, w: b.width, h: b.height };
+  })), Object.values(SECTION));
+  const ink = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--stone-ink').trim());
+  await context.close();
+  const ok = (bg) => { const c = parseColor(bg); return c && (c[3] === 0 || [parseColor('#EEEAE3'), parseColor(ink)].some((k) => k.slice(0, 3).every((v, j) => Math.abs(v - c[j]) < 1))); };
+  const bad = panels.filter((p) => p.w >= 32 && p.h >= 32 && (!ok(p.bg) || p.img !== 'none'));
+  assert.deepEqual(bad, []);
+  assert.deepEqual(errors, []);
+});
+
+test('phone: Projects, Experience and Writing stay within the screen, the page never scrolls sideways', async () => {
+  const { context, page, errors } = await open('', { width: 390, height: 844 });
+  for (const s of Object.values(SECTION)) {
+    await page.$eval(s, (el) => el.scrollIntoView({ block: 'start' }));
+    const r = await page.$eval(s, (el) => {
+      const boxes = [el, ...el.querySelectorAll('*')].map((e) => e.getBoundingClientRect()).filter((b) => b.width > 0);
+      return { l: Math.min(...boxes.map((b) => b.left)), r: Math.max(...boxes.map((b) => b.right)), sw: document.documentElement.scrollWidth, w: innerWidth };
+    });
+    assert.ok(r.l >= -0.5 && r.r <= 390.5, `${s} spans ${r.l}..${r.r}`);
+    assert.ok(r.sw <= r.w, `${s}: the page is ${r.sw - r.w}px wider than the screen`);
+  }
+  await context.close();
+  assert.deepEqual(errors, []);
+});
