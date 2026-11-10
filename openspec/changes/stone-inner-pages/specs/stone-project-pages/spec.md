@@ -68,7 +68,7 @@ Each project page SHALL show the window `innerGlass` names for its route, at the
 - **THEN** it holds `projectWindows.henk`'s alert and messages verbatim, the same text as the homepage's Henk window
 
 ### Requirement: Homelab's window is its own health check
-Homelab's window SHALL be `homelab-health` in a terminal (Ezra, 2026-11-10, H1, text approved as written): title "ezra@workstation: ~", three window dots, the glow of the homelab card's sunset (`windowGlows.dusk`), monospace at 12 px, the text in `projectWindows.homelab`, verbatim, line by line (marker | host | text; spacing inside the text kept):
+Homelab's window SHALL be `homelab-health` in a terminal (Ezra, 2026-11-10, H1, text approved as written): title "ezra@workstation: ~", three window dots, the glow of the homelab card's sunset (`windowGlows.dusk`), monospace from 12 px down to 10 px as the window narrows, so a row stays one line wherever 10 px allows, the text in `projectWindows.homelab`, verbatim, line by line (marker | host | text; spacing inside the text kept):
 
 | Marker | Host | Text |
 |---|---|---|
@@ -88,7 +88,7 @@ The window SHALL hold no IP address, token, key or internal path, and no host na
 #### Scenario: The output, verbatim
 - **GIVEN** `projectWindows.homelab` in a unit test, and `/projects/HomelabInfrastructure` loaded with `?speed=10`
 - **WHEN** its rows are read
-- **THEN** they equal the table above in order, the rendered window shows each row's text, and its body's computed `font-size` is 12px in a monospace family
+- **THEN** they equal the table above in order, the rendered window shows each row's text, its body's computed `font-size` lies between 10px and 12px in a monospace family, and at 1440 every row's text sits on one line
 
 #### Scenario: Nothing private
 - **GIVEN** `projectWindows.homelab` and the rendered window's text

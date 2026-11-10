@@ -23,9 +23,11 @@ const hl = projectWindows.homelab;
 </GlassWindow>
 
 <style is:global>
-  /* a row is 79 characters, wider than the column below about 1700 px: its text wraps inside its own
-     column, the spacing kept, so nothing is cut and nothing scrolls */
-  .pj-window .hl { padding: 18px 22px 20px; font: 12px/1.7 ui-monospace, "JetBrains Mono", Menlo, monospace; }
+  /* the longest row is 79 characters: the type shrinks with the window (from 12 px down to 10 px) so a
+     row stays one line, as a terminal prints it; only where even 10 px is too wide does the text wrap
+     inside its own column, the spacing kept, so nothing is cut and nothing scrolls */
+  .pj-w-homelab { container-type: inline-size; }
+  .pj-window .hl { padding: 18px 22px 20px; font: 12px/1.7 ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: clamp(10px, calc((100cqi - 46px) / 79 / 0.61), 12px); }
   .pj-window .hl .b { white-space: pre-wrap; overflow-wrap: anywhere; }
   .pj-window .hl-h { margin-top: 6px !important; }
   .pj-window .hl-row { display: grid; grid-template-columns: 4ch 12ch minmax(0, 1fr); }

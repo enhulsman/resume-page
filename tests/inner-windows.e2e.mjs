@@ -129,7 +129,7 @@ async function windowContrast(page, moment, sels) {
 const HL = `.art-window[data-glass-moment="homelab"]`;
 const HL_PLAY = `${HL} [data-play]`;
 
-test('Homelab: the output verbatim at 12 px mono, nothing private, every line at once with reduced motion; the texts verbatim', async () => {
+test('Homelab: the output verbatim in mono that scales from 12 to 10 px, nothing private, every line at once with reduced motion; the texts verbatim', async () => {
   const page = await at(HOMELAB);
   const w = await page.evaluate((HL) => {
     const win = document.querySelector(HL);
@@ -142,6 +142,7 @@ test('Homelab: the output verbatim at 12 px mono, nothing private, every line at
       dots: win.querySelectorAll('.glass-dots i').length,
       glow: win.querySelectorAll('[data-glow]').length,
       size: cs.fontSize, family: cs.fontFamily,
+      wrapped: [...play.querySelectorAll('.hl-row .pw-text')].filter((s) => s.getBoundingClientRect().height > parseFloat(getComputedStyle(s).lineHeight) * 1.5).length,
       lines: [...play.querySelectorAll('.b')].map((b) => ({
         cls: b.className, text: b.textContent,
         cells: [...b.querySelectorAll(':scope > span, :scope > b')].map((s) => s.textContent),
@@ -156,7 +157,8 @@ test('Homelab: the output verbatim at 12 px mono, nothing private, every line at
   assert.equal(w.title, 'ezra@workstation: ~');
   assert.equal(w.dots, 3, 'three window dots');
   assert.equal(w.glow, 1, 'its glow beneath');
-  assert.equal(w.size, '12px');
+  assert.ok(parseFloat(w.size) >= 10 && parseFloat(w.size) <= 12, `font-size ${w.size} within 10-12px`);
+  if (page.viewportSize().width >= 1440) assert.equal(w.wrapped, 0, 'every row on one line at 1440');
   assert.match(w.family, /mono/i);
   // the command, the heading, then each row: marker | host | text, the spacing inside kept
   assert.equal(w.lines.length, 2 + hl.rows.length);
