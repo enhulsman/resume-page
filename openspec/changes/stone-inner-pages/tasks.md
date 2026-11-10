@@ -71,9 +71,9 @@ windows and the Homelab texts; (b) pytaiga-mcp's pane and ANNA's page.
 
 ## 5. Diagrams: "View larger" (stone-article-layout)
 
-- [ ] 5.1 Tests (`tests/inner-article.e2e.mjs`): "Only where it shrinks", "Resizing across the natural width", "Open and close", "Reduced motion", "The diagram itself has no glass"
-- [ ] 5.2 `src/components/stone/DiagramView.astro` (one `<dialog>` per page with a diagram, frosted panel, `data-glass-moment="diagram"`) and its measuring script; the diagrams' labels and captions in Archivo, stone ink
-- [ ] 5.3 Run all test commands
+- [x] 5.1 Tests (`tests/inner-article.e2e.mjs`): "Only where it shrinks", "Resizing across the natural width", "Open and close", "Reduced motion", "The diagram itself has no glass"
+- [x] 5.2 `src/components/stone/DiagramView.astro` (one `<dialog>` per page with a diagram, frosted panel, `data-glass-moment="diagram"`) and its measuring script; the diagrams' labels and captions in Archivo, stone ink
+- [x] 5.3 Run all test commands
 
 ## 6. Posts (stone-blog: a post; stone-article-layout on posts)
 

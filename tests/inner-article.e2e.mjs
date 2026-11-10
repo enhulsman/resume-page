@@ -422,3 +422,171 @@ test('Henk\'s chat, as on the homepage: projectWindows.henk verbatim, the same t
   await home.close();
   assert.equal(ours, theirs);
 });
+
+// ---------- the diagrams: "View larger" (chunk 5) ----------
+
+const DIAGRAMS = { '/projects/Henk': '.art .prose .henk-flow', '/projects/ClaudeSandbox': '.art .prose .sbx' };
+const OPEN = '.art .prose .dv-open';
+const DIALOG = 'dialog[data-glass-moment="diagram"]';
+/** The diagram in the prose: its rendered svg width and its viewBox width. */
+const measure = (page, route) => page.locator(`${DIAGRAMS[route]} svg`).first().evaluate((svg) => ({ drawn: svg.getBoundingClientRect().width, natural: svg.viewBox.baseVal.width }));
+const buttons = (page, n) => page.waitForFunction(([sel, n]) => document.querySelectorAll(sel).length === n, [OPEN, n]);
+/** The accessible name at the head of an aria snapshot: `- img "name"`. */
+const nameOf = (snap) => snap.split('\n')[0].match(/^- \w+ "(.*)"/)?.[1] ?? null;
+
+test('Diagrams: one dialog per page with a diagram, a moment of its own, its panel frosted with no glow; none elsewhere', async () => {
+  const s = await survey();
+  for (const route of PROJECTS) {
+    const page = await at(route);
+    const d = await page.evaluate((sel) => [...document.querySelectorAll(sel)].map((dl) => ({
+      inMain: !!dl.closest('main'), modal: dl.tagName, frosted: dl.querySelectorAll('[data-glass="frosted"]').length,
+      glow: dl.querySelectorAll('[data-glow]').length, close: dl.querySelector('.dv-close')?.textContent.trim() ?? null,
+      inAside: !!dl.closest('aside'),
+    })), DIALOG);
+    if ((innerGlass[route] ?? []).includes('diagram')) {
+      assert.deepEqual(d, [{ inMain: true, modal: 'DIALOG', frosted: 1, glow: 0, close: pageWords.article.close, inAside: false }], route);
+    } else {
+      assert.deepEqual(d, [], `${route} has no diagram dialog`);
+    }
+    assert.ok(s[route], route);
+  }
+  assert.equal(pageWords.article.viewLarger, 'View larger');
+  assert.equal(pageWords.article.close, 'Close');
+});
+
+test('Only where it shrinks: no "View larger" at 1440 (Henk at 440 px and up, the sandbox at 640 and up, a click opens nothing); one under each diagram at 390', async () => {
+  for (const [route, min] of [['/projects/Henk', 440], ['/projects/ClaudeSandbox', 640]]) {
+    let page = await at(route);
+    await buttons(page, 0);
+    const m = await measure(page, route);
+    assert.ok(m.drawn >= min && m.drawn >= m.natural - 1, `${route} at 1440: drawn ${m.drawn}, natural ${m.natural}`);
+    assert.notEqual(await page.locator(`${DIAGRAMS[route]} svg`).evaluate((s) => getComputedStyle(s).cursor), 'zoom-in', `${route}: not clickable at 1440`);
+    await page.locator(`${DIAGRAMS[route]} svg`).click();
+    await frames(page);
+    assert.equal(await page.locator(DIALOG).evaluate((d) => d.open), false, `${route}: clicking the diagram at 1440 opens nothing`);
+
+    page = await at(route, { width: 390, height: 844 });
+    await buttons(page, 1);
+    const n = await measure(page, route);
+    assert.ok(n.drawn < n.natural - 1, `${route} at 390: drawn ${n.drawn}, natural ${n.natural}`);
+    const b = await page.locator(OPEN).evaluate((btn, sel) => {
+      const fig = document.querySelector(sel), svg = fig.querySelector('svg');
+      return { text: btn.textContent.trim(), under: btn.getBoundingClientRect().top >= svg.getBoundingClientRect().bottom, after: fig.nextElementSibling === btn, cursor: getComputedStyle(svg).cursor };
+    }, DIAGRAMS[route]);
+    assert.deepEqual(b, { text: pageWords.article.viewLarger, under: true, after: true, cursor: 'zoom-in' }, route);
+  }
+});
+
+test('Resizing across the natural width: Henk\'s button appears at 390 and is gone again at 1440', async () => {
+  const page = await at('/projects/Henk');
+  await buttons(page, 0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await buttons(page, 1);
+  await frames(page);
+  const m = await measure(page, '/projects/Henk');
+  assert.ok(Math.abs(m.drawn - 343) <= 16, `drawn about 343 px at 390: ${m.drawn}`);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await buttons(page, 0);
+});
+
+test('Open and close: Tab and Enter, then Escape; the button and "Close"; the button and the backdrop; focus back on the button each time', async () => {
+  const route = '/projects/Henk';
+  const page = await at(route, { width: 390, height: 844 });
+  await buttons(page, 1);
+  const prose = await page.locator(`${DIAGRAMS[route]} svg`).evaluate((svg) => ({ width: svg.getBoundingClientRect().width, tab: [svg, svg.closest('.henk-flow')].map((e) => e.getAttribute('tabindex')) }));
+  assert.deepEqual(prose.tab, [null, null], 'the diagram itself is no tab stop');
+  const proseName = nameOf(await page.locator(`${DIAGRAMS[route]} svg`).ariaSnapshot());
+  assert.ok(proseName && proseName.startsWith("Henk's trust boundary"), `the prose diagram's name: ${proseName}`);
+
+  const isOpen = async () => {
+    await page.waitForFunction((sel) => document.querySelector(sel).open, DIALOG);
+    const st = await page.evaluate((sel) => {
+      const d = document.querySelector(sel), copy = d.querySelector('svg');
+      return {
+        modal: d.matches(':modal'), focusInside: d.contains(document.activeElement),
+        copyWidth: copy?.getBoundingClientRect().width ?? 0, panel: d.querySelector('[data-glass]')?.getAttribute('data-glass'),
+        ids: [...d.querySelectorAll('[id]')].map((e) => e.id).filter((id) => document.querySelectorAll(`[id="${CSS.escape(id)}"]`).length > 1),
+      };
+    }, DIALOG);
+    assert.ok(st.modal, 'opens modal');
+    assert.ok(st.focusInside, 'focus inside it');
+    assert.ok(st.copyWidth > prose.width + 1, `the copy (${st.copyWidth}) is wider than the prose's (${prose.width})`);
+    assert.equal(st.panel, 'frosted');
+    assert.deepEqual(st.ids, [], 'the copy repeats no id of the page');
+    assert.equal(await page.getByRole('dialog', { name: proseName, exact: true }).count(), 1, 'the dialog is named by its diagram');
+  };
+  const isClosed = async () => {
+    await page.waitForFunction((sel) => !document.querySelector(sel).open, DIALOG);
+    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('dv-open')), true, 'focus back on "View larger"');
+  };
+
+  // Tab reaches it and Enter opens it; Escape closes
+  await page.evaluate(() => { document.activeElement?.blur(); window.scrollTo(0, 0); });
+  let reached = false;
+  for (let i = 0; i < 80 && !reached; i++) {
+    await page.keyboard.press('Tab');
+    reached = await page.evaluate(() => document.activeElement?.classList.contains('dv-open'));
+    assert.equal(await page.evaluate(() => document.activeElement?.tagName === 'svg' || !!document.activeElement?.closest?.('.henk-flow')), false, 'Tab never stops on the diagram');
+  }
+  assert.ok(reached, 'Tab reaches "View larger"');
+  await page.keyboard.press('Enter');
+  await isOpen();
+  await page.keyboard.press('Escape');
+  await isClosed();
+
+  // the button, then "Close"
+  await page.locator(OPEN).click();
+  await isOpen();
+  await page.locator(`${DIALOG} .dv-close`).click();
+  await isClosed();
+
+  // the button, then the backdrop outside the panel
+  await page.locator(OPEN).click();
+  await isOpen();
+  const panel = await box(page, `${DIALOG} [data-glass="frosted"]`);
+  assert.ok(panel.left > 4 || panel.top > 4, 'room outside the panel');
+  await page.mouse.click(panel.left > 4 ? 2 : 195, panel.left > 4 ? 422 : 2);
+  await isClosed();
+});
+
+test('Reduced motion: the sandbox\'s dialog opens with no animation, fully opaque in the first frame (and with motion, it fades)', async () => {
+  const look = (page) => page.evaluate(([open, sel]) => {
+    document.querySelector(open).click();
+    const d = document.querySelector(sel), panel = d.querySelector('[data-glass]');
+    const out = { open: d.open, animations: d.getAnimations().length, opacity: [getComputedStyle(d).opacity, getComputedStyle(panel).opacity] };
+    d.close();
+    return out;
+  }, [OPEN, DIALOG]);
+  const page = await at('/projects/ClaudeSandbox', { width: 390, height: 844 });
+  await buttons(page, 1);
+  assert.deepEqual(await look(page), { open: true, animations: 0, opacity: ['1', '1'] });
+  // the fade exists, so the check above means something: Henk with motion
+  const moving = await at('/projects/Henk', { width: 390, height: 480, motion: 'no-preference', query: 'speed=10' });
+  await buttons(moving, 1);
+  const m = await look(moving);
+  assert.ok(m.open && m.animations >= 1, `with motion the dialog fades in (${m.animations} animations)`);
+});
+
+test('The diagram itself has no glass: no data-glass or backdrop-filter on it or any ancestor in main; its labels and caption in Archivo, stone ink', async () => {
+  for (const route of Object.keys(DIAGRAMS)) {
+    const page = await at(route);
+    const d = await page.locator(DIAGRAMS[route]).evaluate((fig) => {
+      const chain = [];
+      for (let el = fig.querySelector('svg'); el && el.tagName !== 'MAIN'; el = el.parentElement) chain.push(el);
+      const texts = [...fig.querySelectorAll('text'), ...fig.querySelectorAll('.flow-caption, figcaption')];
+      return {
+        glass: chain.filter((el) => el.hasAttribute('data-glass') || getComputedStyle(el).backdropFilter !== 'none').map((el) => el.tagName),
+        fonts: [...new Set(texts.map((t) => getComputedStyle(t).fontFamily))],
+        inks: [...new Set([...fig.querySelectorAll('text')].map((t) => getComputedStyle(t).fill))],
+        caption: [...fig.querySelectorAll('.flow-caption, figcaption')].map((c) => getComputedStyle(c).color),
+        texts: texts.length,
+      };
+    });
+    assert.ok(d.texts > 10, `${route}: ${d.texts} texts read`);
+    assert.deepEqual(d.glass, [], route);
+    for (const f of d.fonts) assert.match(f, /^"?Archivo/, `${route}: a label in ${f}`);
+    // stone ink, its quieter greys and the glass red: opaque inks only
+    const OK = ['rgb(17, 17, 16)', 'rgb(42, 40, 38)', 'rgb(74, 69, 63)', 'rgb(92, 86, 80)', 'rgb(143, 51, 32)'];
+    for (const c of [...d.inks, ...d.caption]) assert.ok(OK.includes(c), `${route}: an ink ${c}`);
+  }
+});

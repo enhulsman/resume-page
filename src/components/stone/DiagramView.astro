@@ -1,0 +1,63 @@
+---
+// "View larger" for a page's diagrams (openspec stone-inner-pages, stone-article-layout: "Diagrams
+// stay on stone, with 'View larger' where they shrink"; Ezra, 2026-11-10). The diagrams stay line
+// drawings on stone in the prose; this is the one native <dialog> per page that shows one large, in
+// a frosted panel over the blurred page (glass moment `diagram`). The panel's "behind" is that
+// blurred page, so it is the one frosted panel without a [data-glow].
+//
+// diagram-view.js measures each diagram and adds the button (the template below) only where the
+// diagram is drawn smaller than its natural size; it clones the diagram into the panel and names the
+// dialog by that copy (aria-labelledby), so the dialog adds no words of its own. The words: "View
+// larger" and "Close", from pageWords.
+import { pageWords } from "../../config/pages.ts";
+
+const w = pageWords.article;
+---
+<dialog class="dv" data-glass-moment="diagram">
+  <div class="glass-window dv-panel" data-glass="frosted">
+    <div class="glass-bar dv-bar"><button type="button" class="dv-close">{w.close}</button></div>
+    <div class="dv-body"></div>
+  </div>
+</dialog>
+<template class="dv-open-tpl"><button type="button" class="dv-open" aria-haspopup="dialog">{w.viewLarger}</button></template>
+
+<script>
+  import "../../scripts/stone/diagram-view.js";
+</script>
+
+<style is:global>
+  /* the button under a diagram that is drawn smaller than its natural size */
+  .art .prose .dv-open {
+    display: inline-flex; align-items: center; margin: -16px 0 32px; padding: 9px 16px;
+    border: 1px solid #6b645c; border-radius: 999px; background: none; cursor: pointer;
+    font: 600 14px/1 var(--stone-sans); color: var(--stone-ink);
+  }
+  .art .prose .dv-open:hover { background: rgb(17 17 16 / 0.05); }
+  .art .prose .dv-open:focus-visible, .dv-close:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; }
+  /* only then is the diagram itself a way in (the button stays the keyboard's) */
+  .art .prose .dv-larger svg { cursor: zoom-in; }
+
+  .dv {
+    width: min(calc(100vw - 2 * var(--stone-gutter)), 1180px); max-width: none; max-height: 92svh;
+    padding: 0; border: 0; background: none; overflow: visible; color: var(--stone-ink);
+  }
+  .dv::backdrop { background: rgb(238 234 227 / 0.6); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .dv[open] { animation: dv-in 0.28s ease; }
+  @keyframes dv-in { from { opacity: 0; transform: scale(0.985); } }
+  @media (prefers-reduced-motion: reduce) { .dv[open] { animation: none; } }
+
+  /* the panel: the frosted window's glass, nearly opaque over the blurred page */
+  .dv .dv-panel { background: rgb(250 248 244 / 0.82); max-height: 92svh; }
+  .dv .dv-bar { justify-content: flex-end; }
+  .dv-close {
+    border: 0; background: none; padding: 6px 4px; border-radius: 6px; cursor: pointer;
+    font: 600 14px/1 var(--stone-sans); color: var(--stone-ink);
+  }
+  /* the copy: at least its natural size (the body scrolls where that is wider than the screen),
+     larger where the screen allows */
+  .dv-body { position: relative; z-index: 3; flex: 1 1 auto; min-height: 0; overflow: auto; padding: 20px clamp(12px, 3vw, 40px) 28px; }
+  .dv-body svg {
+    display: block; margin: 0 auto; width: 100%; height: auto;
+    min-width: var(--dv-w); min-height: var(--dv-h); max-height: calc(92svh - 110px);
+  }
+</style>

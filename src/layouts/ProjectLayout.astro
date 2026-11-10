@@ -5,7 +5,8 @@
 // the contents, the facts and the numbers (its `stats` frontmatter, else its listing's first three
 // dims). The windows: Henk's, the sandbox's and bible-tui's artefacts (ProjectWindow), Homelab's
 // health check, Finance Bot's reply, pytaiga-mcp's drawing in a frosted pane, and ANNA's Teams window
-// with her four levels as rows under it.
+// with her four levels as rows under it. A page whose moments name `diagram` (Henk's, the sandbox's)
+// gets the "View larger" dialog after the article.
 import OverzichtLayout from "./OverzichtLayout.astro";
 import Article from "../components/stone/Article.astro";
 import ProjectWindow from "../components/stone/ProjectWindow.astro";
@@ -14,6 +15,7 @@ import FinanceWindow from "../components/stone/FinanceWindow.astro";
 import DrawingPane from "../components/stone/DrawingPane.astro";
 import AnnaWindow from "../components/stone/AnnaWindow.astro";
 import AnnaLevels from "../components/stone/AnnaLevels.astro";
+import DiagramView from "../components/stone/DiagramView.astro";
 import { details, annaLead } from "../lib/project-pages.ts";
 import { factsOf, numbersOf } from "../lib/article.ts";
 import { glassCards, hueInk, innerGlass } from "../config/glass.ts";
@@ -69,6 +71,7 @@ const projectKeywords =
     )}
     <slot />
   </Article>
+  {moments.includes("diagram") && <DiagramView />}
 </OverzichtLayout>
 
 <script>

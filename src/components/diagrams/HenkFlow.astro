@@ -1,6 +1,6 @@
 ---
 // Bespoke trust-boundary / event-flow diagram for the Henk case study.
-// Inline SVG, zero JS, drawn in the Overzicht tokens (src/styles/overzicht.css).
+// Inline SVG, zero JS, drawn in the stone tokens (src/styles/stone.css).
 ---
 
 <div class="henk-flow">
@@ -120,25 +120,26 @@
 </div>
 
 <style>
-  /* drawn in the sheet's ink: square boxes, untrusted things and the choke point in red */
+  /* a line drawing on stone (stone-article-layout): stone ink, labels and caption in Archivo; the
+     untrusted things, the boundary and the choke point in the glass red */
   .henk-flow { max-width: 480px; margin: 8px 0 32px; }
   .henk-flow svg { display: block; width: 100%; height: auto; }
-  .box { fill: var(--sheet); stroke: var(--ink); stroke-width: 1; rx: 0; transition: fill .5s ease; }
-  .box-untrusted { stroke: var(--red); stroke-dasharray: 5 4; }
+  .box { fill: var(--stone); stroke: var(--stone-ink); stroke-width: 1; rx: 0; }
+  .box-untrusted { stroke: var(--glass-ink-red); stroke-dasharray: 5 4; }
   .box-safe { stroke-width: 1.5; }
-  .box-choke { stroke: var(--red); stroke-width: 2; }
-  .container { fill: none; stroke: var(--ink); stroke-width: 1.5; rx: 0; }
-  .label { font: 600 14px var(--sans); font-stretch: 88%; fill: var(--ink); }
-  .label-choke { fill: var(--red); font-weight: 700; }
+  .box-choke { stroke: var(--glass-ink-red); stroke-width: 2; }
+  .container { fill: none; stroke: var(--stone-ink); stroke-width: 1.5; rx: 0; }
+  .label { font: 600 14px var(--stone-sans); font-stretch: 88%; fill: var(--stone-ink); }
+  .label-choke { fill: var(--glass-ink-red); font-weight: 700; }
   .label-out { font-size: 13px; }
   /* .sub is also the sheet's subhead class: undo its lettering here */
-  .sub { font: 400 9px var(--mono); fill: var(--ink-2); text-transform: none; letter-spacing: 0; margin: 0; }
-  .sub-out { font-size: 8.5px; }
-  .zone { font: 400 10px var(--mono); letter-spacing: .1em; fill: var(--label); }
-  .zone-untrusted { fill: var(--red); }
-  .header { font: 400 9.5px var(--mono); fill: var(--ink-2); }
-  .edge { stroke: var(--ink); stroke-width: 1; }
-  .arrow-head { fill: var(--ink); }
-  .boundary { stroke: var(--red); stroke-width: 1.2; stroke-dasharray: 6 5; }
-  .flow-caption { margin-top: 10px; font: 400 11px/1.5 var(--mono); color: var(--ink-2); }
+  .sub { font: 400 10px var(--stone-sans); fill: #4A453F; text-transform: none; letter-spacing: 0; margin: 0; }
+  .sub-out { font-size: 9.5px; }
+  .zone { font: 600 10px var(--stone-sans); letter-spacing: .1em; fill: var(--glass-ink-quiet); }
+  .zone-untrusted { fill: var(--glass-ink-red); }
+  .header { font: 400 10.5px var(--stone-sans); fill: #4A453F; }
+  .edge { stroke: var(--stone-ink); stroke-width: 1; }
+  .arrow-head { fill: var(--stone-ink); }
+  .boundary { stroke: var(--glass-ink-red); stroke-width: 1.2; stroke-dasharray: 6 5; }
+  .flow-caption { margin-top: 10px; font: 400 13.5px/1.45 var(--stone-sans); color: var(--glass-ink-quiet); }
 </style>
