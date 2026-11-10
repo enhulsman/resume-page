@@ -518,3 +518,71 @@ test('the terminal\'s theme command no longer switches anything: the theme helpe
   assert.match(term, /commands\.set\('theme'/, 'the command stays, and answers');
   assert.equal(existsSync(new URL('src/lib/theme.ts', root)), false);
 });
+
+// ---- the whole page (chunk 7): what the old homepage alone used is gone ----
+
+// Deleted with the drawing-sheet homepage. scene.js and depth.js are not on this list: AnnaPlate's
+// plate.js on /projects draws scene.js's model, and scene.js orders its planes with depth.js.
+const RETIRED = [
+  'src/scripts/overzicht/intro.js',
+  'src/scripts/overzicht/main.js',
+  'src/scripts/overzicht/span.js',
+  ...['YouSheet', 'AnnaSection', 'DetailsSheet', 'RegisterSheet', 'RevisionsSheet', 'NotesSheet', 'ContactSheet'].map((s) => `src/components/overzicht/${s}.astro`),
+  // the arrival drew the name from these glyphs; the stone hero sets it as type
+  'src/data/name-glyphs.json', 'scripts/name-glyphs.mjs', 'tests/name-glyphs.test.mjs',
+  // the revision chart's span, with its unit test
+  'tests/span.test.mjs',
+  // the paper grain left with the drawing sheet (chunk 3)
+  'public/tex/grain.jpg',
+];
+
+test('retired files are gone: the old homepage\'s scripts and sheets; AnnaPlate and plate.js stay, with the model plate.js draws', () => {
+  const left = RETIRED.filter((p) => existsSync(new URL(p, root)));
+  assert.deepEqual(left, []);
+  for (const p of ['src/components/overzicht/AnnaPlate.astro', 'src/scripts/overzicht/plate.js', 'src/scripts/overzicht/scene.js', 'src/scripts/overzicht/depth.js']) {
+    assert.ok(existsSync(new URL(p, root)), `${p} stays`);
+  }
+  assert.match(read('src/scripts/overzicht/plate.js'), /from '\.\/scene\.js'/, 'scene.js stays because plate.js draws it');
+  assert.match(read('src/components/overzicht/AnnaPlate.astro'), /overzicht\/plate\.js/);
+  // nothing still imports what went
+  const srcFiles = (dir) => readdirSync(new URL(dir, root), { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? srcFiles(`${dir}${d.name}/`) : [`${dir}${d.name}`]));
+  const code = [...srcFiles('src/'), ...srcFiles('scripts/')].filter((p) => /\.(astro|ts|js|mjs|mdx)$/.test(p));
+  for (const p of code) {
+    assert.doesNotMatch(read(p), /overzicht\/(intro|main|span)(\.js)?['"]|(YouSheet|DetailsSheet|RegisterSheet|RevisionsSheet|NotesSheet|ContactSheet)\.astro|overzicht\/AnnaSection|name-glyphs|tex\/grain/, p);
+  }
+});
+
+test('npm test runs only files that exist, and no script regenerates the retired glyphs', () => {
+  const scripts = JSON.parse(read('package.json')).scripts;
+  const files = scripts.test.match(/tests\/\S+/g);
+  assert.ok(files.length >= 5, scripts.test);
+  for (const f of files) assert.ok(existsSync(new URL(f, root)), `npm test names ${f}`);
+  assert.doesNotMatch(scripts.test, /span\.test|name-glyphs/);
+  assert.equal(scripts['name-glyphs'], undefined);
+});
+
+test('nothing listens for what is gone: no theme-changed event, no arrival event, anywhere under src/', () => {
+  const walk = (dir) => readdirSync(new URL(dir, root), { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? walk(`${dir}${d.name}/`) : [`${dir}${d.name}`]));
+  const code = walk('src/').filter((p) => /\.(astro|ts|js|mjs)$/.test(p));
+  const hits = code.filter((p) => /theme-changed|ovz:arrived|ovz-arrived/.test(read(p)));
+  assert.deepEqual(hits, []);
+});
+
+test('overzicht.css holds no rule for the old homepage: no sheet-you, scrolly, stage, terminal head or kbd, and the layout\'s noscript no stage', () => {
+  const css = rules(read('src/styles/overzicht.css'));
+  const sel = css.flatMap(items);
+  const OLD = /(^|[\s>+~,(])(\.(sheet-you|you-text|you-side|scrolly|step|stage|leaders|levels|callout|callout-inline|chat-inline|bubble|bubble-q|bubble-a|scale-note|scale-tip|status-mark|term-head|sheet-contact|contact-msg|site-photo|name|tag|status|notes)(?![\w-])|kbd(?![\w-]))/;
+  assert.deepEqual(sel.filter((s) => OLD.test(s)), []);
+  assert.doesNotMatch(read('src/layouts/OverzichtLayout.astro'), /\.stage\b/);
+});
+
+test('every class overzicht.css styles is used by a page, a component, a layout or a script', () => {
+  const walk = (dir) => readdirSync(new URL(dir, root), { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? walk(`${dir}${d.name}/`) : [`${dir}${d.name}`]));
+  // the lab goes in chunk 8 and does not load overzicht.css, so it cannot keep a rule alive
+  const code = walk('src/').filter((p) => /\.(astro|ts|js|mjs|mdx)$/.test(p) && p !== 'src/pages/hero-lab.astro').map(read).join('\n');
+  const classes = [...new Set(rules(read('src/styles/overzicht.css')).flatMap((r) => [...r.selector.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1])))];
+  // set from the layout's `current` prop: page-projects, page-blog, ...
+  const dynamic = new Set(['js']);
+  const unused = classes.filter((c) => !dynamic.has(c) && !new RegExp(`(?<![\\w-])${c}(?![\\w-])`).test(code));
+  assert.deepEqual(unused, []);
+});

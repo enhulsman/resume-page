@@ -1,6 +1,6 @@
-// ANNA's plate on /projects and on its case study: the homepage's model (scene.js) shown
+// ANNA's plate on /projects and on its case study: the old homepage's model (scene.js) shown
 // exploded, plotted once it is on screen, turned by hand or by its buttons. Pointing at a
-// level's label clouds that plate, as on the homepage. No scroll is read here.
+// level's label clouds that plate. No scroll is read here. One light stone: no theme to follow.
 import { createScene } from './scene.js';
 
 const plate = document.querySelector('.anna-plate');
@@ -52,8 +52,4 @@ if (plate) {
     const off = () => { li.classList.remove('hot'); scene.setCloud(null); };
     li.addEventListener('pointerenter', on); li.addEventListener('pointerleave', off);
   }
-
-  const recolour = () => [0, 120, 260, 520].forEach(t => setTimeout(() => scene.theme(), t));
-  addEventListener('theme-changed', recolour);
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolour);
 }

@@ -168,7 +168,7 @@ At 860 px wide and below, the bar SHALL fold the four page links into a menu but
 - **THEN** focus moves to the first of the four links
 
 ### Requirement: The drawing-sheet homepage retires
-The homepage SHALL NOT play an arrival animation (the layout's head block that sets `html.intro`, the `html.intro` CSS, `intro.js` and the terminal's wait for `ovz:arrived` all go) and SHALL NOT render the title block, the revision letters, the stamp, the drawings, the ANNA 3D scene or ANNA's section with its levels. The retired homepage code (`intro.js`, `scene.js`, the homepage `main.js`, `YouSheet`, `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`, `NotesSheet`, `ContactSheet`) SHALL be deleted; `AnnaPlate` and `plate.js` stay for /projects.
+The homepage SHALL NOT play an arrival animation (the layout's head block that sets `html.intro`, the `html.intro` CSS, `intro.js` and the terminal's wait for `ovz:arrived` all go) and SHALL NOT render the title block, the revision letters, the stamp, the drawings, the ANNA 3D scene or ANNA's section with its levels. The retired homepage code (`intro.js`, the homepage `main.js`, `YouSheet`, `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`, `NotesSheet`, `ContactSheet`) SHALL be deleted; `AnnaPlate` and `plate.js` stay for /projects, and with them `scene.js` (the model `plate.js` draws) and `depth.js` (which `scene.js` imports).
 
 #### Scenario: Arrival
 - **GIVEN** a new browser session

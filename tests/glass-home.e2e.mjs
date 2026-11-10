@@ -841,3 +841,201 @@ for (const [width, height] of [[1440, 900], [1280, 720], [390, 844]]) {
     assert.deepEqual(errors, []);
   });
 }
+
+// ---- the whole page (chunk 7): every section together ----
+
+import * as glassConfig from '../src/config/glass.ts';
+import { diaryEntries, readFrontmatter } from '../src/lib/frontmatter.ts';
+import { pageFacts } from '../src/lib/projects.ts';
+
+const SIZES = [[1440, 900], [1280, 720], [390, 844]];
+/** In the page: each moment's glass box in viewport coordinates, the union of its [data-glass]. */
+const glassBoxesFn = () => [...document.querySelectorAll('[data-glass-moment]')].map((m) => {
+  const rs = [...m.querySelectorAll('[data-glass]')].map((g) => g.getBoundingClientRect());
+  return { id: m.dataset.glassMoment, top: Math.min(...rs.map((r) => r.top)), bottom: Math.max(...rs.map((r) => r.bottom)) };
+});
+/** Both windows played: ANNA's conversation at done, the terminal's intro finished and its hint gone. */
+async function bothPlayed(page) {
+  await annaDone(page);
+  await termReady(page);
+  await page.waitForFunction(() => !document.querySelector('.terminal-hint'), null, { timeout: 10000 });
+}
+
+for (const [width, height] of SIZES) {
+  test(`scrolling the whole page at ${width} x ${height}: in steps of a tenth of the screen, never two moments with a third on screen`, async () => {
+    const { context, page, errors } = await open('', { width, height });
+    const walk = () => page.evaluate(async (fn) => {
+      const boxes = new Function(`return (${fn})`)();
+      const next = () => new Promise((r) => requestAnimationFrame(() => r()));
+      const max = document.documentElement.scrollHeight - innerHeight;
+      const step = innerHeight / 10, out = [];
+      for (let y = 0; ; y = Math.min(max, y + step)) {
+        scrollTo({ top: y, behavior: 'instant' });
+        await next();
+        const on = boxes().filter((b) => (Math.min(b.bottom, innerHeight) - Math.max(b.top, 0)) / (b.bottom - b.top) >= 1 / 3).map((b) => b.id);
+        out.push({ y: Math.round(scrollY), on });
+        if (y >= max) break;
+      }
+      return out;
+    }, glassBoxesFn.toString());
+    const first = await walk();
+    await bothPlayed(page);
+    const second = await walk();
+    await context.close();
+    for (const [when, steps] of [['on load', first], ['after play', second]]) {
+      assert.ok(steps.length > 20, `${when}: ${steps.length} steps`);
+      const seen = new Set(steps.flatMap((s) => s.on));
+      assert.deepEqual([...seen].sort(), [...glassMoments].sort(), `${when}: every moment is seen on its own somewhere`);
+      const two = steps.filter((s) => s.on.length > 1);
+      assert.deepEqual(two, [], `${when}: two moments on one screen`);
+    }
+    assert.deepEqual(errors, []);
+  });
+}
+
+test('the kinds: four ribbed cards in the hero, one frosted window for ANNA, one for the terminal with its ribbed reflections hidden from readers', async () => {
+  const { context, page, errors } = await open();
+  const kinds = await page.$$eval('[data-glass-moment]', (ms) => ms.map((m) => {
+    const own = [...m.querySelectorAll('[data-glass]')].filter((g) => !g.parentElement.closest('[data-glass]'));
+    const inner = [...m.querySelectorAll('[data-glass] [data-glass]')];
+    return {
+      id: m.dataset.glassMoment,
+      own: own.map((g) => g.dataset.glass),
+      inner: inner.map((g) => ({ kind: g.dataset.glass, hidden: !!g.closest('[aria-hidden="true"]') })),
+    };
+  }));
+  await context.close();
+  assert.deepEqual(kinds.map((k) => [k.id, k.own]), [['hero', ['ribbed', 'ribbed', 'ribbed', 'ribbed']], ['anna', ['frosted']], ['terminal', ['frosted']]]);
+  assert.deepEqual(kinds[0].inner, []);
+  assert.deepEqual(kinds[1].inner, []);
+  assert.deepEqual(kinds[2].inner, Array(4).fill({ kind: 'ribbed', hidden: true }), 'four reflection minis inside the terminal\'s window');
+  assert.deepEqual(errors, []);
+});
+
+test('no glass anywhere else on the whole page: every canvas, glass object and blur, bar and footer included, lies inside a moment in main', async () => {
+  const { context, page, errors } = await open();
+  const r = await page.evaluate(() => ({
+    loose: [...document.body.querySelectorAll('*')]
+      .filter((el) => el.tagName === 'CANVAS' || el.hasAttribute('data-glass') || getComputedStyle(el).backdropFilter !== 'none')
+      .filter((el) => !el.closest('main [data-glass-moment]'))
+      .map((el) => el.tagName + (el.className && typeof el.className === 'string' ? `.${el.className.split(' ').join('.')}` : '')),
+    outside: [...document.querySelectorAll('[data-glass-moment]')].filter((m) => !m.closest('main')).length,
+  }));
+  await context.close();
+  assert.deepEqual(r.loose, []);
+  assert.equal(r.outside, 0);
+  assert.deepEqual(errors, []);
+});
+
+for (const [width, height] of [[1440, 900], [390, 844]]) {
+  test(`no colour panels on the whole page at ${width} x ${height}: outside the glass and its glows, every ground is stone, ink or nothing`, async () => {
+    const { context, page, errors } = await open('', { width, height });
+    await bothPlayed(page);
+    const all = await page.evaluate(() => [...document.body.querySelectorAll('*')].filter((el) => !el.closest('[data-glass-moment], [data-glow]')).map((el) => {
+      const b = el.getBoundingClientRect(), s = getComputedStyle(el);
+      return { el: `${el.tagName}.${typeof el.className === 'string' ? el.className : ''}`, bg: s.backgroundColor, img: s.backgroundImage, w: b.width, h: b.height };
+    }));
+    const ink = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--stone-ink').trim());
+    await context.close();
+    assert.ok(all.length > 150, `${all.length} elements read`);
+    const ok = (bg) => { const c = parseColor(bg); return c && (c[3] === 0 || [parseColor('#EEEAE3'), parseColor(ink)].some((k) => k.slice(0, 3).every((v, j) => Math.abs(v - c[j]) < 1))); };
+    const bad = all.filter((p) => p.w >= 32 && p.h >= 32 && (!ok(p.bg) || p.img !== 'none'));
+    assert.deepEqual(bad, []);
+    assert.deepEqual(errors, []);
+  });
+}
+
+test('the rendered page is all config: every text, alt, title and aria-label in main and the footer (the terminal\'s own output aside)', async () => {
+  const { context, page, errors } = await open();
+  await bothPlayed(page);
+  const texts = await page.evaluate((fn) => {
+    const under = new Function(`return (${fn})`)();
+    return [...under(document.querySelector('main'), '.term-body'), ...under(document.querySelector('footer'), '.term-body')];
+  }, textsUnder.toString());
+  await context.close();
+  const projectSrc = sourcesIn('src/pages/projects/');
+  const blogSrc = sourcesIn('src/pages/blog/');
+  const corpus = strings(
+    homeConfig, resumeConfig, site, glassConfig, { annaDemo },
+    Object.values(projectSrc).map(readFrontmatter), Object.values(blogSrc).map(readFrontmatter),
+    buildProjects(projectSrc), diaryEntries(blogSrc), Object.values(projectSrc).map(pageFacts),
+  );
+  assert.ok(texts.length > 120, `${texts.length} texts read`);
+  const check = coverer(corpus);
+  const left = texts.map(check).filter(Boolean);
+  assert.deepEqual(left, [], `typed into the markup: ${JSON.stringify(left)}`);
+  assert.deepEqual(errors, []);
+});
+
+test('reduced motion from the start: the hero, ANNA\'s window and the terminal each hold still for 30 frames; her conversation and the intro are whole', async () => {
+  const { context, page, errors } = await open('', { reducedMotion: 'reduce' });
+  const still = {};
+  for (const [name, sel] of [['hero', CARDS], ['anna', '[data-glass-moment="anna"] [data-glass="frosted"]'], ['terminal', `${TERM} [data-glass="frosted"]`]]) {
+    await page.$eval(sel, (el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    if (name === 'anna') await page.waitForFunction(() => window.__annaWindow?.state().done === true, null, { timeout: 20000 });
+    if (name === 'terminal') {
+      await page.waitForFunction((b) => document.querySelector(`${b} .terminal-input-line`), TERM_BODY, { timeout: 20000 });
+      await page.waitForFunction(() => !document.querySelector('.terminal-hint'), null, { timeout: 10000 });
+    }
+    await frames(page, 2);
+    const a = await page.screenshot();
+    await frames(page, 30);
+    const b = await page.screenshot();
+    still[name] = a.equals(b);
+  }
+  const anna = await page.$$eval('.anna-window [data-beat]', (els) => els.map((e) => +getComputedStyle(e).opacity));
+  const term = await page.$eval(TERM_BODY, (b) => ({
+    cmds: [...b.querySelectorAll('.text-theme-primary')].map((e) => e.textContent),
+    intro: JSON.parse(b.dataset.lines).filter((l) => l.type === 'cmd').map((l) => l.text),
+    input: !!b.querySelector('.terminal-input-line'),
+  }));
+  await context.close();
+  assert.deepEqual(still, { hero: true, anna: true, terminal: true });
+  assert.ok(anna.length > 3 && anna.every((o) => o === 1), `every beat shown: ${anna}`);
+  assert.deepEqual(term.cmds, term.intro, 'the whole intro');
+  assert.equal(term.input, true, 'an input line');
+  assert.deepEqual(errors, []);
+});
+
+test('no running animations with reduced motion: after load, and after the page has been scrolled to its end', async () => {
+  const { context, page, errors } = await open('', { reducedMotion: 'reduce' });
+  const running = () => page.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running').map((a) => `${a.constructor.name} ${a.animationName ?? a.transitionProperty ?? ''} on ${a.effect?.target?.tagName}.${a.effect?.target?.className}`));
+  await frames(page, 2);
+  const atLoad = await running();
+  await bothPlayed(page);
+  await page.evaluate(() => scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+  await frames(page, 4);
+  const atEnd = await running();
+  await context.close();
+  assert.deepEqual(atLoad, [], 'after load');
+  assert.deepEqual(atEnd, [], 'after scrolling to the end');
+  assert.deepEqual(errors, []);
+});
+
+test('phone width over the whole page: at 390 x 844, in steps of half a screen, before and after play, nothing wider than the screen', async () => {
+  const { context, page, errors } = await open('', { width: 390, height: 844 });
+  const walk = () => page.evaluate(async () => {
+    const next = () => new Promise((r) => requestAnimationFrame(() => r()));
+    const max = document.documentElement.scrollHeight - innerHeight, out = [];
+    for (let y = 0; ; y = Math.min(max, y + innerHeight / 2)) {
+      scrollTo({ top: y, behavior: 'instant' });
+      await next();
+      const sections = [...document.querySelectorAll('main > section')].map((s) => { const r = s.getBoundingClientRect(); return [s.className, Math.round(r.left * 10) / 10, Math.round(r.right * 10) / 10]; });
+      const bad = sections.filter(([, l, r]) => l < -0.5 || r > 390.5);
+      out.push({ y, sw: document.documentElement.scrollWidth, w: innerWidth, n: sections.length, bad });
+      if (y >= max) break;
+    }
+    return out;
+  });
+  const first = await walk();
+  await bothPlayed(page);
+  const second = await walk();
+  await context.close();
+  for (const [when, steps] of [['on load', first], ['after play', second]]) {
+    assert.ok(steps.length > 8, `${when}: ${steps.length} steps`);
+    assert.ok(steps.every((s) => s.n === 7), `${when}: seven sections`);
+    const wide = steps.filter((s) => s.sw > s.w || s.bad.length);
+    assert.deepEqual(wide, [], `${when}: wider than the screen`);
+  }
+  assert.deepEqual(errors, []);
+});

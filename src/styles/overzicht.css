@@ -71,39 +71,6 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 /* inner pages keep a margin of stone at the screen's edges; the homepage sets its own */
 main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 
-/* ---------- sheet 0: the person, with his photo and the terminal ---------- */
-.sheet-you {
-  min-height: 100svh; display: grid; grid-template-columns: minmax(340px, 38fr) 62fr; align-items: end; align-content: center;
-  padding: 40px var(--wide); position: relative;
-}
-.you-text { padding: 0 var(--gutter); }
-.you-text p { margin: 0 0 1em; color: var(--ink); }
-.you-side {
-  display: grid; grid-template-columns: minmax(150px, 15rem) minmax(0, 36rem); gap: 36px; align-items: end;
-  padding: 0 var(--gutter) 0 calc(var(--gutter) * .4);
-}
-.you-side .term { align-self: end; }
-.site-photo { margin: 0; position: relative; }
-/* the photo is printed in the sheet's two inks; pointing at it develops the real colours */
-.site-photo .photo {
-  --photo-dark: var(--ink); --photo-light: var(--sheet);
-  position: relative; isolation: isolate; aspect-ratio: 1; border: 1.5px solid var(--ink);
-  background: var(--photo-dark); transition: background-color .6s ease;
-}
-.site-photo img { display: block; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.08); mix-blend-mode: screen; transition: filter .6s ease; }
-.site-photo .photo::after { content: ""; position: absolute; inset: 0; background: var(--photo-light); mix-blend-mode: multiply; pointer-events: none; transition: opacity .6s ease; }
-.site-photo:hover .photo { background-color: transparent; }
-.site-photo:hover img { filter: none; }
-.site-photo:hover .photo::after { opacity: 0; }
-.site-photo .clip { position: absolute; z-index: 2; left: 18px; top: -16px; width: 13px; height: 34px; fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; }
-.site-photo figcaption { font: 400 11px/1.4 var(--mono); color: var(--label); margin-top: 8px; }
-
-/* portrait tablets: the text above, the photo and the terminal side by side below it */
-@media (min-width: 861px) and (max-aspect-ratio: 4/5) {
-  .sheet-you { grid-template-columns: 1fr; row-gap: 48px; min-height: 0; padding-bottom: 72px; }
-  .you-side { grid-template-columns: minmax(150px, 15rem) minmax(0, 1fr); padding-left: var(--gutter); }
-}
-
 /* ---------- the pointer layer: crosshair, pencil marks, registration marks ---------- */
 /* a mouse draws with a pencil whose tip sits where the crosshair meets; links and fields keep their own */
 /* only on the drawing sheets (the inner pages); the stone homepage keeps the system's cursor */
@@ -156,32 +123,10 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
   background-size: 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px;
 }
 
-/* ---------- sheet 1: the scrolly section ---------- */
-.scrolly { display: grid; grid-template-columns: minmax(340px, 38fr) 62fr; position: relative; padding-inline: var(--wide); }
-.copy { padding: 0 var(--gutter); position: relative; z-index: 2; }
-.step { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: calc(var(--bar) + 40px) 0 60px; max-width: 34em; }
-/* the levels sit closer, so the next one's heading shows under the one being read; the request
-   keeps a screen of its own while the drawing plots, and the last level just enough below it
-   that the drawing stays pinned beside it until it is read */
-.step[data-cloud] { min-height: 0; padding: 8.5svh 0; }
-@media (max-height: 800px) { .step[data-cloud] { padding: 5.5svh 0; } }
-.step:last-child { min-height: calc(78svh + 3rem); justify-content: flex-start; }
-.step h2 { font-size: clamp(26px, 2.4vw, 36px); line-height: 1.08; font-stretch: 88%; letter-spacing: -.01em; margin-bottom: .7em; }
-.step p { margin: 0 0 1em; color: var(--ink); }
-.tag { font: 400 12px/1 var(--mono) !important; letter-spacing: .06em; color: var(--red) !important; margin-bottom: 1.1em !important; }
-
-.name {
-  font-size: clamp(54px, 6.2vw, 112px); line-height: .84; font-weight: 820; font-stretch: 125%;
-  letter-spacing: -.035em; margin: 0 0 .32em -.04em;
-}
-.name { position: relative; }
-.name span { display: block; width: fit-content; }
+/* ---------- what the case studies and the CV still share from the old first sheet ---------- */
 .role { font-size: clamp(19px, 1.6vw, 24px); font-weight: 600; font-stretch: 92%; margin: 0 0 .7em !important; }
 .role a { text-decoration-color: var(--faint); }
 .lede { font-size: clamp(17px, 1.25vw, 19px); max-width: 30em; color: var(--ink-2) !important; }
-.status { font: 400 12.5px/1.3 var(--mono) !important; display: flex; align-items: center; gap: 10px; margin: 1.4em 0 1.6em !important; }
-.status-mark { width: 9px; height: 9px; border: 1.5px solid var(--ink); position: relative; }
-.status-mark::after { content: ""; position: absolute; inset: 1.5px; background: var(--red); animation: blink 2.4s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 
 .actions { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 0 0 2.2em !important; }
@@ -193,51 +138,8 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .titleblock th, .titleblock td { border: .75px solid var(--ink); padding: 6px 8px; text-align: left; vertical-align: top; }
 .titleblock th { font-weight: 400; color: var(--label); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; width: 1%; white-space: nowrap; }
 
-.stage { position: sticky; top: 0; height: 100svh; }
+/* ANNA's plate (AnnaPlate.astro): its canvas fills the stage */
 .drawing { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.leaders { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-.leaders line { stroke: var(--ink); stroke-width: .75; }
-.leaders circle { fill: var(--ink); }
-
-.levels { list-style: none; margin: 0; padding: 0; }
-.levels li {
-  position: absolute; left: 0; top: 0; width: 236px;
-  font-size: 13px; line-height: 1.4; transform: translate3d(var(--x, 0), var(--y, 0), 0) translateY(-50%);
-  opacity: var(--o, 0); transition: opacity .4s ease, color .3s;
-}
-.levels b { display: block; font: 700 12px/1.2 var(--sans); font-stretch: 80%; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; }
-.levels span { color: var(--ink-2); display: block; }
-.levels li.hot b { color: var(--red); }
-/* a label is a link to its level's text; the level being read stands out, the others step back */
-.levels a { color: inherit; text-decoration: none; }
-.levels b { transition: color .3s, opacity .3s; }
-.levels li.dim b { opacity: .4; }
-.stage.over-level { cursor: pointer; }
-
-.callout {
-  position: absolute; left: 0; top: 0; margin: 0; width: 250px; padding: 12px 14px 14px;
-  border: 1.5px solid var(--ink); background: var(--sheet);
-  transform: translate3d(var(--x, 0), var(--y, 0), 0); opacity: var(--o, 0); transition: opacity .4s;
-}
-.callout figcaption { font: 400 10px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--label); margin-bottom: 10px; }
-.bubble { margin: 0; font-size: 13.5px; line-height: 1.35; padding: 8px 10px; border: .75px solid var(--ink); }
-.bubble-q { margin-left: 22px; border-color: var(--red); color: var(--ink); clip-path: inset(0 calc(100% - var(--qp, 100%)) 0 0); }
-.bubble-a { margin-top: 8px; margin-right: 14px; opacity: var(--ap, 0); transform: translateY(calc((1 - var(--ap, 0)) * 6px)); }
-.bubble-a b { font: 700 10.5px/1 var(--sans); font-stretch: 80%; letter-spacing: .1em; margin-right: 4px; }
-
-.scale-note {
-  position: absolute; left: 0; top: 0; transform: translate3d(var(--x, 0), var(--y, 0), 0) translate(-50%, 6px);
-  appearance: none; background: none; border: 0; color: var(--ink-2); padding: 6px 4px; cursor: help;
-  font: 400 10.5px/1.2 var(--mono); opacity: var(--o, 0); transition: opacity .4s;
-}
-.scale-note span { border-bottom: 1px dotted var(--faint); }
-.scale-note:hover, .scale-note:focus-visible { color: var(--red); }
-.scale-tip {
-  position: absolute; left: 0; top: 0; width: 230px; margin: 0; padding: 10px 12px; font-size: 13px; line-height: 1.4;
-  background: var(--sheet); border: 1.5px solid var(--red); transform: translate3d(var(--x, 0), var(--y, 0), 0) translate(-30%, 34px);
-  opacity: 0; pointer-events: none; transition: opacity .25s;
-}
-.scale-note:hover + .scale-tip, .scale-note:focus-visible + .scale-tip, .scale-note[aria-expanded="true"] + .scale-tip { opacity: 1; }
 
 .replay {
   appearance: none; background: none; border: 0; border-bottom: 1px solid var(--red); color: var(--red); cursor: pointer;
@@ -257,12 +159,9 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .dwg { width: 100%; height: auto; overflow: visible; }
 .dwg .ln path { fill: none; stroke: var(--ink); stroke-width: 1.1; stroke-linejoin: round; }
 .dwg .ln .cut { stroke-width: 2.2; }
-.dwg .ln .thick { stroke-width: 2.6; }
-.dwg .ln .wall { stroke-width: 6; }
 .dwg .ln .faint { stroke: var(--faint); stroke-width: .8; }
 .dwg .ln .swing, .dwg .ln .dash { stroke-dasharray: 5 4; }
 .dwg .ln .mesh { stroke-width: 1.4; }
-.dwg .ln .pipe { stroke-width: 5; }
 .dwg .ln .arrow { marker-end: url(#arrow); }
 .dwg .red path { fill: none; stroke: var(--red); stroke-width: 1.6; }
 .dwg .red .dash { stroke-dasharray: 5 4; }
@@ -280,7 +179,7 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .links { display: flex; gap: 22px; }
 .links a { font: 600 12.5px/1 var(--sans); font-stretch: 82%; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid var(--faint); padding-bottom: 3px; }
 
-/* drawing plot-in: main.js sets each path's dash to its own length, then releases it */
+/* drawing plot-in: chrome.js sets each path's dash to its own length, then releases it */
 .js .dwg path { transition: stroke-dashoffset 1.5s cubic-bezier(.5,0,.2,1); }
 .js .dwg text { opacity: 0; transition: opacity .6s ease .5s; }
 .js .dwg.drawn text { opacity: 1; }
@@ -291,13 +190,7 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .register .reg-title { font: 650 19px/1.25 var(--sans); font-stretch: 90%; letter-spacing: -.005em; margin: 0; }
 .register .reg-what { margin: 0; font-size: 15.5px; line-height: 1.5; color: var(--ink-2); }
 .register .reg-status { margin: 6px 0 0; font: 400 11.5px/1.3 var(--mono); }
-.register .card-all { padding: 0; grid-template-rows: 1fr; }
-.all-projects { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; height: 100%; min-height: 150px; box-sizing: border-box; padding: 24px 26px 26px; font: 650 19px/1.25 var(--sans); font-stretch: 90%; text-decoration: none; }
-.all-projects span { font-size: 26px; line-height: 1; }
-.register .card:has(.card-link:hover), .register .card-all:hover { background: color-mix(in srgb, var(--ink) 4%, var(--panel)); }
-
-/* "More projects" stays one line: its head column fits the title instead of breaking it in two */
-@media (min-width: 861px) { #register .sheet-head { grid-template-columns: max-content minmax(0, 1fr); } #register-h { white-space: nowrap; } }
+.register .card:has(.card-link:hover) { background: color-mix(in srgb, var(--ink) 4%, var(--panel)); }
 
 /* /projects: every project under where it stands */
 .status-group { margin-top: 88px; }
@@ -311,21 +204,9 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 
 .revs { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--ink); }
 .revs li { display: grid; grid-template-columns: 56px 120px minmax(0, 46em) minmax(150px, 1fr); gap: 0 18px; padding: 18px 0; border-bottom: .75px solid var(--hair); }
-/* the stack column: the role's main tools, one per line, ruled off from the summary */
-.revs .stack { list-style: none; margin: 0; padding: 2px 0 0 18px; border-left: .75px solid var(--hair); font: 400 12px/1.75 var(--mono); color: var(--ink-2); }
-.revs .stack li { display: block; padding: 0; border: 0; }
-/* the programme chart: on a wide screen, each revision's span on one axis of years, the year
-   lines running unbroken down the table, a red line at now (RevisionsSheet.astro) */
-.revs .span, .revs-axis { display: none; }
+/* on a wide screen the table keeps the column the programme chart had */
 @media (min-width: 1800px) {
   .revs > li { grid-template-columns: 56px 120px minmax(0, 46em) minmax(150px, 210px) minmax(0, 1fr); }
-  .revs .span { display: block; position: relative; margin: -18px 0; min-height: calc(100% + 36px);
-    background: repeating-linear-gradient(90deg, var(--hair) 0 .75px, transparent .75px calc(100% / var(--n))); }
-  .revs .span::after { content: ""; position: absolute; top: 0; bottom: -1px; left: var(--now); border-left: .75px dashed var(--red); }
-  .revs .span-bar { position: absolute; left: var(--l); width: var(--w); top: 25px; height: 6px; background: var(--ink); }
-  .revs > li:first-child .span-bar { background: var(--red); }
-  .revs-axis { display: block; position: absolute; left: 0; right: 0; top: -22px; height: 12px; }
-  .revs-axis span { position: absolute; left: var(--x); padding-left: 4px; font: 400 10px/1 var(--mono); color: var(--label); }
 }
 .rev { font: 700 11.5px/1 var(--sans); width: 34px; height: 30px; display: grid; place-items: center; position: relative; }
 .rev { padding-top: 7px; }
@@ -348,13 +229,8 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .schedule th, .schedule td { border: .75px solid var(--ink); padding: 9px 12px; text-align: left; vertical-align: top; }
 .schedule th { font: 400 10.5px/1.5 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); width: 30%; }
 
-.notes { margin: 0; padding: 0 0 0 1.6em; font-size: 16.5px; columns: 2 24em; column-gap: calc(var(--gutter) * 2); }
-.notes li { padding: 0 0 .9em .4em; max-width: 36em; break-inside: avoid; }
-.notes li::marker { font: 400 12px var(--mono); color: var(--red); }
 .term { border: 1.5px solid var(--ink); background: color-mix(in srgb, var(--ink) 4%, var(--sheet)); align-self: start; font: 400 13px/1.55 var(--mono); }
-.term-head { display: flex; justify-content: space-between; margin: 0; padding: 8px 12px; border-bottom: .75px solid var(--ink); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
-kbd { font: inherit; color: var(--red); }
-/* the real terminal (src/scripts/interactive-terminal.ts), drawn in the sheet's ink */
+/* the real terminal (src/scripts/interactive-terminal.ts); About's frosted window restyles it */
 .term { position: relative; }
 .term-body { padding: 12px; height: 300px; overflow-y: auto; overflow-x: hidden; cursor: text; outline: none; scrollbar-width: thin; scrollbar-color: var(--hair) transparent; }
 .term-body .h-1 { height: 4px; }
@@ -376,9 +252,6 @@ kbd { font: inherit; color: var(--red); }
 .diary a { font-weight: 650; text-decoration: none; justify-self: start; }
 .diary span { color: var(--ink-2); font-size: 14.5px; }
 
-.sheet-contact { min-height: 80svh; display: flex; flex-direction: column; justify-content: center; padding-bottom: 80px; }
-.sheet-contact h2 { font-size: clamp(48px, 7vw, 120px); font-stretch: 125%; font-weight: 820; letter-spacing: -.035em; line-height: .9; margin-bottom: .35em; }
-.contact-msg { max-width: 34em; font-size: 18px; color: var(--ink-2); margin: 0 0 2em; }
 .stamp {
   position: absolute; right: calc(var(--gutter) + min(2vw, 38.4px) + var(--wide)); top: clamp(60px, 12vh, 120px);
   border: 2.5px solid var(--red); color: var(--red); padding: 10px 18px 12px; text-align: center; transform: rotate(-6deg);
@@ -561,13 +434,6 @@ kbd { font: inherit; color: var(--red); }
   .titleblock th, .titleblock td { border: 0; border-top: .75px solid var(--ink); width: auto; }
   .titleblock th { border-right: .75px solid var(--ink); }
   .titleblock tr:first-child > :nth-child(-n+2) { border-top: 0; }
-  /* one column, the face before the title block: who, then the paperwork */
-  .sheet-you { display: flex; flex-direction: column; align-items: stretch; min-height: 0; padding: calc(var(--bar) + 44px) var(--gutter) 36px; }
-  .you-text, .you-side { display: contents; }
-  .site-photo { order: 1; display: grid; grid-template-columns: 116px 1fr; gap: 14px; align-items: end; margin: 8px 0 30px; }
-  .site-photo figcaption { margin: 0; }
-  .sheet-you .titleblock { order: 2; margin-bottom: 30px; }
-  .sheet-you .term { order: 3; align-self: stretch; }
   .sheet-head { grid-template-columns: 1fr; gap: 14px; }
   .details { grid-template-columns: 1fr; }
   .detail { padding: 20px 16px 24px; }
@@ -576,14 +442,11 @@ kbd { font: inherit; color: var(--red); }
   .register { grid-template-columns: 1fr; }
   .register .card { padding: 20px 16px 22px; }
   .register .reg-title { font-size: 18px; }
-  .all-projects { min-height: 0; padding: 20px 16px 22px; }
   .status-group { margin-top: 56px; }
   .side { grid-template-columns: 1fr 1fr; }
   .revs li { grid-template-columns: 40px minmax(0, 1fr); }
   .revs .when { grid-column: 2; }
   .revs li > div { grid-column: 2; }
-  .revs .stack { grid-column: 2; display: flex; flex-wrap: wrap; gap: 0 7px; margin-top: 8px; padding: 0; border: 0; }
-  .revs .stack li:not(:last-child)::after { content: "·"; margin-left: 7px; }
   .revs h3 i { display: block; margin: 2px 0 0; }
   .schedules { grid-template-columns: 1fr; }
   .diary li { grid-template-columns: 1fr; }
@@ -600,7 +463,6 @@ kbd { font: inherit; color: var(--red); }
   .details-rows .detail { grid-template-columns: 1fr; padding: 32px 16px 36px; }
   /* the sheets close up on a phone: a screen of blank paper reads as the end of the page */
   .sheet:not(.sheet-first) { padding-top: 56px; }
-  .sheet-contact { min-height: 0; padding-bottom: 56px; }
   .sub { margin-top: 44px; }
   .schedules { margin-top: 44px; }
   .prose { grid-template-columns: 1fr; }
@@ -616,8 +478,6 @@ kbd { font: inherit; color: var(--red); }
   .tm-row label { border-right: 0; padding: 12px 12px 0; }
   .tm-row input, .tm-row textarea { padding-top: 6px; }
 }
-/* a portrait tablet has the room for a face you can see */
-@media (min-width: 600px) and (max-width: 860px) { .site-photo { grid-template-columns: 200px 1fr; } }
 /* small phones: the mark, the name, "Get in touch" and the menu keep one line */
 @media (max-width: 420px) {
   .bar { font-size: 14px; }
@@ -632,36 +492,9 @@ kbd { font: inherit; color: var(--red); }
 }
 
 
-/* stacked layout: portrait phones, and tall portrait screens (tablets, portrait monitors) */
-@media (max-width: 860px) and (orientation: portrait), (max-aspect-ratio: 4/5) {
-  .scrolly { display: flex; flex-direction: column; }
-  .copy { display: contents; }
-  .step { order: 2; min-height: 0; padding: 28px var(--gutter) 44px; justify-content: flex-start; position: relative; z-index: 1; }
-  .stage { order: 1; height: 40svh; top: var(--bar); z-index: 4; background: var(--sheet); border-bottom: 1.5px solid var(--ink); }
-  /* the text scrolling under the drawing fades out instead of meeting a hard cut */
-  .stage::after { content: ""; position: absolute; left: 0; right: 0; top: calc(100% + 1.5px); height: 20px; background: linear-gradient(var(--sheet), transparent); pointer-events: none; }
-  .step:first-of-type { margin-top: 0; }
-  .step:last-child, .step[data-cloud] { min-height: 0; padding: 28px var(--gutter) 44px; }
-  .step::before { content: ""; position: absolute; left: var(--gutter); right: var(--gutter); top: 0; border-top: .75px solid var(--ink); }
-  .scale-tip { width: 190px; }
-  .turn { left: 12px; bottom: 8px; }
-  .stage .turn span { display: none; }
-}
-
-/* the stage adapts to its own size: narrow or short stages keep the level names only,
-   and the turn buttons without their caption */
-.stage.short .turn span, .stage.compact .turn span { display: none; }
+/* the plate's turn buttons lose their caption on a narrow stage */
 .plate-stage { container-type: inline-size; }
 @container (max-width: 480px) { .plate-stage .turn span { display: none; } }
-
-.stage.short .levels li { width: 180px; }
-.stage.compact .levels li { width: 108px; font-size: 11px; }
-.stage.compact .levels span, .stage.short .levels span { display: none; }
-
-/* the screen detail, inline in the text when the drawing has no room for it */
-.callout-inline { display: none; position: static; transform: none; opacity: 1; width: auto; max-width: 330px; margin: 6px 0 22px; }
-.chat-inline .callout-inline { display: block; }
-.chat-inline .stage .callout { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .01ms !important; animation: none !important; }
@@ -677,13 +510,9 @@ kbd { font: inherit; color: var(--red); }
 .js .dwg.drawn .fill { opacity: 1; }
 /* labels knock out the lines behind them, the way a drafter leaves a gap for lettering */
 .dwg .lbl text { paint-order: stroke; stroke: var(--sheet); stroke-width: 4px; stroke-linejoin: round; }
-.levels li { pointer-events: auto; cursor: default; }
-.stage.turnable { cursor: grab; touch-action: pan-y; }
-.stage.turning { cursor: grabbing; }
 .turn { position: absolute; left: 70px; bottom: 22px; margin: 0; display: flex; align-items: center; gap: 8px; font: 400 10.5px/1 var(--mono); color: var(--ink-2); letter-spacing: .04em; opacity: 0; visibility: hidden; transition: opacity .5s, visibility 0s .5s; }
 .turn button { appearance: none; background: var(--sheet); border: .75px solid var(--ink); color: var(--ink); font: inherit; width: 28px; height: 28px; cursor: pointer; padding: 0; }
 .turn button:hover { border-color: var(--red); color: var(--red); }
-.stage.turnable .turn { opacity: 1; visibility: visible; transition: opacity .5s; }
 
 /* print: everything drawn, nothing waiting on scroll, and the CV on white paper */
 @media print {
@@ -700,7 +529,6 @@ kbd { font: inherit; color: var(--red); }
   .sheet-head { margin-bottom: 18px; }
   .sheet-head h1, .sheet-head h2 { font-size: 26pt; }
   .revs li, .schedule tr, .detail { break-inside: avoid; }
-  .revs .span { display: none !important; }
   .actions .act { border: 0; padding: 0; background: none; color: #000; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

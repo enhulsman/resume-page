@@ -60,10 +60,10 @@ decision behind it.
 
 ## 7. The whole page (stone-homepage; glass-material)
 
-- [ ] 7.1 Tests from: section order, the overlap computed from the layout (three sizes, on load and after play), scrolling the whole page (three sizes), the page matches the list, the kinds, no glass anywhere else and no colour panels over the whole page, the rendered page is all config, the check catches a typed-in word (unit, on the covering checker with all five fixtures), reduced motion from the start and no running animations, phone width over the whole page, retired files are gone
-- [ ] 7.2 Adjust spacing and placement until the overlap checks pass (never fading or hiding glass)
-- [ ] 7.3 Delete the files only the old homepage used: `scene.js`, the homepage `main.js`, `YouSheet`, the overzicht `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`, `NotesSheet`, `ContactSheet`; for `depth.js`, `span.js` and the name glyphs, grep inner pages first and delete only what nothing imports, with its unit test from `npm test`. Keep `AnnaPlate` and `plate.js`
-- [ ] 7.4 Run all test commands
+- [x] 7.1 Tests from: section order, the overlap computed from the layout (three sizes, on load and after play), scrolling the whole page (three sizes), the page matches the list, the kinds, no glass anywhere else and no colour panels over the whole page, the rendered page is all config, the check catches a typed-in word (unit, on the covering checker with all five fixtures), reduced motion from the start and no running animations, phone width over the whole page, retired files are gone
+- [x] 7.2 Adjust spacing and placement until the overlap checks pass (never fading or hiding glass)
+- [x] 7.3 Delete the files only the old homepage used: the homepage `main.js`, `YouSheet`, the overzicht `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`, `NotesSheet`, `ContactSheet`; for `depth.js`, `span.js` and the name glyphs, grep inner pages first and delete only what nothing imports, with its unit test from `npm test`. Keep `AnnaPlate` and `plate.js` (and so `scene.js`, which `plate.js` draws, and `depth.js`, which `scene.js` imports)
+- [x] 7.4 Run all test commands
 
 ## 8. Remove the lab and the rejected stagings (last)
 

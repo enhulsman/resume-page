@@ -481,7 +481,7 @@ for (const width of [900, 1024, 1180, 1440]) {
 }
 
 test('no project drawing scrolls sideways at any width, and none says it does', async () => {
-  for (const path of ['/', '/projects']) for (const [width, height] of [[390, 844], [820, 1180], [844, 390]]) {
+  for (const path of ['/projects', '/projects/Henk']) for (const [width, height] of [[390, 844], [820, 1180], [844, 390]]) {
     const { context, page } = await open(path, { width, height });
     const r = await page.locator('.dwg-scroll').evaluateAll(els => els.map(el => ({ over: el.scrollWidth > el.clientWidth + 1, hint: getComputedStyle(el, '::after').content })));
     for (const x of r) {

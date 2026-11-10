@@ -105,7 +105,7 @@ hero cannot ship on its own: the page under it has to speak the same language.
 - **Shared chrome** on every page: stone colours, Archivo, the new top bar and footer; no theme
   button, no dark theme. **BREAKING** for the drawing-sheet look of inner pages' chrome.
 - **Phones** keep a menu button in the bar; the footer gets stone wording from config.
-- **Retired:** the arrival (`intro.js` and the layout's `html.intro` block), the 3D scene (`scene.js`, the homepage `main.js`), the
+- **Retired:** the arrival (`intro.js` and the layout's `html.intro` block), the 3D scene's homepage driver (the homepage `main.js`; `scene.js` stays, AnnaPlate on /projects draws it), the
   homepage sheets (`YouSheet`, `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`,
   `NotesSheet`, `ContactSheet`), and last `/hero-lab` with the H2 variant, the glare and the
   turn, journey and stack stagings.
