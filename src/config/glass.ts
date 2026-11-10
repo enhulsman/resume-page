@@ -1,7 +1,7 @@
 // The glass: the hero's cards (one [04] light per project), what may be glass, and the frosted windows' glows.
 // Titles and links come from home.ts; each readout's number is one of the project's own
 // dimensions there, so a number changed on the homepage changes here too.
-import { details, annaLead, type DetailListing } from './home.ts';
+import { details, annaLead, register, type DetailListing, type CardListing } from './home.ts';
 
 type RGB = [number, number, number];
 export interface LayerTune {
@@ -14,7 +14,7 @@ export interface LayerTune {
 }
 
 export interface GlassCard {
-  id: 'anna' | DetailListing['id'];
+  id: 'anna' | DetailListing['id'] | CardListing['id'];
   title: string;
   href: string;
   /** The number the readout leads with ('' for ANNA, whose fact is a phrase). */
@@ -160,18 +160,117 @@ export const terminalReflection: { blur: number; opacity: number; panes: Reflect
   ],
 };
 
+// Every project's own light (openspec stone-inner-pages, Ezra 2026-11-10): a near and a deep colour
+// for its windows' glows and /blog's hover lights, and a ribbed light (`card`) for its card on
+// /projects. The hero's three projects keep their card's light; bible-tui (amber), pytaiga-mcp (teal),
+// Encrypted Chat TUI (violet) and This site (warm, ANNA's flame without its tongue) are tuned as in
+// the inner-page sketches; Finance Bot has a light of its own (Ezra's fix), a jade green, no longer the
+// benched mist: its deep colour at least 30 degrees of hue from every other project's and the mist's.
+export type ProjectLightId = DetailListing['id'] | CardListing['id'];
+export interface ProjectLight { near: RGB; deep: RGB; card: GlassCard }
+const heroCard = (id: GlassCard['id']) => {
+  const c = glassCards.find((x) => x.id === id);
+  if (!c) throw new Error(`glass.ts has no hero card ${id}`);
+  return c;
+};
+const listingOf = (id: ProjectLightId) => {
+  const l = [...details, ...register].find((x) => x.id === id);
+  if (!l) throw new Error(`home.ts has no project ${id}`);
+  return l;
+};
+/** A project light of its own: one of the study's fitted shapes (`light`), recoloured. */
+const ownLight = (id: ProjectLightId, light: number, base: GlassCard['base'], wash: RGB, distance: number, tune: GlassCard['tune']): GlassCard =>
+  ({ id, title: listingOf(id).title, href: listingOf(id).href, value: '', readout: '', light, base, ink: 'dark', distance, wash: { color: wash, opacity: 0.2 }, tune });
+
+export const projectLights: Record<ProjectLightId, ProjectLight> = {
+  henk: { near: [128, 170, 226], deep: [48, 92, 172], card: heroCard('henk') },
+  // the sun, and the plum ground it sets into
+  homelab: { near: [255, 180, 104], deep: [176, 120, 150], card: heroCard('homelab') },
+  sandbox: { near: [196, 224, 140], deep: [86, 140, 50], card: heroCard('sandbox') },
+  // the mist's shape (a deep haze, one tilted pale band), in jade: Finance Bot's own
+  finance: { near: [150, 214, 164], deep: [52, 150, 78], card: ownLight('finance', 2, tint([-3, 1, -2]), [120, 186, 138], 0.5, [
+    { scale: 2.6, dy: -30, set: { color: [150, 214, 164], sigma: 1.0 } },
+    { scale: 1.25, dy: -24, lean: 0.15, set: { color: [228, 244, 232], color2: [52, 150, 78], g0: 190, g1: 260, sigma: 0.08 } },
+  ]) },
+  // amber: a flame's halo and a short tongue, deep orange at its tip
+  bible: { near: [244, 196, 110], deep: [196, 110, 52], card: ownLight('bible', 0, tint([5, 0, -7]), [240, 176, 100], 0.45, [
+    { scale: 1.9, dy: 10, set: { color: [246, 200, 130], sigma: 1.0, opacity: 0.7 } },
+    { set: { opacity: 0 } },
+    { scale: 1.3, stretch: [0.9, 1.05], dy: -16, set: { color: [196, 104, 40], color2: [255, 214, 120], g0: 150, g1: 300, sigma: 0.08 } },
+  ]) },
+  // teal: the tide's band, greener
+  pytaiga: { near: [132, 204, 190], deep: [40, 120, 120], card: ownLight('pytaiga', 1, tint([-3, 1, 0]), [110, 180, 170], 0.6, [
+    { scale: 0.95, set: { color: [132, 204, 190], color2: [36, 112, 112], g0: 130, g1: 260, sigma: 0.1 } },
+  ]) },
+  // violet: a pale halo and a hard-rimmed pod
+  chat: { near: [196, 172, 226], deep: [104, 78, 168], card: ownLight('chat', 4, tint([-1, -2, 2]), [176, 156, 214], 0.45, [
+    { scale: 2.2, set: { color: [206, 194, 230], sigma: 1.0, opacity: 0.6 } },
+    { scale: 1.1, dy: 10, set: { color: [210, 190, 244], color2: [96, 70, 160], g0: 140, g1: 290, sigma: 0.07, opacity: 1 } },
+  ]) },
+  // warm: the bar's hover light, ANNA's flame without its tongue
+  site: { near: [242, 168, 112], deep: [214, 58, 34], card: ownLight('site', 0, tint([4, -1, -5]), [236, 150, 96], 0.5, [
+    { scale: 1.9, dy: 10, set: { color: [242, 168, 112], sigma: 1.0, opacity: 0.75 } },
+    { set: { opacity: 0 } },
+    { scale: 1.2, dy: -10, set: { color: [214, 90, 50], color2: [255, 196, 96], g0: 150, g1: 300, sigma: 0.09 } },
+  ]) },
+};
+
+/**
+ * Each page's light (openspec stone-inner-pages, Ezra 2026-11-10: "the hero's four lights, card
+ * order"): the bar's hover glow per link, and the head light far behind /blog's and /resume's
+ * heading. The near colour is its hero card's first light; the deep one as tuned in the sketches.
+ */
+export type PageLightId = 'projects' | 'blog' | 'resume' | 'contact';
+const firstLight = (id: GlassCard['id']) => heroCard(id).tune![0]!.set!.color as RGB;
+export const pageLights: Record<PageLightId, { near: RGB; deep: RGB }> = {
+  projects: { near: firstLight('anna'), deep: [255, 196, 96] }, // the flame
+  blog: { near: firstLight('henk'), deep: [96, 132, 200] }, // the tide
+  resume: { near: firstLight('homelab'), deep: [214, 120, 140] }, // the sunset
+  contact: { near: firstLight('sandbox'), deep: [150, 188, 110] }, // the moss
+};
+
+/**
+ * Every inner page's glass, by route, top to bottom (openspec stone-inner-pages): each id is a
+ * `data-glass-moment` on that page. A route without glass lists none; every built inner route has
+ * an entry, so a new post or project page cannot gain or lose glass by accident.
+ */
+export type InnerMoment = 'anna' | 'project-cards' | 'henk' | 'sandbox' | 'bible' | 'homelab' | 'finance'
+  | 'pytaiga' | 'diagram' | 'code' | 'post-drawing' | 'compose';
+export const innerGlass: Record<string, InnerMoment[]> = {
+  '/projects': ['anna', 'project-cards'],
+  '/projects/AnnaAssistant': ['anna'],
+  '/projects/Henk': ['henk', 'diagram'],
+  '/projects/ClaudeSandbox': ['sandbox', 'diagram'],
+  '/projects/BibleTui': ['bible'],
+  '/projects/HomelabInfrastructure': ['homelab'],
+  '/projects/FinanceBot': ['finance'],
+  '/projects/PytaigaMcp': ['pytaiga'],
+  '/projects/EncryptedChatTUI': [],
+  '/projects/ResumePage': [],
+  '/blog': [],
+  '/blog/henk-watchdog': ['henk', 'code'],
+  '/blog/henk-exactly-once': ['post-drawing'],
+  '/blog/bible-tui': ['bible'],
+  '/blog/spec-factory': [],
+  '/blog/successor-scoreboard': [],
+  '/resume': [],
+  '/contact': ['compose'],
+};
+
 // As tuned in the glass lab (2026-11-09): ANNA's flame, red at its foot, yellow at its heart, amber
 // around. The terminal's: the two reflected cards' hues, warm high on the left, cool low on the right.
 // The projects' windows (sketch A2, 2026-11-11): each project's own light, near high on the left,
 // deep low on the right: Henk's tide and the sandbox's moss from their cards, a new amber for bible-tui.
-const projectGlow = (near: RGB, deep: RGB): WindowGlow => ({ inset: '4% -7% 2%', blur: 26, lights: [
+// Inner pages (2026-11-10): Homelab's window glows in its card's sun and plum (dusk), Finance Bot's
+// in its own light.
+const projectGlow = ({ near, deep }: { near: RGB; deep: RGB }): WindowGlow => ({ inset: '4% -7% 2%', blur: 26, lights: [
   { at: [30, 38], color: near, opacity: 0.95 },
   { at: [70, 66], color: deep, opacity: 0.62 },
 ] });
-export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible', WindowGlow> = {
-  henk: projectGlow([128, 170, 226], [48, 92, 172]),
-  sandbox: projectGlow([196, 224, 140], [86, 140, 50]),
-  bible: projectGlow([244, 196, 110], [196, 110, 52]),
+export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible' | 'dusk' | 'finance', WindowGlow> = {
+  henk: projectGlow(projectLights.henk),
+  sandbox: projectGlow(projectLights.sandbox),
+  bible: projectGlow(projectLights.bible),
   flame: { inset: '14% -7% 10%', blur: 28, lights: [
     { at: [28, 66], color: [214, 58, 34], opacity: 0.5 },
     { at: [52, 42], color: [255, 196, 96], opacity: 0.6 },
@@ -181,7 +280,16 @@ export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible
     { at: [30, 34], color: washOf('anna'), opacity: 0.5 },
     { at: [76, 70], color: washOf('henk'), opacity: 0.42 },
   ] },
+  dusk: { inset: '4% -7% 2%', blur: 26, lights: [
+    { at: [32, 36], color: projectLights.homelab.near, opacity: 0.9 },
+    { at: [68, 66], color: projectLights.homelab.deep, opacity: 0.6 },
+  ] },
+  finance: projectGlow(projectLights.finance),
 };
+// TEMPORARY, goes in stone-inner-pages task 12.2 with src/pages/sketches/: the untracked sketches
+// pick a window's glow by its projectWindows id, so `homelab` (now a projectWindows entry) must
+// resolve for them to build. Not enumerable: no page or test lists it; the real windows use `dusk`.
+Object.defineProperty(windowGlows, 'homelab', { value: windowGlows.dusk, enumerable: false });
 /** The glow's CSS background: one soft radial gradient per light, each fading to nothing. */
 export const glowBackground = (g: WindowGlow) =>
   g.lights.map((l) => `radial-gradient(closest-side at ${l.at[0]}% ${l.at[1]}%, ${rgba(l.color, l.opacity)}, ${rgba(l.color, 0)})`).join(', ');

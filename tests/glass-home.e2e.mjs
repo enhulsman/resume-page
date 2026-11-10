@@ -362,12 +362,18 @@ test('ANNA: no run line and no levels in her section, one glass object, a froste
   const { context, page, errors } = await open();
   const s = await page.$eval(ANNA, (el) => ({
     text: el.textContent,
+    labels: [...el.querySelectorAll('*')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
     glass: [...el.querySelectorAll('[data-glass]')].map((g) => g.dataset.glass),
     stagings: el.querySelectorAll('.anna-turn, .anna-journey, .anna-x, .slab').length,
   }));
   await context.close();
   for (const re of [/\bv\d+\.\d+/, /\breleases?\b/i, /\btests\b/i]) assert.doesNotMatch(s.text, re);
-  for (const l of annaLevels) assert.ok(!s.text.includes(l.name), `level ${l.name}`);
+  // the levels' names are plain words since 2026-11-10 ("MCP connectors" is also one of ANNA's rules):
+  // a level shows as its text, or as its name set alone as a label
+  for (const l of annaLevels) {
+    assert.ok(!s.text.includes(l.text), `level ${l.name}: its text`);
+    assert.ok(!s.labels.includes(l.name), `level ${l.name}: its name as a label`);
+  }
   assert.deepEqual(s.glass, ['frosted']);
   assert.equal(s.stagings, 0);
   assert.deepEqual(errors, []);
@@ -377,9 +383,12 @@ test('the four levels are not on the homepage', async () => {
   const { context, page } = await open(`?chat=${END}`);
   await annaDone(page);
   const text = await page.evaluate(() => document.body.textContent.replace(/\s+/g, ' '));
+  const labels = await page.evaluate(() => [...document.body.querySelectorAll('*')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
   await context.close();
+  // the names are plain words since 2026-11-10 ("Claude", "MCP connectors" appear elsewhere on the
+  // page): a name counts as a level only where it is set alone, as a label
   for (const l of annaLevels) {
-    assert.ok(!text.includes(l.name), `name: ${l.name}`);
+    assert.ok(!labels.includes(l.name), `name: ${l.name}`);
     assert.ok(!text.includes(l.text), `text: ${l.text}`);
   }
 });

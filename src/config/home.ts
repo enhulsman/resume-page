@@ -31,12 +31,15 @@ export interface DetailListing {
   href: string;
 }
 
-/** ANNA's levels below the room, as the homepage labels them; /projects labels its plate the same way. */
+/**
+ * ANNA's four levels, as rows of type under her text on /projects and under her window on her page
+ * (openspec stone-inner-pages, anna-section). The names carry no minus numbers (approved 2026-11-10).
+ */
 export const annaLevels = [
-  { id: 'identity', name: '−1 Identity', text: 'Entra ID, profile, history, memories. Everything is per user.' },
-  { id: 'claude', name: '−2 Claude', text: 'Two backends behind one interface: Claude Code streaming as a subprocess, or the Anthropic API.' },
-  { id: 'connectors', name: '−3 MCP connectors', text: 'Loket for leave, ClockWise for hours, plus ANNA\'s own tools for memory, reminders and documents.' },
-  { id: 'ops', name: '−4 Operations', text: 'Health checks, a log analyser, alerts before tokens expire, an admin portal.' },
+  { id: 'identity', name: 'Identity', text: 'Entra ID, profile, history, memories. Everything is per user.' },
+  { id: 'claude', name: 'Claude', text: 'Two backends behind one interface: Claude Code streaming as a subprocess, or the Anthropic API.' },
+  { id: 'connectors', name: 'MCP connectors', text: 'Loket for leave, ClockWise for hours, plus ANNA\'s own tools for memory, reminders and documents.' },
+  { id: 'ops', name: 'Operations', text: 'Health checks, a log analyser, alerts before tokens expire, an admin portal.' },
 ];
 
 /** ANNA on /projects, where it leads the set; its drawing is the homepage's section, turned. */
@@ -187,10 +190,17 @@ export const details: DetailListing[] = [
 ];
 
 /** The projects without a drawing yet, each with a project page; they show as cards. */
-export interface CardListing { title: string; href: string; what: string; group: Group; /** Left off the homepage's cards. */ hideOnHome?: boolean; }
+export interface CardListing {
+  /** Its light in glass.ts' projectLights. */
+  id: 'chat' | 'site';
+  title: string; href: string; what: string; group: Group;
+  /** Left off the homepage's cards. */ hideOnHome?: boolean;
+  /** Its card on /projects reads its intro from its page's `hook` (buildProjects joins it as `text`). */
+  introFromHook?: boolean;
+}
 export const register: CardListing[] = [
-  { title: 'Encrypted Chat TUI', href: '/projects/EncryptedChatTUI', what: 'Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL', group: 'paused' },
-  { title: 'This site', href: '/projects/ResumePage', what: 'Static-first Astro portfolio on Cloudflare Workers', group: 'running', hideOnHome: true }, // you are on it
+  { id: 'chat', title: 'Encrypted Chat TUI', href: '/projects/EncryptedChatTUI', what: 'Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL', group: 'paused' },
+  { id: 'site', title: 'This site', href: '/projects/ResumePage', what: 'Static-first Astro portfolio on Cloudflare Workers', group: 'running', hideOnHome: true, introFromHook: true }, // you are on it
 ];
 
 /** The skills, as a drawing's materials schedule. */
@@ -240,13 +250,17 @@ export const footer = {
   verse: 'Proverbs 3:5-7',
 };
 
+/** The upload Finance Bot's window answers (invented). */
+const FINANCE_UPLOAD = '20261124-201508-3fa1';
+
 /**
  * Projects on the homepage (Ezra, 2026-11-11, sketch A2 tight): three projects each hold a real
  * artefact of their own in a frosted window, in this order; the others stay rows. The Henk chat and
  * the sandbox report are PLACEHOLDERS written from their project pages' facts (Henk refusing a
  * prompt-injection payload and trusting its source less; the report's blocked requests, direct-IP
  * access and 0-100 risk score), to be replaced by a real transcript and a real report. bible-tui's
- * verses are Genesis 1:1-5 in the KJV, as its reader shows them.
+ * verses are Genesis 1:1-5 in the KJV, as its reader shows them. Homelab's and Finance Bot's windows
+ * open their own project pages (openspec stone-inner-pages).
  */
 export const projectWindows = {
   henk: {
@@ -284,6 +298,55 @@ export const projectWindows = {
       'And God called the light Day, and the darkness he called Night. And the evening and the morning were the first day.',
     ],
     keys: 'j/k scroll   / search   g jump   t translation',
+  },
+  /**
+   * Homelab's page (openspec stone-inner-pages, H1, approved as written): `homelab-health` run on the
+   * workstation, a real run of 2026-11-12 with every address left out. A snapshot; it does not update.
+   * Each row is marker | host | text, the spacing inside the text kept.
+   */
+  homelab: {
+    title: 'ezra@workstation: ~',
+    prompt: '$',
+    command: 'homelab-health',
+    heading: '=== Homelab Health ===',
+    rows: [
+      { marker: '[+]', host: 'workstation', text: 'load:0.82  mem:8975/15994MB disk: 41% docker:NA  (this machine)' },
+      { marker: '[+]', host: 'rp5', text: 'load:1.28  mem:3508/8063MB  disk: 46% docker:19  dns:ok' },
+      { marker: '[!]', host: '', text: 'hygiene: journal 3686MB' },
+      { marker: '[+]', host: 'vps', text: 'load:0.43  mem:2039/3819MB  disk: 73% docker:19  dns:ok' },
+      { marker: '', host: '', text: 'hygiene: ok' },
+      { marker: '[+]', host: 'rp2', text: 'load:0.37  mem:422/921MB    disk: 73% docker:NA  dns:ok' },
+      { marker: '', host: '', text: 'hygiene: ok' },
+      { marker: '[+]', host: '', text: 'Prometheus: all targets up' },
+    ],
+  },
+  /**
+   * Finance Bot's page (approved as written, 2026-11-10): its reply in Discord to an `/upload`. Every
+   * number, the date, the upload id and the merchants are invented; the wording is the bot's own (the
+   * acknowledgement, the progress line and the summary embed). No real financial data.
+   */
+  finance: {
+    title: 'Discord · #finance',
+    command: { user: 'Ezra', verb: 'used', name: '/upload', file: 'asn-export.csv' },
+    bot: {
+      name: 'Finance Bot',
+      tag: 'APP',
+      text: `Processing 1 file(s) as upload ${FINANCE_UPLOAD}; progress and the summary follow in your thread`,
+      mention: '#Approvals-Ezra',
+    },
+    progress: '11/2026: 164 rows written, 2 flagged',
+    summary: {
+      title: `Upload ${FINANCE_UPLOAD}: complete`,
+      /** One line each; an indented line keeps its indent when it wraps. */
+      lines: [
+        { indent: false, text: '164 rows read from 1 file; 164 new.' },
+        { indent: false, text: 'Periods:' },
+        { indent: true, text: '11/2026: written, 164 rows (151 expenses, 13 income), sheet created, 2 flagged, 0 marked' },
+        { indent: false, text: 'Flagged rows (the AI guess that was not used):' },
+        { indent: true, text: '06-11-2026  18.95  Kruidvat  -> Persoonlijke verzorging (0.61)' },
+        { indent: true, text: '13-11-2026  42.50  Bol.com  -> Huishouden (0.68)' },
+      ],
+    },
   },
 };
 /** The projects that hold a window, in page order. */

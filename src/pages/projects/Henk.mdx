@@ -4,6 +4,11 @@ description: "Security-first homelab agent on the Claude Agent SDK: a default-de
 date: 2026-07-20
 github: "https://github.com/enhulsman/henk"
 tech: ["Python", "Claude Agent SDK", "Docker", "Signal", "ntfy", "Tailscale", "pytest"]
+stats:
+  - { value: "3,660", label: "tests, SDK mocked out" }
+  - { value: "1", label: "owner; everyone else is dropped" }
+  - { value: "4", label: "egress ports, zero inbound" }
+  - { value: "exactly once", label: "event replay across restarts" }
 layout: "../../layouts/ProjectLayout.astro"
 showcase: true
 dateLabel: "Running since"

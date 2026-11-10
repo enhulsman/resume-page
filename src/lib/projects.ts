@@ -16,6 +16,8 @@ export interface PageFacts {
   status: string;
   /** The repository, when the page names one. */
   code?: string;
+  /** The page's lead. */
+  hook: string;
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -32,11 +34,13 @@ export function pageFacts(src: string): PageFacts {
     tech: fm.tech ? JSON.parse(fm.tech) : [],
     status: `${fm.dateLabel} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}${fm.statusNote ? `, ${fm.statusNote}` : ''}`,
     code: !github ? undefined : github.startsWith('http') ? github : `${site.social.GitHub}/${github}`,
+    hook: fm.hook ?? '',
   };
 }
 
 export type Detail = DetailListing & { status: string; code?: string };
-export type Card = CardListing & { status: string };
+/** `text`: the page's hook, for a listing that asks for it (`introFromHook`). */
+export type Card = Omit<CardListing, 'id'> & { id: CardListing['id'] | DetailListing['id']; status: string; text?: string };
 export interface TerminalProject { title: string; description: string; tech: string[]; github: string; link: string; slug: string; }
 
 /** `sources` maps each page's path (any directory, ending in Name.mdx) to its raw text, as import.meta.glob gives it. */
@@ -49,10 +53,14 @@ export function buildProjects(sources: Record<string, string>) {
   };
   const annaLead = { ...annaListing, status: facts(annaListing.href).status };
   const details: Detail[] = detailListings.map(d => ({ ...d, status: facts(d.href).status, code: facts(d.href).code }));
-  const register: Card[] = registerListings.map(r => ({ ...r, status: facts(r.href).status }));
+  const register: Card[] = registerListings.map(r => ({
+    ...r,
+    status: facts(r.href).status,
+    ...(r.introFromHook ? { text: facts(r.href).hook } : {}),
+  }));
   /** Every project as a card, the drawn ones included, in /projects' group order. */
   const cards: Card[] = groups.flatMap(g => [
-    ...details.filter(d => d.group === g.id).map(d => ({ title: d.title, href: d.href, what: d.what, status: d.status, group: d.group as Group })),
+    ...details.filter(d => d.group === g.id).map(d => ({ id: d.id, title: d.title, href: d.href, what: d.what, status: d.status, group: d.group as Group })),
     ...register.filter(r => r.group === g.id),
   ]);
   /** The terminal's `projects`, ANNA first, each as its page describes itself, as a sentence. */
