@@ -4,6 +4,7 @@
 // A project's dates, date label, code link, stack and description live in its page's
 // frontmatter, not here: src/lib/projects.ts joins them to these listings.
 import { education, spokenLanguages } from './resume.ts';
+import site from './site.ts';
 
 /** /projects groups every project by where it stands, so a lighter treatment reads as paused, not as less. */
 export type Group = 'running' | 'paused' | 'done';
@@ -18,8 +19,10 @@ export interface DetailListing {
   id: 'henk' | 'finance' | 'homelab' | 'bible' | 'pytaiga' | 'sandbox';
   title: string;
   text: string;
-  /** Strongest first: the homepage shows the first, /projects the first two. */
+  /** Strongest first: /projects shows the first two. */
   dims: { value: string; label: string }[];
+  /** Which of `dims` the homepage's row sets large (default 0), so /projects keeps `dims`' order. */
+  homeDim?: number;
   /** Its one line, for where it is listed rather than drawn. */
   what: string;
   group: Group;
@@ -58,6 +61,22 @@ export const annaCalls = {
   /** Before the sources she read, in the window. */
   read: 'Read:',
   replay: 'Replay',
+};
+
+/**
+ * The stone homepage's own words (openspec stone-glass-homepage): the hero's role and intro lines
+ * (moved from /hero-lab unchanged), the section headings and link labels, the word for a current
+ * job's end year, the terminal window's title and the photo's alt text. ANNA's heading is
+ * annaLead.title; the name is site.name.
+ */
+export const homeSections = {
+  role: `${site.role} at ${site.company}.`,
+  intro: 'I\u00a0build ANNA, an AI assistant in Microsoft Teams that does the admin no one should spend their day on.',
+  headings: { projects: 'Projects', experience: 'Experience', writing: 'Writing', about: 'About', contact: 'Contact' },
+  links: { projects: 'See all projects', resume: 'Full résumé', writing: 'All writing' },
+  now: 'now',
+  terminalTitle: 'ezra@hulsman: ~',
+  photoAlt: `${site.name}, photographed from below`,
 };
 
 /** The two drawn in full on the homepage; the others are its cards. */
@@ -124,6 +143,7 @@ export const details: DetailListing[] = [
       { value: '3', label: 'Python versions in CI' },
       { value: '50 → 5', label: 'fields per story in a list' },
     ],
+    homeDim: 2,
     what: 'A merged pull request to an open-source MCP server for Taiga',
     group: 'done',
     href: '/projects/PytaigaMcp',

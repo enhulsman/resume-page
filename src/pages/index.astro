@@ -1,12 +1,8 @@
 ---
+// The homepage in stone and glass (openspec stone-glass-homepage). The sections arrive in order,
+// one change at a time: the hero now; ANNA, Projects, Experience, Writing, About and Contact next.
 import OverzichtLayout from "../layouts/OverzichtLayout.astro";
-import YouSheet from "../components/overzicht/YouSheet.astro";
-import AnnaSection from "../components/overzicht/AnnaSection.astro";
-import DetailsSheet from "../components/overzicht/DetailsSheet.astro";
-import RegisterSheet from "../components/overzicht/RegisterSheet.astro";
-import RevisionsSheet from "../components/overzicht/RevisionsSheet.astro";
-import NotesSheet from "../components/overzicht/NotesSheet.astro";
-import ContactSheet from "../components/overzicht/ContactSheet.astro";
+import Hero from "../components/stone/Hero.astro";
 import site from "../config/site";
 
 const title = `${site.name}, ${site.role}`;
@@ -18,16 +14,15 @@ const description = `${site.name} is a ${site.role} at ${site.company}, building
   description={description}
   keywords={`${site.seo.keywords}, resume, portfolio, Utrecht, ${site.company}`}
 >
-  <YouSheet />
-  <AnnaSection />
-  <DetailsSheet />
-  <RegisterSheet />
-  <RevisionsSheet />
-  <NotesSheet />
-  <ContactSheet />
+  <Hero />
 </OverzichtLayout>
 
 <script>
-  import '../scripts/overzicht/intro.js';
-  import '../scripts/overzicht/main.js';
+  import '../scripts/glass/panes.js';
 </script>
+
+<style is:global>
+  /* Until the stone bar (chunk 3): the drawing-sheet bar is fixed over the page, so the hero
+     starts below it. Goes with that bar. */
+  main:has(> .hero) { padding-top: calc(var(--frame) + 6px + var(--bar)); }
+</style>

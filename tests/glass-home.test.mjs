@@ -11,6 +11,8 @@ import { glassMoments, glassCards, fallbackFor, windowGlows } from '../src/confi
 import { momentsOverlap, visibleShare } from './lib/moments.mjs';
 import { slowFrom } from '../src/scripts/glass/guard.js';
 import { parseColor, contrast } from './lib/contrast.mjs';
+import * as home from '../src/config/home.ts';
+import site from '../src/config/site.ts';
 
 const root = new URL('../', import.meta.url);
 const read = (p) => readFileSync(new URL(p, root), 'utf8');
@@ -242,4 +244,67 @@ test('panes.js mounts every ribbed pane and drops the lab\'s dial, look and hook
 test('model.js says which features only the retired stagings used', () => {
   const src = read('src/scripts/glass/model.js');
   assert.match(src, /retired ANNA stagings/);
+});
+
+// ---- the hero arrives, the old homepage leaves (chunk 2) ----
+
+const { details } = home;
+const homeSections = home.homeSections ?? {};
+
+test('readouts from the project data: ANNA is "In production", every other card one of its project\'s dims verbatim', () => {
+  assert.equal(glassCards[0].id, 'anna');
+  assert.equal(glassCards[0].readout, 'In production');
+  for (const c of glassCards.slice(1)) {
+    const d = details.find((x) => x.id === c.id);
+    assert.ok(d, `${c.id} has a listing in home.ts`);
+    assert.ok(d.dims.some((dim) => c.readout.includes(dim.value)), `${c.id}: "${c.readout}" holds one of ${d.dims.map((x) => x.value).join(', ')}`);
+  }
+});
+
+test('headings and labels live in config: homeSections', () => {
+  assert.deepEqual(
+    [homeSections.headings.projects, homeSections.headings.experience, homeSections.headings.writing, homeSections.headings.about, homeSections.headings.contact],
+    ['Projects', 'Experience', 'Writing', 'About', 'Contact'],
+  );
+  assert.deepEqual([homeSections.links.projects, homeSections.links.resume, homeSections.links.writing], ['See all projects', 'Full résumé', 'All writing']);
+  assert.equal(homeSections.now, 'now');
+  assert.equal(homeSections.terminalTitle, 'ezra@hulsman: ~');
+  assert.equal(homeSections.photoAlt, 'Ezra Hulsman, photographed from below');
+  // the hero's lines, moved from the lab unchanged
+  assert.equal(homeSections.role, `${site.role} at ${site.company}.`);
+  assert.equal(homeSections.intro.replace(/ /g, ' '), 'I build ANNA, an AI assistant in Microsoft Teams that does the admin no one should spend their day on.');
+});
+
+test('homeDim: pytaiga-mcp shows its third dimension on the homepage; its dims keep their order for /projects', () => {
+  const py = details.find((d) => d.id === 'pytaiga');
+  assert.equal(py.homeDim, 2);
+  assert.equal(py.dims[py.homeDim].value, '50 → 5');
+  assert.deepEqual(py.dims.map((d) => d.value), ['11', '3', '50 → 5']);
+  for (const d of details.filter((x) => x.id !== 'pytaiga')) assert.equal(d.homeDim, undefined, `${d.id} defaults to 0`);
+});
+
+test('the homepage is the stone hero: Hero.astro from config, panes.js, none of the drawing sheets', () => {
+  const index = read('src/pages/index.astro');
+  assert.match(index, /import Hero from "\.\.\/components\/stone\/Hero\.astro"/);
+  assert.match(index, /scripts\/glass\/panes\.js/);
+  assert.doesNotMatch(index, /components\/overzicht\/(YouSheet|AnnaSection|DetailsSheet|RegisterSheet|RevisionsSheet|NotesSheet|ContactSheet)/);
+  assert.doesNotMatch(index, /overzicht\/(intro|main)\.js/);
+  const hero = read('src/components/stone/Hero.astro');
+  assert.match(hero, /data-glass-moment="hero"/);
+  assert.match(hero, /\{site\.name\}/, 'the h1 is site.name');
+  assert.match(hero, /glassCards\.map/);
+  assert.match(hero, /<GlassCard /);
+  assert.doesNotMatch(hero, /data-glare|glare/, 'the name is plain');
+});
+
+test('the arrival is gone: no html.intro in the layout or the sheet, no intro.js, no wait for ovz:arrived', () => {
+  assert.equal(existsSync(new URL('src/scripts/overzicht/intro.js', root)), false);
+  const layout = read('src/layouts/OverzichtLayout.astro');
+  assert.doesNotMatch(layout, /classList\.add\('intro'\)|ovz:arrived|ovz-arrived|ovzEarly/);
+  assert.doesNotMatch(read('src/styles/overzicht.css'), /html\.intro/);
+  assert.doesNotMatch(read('src/components/overzicht/Terminal.astro'), /ovz:arrived|classList\.contains\('intro'\)/);
+  // its suites went with it
+  assert.equal(existsSync(new URL('tests/intro.e2e.mjs', root)), false);
+  assert.equal(existsSync(new URL('tests/overzicht.e2e.mjs', root)), false);
+  assert.doesNotMatch(JSON.parse(read('package.json')).scripts['test:e2e'], /intro\.e2e|overzicht\.e2e/);
 });

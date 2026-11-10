@@ -1,0 +1,68 @@
+---
+// The hero (openspec stone-glass-homepage): the name as plain type on two lines, the role and
+// intro line, and the four ribbed glass cards, one light per project, each a link to its page.
+// The first glass moment. Every word comes from config: site.ts, homeSections and glassCards.
+import "../../styles/stone.css";
+import GlassCard from "./GlassCard.astro";
+import { glassCards } from "../../config/glass.ts";
+import { homeSections } from "../../config/home.ts";
+import site from "../../config/site";
+---
+
+<section class="hero" data-glass-moment="hero" aria-labelledby="hero-name">
+  <div class="hero-top">
+    <h1 id="hero-name" class="hero-name">{site.name}</h1>
+    <p class="hero-intro">{homeSections.role} {homeSections.intro}</p>
+  </div>
+  <ul class="cards" aria-label={homeSections.headings.projects}>
+    {glassCards.map((c, i) => <li><GlassCard card={c} index={i + 1} /></li>)}
+  </ul>
+</section>
+
+<style>
+  .hero {
+    padding: clamp(32px, 4.4vw, 64px) var(--stone-gutter) 40px;
+    font-family: var(--stone-sans);
+    color: var(--stone-ink);
+    -webkit-font-smoothing: antialiased;
+    word-spacing: 0.06em;
+  }
+  .hero-top {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end;
+    column-gap: clamp(24px, 4vw, 64px);
+  }
+  /* plain type, one word to a line: min-content breaks at the space, one text node stays */
+  .hero-name {
+    margin: 0 0 0 -0.04em; inline-size: min-content;
+    font: 900 var(--stone-t-name)/0.84 var(--stone-sans);
+    font-stretch: 88%;
+    letter-spacing: -0.045em;
+    word-spacing: normal;
+    color: var(--stone-ink);
+  }
+  .hero-intro {
+    margin: 0 0 0.35em; max-width: 33ch; justify-self: end;
+    font-size: clamp(18px, 1.75vw, 25px); line-height: 1.32; color: var(--stone-ink-2); text-wrap: pretty;
+  }
+  .cards {
+    list-style: none; margin: clamp(28px, 3.6vw, 52px) 0 0; padding: 0;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 1vw, 14px);
+  }
+  /* four across: the row never pushes the cards below the first screen */
+  .cards :global(.glass-card) { aspect-ratio: auto; width: 100%; height: min(40svh, 27vw); }
+
+  @media (max-width: 760px) {
+    .hero-top { grid-template-columns: 1fr; row-gap: 18px; }
+    .hero-intro { justify-self: start; }
+    /* the cards scroll sideways in their own row; the page never does */
+    .cards {
+      grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%;
+      overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--stone-gutter));
+      padding: 4px var(--stone-gutter) 16px; scroll-padding-inline: var(--stone-gutter); scrollbar-width: none;
+    }
+    .cards li { scroll-snap-align: start; }
+    .cards :global(.glass-card) { height: auto; aspect-ratio: 296 / 340; }
+    .cards :global(.glass-card .title) { font-size: 19px; }
+    .cards :global(.glass-card .readout) { font-size: 14px; }
+  }
+</style>

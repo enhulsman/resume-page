@@ -1,5 +1,6 @@
 // End-to-end checks for the inner pages, drawn as "sheets in the set": same frame, bar,
-// tokens and type as the homepage. Needs a running site, like tests/overzicht.e2e.mjs:
+// tokens and type. The homepage left the set (openspec stone-glass-homepage: it is stone and
+// glass now, tested in tests/glass-*.e2e.mjs). Needs a running site:
 //
 //   BASE=http://localhost:4321 node --test tests/sheets.e2e.mjs
 import { test, before, after } from 'node:test';
@@ -20,8 +21,6 @@ after(async () => { await browser?.close(); });
 
 async function open(path, { width = 1440, height = 900, scale = 1, reducedMotion = 'no-preference', colorScheme = 'light', storage } = {}) {
   const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: scale, reducedMotion, colorScheme });
-  // the homepage's arrival is tested on its own (tests/intro.e2e.mjs); here the page is as it settles
-  await context.addInitScript(() => { try { sessionStorage.setItem('ovz-arrived', '1'); } catch {} });
   if (storage) await context.addInitScript(s => { for (const [k, v] of Object.entries(s)) if (localStorage.getItem(k) === null) localStorage.setItem(k, v); }, storage);
   const page = await context.newPage();
   const errors = [];
@@ -72,8 +71,8 @@ for (const path of INNER) {
   });
 }
 
-test('one bar on every page, homepage included: EH. | Ezra Hulsman, Projects, Blog, Résumé, Contact, and the theme button', async () => {
-  for (const [path, current] of [['/', null], ['/projects', 'PROJECTS'], ['/projects/Henk', 'PROJECTS'], ['/blog', 'BLOG'], [`/blog/${POSTS[0]}`, 'BLOG'], ['/resume', 'RÉSUMÉ'], ['/contact', 'CONTACT']]) {
+test('one bar on every page: EH. | Ezra Hulsman, Projects, Blog, Résumé, Contact, and the theme button', async () => {
+  for (const [path, current] of [['/projects', 'PROJECTS'], ['/projects/Henk', 'PROJECTS'], ['/blog', 'BLOG'], [`/blog/${POSTS[0]}`, 'BLOG'], ['/resume', 'RÉSUMÉ'], ['/contact', 'CONTACT']]) {
     const { context, page } = await open(path);
     // the signature from the old site, then the name in full; read out as the name alone
     assert.equal((await page.locator('.bar-name').innerText()).replace(/\s+/g, ' ').trim(), 'EH. EZRA HULSMAN');
@@ -393,7 +392,7 @@ async function greenAtTheEdges(page) {
   return n;
 }
 
-for (const path of ['/', '/projects', '/projects/Henk', '/resume']) {
+for (const path of ['/projects', '/projects/Henk', '/resume']) {
   for (const [width, height] of [[1440, 900], [390, 844]]) {
     test(`${path} at ${width}px: scrolled content never shows above the bar or past the frame`, async () => {
       const { context, page } = await open(path, { width, height });
@@ -418,9 +417,9 @@ for (const scale of [2.625, 2.75, 3]) {
 
 // ---------- a drawn project is one target: drawing, title or link ----------
 
-test('clicking a project\'s drawing opens its case study, on /projects and on the homepage', async () => {
-  for (const path of ['/projects', '/']) {
-    const { context, page } = await open(path);
+test('clicking a project\'s drawing opens its case study, on /projects', async () => {
+  {
+    const { context, page } = await open('/projects');
     const dwg = page.locator('#henk .dwg');
     await dwg.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
@@ -479,7 +478,7 @@ test('/projects on a wide screen: the text sits beside each drawing, and ANNA is
 // ---------- keyboard and screen-reader paths ----------
 
 test('on a phone the opened menu\'s links come next in keyboard order', async () => {
-  for (const path of ['/', '/projects']) {
+  for (const path of ['/projects']) {
     const { context, page } = await open(path, { width: 390, height: 844 });
     await page.locator('.menu-btn').focus();
     await page.keyboard.press('Enter');
@@ -501,7 +500,7 @@ test('/resume: every section is a heading a screen reader can jump to', async ()
 
 for (const width of [900, 1024, 1180, 1440]) {
   test(`at ${width}px every detail drawing is drawn at a legible scale`, async () => {
-    for (const path of ['/', '/projects', '/projects/Henk']) {
+    for (const path of ['/projects', '/projects/Henk']) {
       const { context, page } = await open(path, { width, height: 900 });
       const scales = await page.locator('.dwg').evaluateAll(ds => ds.map(d => d.getBoundingClientRect().width / d.viewBox.baseVal.width));
       // 11.5px lettering at the drawing's own scale; 0.9 keeps it above 10px

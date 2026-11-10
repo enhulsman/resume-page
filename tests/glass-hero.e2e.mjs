@@ -1,4 +1,7 @@
-// The glass hero prototype in a real browser. Needs a running site:
+// The glass hero in a real browser. The H3 hero's own tests run on the homepage (`/`), where it
+// shipped (openspec stone-glass-homepage, chunk 2); the lab-only and H2 tests stay on /hero-lab
+// until the lab goes (chunk 8). The fit to one screen moves to `/` in chunk 3, once the
+// drawing-sheet frame and bar no longer take height above the hero. Needs a running site:
 //   BASE=http://localhost:4399 node --test tests/glass-hero.e2e.mjs
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,16 +12,21 @@ let browser;
 before(async () => { browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); });
 after(async () => { await browser?.close(); });
 
-async function open(q = '', { width = 1440, height = 900, reducedMotion = 'no-preference' } = {}) {
+async function open(q = '', { width = 1440, height = 900, reducedMotion = 'no-preference', path = '/hero-lab' } = {}) {
   const context = await browser.newContext({ viewport: { width, height }, reducedMotion });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   page.on('console', m => m.type() === 'error' && errors.push(m.text()));
-  await page.goto(`${BASE}/hero-lab${q}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}${path}${q}`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__glassReady === true);
   return { context, page, errors };
 }
+/** The homepage, where the H3 hero lives now. */
+const home = (q = '', o = {}) => open(q, { ...o, path: '/' });
+const HERO = '[data-glass-moment="hero"]';
+/** Let the page render `n` more frames. */
+const frames = (page, n = 2) => page.evaluate((n) => new Promise((done) => { const f = (k) => (k ? requestAnimationFrame(() => f(k - 1)) : done()); f(n); }), n);
 
 // how much a card's canvas varies: an unlit or blank canvas is flat
 const spread = (page, sel) => page.$$eval(sel, cs => cs.map(c => {
@@ -30,17 +38,18 @@ const spread = (page, sel) => page.$$eval(sel, cs => cs.map(c => {
 }));
 
 test('H3: the name is real text, four cards link to their pages, every card is lit', async () => {
-  const { context, page, errors } = await open();
-  assert.equal((await page.textContent('#name-h3')).replace(/\s+/g, ''), 'EzraHulsman');
-  const links = await page.$$eval('.h3 li:not(.bench) .glass-card', as => as.map(a => [a.querySelector('.title').textContent, a.getAttribute('href')]));
+  const { context, page, errors } = await home();
+  assert.equal((await page.textContent(`${HERO} h1`)).replace(/\s+/g, ''), 'EzraHulsman');
+  const links = await page.$$eval(`${HERO} .glass-card`, as => as.map(a => [a.querySelector('.title').textContent, a.getAttribute('href')]));
   assert.deepEqual(links.map(l => l[0]), ['ANNA', 'Henk', 'Homelab', 'Claude Sandbox']);
   for (const [, href] of links) assert.match(href, /^\/projects\//);
-  for (const s of await spread(page, '.h3 li:not(.bench) .glass-card canvas')) assert.ok(s > 40, `a lit card varies (${s})`);
+  for (const s of await spread(page, `${HERO} .glass-card canvas`)) assert.ok(s > 40, `a lit card varies (${s})`);
   assert.deepEqual(errors, []);
   await context.close();
 });
 
-for (const [w, h] of [[1440, 900], [1280, 720], [1920, 1080]]) test(`H3 fits one ${w} x ${h} screen, cards included`, async () => {
+// lab only until chunk 3 moves the fit to `/` (see the head of this file)
+for (const [w, h] of [[1440, 900], [1280, 720], [1920, 1080]]) test(`lab: H3 fits one ${w} x ${h} screen, cards included`, async () => {
   const { context, page } = await open('', { width: w, height: h });
   const bottom = await page.$eval('.h3 .cards', el => el.getBoundingClientRect().bottom);
   await context.close(); // before asserting: a context left open keeps animating and starves the next test
@@ -48,16 +57,18 @@ for (const [w, h] of [[1440, 900], [1280, 720], [1920, 1080]]) test(`H3 fits one
 });
 
 test('reduced motion: the light holds still', async () => {
-  const { context, page } = await open('', { reducedMotion: 'reduce' });
-  const a = await page.$eval('.h3 .cards .glass-card canvas', c => c.toDataURL());
-  await page.waitForTimeout(600);
-  const b = await page.$eval('.h3 .cards .glass-card canvas', c => c.toDataURL());
+  const { context, page } = await home('', { reducedMotion: 'reduce' });
+  const a = await page.$eval(`${HERO} .glass-card canvas`, c => c.toDataURL());
+  await frames(page, 30);
+  const b = await page.$eval(`${HERO} .glass-card canvas`, c => c.toDataURL());
   assert.equal(a, b);
   await context.close();
 });
 
 test('phone width: no sideways page scroll, the cards scroll in their own row', async () => {
-  const { context, page, errors } = await open('', { width: 390, height: 844 });
+  const { context, page, errors } = await home('', { width: 390, height: 844 });
+  const row = await page.$eval(`${HERO} .cards`, r => r.scrollWidth - r.clientWidth);
+  assert.ok(row > 0, 'the row holds more than one screen of cards');
   const over = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   assert.ok(over <= 0, `page overflows by ${over}px`);
   assert.deepEqual(errors, []);
@@ -76,12 +87,12 @@ test('H2: the name and one lit card, ANNA', async () => {
 });
 
 test('the four cards fill the row: no gap after the last card', async () => {
-  const { context, page } = await open();
-  const gap = await page.evaluate(() => {
-    const row = document.querySelector('.h3 .cards').getBoundingClientRect();
-    const cards = [...document.querySelectorAll('.h3 li:not(.bench) .glass-card')].map(c => c.getBoundingClientRect());
+  const { context, page } = await home();
+  const gap = await page.evaluate((hero) => {
+    const row = document.querySelector(`${hero} .cards`).getBoundingClientRect();
+    const cards = [...document.querySelectorAll(`${hero} .glass-card`)].map(c => c.getBoundingClientRect());
     return row.right - cards.at(-1).right;
-  });
+  }, HERO);
   await context.close();
   assert.ok(Math.abs(gap) < 1, `${gap}px left over`);
 });
