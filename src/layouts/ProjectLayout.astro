@@ -3,11 +3,17 @@
 // The head opens like the project's chapter on the homepage (its card's index in that card's hue,
 // the title, the hook); the right column holds the window `innerGlass` names for the route, then
 // the contents, the facts and the numbers (its `stats` frontmatter, else its listing's first three
-// dims). ANNA's page keeps her plate in the window's place until her own window replaces it.
+// dims). The windows: Henk's, the sandbox's and bible-tui's artefacts (ProjectWindow), Homelab's
+// health check, Finance Bot's reply, pytaiga-mcp's drawing in a frosted pane, and ANNA's Teams window
+// with her four levels as rows under it.
 import OverzichtLayout from "./OverzichtLayout.astro";
 import Article from "../components/stone/Article.astro";
 import ProjectWindow from "../components/stone/ProjectWindow.astro";
-import AnnaPlate from "../components/overzicht/AnnaPlate.astro";
+import HomelabWindow from "../components/stone/HomelabWindow.astro";
+import FinanceWindow from "../components/stone/FinanceWindow.astro";
+import DrawingPane from "../components/stone/DrawingPane.astro";
+import AnnaWindow from "../components/stone/AnnaWindow.astro";
+import AnnaLevels from "../components/stone/AnnaLevels.astro";
 import { details, annaLead } from "../lib/project-pages.ts";
 import { factsOf, numbersOf } from "../lib/article.ts";
 import { glassCards, hueInk, innerGlass } from "../config/glass.ts";
@@ -28,6 +34,8 @@ const hue = ci >= 0 ? hueInk(glassCards[ci]) : undefined;
 // project's MDX under its own route gets none
 const moments = innerGlass[path] ?? [];
 const ARTEFACTS = ["henk", "sandbox", "bible"] as const;
+const WINDOWS = [...ARTEFACTS, "homelab", "finance", "pytaiga", "anna"] as const;
+const moment = moments.find((m): m is (typeof WINDOWS)[number] => (WINDOWS as readonly string[]).includes(m));
 const artefact = moments.find((m): m is (typeof ARTEFACTS)[number] => (ARTEFACTS as readonly string[]).includes(m));
 
 const facts = factsOf(frontmatter, "project");
@@ -48,9 +56,21 @@ const projectKeywords =
   ogDescription={description}
   ogType="article"
 >
-  <Article title={title} lead={hook} index={index} hue={hue} facts={facts} numbers={numbers} moment={artefact ?? (isAnna ? "anna" : undefined)}>
+  <Article title={title} lead={hook} index={index} hue={hue} facts={facts} numbers={numbers} moment={moment}>
     {artefact && <ProjectWindow slot="window" id={artefact} class="art-stage" />}
-    {!artefact && isAnna && <div slot="window" class="plate"><AnnaPlate /></div>}
+    {moment === "homelab" && <HomelabWindow slot="window" class="art-stage" />}
+    {moment === "finance" && <FinanceWindow slot="window" class="art-stage" />}
+    {moment === "pytaiga" && <DrawingPane slot="window" id="pytaiga" title={title} glow="cards" class="art-stage" />}
+    {moment === "anna" && (
+      <Fragment slot="window">
+        <div class="anna-window art-anna"><AnnaWindow class="art-stage" /></div>
+        <AnnaLevels class="art-levels" />
+      </Fragment>
+    )}
     <slot />
   </Article>
 </OverzichtLayout>
+
+<script>
+  import "../scripts/glass/anna-window.js";
+</script>

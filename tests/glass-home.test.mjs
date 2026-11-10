@@ -436,18 +436,31 @@ test('the copy check covers joined config values and catches a typed-in word', (
   assert.deepEqual(strings({ a: 'x', b: ['y', { c: 'z' }], n: 3 }), ['x', 'y', 'z']);
 });
 
-test('nothing on the homepage imports the four levels: the page and the stone components', () => {
-  const files = ['src/pages/index.astro', ...list('src/components/stone/', '.astro')];
-  assert.ok(files.length >= 4, files.join());
-  for (const f of files) assert.doesNotMatch(read(f), /annaLevels/, f);
+// rewritten (openspec stone-inner-pages 4.2, decision 2026-11-10): the levels are rows on /projects
+// and ANNA's page, and AnnaLevels.astro lives in src/components/stone/, so the check names the
+// homepage's own components (anna-section "Nothing on the homepage imports them")
+test('nothing on the homepage imports the four levels: the page and its named components', () => {
+  const files = ['src/pages/index.astro', ...['Hero', 'AnnaSection', 'AnnaWindow', 'Projects', 'Experience', 'Writing', 'About', 'Contact'].map((n) => `src/components/stone/${n}.astro`)];
+  for (const f of files) assert.doesNotMatch(read(f), /annaLevels|AnnaLevels/, f);
+  // and the homepage renders exactly those stone components (no other one could bring them in)
+  const used = [...read('src/pages/index.astro').matchAll(/components\/stone\/(\w+)\.astro/g)].map((m) => m[1]);
+  for (const n of used) assert.ok(['Hero', 'AnnaSection', 'Projects', 'Experience', 'Writing', 'About', 'Contact'].includes(n), `index.astro uses ${n}`);
 });
 
 test('nothing on the homepage imports the four levels: glass.ts', () => {
   assert.doesNotMatch(read('src/config/glass.ts'), /annaLevels/);
 });
 
+// reads AnnaSection.astro and AnnaWindow.astro together (openspec stone-inner-pages 4.2, decision
+// 2026-11-10: her window also opens her page and /projects, so its markup lives in AnnaWindow.astro)
 test('AnnaSection: one frosted window from config, the moment named, the window driver reused', () => {
-  const src = read('src/components/stone/AnnaSection.astro');
+  const section = read('src/components/stone/AnnaSection.astro');
+  assert.match(section, /import AnnaWindow from "\.\/AnnaWindow\.astro"/);
+  assert.match(section, /<AnnaWindow\b/);
+  const src = section + read('src/components/stone/AnnaWindow.astro');
+  // the class names anna-window.js keys on stay
+  for (const c of ['anna-window', 'aw-window', 'aw-compose', 'aw-replay']) assert.match(src, new RegExp(`\\b${c}\\b`), c);
+  assert.match(src, /data-beat=/);
   // one line of work (Ezra, 2026-11-11): no steps list, no record
   assert.match(src, /annaCalls\.work/);
   assert.doesNotMatch(src, /annaDemo\.(steps|record|recordHeading)/);

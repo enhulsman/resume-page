@@ -195,23 +195,15 @@ test('the ANNA plate turns by hand and by its buttons', async () => {
   await context.close();
 });
 
-test('ANNA\'s project page draws the model large: most of its box is model', async () => {
-  const { context, page } = await open('/projects/AnnaAssistant', { reducedMotion: 'reduce' });
-  await page.locator('.plate-stage').scrollIntoViewIfNeeded();
-  await page.waitForFunction(modelHeight, 480, { timeout: 10000 }).catch(() => {});
-  const h = await page.evaluate(() => {
-    const c = document.querySelector('.plate-stage canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-    let y0 = 1e9, y1 = -1;
-    for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 4) if (d[(y * c.width + x) * 4 + 3] > 20) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
-    return (y1 - y0) / devicePixelRatio;
-  });
-  assert.ok(h >= 480, `the model is ${Math.round(h)}px tall`);
-  await context.close();
-});
+// 'ANNA's project page draws the model large' retired (openspec stone-inner-pages 4.2, decision
+// 2026-11-10: ANNA's plate retires on her page, her window and levels take its place):
+// tests/inner-windows.e2e.mjs checks her page instead.
 
+// on /projects, where the plate stays until that page moves to stone (her own page has none since
+// stone-inner-pages chunk 4)
 test('turning the ANNA plate by hand draws no pencil line on the page', async () => {
-  const { context, page } = await open('/projects/AnnaAssistant');
-  const stage = page.locator('.plate-stage');
+  const { context, page } = await open('/projects');
+  const stage = page.locator('#anna .plate-stage');
   await stage.scrollIntoViewIfNeeded();
   await untilInked(page);
   const b = await stage.boundingBox();
@@ -240,22 +232,10 @@ test('reduced motion: every plate arrives drawn', async () => {
 // decision 2026-11-10: P1 head with layout ac, the drawings retire): tests/inner-article.e2e.mjs
 // checks the stone head, the facts, the numbers and the window instead.
 
-test('ANNA\'s case study carries the section drawing; a project without a drawing has none', async () => {
-  let { context, page } = await open('/projects/AnnaAssistant');
-  assert.equal(await page.locator('.plate canvas.drawing').count(), 1);
-  const h = await page.locator('.plate .plate-stage').evaluate(s => s.getBoundingClientRect().height);
-  // tall enough to draw the exploded model large, never the whole screen (2026-10-09: was 60%)
-  assert.ok(h <= 900 * 0.75, `the model is ${Math.round(h)}px tall on a 900px screen`);
-  await page.locator('.plate').scrollIntoViewIfNeeded();
-  await untilInked(page);
-  assert.ok(await inked(page) > 500);
-  await context.close();
-
-  ({ context, page } = await open('/projects/EncryptedChatTUI'));
-  assert.equal(await page.locator('.plate').count(), 0);
-  assert.equal(await page.locator('.titleblock th', { hasText: 'Preview' }).count(), 0, 'no empty rows');
-  await context.close();
-});
+// 'ANNA's case study carries the section drawing; a project without a drawing has none' retired
+// (openspec stone-inner-pages 4.2, decision 2026-11-10: her plate retires on her page, her window and
+// levels take its place): tests/inner-windows.e2e.mjs ("Window and levels") and
+// tests/inner-article.e2e.mjs ("The window per page") check both pages instead.
 
 // ---------- the blog: the site diary, then a post ----------
 

@@ -11,16 +11,15 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { innerGlass, glassCards, hueInk } from '../src/config/glass.ts';
-import { projectWindows } from '../src/config/home.ts';
+import { projectWindows, annaCalls } from '../src/config/home.ts';
 import { pageWords } from '../src/config/pages.ts';
 import { readFrontmatter } from '../src/lib/frontmatter.ts';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 const PROJECTS = readdirSync(new URL('../src/pages/projects/', import.meta.url)).filter((f) => f.endsWith('.mdx')).map((f) => `/projects/${f.slice(0, -4)}`);
-// The windows built so far. Chunk 4 adds homelab, finance, pytaiga and ANNA's window; until then
-// their pages hold no window in the article (ANNA's keeps her plate).
-const BUILT_WINDOWS = ['henk', 'sandbox', 'bible'];
+// The windows built so far: every project page's (chunk 4 added homelab, finance, pytaiga and ANNA's).
+const BUILT_WINDOWS = ['henk', 'sandbox', 'bible', 'homelab', 'finance', 'pytaiga', 'anna'];
 const windowOf = (route) => (innerGlass[route] ?? []).find((m) => BUILT_WINDOWS.includes(m));
 const norm = (s) => s.replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
 const rgb = (s) => s.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number).join(',');
@@ -141,6 +140,7 @@ async function survey() {
         asideFirst: aside?.firstElementChild?.className ?? null,
         glassInAside: aside ? aside.querySelectorAll('[data-glass]').length : -1,
         windowTitles: aside ? [...aside.querySelectorAll('[data-glass="frosted"] .glass-title')].map((t) => t.textContent) : [],
+        paneDrawings: aside ? aside.querySelectorAll('.art-window [data-glass="frosted"] svg.dwg').length : 0,
         facts: [...(art?.querySelectorAll('.art-facts > div') ?? [])].map((d) => ({
           label: d.querySelector('dt').textContent, value: d.querySelector('dd').innerText,
           href: d.querySelector('dd a')?.getAttribute('href') ?? null,
@@ -185,13 +185,19 @@ test('No window, same column: Encrypted Chat TUI\'s aside holds no glass and ope
   assert.match(p.asideFirst, /\bart-stick\b/);
 });
 
-test('The window per page: Henk, the sandbox and bible-tui hold their window in the aside; Encrypted Chat TUI and This site none', async () => {
+test('The window per page: each project page holds its window in the aside; Encrypted Chat TUI and This site none', async () => {
   const s = await survey();
-  for (const [route, id] of [['/projects/Henk', 'henk'], ['/projects/ClaudeSandbox', 'sandbox'], ['/projects/BibleTui', 'bible']]) {
+  for (const [route, id, title] of [
+    ['/projects/Henk', 'henk', projectWindows.henk.title], ['/projects/ClaudeSandbox', 'sandbox', projectWindows.sandbox.title],
+    ['/projects/BibleTui', 'bible', projectWindows.bible.title], ['/projects/HomelabInfrastructure', 'homelab', 'ezra@workstation: ~'],
+    ['/projects/FinanceBot', 'finance', 'Discord · #finance'], ['/projects/PytaigaMcp', 'pytaiga', 'pytaiga-mcp'],
+    ['/projects/AnnaAssistant', 'anna', annaCalls.window],
+  ]) {
     assert.equal(windowOf(route), id, `innerGlass names ${id} for ${route}`);
-    assert.deepEqual(s[route].windowTitles, [projectWindows[id].title], route);
+    assert.deepEqual(s[route].windowTitles, [title], route);
     assert.match(s[route].asideFirst, /\bart-window\b/, `${route}: the window opens the aside`);
   }
+  assert.equal(s['/projects/PytaigaMcp'].paneDrawings, 1, 'pytaiga-mcp\'s pane holds a .dwg drawing');
   for (const route of ['/projects/EncryptedChatTUI', '/projects/ResumePage']) {
     assert.deepEqual(innerGlass[route], [], route);
     assert.equal(s[route].glassInAside, 0, route);

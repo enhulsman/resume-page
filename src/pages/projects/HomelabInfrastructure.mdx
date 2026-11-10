@@ -1,19 +1,21 @@
 ---
 title: "Homelab Infrastructure"
-description: "Three-device hybrid cloud-home infrastructure with automated cross-device backups, Prometheus monitoring and alerting, recursive DNSSEC resolution, and Cloudflare Zero Trust networking"
+description: "Three servers and the workstation that runs them: automated cross-device backups, Prometheus monitoring and alerting, recursive DNSSEC resolution, and Cloudflare Zero Trust networking"
 date: 2025-06-01
 tech: ["Docker", "Prometheus", "Grafana", "Tailscale", "Cloudflare", "Bash", "Linux"]
 layout: "../../layouts/ProjectLayout.astro"
 showcase: true
 dateLabel: "Operating since"
-hook: "A 3-device homelab spanning a Raspberry Pi 5, a Hetzner VPS, and a Raspberry Pi 2, connected by a Tailscale mesh, fronted by Cloudflare tunnels, monitored by Prometheus, and backed up cross-device every night."
+hook: "A homelab of a Raspberry Pi 5, a Hetzner VPS and a Raspberry Pi 2, run from my workstation: joined by a Tailscale mesh, fronted by Cloudflare tunnels, monitored by Prometheus, and backed up cross-device every night."
 ---
 
 ## What I Built
 
-**Compute and networking.** Three devices share the workload: a Raspberry Pi 5 runs the primary DNS, Docker containers, and acts as a Tailscale exit node. A Hetzner VPS hosts Prometheus, Grafana, and Taiga for project management. A Raspberry Pi 2 (1GB of RAM, no Docker) serves as backup DNS and a metrics endpoint. All three sit on a Tailscale WireGuard mesh for encrypted inter-device communication. My workstation, a Ryzen 7 PC running WSL2, is the fourth machine on the mesh: where I build, and the admin seat that reaches every host. External access runs through Cloudflare Tunnel endpoints across two domains: one for infrastructure services, one for user-facing applications. Zero Trust policies gate sensitive endpoints. Every tunnel uses token-based remote config, so device replacement is trivial: install cloudflared, paste a token, done.
+**Compute and networking.** Three devices share the workload: a Raspberry Pi 5 runs the primary DNS, Docker containers, and acts as a Tailscale exit node. A Hetzner VPS hosts Prometheus, Grafana, and Taiga for project management. A Raspberry Pi 2 (1GB of RAM, no Docker) serves as backup DNS and a metrics endpoint. All three sit on a Tailscale WireGuard mesh for encrypted inter-device communication. My workstation, a PC I built myself around a Ryzen 7 7800X3D on AM5 with 32 GB of DDR5-6000 and an RTX 2080 Ti, running WSL2, is the fourth machine on the mesh and the one I use most: where I build, and the admin seat that reaches every host and runs the orchestration, from deploys to the scripts and agents I run the lab with. External access runs through Cloudflare Tunnel endpoints across two domains: one for infrastructure services, one for user-facing applications. Zero Trust policies gate sensitive endpoints. Every tunnel uses token-based remote config, so device replacement is trivial: install cloudflared, paste a token, done.
 
 **Monitoring and alerting.** Prometheus on the VPS scrapes seven targets across all devices: node-exporter on each for system metrics, cadvisor on Pi5 and VPS for per-container resource usage, an adguard-exporter for DNS statistics, and a Pushgateway. Grafana does the alerting: 19 rules cover DNS processing time with per-device thresholds (because a Pi 2 and a VPS shouldn't alert at the same latency), memory, the liveness of key containers and backup freshness, delivered to Discord or to Henk, my homelab agent, which triages them over Signal.
+
+**One command for the whole lab.** `homelab-health`, a script I wrote, checks every machine from the workstation at once: load, memory, disk, containers and DNS, plus slow-burn problems such as a service stuck in a restart loop, and any Prometheus target that is down. An offline host shows as unreachable within ten seconds instead of hanging the check. The restart-loop check exists because a sync service once crash-looped 472,000 times over 110 days without a single alert.
 
 **Backups.** Automated nightly backups run cross-device over Tailscale. The VPS dumps Taiga's PostgreSQL database (CouchDB has its own backup job, three times a day), snapshots Grafana and Prometheus Docker volumes, and collects configs, all rsynced to Pi5. Pi5 backs up DNS configs, Docker compose files, credentials, and systemd units to the VPS. Each script tracks errors per-step so a single failure doesn't prevent the remaining backups from completing. Prometheus textfile exporter metrics feed BackupStale and BackupErrors alerts. AdGuard query logs and InfluxDB data are deliberately excluded from cross-device sync, a value assessment based on size versus recoverability, not an oversight.
 

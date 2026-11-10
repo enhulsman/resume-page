@@ -99,9 +99,10 @@ main.page:has(> .art) { padding-inline: 0; }
 }
 .art-lead { margin: 0.9em 0 0; max-width: 36em; font-size: var(--stone-t-lead); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
 
-/* the window, as wide as the column allows, never more than 600 px */
+/* the window, as wide as the column allows, never more than 600 px; ANNA's levels under hers */
 .art-window { min-width: 0; }
 .art-window .glass-stage { width: 100%; max-width: 600px; }
+.art-window .art-levels { max-width: 600px; margin-top: 32px; }
 
 /* the block: contents, facts, numbers */
 .art-label { margin: 0 0 8px; font-size: var(--stone-t-small); font-weight: 600; color: #5C5650; }
@@ -187,10 +188,3 @@ main.page:has(> .art) { padding-inline: 0; }
   .art-title { font-size: clamp(40px, 11vw, 56px); }
   .art .prose { font-size: 16.5px; }
 }
-
-/* TEMPORARY until ANNA's window replaces her plate (stone-inner-pages chunk 4): the plate in the
-   window's place, its levels and Replay under the model */
-.art-window .plate { display: block; margin: 0; padding: 0; border: 0; }
-.art-window .anna-plate { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
-.art-window .anna-plate .plate-stage { grid-row: auto; }
-.art-window .anna-plate .replay { grid-column: 1; }
