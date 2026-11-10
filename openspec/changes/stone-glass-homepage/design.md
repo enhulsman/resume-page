@@ -34,21 +34,39 @@ hero card (benched in config, can return as 05); usage or adoption facts for ANN
    `data-glass="frosted"`. Tests compare the page against the list, so a new object is one config
    line plus the same tests. *Why:* Ezra keeps the list open; the test is the gate, not memory.
 
-2. **One moment per screen, made measurable.** A moment is on screen when at least a third of its
-   root's height is inside the viewport. At no scroll position may two moments be on screen. The
-   layout earns this with space, not by hiding anything: the ANNA section opens with its copy
-   (heading, lead, rules) and its window sits beside the rules, low enough that the hero cards are
-   under a third visible before the window passes a third. The terminal sits after the notes.
-   *Alternative rejected:* fading glass in and out on scroll; that is motion used to explain.
+2. **One moment per screen, measured on the glass.** A moment's glass box is the union of its
+   `[data-glass]` elements (the four cards; ANNA's window; the terminal window, minis inside it), not
+   the section around it. A moment is on screen when a third of its glass box's height is in the
+   viewport. Because the visible share is piecewise linear in the scroll position, whether two
+   neighbouring moments A above B can ever both be on screen is closed form: they can exactly when
+   `(b0 + hB/3) - (a1 - hA/3) <= viewport height`. A pure function in `tests/lib/moments.mjs`
+   computes it from element offsets at 1440x900, 1280x720 and 390x844, on load and again after
+   ANNA's conversation and the terminal's intro finish; a scroll walk in tenths of the viewport
+   stays as the visible proof. The cost, estimated: about 550-600 px of non-glass between the card
+   bottoms and the window top at 1440x900 (900 - 600/3 - 330/3), about 440 px at 1280x720. The
+   layout pays it with placement: ANNA's window starts below her heading, lead and first rule, beside
+   the rules. *Alternative rejected:* fading glass in and out on scroll; that is motion used to
+   explain.
 
 3. **Ribbed panes: one driver, from the lab.** `hero.js` is copied to `panes.js`, which mounts
    every `[data-glass="ribbed"]` on the page through the one shared WebGL context, keeps the 10 s
    loop, the still frame at 2.4 s for reduced motion, the off-screen pause, `?t=` and
    `window.__glass`/`__glassReady` for tests. Dropped from the copy: the distance dial, the
    `look=before` path and the `paneFor`/`redrawPane` hooks (only the stagings used them). Added: the
-   slow-device guard (rolling frame time above 20 ms over 2 s draws the still frame and stops the
-   loop for the visit) and the no-WebGL fallback (each pane's CSS ground plus a soft radial gradient
-   of its light's colour, computed at build time from `glassCards`). Model features only the
+   slow-device guard and the no-WebGL fallback. The guard measures the time spent drawing each frame
+   (`performance.now()` around the draw calls), never the interval between frames, so a phone that
+   caps frames at 30 Hz is not slow; it averages over 2 s starting 1 s after `__glassReady`, and
+   above 20 ms draws the still frame and stops the loop for the visit. The decision is a pure
+   function, `slowFrom(samples)` in `src/scripts/glass/guard.js`, over `{ t, interval, draw }`
+   samples, unit-tested on made-up samples (30 Hz with cheap draws stays, expensive draws trip, the
+   first second and older samples are ignored, no verdict before 2 s of eligible samples; frames
+   that drew no pane are not sampled), because an e2e run cannot tell a capped frame rate
+   from swiftshader's own slowness. `panes.js` only collects samples. It has a test switch
+   (`?guard=off`, `__glass.guard(false)`); e2e checks only the wiring (a 30 ms busy-work hook trips
+   it, `?guard=off` keeps the loop running), and the off-screen test first proves the counts rise
+   in view. The
+   no-WebGL fallback is each pane's CSS ground plus a soft radial gradient
+   of its light's colour, computed at build time from `glassCards`. Model features only the
    stagings used (ink, eight layers, slide and turn) stay in `model.js`/`shader.js` with their unit
    tests; they cost nothing at runtime.
 
@@ -59,13 +77,15 @@ hero card (benched in config, can return as 05); usage or adoption facts for ANN
    faint upside-down reflection of the four cards along its inside top edge (four mini ribbed panes,
    decoration, `aria-hidden`, inside the terminal moment).
 
-5. **One shared contrast fix: an opaque quiet ink.** `stone.css` defines `--glass-ink-quiet`, an
-   opaque warm grey (start at `#5C5650`, about 7:1 on white), used by every secondary text on glass:
-   window titles, the Replay button, message names, sources, steps, the record heading and items,
-   the terminal's dim text. The hero cards' title, index and readout stay full ink. No text on glass uses an
-   alpha-blended ink, because its contrast then depends on whatever glows behind it. If the measured
-   contrast test fails anywhere, the token darkens; nothing else changes. The terminal's red prompt
-   (`#B4432B`) also has to pass over the glow; if it does not, it takes the token too.
+5. **One shared contrast fix: opaque inks on glass.** `stone.css` defines `--glass-ink-quiet`, an
+   opaque warm grey (start `#5C5650`: about 7.2:1 on white, 6.0:1 on stone), and it replaces exactly
+   the inks that were alpha-blended in the lab (window titles 0.55 and 0.66, Replay, message names,
+   sources, record heading) plus the terminal's dim `#8a8278` (about 3.8:1 even on white). Inks that
+   are already opaque and darker (steps `#4a453f`, record items `#3a3632`, body ink) stay. The
+   terminal's red prompt and error text take `--glass-ink-red` (start `#8F3320`), because `#B4432B`
+   is likely about 3.5:1 over the four-colour glow and turning it grey would lose the prompt. If the
+   measured test fails, the failing token darkens in its one place; nothing else changes. The hero
+   cards' title, index and readout stay full ink.
 
 6. **ANNA's section is the lab's window staging, minus the lab.** Left: `h2` "ANNA",
    `annaLead.text`, `annaCalls.heading`, the three rules (rule, why, how), `annaCalls.closing`, and
@@ -74,43 +94,75 @@ hero card (benched in config, can return as 05); usage or adoption facts for ANN
    and `anna-window-model.js` are reused as they are; the conversation's beats are all in the markup
    from the start. The section shows `01`, the ANNA card's index, beside its heading.
 
-7. **Projects as rows of type.** Every project except ANNA and `hideOnHome` ones, hero-card
+7. **Projects as rows of type, on what exists.** Rows come from `buildProjects` in
+   `src/lib/projects.ts`, which already joins each listing's `status` from frontmatter. Every project except ANNA and `hideOnHome` ones, hero-card
    projects first in card order carrying their card index (02 Henk, 03 Homelab, 04 Claude Sandbox),
    then the rest in `home.ts` order (Finance Bot, bible-tui, pytaiga-mcp, then the register). A row:
-   index if any, title, `what`, status from frontmatter, and its first dimension's value set large in
-   tabular figures with its label beside it (the register's entries have no number). Index numbers
+   index if any, title, `what`, status, and its homepage number set large in
+   tabular figures with its label beside it (the register's entries have no number). The number is
+   `dims[homeDim]`, a new optional index on a listing (default 0), so pytaiga-mcp shows "50 → 5" as
+   the inventory asks while `dims`' order, which /projects reads, stays. Index numbers
    may take the hue of their card's light: colour only as that small mark.
 
 8. **Experience, Writing, About, Contact.** Experience: each `resume.ts` entry as years
-   (`startDate`–`endDate`, or `startDate`–now), role and company, hairline rules, link to /resume.
-   Writing: the five newest published posts (no leading underscore), title, date, description, link
-   to /blog. About: `notes`, the site photo plain (alt from config), and the terminal window.
+   (`startDate`–`endDate`, or `startDate`–now), `role` and `client`, hairline rules, link to /resume.
+   Writing: `diaryEntries(...).slice(0, 5)` from `src/lib/frontmatter.ts` (published, newest first),
+   each with title, date label and its one-line `line`, link to /blog; no new sorting code. About: `notes`, the site photo plain (alt from config), and the terminal window.
    Contact: `site.social.email` set large as a mailto link, then the contact page, LinkedIn and
    GitHub as type. Section headings and link labels live in `home.ts` (`homeSections`).
 
-9. **Copy single-source, enforced by a scan.** `tests/single-source.test.ts` gains a test that reads
-   `src/pages/index.astro` and every `src/components/stone/*.astro`, removes frontmatter, comments,
-   `<style>`, `<script>` and `{...}` expressions, and finds no letters left between tags or in
-   `alt`, `title` and `aria-label` values. The existing project-fact tests stay as they are.
+9. **Copy single-source, checked on the rendered page.** A source scan that strips `{...}` would
+   miss words written inside a `.map()`, so the check runs on the page itself: every text node and
+   every `alt`, `title` and `aria-label` under `main` and the footer (outside the terminal's own
+   output, which `single-source.test.ts` already checks) is covered by the corpus: every corpus
+   value of three letters or more that it contains as whole words is removed, longest first, and
+   no letters may remain. A plain substring test
+   would fail correct markup, because the browser merges neighbouring values into one text node
+   (the footer line, `annaLead.text` plus its full stop, the sources joined with " · "). The corpus:
+   string values exported by `src/config/*.ts`, project and blog frontmatter, and what
+   `diaryEntries`, `buildProjects` and `pageFacts` derive. The checker is a function with its own
+   unit test on five fixtures: a typed heading, a word inside a mapped list and "Blogs about" next
+   to a corpus "Blog" must fail; the footer line and the lead with its full stop must pass. Literals the lab
+   markup held get config homes: the terminal title, headings, labels and photo alt in
+   `homeSections`, the `h1` from `site.name`, the message names from `annaLead.title` and
+   `annaDemo.who`. The existing project-fact tests stay.
 
 10. **Reduced motion is a still page.** Lights hold the still frame; the conversation shows
-    finished with no Replay; the terminal prints its intro at once with a steady caret; no CSS
-    transition moves anything. Switching reduced motion on after load does the same at once.
+    finished with no Replay; the terminal prints its intro at once with a steady caret (it already
+    does when reduced motion is set on load); no CSS transition moves anything. Switching reduced
+    motion on after load does the same at once: `terminal-animation.ts` reads `matchMedia` once
+    today, so it gains a change listener that renders the rest of the intro instantly.
 
 11. **Chrome.** `OverzichtLayout` stays the one layout. Its bar ("EH." mark, Projects, Blog,
     Résumé, Contact, "Get in touch") and footer move to stone and Archivo; the theme script, button
     and dark rules go; inner page bodies keep their `overzicht.css` layout with colour variables
-    mapped to stone.
+    mapped to stone. The drawing-sheet frame (`.frame` with its A–F letters, in the layout, not in
+    any page body) and the green table leave every page: they are chrome, and the 2026-11-09
+    decision took the drawing-sheet language off the homepage, which renders inside this layout.
+    The bar keeps "EH." with "Ezra Hulsman" beside it, as today, so a visitor arriving on an inner
+    page still sees whose site it is. On phones (860 px and below) the bar keeps today's menu button from `chrome.js`,
+    restyled, its theme code removed: the lab bar simply hid the links, which would strand phone
+    visitors. The footer's words move to `footer` in `home.ts` ("Made in Utrecht by" + `site.name`,
+    the "Proverbs 3:5-7" link); the drawing-sheet line goes. Both are calls for Ezra.
 
-12. **Order of work: homepage first, lab last.** New code lives in new files while the lab still
-    runs, so the lab's tests stay green until the last chunk removes the lab, its scripts, its
-    tests and the lab-only exports of `glass.ts` (`h2Card`, `annaExploded`, `AnnaPane`,
-    `AnnaVariant`, the `before` look). Retired drawing-sheet homepage code is deleted, not parked;
-    `AnnaPlate`/`plate.js` stay for /projects.
+12. **Order of work: the old homepage leaves first, the lab last.** Nothing deploys before Ezra's
+    review, so there is no reason to keep the drawing-sheet homepage under the new one. Chunk 2
+    replaces `index.astro` with the stone page (hero only, sections added chunk by chunk), removes
+    the arrival (the layout's `html.intro` head block and CSS, `intro.js`, the terminal's
+    `ovz:arrived` wait) and retires `intro.e2e.mjs`, `overzicht.e2e.mjs` and the homepage parts of
+    `sheets.e2e.mjs`. Chunk 3 rewrites or retires each named `sheets.e2e.mjs` test that asserts the
+    old bar, theme or dark print. Chunk 7 only deletes files and adds whole-page tests. New glass
+    code lives in new files while the lab still runs, so the lab's tests stay green until chunk 8
+    removes the lab, its scripts, its tests and the lab-only exports of `glass.ts` (`h2Card`,
+    `annaExploded`, `AnnaPane`, `AnnaVariant`, the `before` look). `AnnaPlate`/`plate.js` stay for
+    /projects. Model features only the stagings used (ink, eight layers, slide, turn) stay with
+    their tests and get a one-line note in `model.js` so nobody wires them back by accident.
 
 13. **Tests wait on state, never on time.** swiftshader renders slowly: e2e tests wait on
-    `__glassReady`, on the window's `done` state, on terminal output, on `fonts.ready`, never on a
-    fixed sleep. Frame-sensitive checks freeze the light with `?t=` or `__glass.at(t)`.
+    `__glassReady`, on the window's `done` state, on terminal output, on `fonts.ready`, on frame
+    counts, never on a fixed sleep. Frame-sensitive checks freeze the light with `?t=` or
+    `__glass.at(t)`; tests of the running loop load with `?guard=off`. `?chat=` stays on `/` as a
+    test hook, like `?t=`.
 
 ## Risks / Trade-offs
 
@@ -135,4 +187,33 @@ previous deploy. `/hero-lab` lives on in the branch history.
 ## Open Questions
 
 None block the build. For Ezra's morning look: the space the one-moment rule leaves under the hero,
-whether the three hero projects should also be rows, and whether the terminal's reflection stays.
+whether the three hero projects should also be rows, whether the terminal's reflection stays, the
+phone menu versus a row of links, and the footer's wording (all in the proposal's For Ezra list).
+
+## Round 1 responses
+
+All seven should-fix findings were right and are applied; none declined.
+
+- M1: the one-moment rule is measured on each moment's glass box, computed from offsets and walked, before and after play; the cost is in For Ezra item 13.
+- M2: the old homepage and arrival leave in chunk 2 with their suites; chunk 3 names every `sheets.e2e.mjs` test it rewrites or retires and why.
+- M3: `homeDim` (option a) keeps `dims`' order for /projects; pytaiga shows "50 → 5"; For Ezra item 3.
+- M4: phones keep today's menu, restyled (pick, For Ezra item 10); footer text in config, verbatim in For Ezra item 11; tests on seven pages.
+- M5: the guard measures draw time, starts after a 1 s settle, has `?guard=off`; capped frame rate and off-screen-rises-first scenarios added; For Ezra item 9.
+- S1: the quiet token covers only the alpha inks and `.terminal-dim`; darker opaque inks stay; the prompt gets `--glass-ink-red`, not grey.
+- S2: the copy check runs on the rendered page against a config corpus, with a `.map()` fixture; terminal title, `h1` and message names have config homes.
+- S3: rows build on `projects.ts`, Writing on `diaryEntries` and its `line`.
+- S4: chrome, dark-theme and phone-menu scenarios include `/projects/Henk` and `/blog/bible-tui`.
+- S5: a page-level "reduced motion switched on after load" scenario, and `terminal-animation.ts` gains the change listener.
+- S6: For Ezra corrected (the reduced-motion intro is not new) and extended with the missing calls; item 1 names the reversal.
+- S7: scenarios split across the chunks where their objects exist; the two orphans are in chunks 2 and 4.
+- Minors: glow line clipped to the window's box; `?chat=` kept as a test hook; `h1` compared with whitespace collapsed; `client` named; `model.js` note.
+
+## Round 2 responses
+
+- N1: the sheet frame and green table leave every page (design 11, "No sheet frame" scenario, For Ezra item 14); the bar keeps the name (no visitor-visible change); chunk 3.2 names `sheets.e2e.mjs:132` and `:676` kept, `:396` rewritten, `:411` retired, each with its reason.
+- N2: the copy check is a covering check (remove corpus values longest first, no letters may remain), with the footer line and the lead plus full stop as must-pass fixtures; ANNA's copy scenario uses the same wording.
+- N3: the guard's decision is the pure `slowFrom` in `guard.js`, unit-tested on samples; e2e checks only the wiring.
+- S8: For Ezra item 13 now matches design 2 (window below heading, lead and first rule; the gap is that copy plus stone).
+- S9: the hero-fit scenario moves to chunk 3, after the old frame and bar are gone.
+- Minors: the corpus names `diaryEntries`, `buildProjects` and `pageFacts`; the footer's full stop is markup.
+

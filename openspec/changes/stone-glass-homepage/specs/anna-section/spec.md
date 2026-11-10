@@ -14,9 +14,9 @@ The homepage's ANNA section SHALL show, in this order and as real text: the head
 - **THEN** its `href` is `https://anna-site.anamata.ai` and its text is `annaCalls.more.label`
 
 #### Scenario: Written in config only
-- **GIVEN** the ANNA section's component source
-- **WHEN** the single-source scan reads it
-- **THEN** it holds no literal words, and every text in the section comes from `annaLead`, `annaCalls` or `annaDemo`
+- **GIVEN** the homepage loaded with the conversation at `done`
+- **WHEN** the copy check runs over the ANNA section
+- **THEN** for every text in it, the message names "ANNA" and "Joris" included, removing the `annaLead`, `annaCalls` and `annaDemo` values it contains as whole words (three letters or more, longest first) leaves no letters
 
 ### Requirement: Dropped ANNA stagings stay dropped
 The ANNA section SHALL NOT include a production-facts line (versions, release counts, test counts), the four levels, the turned card, the journey, the exploded stack or any glass other than its one Teams window.
@@ -32,7 +32,7 @@ The ANNA section SHALL NOT include a production-facts line (versions, release co
 - **THEN** there is exactly one `[data-glass]` element, a frosted window, and no element with class `anna-turn`, `anna-journey`, `anna-x` or `slab`
 
 ### Requirement: The Teams window plays "Close my week"
-Beside (desktop) or below (phone) the copy, a frosted window titled `annaCalls.window` SHALL hold anna-site's "Close my week" conversation from `src/config/anna-demo.ts`: Joris's request, ANNA's answer, the sources she read after `annaCalls.read`, her steps, her question, Joris's reply typed into the compose box and sent, her result, and the record under `annaDemo.recordHeading`. Every beat MUST be in the markup from the start, hidden until it lands. The conversation SHALL play once when about 40% of the window is in view, keep the newest beat in view unless the reader has scrolled the chat, and play again from the start on Replay (`annaCalls.replay`).
+Beside (desktop) or below (phone) the copy, a frosted window titled `annaCalls.window` SHALL hold anna-site's "Close my week" conversation from `src/config/anna-demo.ts`: Joris's request, ANNA's answer, the sources she read after `annaCalls.read`, her steps, her question, Joris's reply typed into the compose box and sent, her result, and the record under `annaDemo.recordHeading`. Every beat MUST be in the markup from the start, hidden until it lands. The conversation SHALL play once when about 40% of the window is in view, keep the newest beat in view unless the reader has scrolled the chat, and play again from the start on Replay (`annaCalls.replay`). The `?chat=<seconds>` hold stays on `/` as a test hook.
 
 #### Scenario: The words are anna-site's
 - **GIVEN** `src/config/anna-demo.ts` and an anna-site checkout

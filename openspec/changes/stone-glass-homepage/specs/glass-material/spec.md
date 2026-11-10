@@ -29,16 +29,21 @@ The site SHALL use glass only on objects listed in `glassMoments` in `src/config
 - **THEN** none contains a `canvas`, a `[data-glass]` element or an element with a `backdrop-filter`
 
 ### Requirement: At most one glass moment per screen
-At no scroll position SHALL two glass moments be on screen together, where a moment is on screen when at least one third of its root element's height lies inside the viewport.
+At no scroll position SHALL two glass moments be on screen together. A moment's glass box is the union of the boxes of its `[data-glass]` elements (the hero: its four cards; ANNA: her window; the terminal: its window, which contains the reflection minis); the section around it does not count. A moment is on screen when at least one third of its glass box's height lies inside the viewport. For two moments A above B with glass boxes [a0, a1] and [b0, b1] in page coordinates and heights hA and hB, both can be on screen at once exactly when (b0 + hB/3) - (a1 - hA/3) <= the viewport height, so the page SHALL keep b0 - a1 greater than the viewport height - hA/3 - hB/3 for every pair of neighbouring moments. Meeting this SHALL be done with space and placement only, never by fading or hiding glass.
 
-#### Scenario: Scrolling the whole page on desktop
-- **GIVEN** the homepage loaded at 1440x900 and at 1280x720, with fonts ready and `__glassReady`
-- **WHEN** the page is scrolled from top to bottom in steps of one tenth of the viewport height, and at each step the visible share of each `[data-glass-moment]` root is measured
-- **THEN** at every step at most one moment has a visible share of one third or more
+#### Scenario: The overlap check itself
+- **GIVEN** the pure function that takes two glass boxes and a viewport height
+- **WHEN** a unit test gives it a hero box [200, 530] and a window box [630, 1230] at a viewport height of 900
+- **THEN** it reports an overlap, and with the window box moved to [1150, 1750] it reports none
 
-#### Scenario: Scrolling the whole page on a phone
-- **GIVEN** the homepage loaded at 390x844
-- **WHEN** the same scroll walk is made
+#### Scenario: Computed from the layout
+- **GIVEN** the homepage loaded at 1440x900, at 1280x720 and at 390x844, with fonts ready and `__glassReady`
+- **WHEN** each moment's glass box is read from the element offsets, once on load and again after ANNA's conversation reached `done` and the terminal's intro finished
+- **THEN** the overlap check reports no overlap for any pair of neighbouring moments at any of the three sizes
+
+#### Scenario: Scrolling the whole page
+- **GIVEN** the homepage loaded at 1440x900, at 1280x720 and at 390x844
+- **WHEN** the page is scrolled from top to bottom in steps of one tenth of the viewport height and at each step the visible share of each moment's glass box is measured
 - **THEN** at every step at most one moment has a visible share of one third or more
 
 ### Requirement: Ribbed glass touches only the light
@@ -80,7 +85,7 @@ The light behind any glass SHALL be soft: a ribbed pane's wash and a window's gl
 
 #### Scenario: A window's glow has no edge
 - **GIVEN** the homepage loaded with both windows hidden
-- **WHEN** a horizontal line of pixels through the centre of each `[data-glow]` element is captured
+- **WHEN** a horizontal line of pixels through the vertical centre of each window's box, clipped to that box, is captured
 - **THEN** no two neighbouring pixels on it differ by more than 6 levels in any channel
 
 #### Scenario: No colour panels
@@ -107,17 +112,37 @@ All ribbed panes on a page SHALL run on one shared 10 s loop drawn through one W
 - **THEN** there is exactly one WebGL context and every pane, reflection minis included, is lit (its pixels vary by more than 40 levels)
 
 ### Requirement: Light pauses when nobody can see it or the device struggles
-A ribbed pane SHALL stop redrawing while it is off screen, and the page SHALL switch every pane to its still frame for the rest of the visit when frame times average above 20 ms over 2 s.
+A ribbed pane SHALL stop redrawing while it is off screen. The page SHALL switch every pane to its still frame for the rest of the visit when drawing is slow. The decision SHALL be a pure function, `slowFrom(samples)` in `src/scripts/glass/guard.js`, over per-frame samples `{ t, interval, draw }` (`t` seconds since `__glassReady`, `interval` the time since the previous frame, `draw` the time spent in the frame's draw calls, all in ms except `t`): it ignores samples with `t` below 1 s, returns false until the eligible samples span at least 2 s (so never before `t` = 3 s), and then returns true when the mean `draw` over the samples of the last 2 s exceeds 20 ms; `interval` never counts. `panes.js` only collects the samples and calls it, and does not sample a frame in which no pane was drawn (every pane off screen), so idle frames do not dilute the average. The guard SHALL have a test switch (`?guard=off` and `window.__glass.guard(false)`), and every e2e test that needs the loop running SHALL switch it off.
+
+#### Scenario: A capped frame rate is not a slow device
+- **GIVEN** `slowFrom` in a unit test
+- **WHEN** it is given 3 s of samples with 33 ms intervals and 5 ms draws
+- **THEN** it returns false
+
+#### Scenario: Expensive drawing is a slow device
+- **GIVEN** `slowFrom` in a unit test
+- **WHEN** it is given 3 s of samples with 16 ms intervals and 30 ms draws
+- **THEN** it returns true
+
+#### Scenario: The first second and the window
+- **GIVEN** `slowFrom` in a unit test
+- **WHEN** it is given 40 ms draws only before `t` = 1 s followed by 2 s of 5 ms draws, and separately 30 ms draws only more than 2 s before the last sample followed by 2 s of 5 ms draws
+- **THEN** it returns false in both cases
+
+#### Scenario: No verdict before a full window
+- **GIVEN** `slowFrom` in a unit test
+- **WHEN** it is given samples from `t` = 1 s to `t` = 1.2 s with 60 ms draws
+- **THEN** it returns false, and with the same draws continued to `t` = 3.1 s it returns true
 
 #### Scenario: Off screen
-- **GIVEN** the homepage loaded with the hero cards drawing
-- **WHEN** the page is scrolled so the hero is out of view and the draw count of each card is read before and after 30 animation frames
-- **THEN** the hero cards' draw counts do not change until they return into view
+- **GIVEN** the homepage loaded with `?guard=off` and the hero in view
+- **WHEN** each card's draw count (`window.__glass.draws`) is read before and after 30 animation frames, then the hero is scrolled out of view and the counts are read again before and after 30 more frames
+- **THEN** the counts rose while in view and did not change while out of view
 
-#### Scenario: A slow device
-- **GIVEN** the homepage loaded with frame times made to exceed 20 ms (a busy loop injected into `requestAnimationFrame`)
-- **WHEN** the page reports that the slow-device guard has tripped
-- **THEN** every pane shows the still frame and two captures after 30 further frames are identical
+#### Scenario: The guard is wired
+- **GIVEN** the homepage loaded with the guard on and a test hook that adds 30 ms of busy work to every frame's draw
+- **WHEN** the test waits until `window.__glass.slow` is true
+- **THEN** every pane shows the still frame and two captures after 30 further frames are identical; and with `?guard=off` and the same hook, `__glass.slow` stays false after 4 s of frames and the cards keep changing
 
 ### Requirement: Without WebGL the page still works
 Without WebGL a ribbed pane SHALL show its ground with a static soft CSS gradient of its light's colour, and all its text and its link SHALL work unchanged.
@@ -128,17 +153,17 @@ Without WebGL a ribbed pane SHALL show its ground with a static soft CSS gradien
 - **THEN** no error is thrown, every card link has its `/projects/` href, every card's background varies by more than 10 levels, and both windows still show their content
 
 ### Requirement: Every text on glass reads at 4.5:1
-Every text on a glass object SHALL have a contrast of at least 4.5:1 against the pixels behind it at every moment of the light's loop. Secondary text on frosted glass (window titles, the Replay button, message names, sources, steps, the record heading and items, the terminal's dim text) SHALL use one shared opaque colour, `--glass-ink-quiet`, defined once in `src/styles/stone.css`; no text on glass SHALL use an alpha-blended colour.
+Every text on a glass object SHALL have a contrast of at least 4.5:1 against the pixels behind it at every moment of the light's loop. Every text that the lab coloured with an alpha-blended ink (the window titles `.glass-title`, the Replay button, the message names `.msg .who`, `.sources`, the record heading `.rec-head`) and the terminal's dim text (`.terminal-dim`, `#8a8278` today) SHALL use one shared opaque colour, `--glass-ink-quiet`, defined once in `src/styles/stone.css`. Texts that already use a darker opaque ink (`.steps` `#4a453f`, `.record` items `#3a3632`, body text in ink) SHALL keep it. The terminal's red prompt and error text SHALL use one opaque `--glass-ink-red`, defined once in the same file. No text on glass SHALL use an alpha-blended colour.
 
-#### Scenario: The token is one opaque colour
+#### Scenario: The tokens are opaque and defined once
 - **GIVEN** `src/styles/stone.css` and every stylesheet and `<style>` block used by the homepage
 - **WHEN** a unit test reads them
-- **THEN** `--glass-ink-quiet` is defined exactly once, as an opaque colour with at least 4.5:1 against `#FFFFFF` and against `#EEEAE3`, and no rule for `.glass-title`, `.msg .who`, `.rec-head`, `.sources`, `.steps`, `.record`, the Replay button or `.terminal-dim` sets a colour with an alpha below 1
+- **THEN** `--glass-ink-quiet` and `--glass-ink-red` are each defined exactly once as opaque colours with at least 4.5:1 against `#FFFFFF` and `#EEEAE3`, the listed alpha selectors and `.terminal-dim` use `--glass-ink-quiet`, the prompt and error use `--glass-ink-red`, and no colour with an alpha below 1 is set on any text selector inside a glass object
 
 #### Scenario: Window text, measured
-- **GIVEN** the homepage at 1440x900 with `?t=2.4`, ANNA's conversation finished and the terminal having answered `ls`
+- **GIVEN** the homepage at 1440x900 with `?t=2.4`, ANNA's conversation at `done` and the terminal having answered `ls`
 - **WHEN** each text element inside both frosted windows has its colour read, the text is made transparent, and the pixels behind each box are sampled from a screenshot
-- **THEN** the lowest contrast for every element is at least 4.5:1, the terminal title included
+- **THEN** the lowest contrast for every element is at least 4.5:1, the window titles, steps, record items, terminal prompt and terminal dim text included
 
 #### Scenario: Card text across the loop
 - **GIVEN** the homepage at 1440x900

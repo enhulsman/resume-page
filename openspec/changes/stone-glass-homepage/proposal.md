@@ -24,21 +24,43 @@ real page; you judge the real page instead.
 **Calls made overnight that you may want to reverse:**
 
 1. **Henk, Homelab and Claude Sandbox show twice:** as hero cards and again as rows in Projects,
-   numbered 02 to 04 like their cards. The inventory's example numbers (`4` egress ports) and its
-   "index numbers carry into the sections" line point that way. To reverse: drop them from the list.
-2. **Left off the homepage because the inventory does not list them:** the side pieces (flag,
+   numbered 02 to 04 like their cards. This reverses the 2026-11-09 spec's "no project shown twice";
+   the inventory's example numbers (`4` egress ports) and its "index numbers carry into the
+   sections" line point this way. To reverse: drop them from the list.
+2. **The hero cards link to their project pages,** not down to their sections on the homepage.
+3. **pytaiga-mcp's row shows "50 → 5"** (fields per story), as the inventory names, through a new
+   `homeDim` setting; /projects keeps leading with "11 tests".
+4. **Left off the homepage because the inventory does not list them:** the side pieces (flag,
    sleep, wordle), the skills and education lines, and the contact message. They stay in config
    and on /resume and /contact.
-3. **The terminal keeps the lab's faint upside-down reflection of the four cards** along its top edge.
-4. **With reduced motion the terminal shows its intro at once** instead of typing it (new).
-5. **New copy, in config:** the section headings "Projects", "Experience", "Writing", "About",
-   "Contact", the links "See all projects", "Full résumé", "All writing", "now" for a current
-   job's end year, and the photo's alt text "Ezra Hulsman, photographed from below" (the current
-   alt, moved). The hero's role and intro lines move from the lab page into config unchanged.
-6. **"One glass moment per screen" is tested as:** never two glass objects with a third or more of
-   their height on screen together. That leaves a deliberate stretch of stone between the cards and
-   ANNA's window.
-7. **Writing shows the five newest posts** and a link to /blog.
+5. **Contact adds three small links** under the large address: the contact page, LinkedIn, GitHub.
+6. **Writing shows the five newest posts** with each post's one-line diary line, and a link to /blog.
+7. **The terminal keeps the lab's faint upside-down reflection of the four cards** along its top edge.
+8. **The terminal's red prompt becomes a darker red** (`#8F3320` to start) so it reads at 4.5:1
+   over the glow; it darkens further only if the measurement asks.
+9. **On a slow phone the lights hold still:** if drawing them takes over 20 ms a frame for 2 s,
+   they stop on their still frame for the visit. A phone that only lowers its frame rate is not
+   counted as slow.
+10. **Phones keep a menu button** for Projects, Blog, Résumé and Contact (today's menu, in stone);
+    "Get in touch" stays visible. The alternative is a sideways-scrolling row of links.
+11. **The footer reads, on every page:** "Made in Utrecht by Ezra Hulsman. Proverbs 3:5-7" (the
+    verse a link, as now). The drawing-sheet line "Every dimension on this sheet is a real number.
+    Nothing is drawn in perspective." goes, and "Drawn" becomes "Made".
+12. **New copy, in config:** the section headings "Projects", "Experience", "Writing", "About",
+    "Contact", the links "See all projects", "Full résumé", "All writing", "now" for a current
+    job's end year, the terminal title "ezra@hulsman: ~" (as in the lab), and the photo's alt text
+    "Ezra Hulsman, photographed from below" (the current alt, moved). The hero's role and intro
+    lines move from the lab page into config unchanged.
+13. **"One glass moment per screen" is measured on the glass itself:** never two glass objects
+    with a third or more of their height on screen together. The cost: roughly 550 to 600 px
+    between the bottom of the cards and the top of ANNA's window on a 1440x900 screen, about 440 px
+    at 1280x720, filled by ANNA's heading, lead and first rule plus stone. Her window therefore
+    starts beside her rules, below her heading, lead and first rule.
+14. **The drawing-sheet frame (the border with A–F letters) and its green table leave every page,**
+    not only the homepage, with the stone bar and footer. The bar keeps "EH." with your name
+    beside it, as today.
+
+With reduced motion the terminal's intro is already shown at once today; that stays.
 
 **What a visitor of the homepage sees change:**
 
@@ -82,7 +104,8 @@ hero cannot ship on its own: the page under it has to speak the same language.
 - **ANNA's section** is the window staging from the lab; `annaLevels` is used on /projects only.
 - **Shared chrome** on every page: stone colours, Archivo, the new top bar and footer; no theme
   button, no dark theme. **BREAKING** for the drawing-sheet look of inner pages' chrome.
-- **Retired:** the arrival (`intro.js`), the 3D scene (`scene.js`, the homepage `main.js`), the
+- **Phones** keep a menu button in the bar; the footer gets stone wording from config.
+- **Retired:** the arrival (`intro.js` and the layout's `html.intro` block), the 3D scene (`scene.js`, the homepage `main.js`), the
   homepage sheets (`YouSheet`, `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`,
   `NotesSheet`, `ContactSheet`), and last `/hero-lab` with the H2 variant, the glare and the
   turn, journey and stack stagings.
@@ -108,13 +131,16 @@ hero cannot ship on its own: the page under it has to speak the same language.
 - **Files:** `src/pages/index.astro`; new `src/components/stone/*` (hero, ANNA section and window,
   projects, experience, writing, about with the terminal window, contact); new
   `src/styles/stone.css`; `src/scripts/glass/panes.js` (from `hero.js`); `src/config/glass.ts`
-  (moments list, lab-only exports removed); `src/config/home.ts` (section headings, photo alt);
+  (moments list, lab-only exports removed); `src/config/home.ts` (`homeSections`, `footer`,
+  `homeDim`); `src/scripts/terminal-animation.ts` (reduced motion switched on mid-typing);
   `src/layouts/OverzichtLayout.astro`, `Bar.astro`, `Foot.astro` (chrome); deletions listed above.
 - **Tests:** new `tests/glass-home.test.mjs`, `tests/glass-home.e2e.mjs`,
-  `tests/glass-chrome.e2e.mjs`, `tests/glass-retired.test.mjs`, `tests/glass-retired.e2e.mjs`;
-  `tests/glass-hero.e2e.mjs`, `glass-anna-window.e2e.mjs` and `glass-terminal.e2e.mjs` move from
-  `/hero-lab` to `/`; `tests/single-source.test.ts` gains the homepage copy scan; the lab-only and
-  drawing-sheet homepage tests go; `package.json` runs the glass suites.
+  `tests/glass-chrome.e2e.mjs`, `tests/glass-retired.test.mjs`, `tests/glass-retired.e2e.mjs`,
+  `tests/lib/moments.mjs`; `tests/glass-hero.e2e.mjs`, `glass-anna-window.e2e.mjs` and
+  `glass-terminal.e2e.mjs` move from `/hero-lab` to `/`; `tests/intro.e2e.mjs` and
+  `tests/overzicht.e2e.mjs` go with the old homepage; named tests in `tests/sheets.e2e.mjs` are
+  rewritten for the stone bar or retired with the dark theme; the lab-only tests go last;
+  `package.json` runs the glass suites.
 - **Performance:** every pane draws through one shared WebGL context (already so in the lab), so
   four cards plus four reflection minis cost one context. Device pixel ratio capped at 2; light
   pauses off screen and holds still on slow devices.

@@ -9,12 +9,12 @@ The homepage SHALL show, top to bottom: the hero, then the sections ANNA, Projec
 - **THEN** they are "ANNA", "Projects", "Experience", "Writing", "About", "Contact"
 
 ### Requirement: The hero is the name and four ribbed cards
-The hero SHALL show the name as a real `h1` in plain type (no glare, no effect on the name), the role and the intro line ("I build ANNA, an AI assistant in Microsoft Teams that does the admin no one should spend their day on."), and four ribbed glass cards in this order: ANNA, Henk, Homelab, Claude Sandbox, each a link to its project page, each with its index `01` to `04`. Each card's readout SHALL come from config: ANNA's is "In production", the others one of that project's dimensions in `home.ts`.
+The hero SHALL show the name (`site.name`) as a real `h1` in plain type, set on two lines (no glare, no effect on the name), the role and the intro line ("I build ANNA, an AI assistant in Microsoft Teams that does the admin no one should spend their day on."), and four ribbed glass cards in this order: ANNA, Henk, Homelab, Claude Sandbox, each a link to its project page, each with its index `01` to `04`. Each card's readout SHALL come from config: ANNA's is "In production", the others one of that project's dimensions in `home.ts`.
 
 #### Scenario: Hero content
 - **GIVEN** the homepage loaded at 1440x900
 - **WHEN** the hero is read
-- **THEN** the `h1` reads "Ezra Hulsman", the intro line is present verbatim, the four card titles are ANNA, Henk, Homelab, Claude Sandbox in order, and every card's `href` starts with `/projects/`
+- **THEN** the `h1`'s text with whitespace collapsed to single spaces reads "Ezra Hulsman", the intro line is present verbatim, the four card titles are ANNA, Henk, Homelab, Claude Sandbox in order, and every card's `href` starts with `/projects/`
 
 #### Scenario: The name is plain
 - **GIVEN** the homepage loaded
@@ -37,7 +37,7 @@ The hero SHALL show the name as a real `h1` in plain type (no glare, no effect o
 - **THEN** the cards scroll sideways in their own row and the page itself has no sideways scroll
 
 ### Requirement: Other projects as rows of type
-The Projects section SHALL list, as rows of type on stone with no glass, every project in `details` and `register` except ANNA and those marked `hideOnHome`: first the hero-card projects in card order, each with its card index (02 Henk, 03 Homelab, 04 Claude Sandbox), then the others in `home.ts` order. A row SHALL show the project's title, its `what` line, its status from the project page's frontmatter, its first dimension's value set large in tabular figures with that dimension's label, and link to its project page; a register entry has no number. The section SHALL end with a link to /projects.
+The Projects section SHALL list, as rows of type on stone with no glass, every project in `details` and `register` except ANNA and those marked `hideOnHome`: first the hero-card projects in card order, each with its card index (02 Henk, 03 Homelab, 04 Claude Sandbox), then the others in `home.ts` order. A row SHALL show the project's title, its `what` line, its status from the project page's frontmatter (joined by `src/lib/projects.ts`), its homepage number set large in tabular figures with that dimension's label, and link to its project page; a register entry has no number. The homepage number is `dims[homeDim]`, where `homeDim` is an optional index on a `DetailListing` in `home.ts` (default 0); pytaiga-mcp sets `homeDim: 2` so its row shows "50 → 5", and the order of `dims` (which /projects reads) does not change. The section SHALL end with a link to /projects.
 
 #### Scenario: The rows
 - **GIVEN** the homepage loaded
@@ -47,25 +47,30 @@ The Projects section SHALL list, as rows of type on stone with no glass, every p
 #### Scenario: The number is the project's
 - **GIVEN** the homepage loaded
 - **WHEN** each detail row's large number is read
-- **THEN** it equals that project's `dims[0].value` in `home.ts` (Henk "4", bible-tui "102", pytaiga-mcp "50 → 5"), and its label equals `dims[0].label`
+- **THEN** it equals that project's `dims[homeDim ?? 0].value` in `home.ts` (Henk "4", Homelab "4", Claude Sandbox "3,700", Finance Bot "0.75", bible-tui "102", pytaiga-mcp "50 → 5"), and its label equals that dimension's label
+
+#### Scenario: /projects keeps its numbers
+- **GIVEN** `home.ts` with `homeDim` added
+- **WHEN** a unit test reads pytaiga-mcp's `dims`
+- **THEN** their order is unchanged ("11", "3", "50 → 5"), so /projects still leads with the first two
 
 #### Scenario: A number changes at its source
-- **GIVEN** the row builder in a unit test with a project whose first dimension is changed
+- **GIVEN** the row builder in a unit test with a project whose `dims[homeDim]` is changed
 - **WHEN** the rows are built
 - **THEN** the row shows the new value with no other edit
 
 ### Requirement: Experience, Writing, About and Contact keep their sources
-Experience SHALL list every entry in `resume.ts` `experience` as years (`startDate`–`endDate`, or `startDate`– and the word for now from config), role and company, divided by hairline rules, ending with a link to /resume. Writing SHALL list the five newest published posts (files under `src/pages/blog/` not starting with `_`), newest first, each with title, date and description from frontmatter, ending with a link to /blog. About SHALL show `notes` from `home.ts`, the site photo as a plain image with its alt text from config, and the terminal in a frosted window. Contact SHALL show `site.social.email` set large as a `mailto:` link, then links to /contact, LinkedIn and GitHub from `site.ts`, as type with no glass.
+Experience SHALL list every entry in `resume.ts` `experience` as years (`startDate`–`endDate`, or `startDate`– and the word for now from config), `role` and the company (`client`), divided by hairline rules, ending with a link to /resume. Writing SHALL list the first five of `diaryEntries` from `src/lib/frontmatter.ts` (published posts, newest first), each with its `title`, date `label` and one-line `line` (the post's `diary` line, or its description when it has none), ending with a link to /blog. About SHALL show `notes` from `home.ts`, the site photo as a plain image with its alt text from config, and the terminal in a frosted window. Contact SHALL show `site.social.email` set large as a `mailto:` link, then links to /contact, LinkedIn and GitHub from `site.ts`, as type with no glass.
 
 #### Scenario: Experience
 - **GIVEN** the homepage loaded
 - **WHEN** the Experience rows are read
-- **THEN** there is one row per `experience` entry in order, each showing its role and its company and the years starting with `startDate`
+- **THEN** there is one row per `experience` entry in order, each showing its `role`, its `client` and the years starting with `startDate`
 
 #### Scenario: A new post
-- **GIVEN** the post list builder in a unit test with one more published post dated after all others
-- **WHEN** the Writing list is built
-- **THEN** that post is first and the list has at most five entries; a post whose file starts with `_` never appears
+- **GIVEN** the Writing list built from `diaryEntries(...).slice(0, 5)` in a unit test, with one more published post dated after all others added to the sources
+- **WHEN** the list is built
+- **THEN** that post is first, the list has at most five entries, each entry shows its `line`, and a post whose file starts with `_` never appears
 
 #### Scenario: About
 - **GIVEN** the homepage loaded
@@ -88,22 +93,22 @@ Experience SHALL list every entry in `resume.ts` `experience` as years (`startDa
 - **THEN** its largest text is `site.social.email` in a link to `mailto:` + that address, and it links to /contact, `site.social.LinkedIn` and `site.social.GitHub`
 
 ### Requirement: Copy comes only from config
-Every word and number on the homepage SHALL come from config or content files (`src/config/*.ts`, project and blog frontmatter). The homepage's markup (`src/pages/index.astro` and `src/components/stone/*.astro`) MUST contain no literal words: after frontmatter, comments, `<style>` and `<script>` blocks and `{...}` expressions are removed, no letters remain between tags or in `alt`, `title` or `aria-label` values. The existing single-source tests for project facts SHALL keep passing.
+Every word and number on the homepage SHALL come from config or content files: string values exported by `src/config/*.ts`, project and blog frontmatter, and what `diaryEntries` (`src/lib/frontmatter.ts`), `buildProjects` and `pageFacts` (`src/lib/projects.ts`) derive from them (date labels, statuses). The check is a covering check: for every text node under `main` and the footer, and every `alt`, `title` and `aria-label` value there, every corpus value of three letters or more that occurs in the text as whole words (at word boundaries) is removed, longest first, and no letters SHALL remain (so markup may join config values with punctuation, as in the footer line or `annaLead.text` followed by a full stop); the terminal's own output (`.term-body`) is excluded, because its text is checked by the existing terminal test in `tests/single-source.test.ts`. Words that markup used to hold get config homes: the terminal title "ezra@hulsman: ~", the section headings, link labels and the photo's alt in `homeSections`; the `h1` from `site.name`; the message names from `annaLead.title` and `annaDemo.who`. The existing single-source tests for project facts SHALL keep passing.
 
-#### Scenario: The scan
-- **GIVEN** `src/pages/index.astro` and every `src/components/stone/*.astro`
-- **WHEN** the single-source test strips frontmatter, comments, style and script blocks and expressions
-- **THEN** no letter remains between tags or in an `alt`, `title` or `aria-label` value
+#### Scenario: The rendered page is all config
+- **GIVEN** the homepage loaded at 1440x900 with ANNA's conversation at `done`
+- **WHEN** every text node and every `alt`, `title` and `aria-label` under `main` and the footer, outside `.term-body`, is checked against the corpus
+- **THEN** after removing every corpus value it contains, longest first, no letters remain in any of them
 
-#### Scenario: The scan catches a typed-in word
-- **GIVEN** a component source with `<h2>Projects</h2>` in its markup
-- **WHEN** the scan runs over it
-- **THEN** it reports that file and the word
+#### Scenario: The check catches a typed-in word
+- **GIVEN** the checker function in a unit test and four fixtures: `<h2>Projects</h2>` where "Projects" is not in the corpus; a link "See all" rendered inside a list of rows; the footer line "Made in Utrecht by Ezra Hulsman." with "Made in Utrecht by" and "Ezra Hulsman" in the corpus; and `annaLead.text` followed by "."; and a typed "Blogs about" with "Blog" in the corpus
+- **WHEN** the checker runs over each fixture
+- **THEN** it reports "Projects", "See all" and "Blogs about" (a corpus value inside a longer word is not removed), and passes the footer line and the lead
 
 #### Scenario: Headings and labels live in config
 - **GIVEN** `homeSections` in `src/config/home.ts`
 - **WHEN** a unit test reads it
-- **THEN** it holds the headings "Projects", "Experience", "Writing", "About", "Contact", the link labels and the photo's alt text
+- **THEN** it holds the headings "Projects", "Experience", "Writing", "About", "Contact", the link labels, the word for now, the terminal title "ezra@hulsman: ~" and the photo's alt text
 
 ### Requirement: The whole page is still on request
 With `prefers-reduced-motion: reduce`, nothing on the homepage SHALL move on its own: the lights hold their still frame, ANNA's conversation shows finished, the terminal prints its intro at once with a steady caret, and no CSS transition or animation runs. Switching reduced motion on after load SHALL have the same effect at once.
@@ -112,6 +117,11 @@ With `prefers-reduced-motion: reduce`, nothing on the homepage SHALL move on its
 - **GIVEN** the homepage loaded with `prefers-reduced-motion: reduce` and `__glassReady`
 - **WHEN** the page is screenshotted at the hero, at ANNA's window and at the terminal, and again after `requestAnimationFrame` has run 30 more times at each
 - **THEN** each pair of screenshots is identical, ANNA's window shows every beat, and the terminal shows its whole intro and an input line
+
+#### Scenario: Reduced motion switched on after load
+- **GIVEN** the homepage loaded without reduced motion, `?guard=off`, with the terminal in view and its intro still typing
+- **WHEN** reduced motion is switched on (`page.emulateMedia({ reducedMotion: 'reduce' })`)
+- **THEN** within the next animation frames the cards hold the still frame, the terminal shows its whole intro and an input line, its caret does not blink, and two screenshots 30 frames apart are identical
 
 #### Scenario: No running animations
 - **GIVEN** the homepage loaded with reduced motion
@@ -127,25 +137,43 @@ At 390x844 the homepage SHALL never scroll sideways; content that is wider (the 
 - **THEN** at every step `document.documentElement.scrollWidth` is at most `innerWidth`, and every section's box lies within 0..390 px
 
 ### Requirement: Shared chrome on every page
-Every page SHALL use the stone ground (`#EEEAE3`), the Archivo type, the top bar (the "EH." mark linking home, Projects, Blog, Résumé, Contact, and "Get in touch") and the stone footer. There SHALL be no theme button and no dark theme.
+Every page SHALL use the stone ground (`#EEEAE3`), the Archivo type, the top bar (the "EH." mark linking home, Projects, Blog, Résumé, Contact, and "Get in touch") and the stone footer. The footer's words SHALL come from config (`footer` in `src/config/home.ts`): the line "Made in Utrecht by" followed by `site.name`, and the link "Proverbs 3:5-7" to `site.quoteUrl`; the drawing-sheet line ("Every dimension on this sheet is a real number. Nothing is drawn in perspective.") goes. The bar keeps the "EH." signature with the full name `site.name` beside it on one line, as today. The drawing-sheet frame (`.frame` with its A–F reference letters in `OverzichtLayout.astro`, and its border rules in `overzicht.css`) and the green table around it SHALL leave every page. There SHALL be no theme button and no dark theme.
+
+#### Scenario: No sheet frame
+- **GIVEN** each of `/`, `/projects`, `/projects/Henk`, `/blog`, `/blog/bible-tui`, `/resume`, `/contact` loaded
+- **WHEN** the page is inspected
+- **THEN** it has no `.frame` element, and the page ground at the viewport edges is `#EEEAE3`
 
 #### Scenario: Inner pages carry the chrome
-- **GIVEN** `/projects`, `/blog`, `/resume` and `/contact` each loaded
-- **WHEN** the body background and the top bar are read
-- **THEN** the background is `#EEEAE3` and the bar shows the "EH." mark and the five links
+- **GIVEN** `/projects`, `/projects/Henk`, `/blog`, `/blog/bible-tui`, `/resume` and `/contact` each loaded
+- **WHEN** the body background, the top bar and the footer are read
+- **THEN** the background is `#EEEAE3`, the bar shows the "EH." mark with "Ezra Hulsman" beside it, the four page links and "Get in touch", and the footer reads "Made in Utrecht by Ezra Hulsman." with a "Proverbs 3:5-7" link
 
 #### Scenario: Dark system theme
-- **GIVEN** any of `/`, `/projects`, `/blog`, `/resume`, `/contact` loaded with `prefers-color-scheme: dark`
+- **GIVEN** any of `/`, `/projects`, `/projects/Henk`, `/blog`, `/blog/bible-tui`, `/resume`, `/contact` loaded with `prefers-color-scheme: dark`
 - **WHEN** the body background is read
 - **THEN** it is still `#EEEAE3`, and no theme button exists
 
+### Requirement: Phones reach every page from the bar
+At 860 px wide and below, the bar SHALL fold the four page links into a menu button (the existing menu behaviour, restyled in stone, without the theme button); "Get in touch" and the "EH." mark stay visible. Opening the menu SHALL show the four links next in keyboard order.
+
+#### Scenario: Every page from every page
+- **GIVEN** each of `/`, `/projects`, `/projects/Henk`, `/blog`, `/blog/bible-tui`, `/resume`, `/contact` loaded at 390x844
+- **WHEN** the menu button is pressed and each of Projects, Blog, Résumé and Contact is followed in turn
+- **THEN** each lands on `/projects`, `/blog`, `/resume` and `/contact` respectively, and the page has no sideways scroll with the menu open
+
+#### Scenario: Keyboard order
+- **GIVEN** `/projects` loaded at 390x844
+- **WHEN** the menu button is focused and activated with Enter, then Tab is pressed
+- **THEN** focus moves to the first of the four links
+
 ### Requirement: The drawing-sheet homepage retires
-The homepage SHALL NOT play an arrival animation and SHALL NOT render the title block, the revision letters, the stamp, the drawings, the ANNA 3D scene or ANNA's section with its levels. The retired homepage code (`intro.js`, `scene.js`, the homepage `main.js`, `YouSheet`, `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`, `NotesSheet`, `ContactSheet`) SHALL be deleted; `AnnaPlate` and `plate.js` stay for /projects.
+The homepage SHALL NOT play an arrival animation (the layout's head block that sets `html.intro`, the `html.intro` CSS, `intro.js` and the terminal's wait for `ovz:arrived` all go) and SHALL NOT render the title block, the revision letters, the stamp, the drawings, the ANNA 3D scene or ANNA's section with its levels. The retired homepage code (`intro.js`, `scene.js`, the homepage `main.js`, `YouSheet`, `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`, `NotesSheet`, `ContactSheet`) SHALL be deleted; `AnnaPlate` and `plate.js` stay for /projects.
 
 #### Scenario: Arrival
 - **GIVEN** a new browser session
 - **WHEN** the homepage loads
-- **THEN** the hero is fully visible in the first painted frame and the document has no `intro` class
+- **THEN** the hero is fully visible in the first painted frame, the document never gets an `intro` class, and the body is not clipped to one screen
 
 #### Scenario: Retired files are gone
 - **GIVEN** the repository
