@@ -43,6 +43,23 @@ export const annaLead = {
   href: '/projects/AnnaAssistant',
 };
 
+/** ANNA's rules, beside the window where she works (/hero-lab, the window staging): a rule, why, and what enforces it. */
+export const annaCalls = {
+  heading: 'What she may do, and for whom.',
+  rules: [
+    { rule: 'Everyone gets their own ANNA.', why: 'Profile, memory and files belong to one person; colleagues never see what you asked.', how: 'Entra ID identifies every request.' },
+    { rule: 'Never more than the admin granted.', why: 'Each connector (hours, leave, documents) is switched on per person or per role.', how: 'MCP connectors, set per user.' },
+    { rule: 'Asks before anything that can\'t be undone.', why: 'Every action she takes leaves a record you and your admin can see.', how: 'The record is kept by ANNA itself.' },
+  ],
+  closing: 'New connectors are built at each company during onboarding.',
+  more: { label: 'See ANNA at work', href: 'https://anna-site.anamata.ai' },
+  /** The window around the conversation (its words are src/config/anna-demo.ts). */
+  window: 'Teams · ANNA',
+  /** Before the sources she read, in the window. */
+  read: 'Read:',
+  replay: 'Replay',
+};
+
 /** The two drawn in full on the homepage; the others are its cards. */
 export const homeDrawn: DetailListing['id'][] = ['henk', 'finance'];
 

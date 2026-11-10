@@ -1,5 +1,6 @@
-// ANNA's two stagings in /hero-lab?lab=1, in a real browser (the shapes: tests/glass-anna-scene.test.mjs).
-//   ?anna=turn (default): the ANNA card, turned by scroll or drag; its levels' copy beside their lights
+// ANNA's stagings in /hero-lab?lab=1, in a real browser (the shapes: tests/glass-anna-scene.test.mjs).
+//   ?anna=window (default): the rules beside a glass window where a conversation plays (tests/glass-anna-window.e2e.mjs)
+//   ?anna=turn:           the ANNA card, turned by scroll or drag; its levels' copy beside their lights
 //   ?anna=journey:        one tall pane; the question goes down and comes back as the reader scrolls
 //   ?anna=stack:          the exploded stack from before (tests/glass-anna.e2e.mjs)
 // Needs a running site:
@@ -46,9 +47,10 @@ const lit = (page, sel) => page.$eval(sel, (el) => {
   return most;
 });
 
-test('one staging at a time: turn by default, journey and stack on the switch, none without ?lab=1', async () => {
-  for (const [q, want] of [['', 'turn'], ['&anna=turn', 'turn'], ['&anna=journey', 'journey'], ['&anna=stack', 'stack']]) {
+test('one staging at a time: window by default, turn, journey and stack on the switch, none without ?lab=1', async () => {
+  for (const [q, want] of [['', 'window'], ['&anna=window', 'window'], ['&anna=turn', 'turn'], ['&anna=journey', 'journey'], ['&anna=stack', 'stack']]) {
     const { context, page, errors } = await open(q);
+    assert.equal(await shown(page, '.anna-window'), want === 'window', `${q}: window`);
     assert.equal(await shown(page, '.anna-turn'), want === 'turn', `${q}: turn`);
     assert.equal(await shown(page, '.anna-journey'), want === 'journey', `${q}: journey`);
     assert.equal(await shown(page, '.anna-x'), want === 'stack', `${q}: stack`);
@@ -56,7 +58,7 @@ test('one staging at a time: turn by default, journey and stack on the switch, n
     assert.deepEqual(errors, []);
   }
   const { context, page } = await open('', { lab: false });
-  for (const sel of ['.anna-turn', '.anna-journey', '.anna-x']) assert.equal(await shown(page, sel), false, sel);
+  for (const sel of ['.anna-window', '.anna-turn', '.anna-journey', '.anna-x']) assert.equal(await shown(page, sel), false, sel);
   await context.close();
 });
 
@@ -64,6 +66,7 @@ test('the lab bar switches staging in place', async () => {
   const { context, page, errors } = await open('');
   await page.click('.lab a[data-key="anna"][data-val="journey"]');
   assert.equal(await shown(page, '.anna-journey'), true);
+  assert.equal(await shown(page, '.anna-window'), false);
   assert.equal(await shown(page, '.anna-turn'), false);
   assert.match(page.url(), /anna=journey/);
   await context.close();
@@ -71,7 +74,7 @@ test('the lab bar switches staging in place', async () => {
 });
 
 test('turn: the card face-on, its levels\' copy hidden; scrolled through, turned with all four beside their lights', async () => {
-  const { context, page, errors } = await open('&t=2.4');
+  const { context, page, errors } = await open('&anna=turn&t=2.4');
   assert.deepEqual(await page.$$eval('.anna-turn .levels h3', (hs) => hs.map((h) => h.textContent)), LEVELS);
   await into(page, '.anna-turn', 0);
   const face = await until(page, '__annaTurn', (s) => s.turn < 0.02);
@@ -91,7 +94,7 @@ test('turn: the card face-on, its levels\' copy hidden; scrolled through, turned
 });
 
 test('turn: each level\'s copy sits level with its light, beside the pane, outside the glass', async () => {
-  const { context, page, errors } = await open('&t=2.4');
+  const { context, page, errors } = await open('&anna=turn&t=2.4');
   await into(page, '.anna-turn', 1.6);
   await until(page, '__annaTurn', (s) => s.turn > 0.98);
   const geo = await page.evaluate(() => {
@@ -105,7 +108,7 @@ test('turn: each level\'s copy sits level with its light, beside the pane, outsi
 });
 
 test('turn: a sideways drag turns the card without scrolling', async () => {
-  const { context, page, errors } = await open('&t=2.4');
+  const { context, page, errors } = await open('&anna=turn&t=2.4');
   await into(page, '.anna-turn', 0);
   await until(page, '__annaTurn', (s) => s.turn < 0.02);
   const y0 = await page.evaluate(() => scrollY);
@@ -122,7 +125,7 @@ test('turn: a sideways drag turns the card without scrolling', async () => {
 });
 
 test('turn, reduced motion: one complete still, turned, all copy shown', async () => {
-  const { context, page, errors } = await open('', { reducedMotion: 'reduce' });
+  const { context, page, errors } = await open('&anna=turn', { reducedMotion: 'reduce' });
   await into(page, '.anna-turn', 0);
   const s = await until(page, '__annaTurn', (s) => s.turn > 0.98);
   assert.ok(s.turn > 0.98 && s.labels.every((o) => o > 0.98), JSON.stringify(s));

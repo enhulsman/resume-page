@@ -5,9 +5,11 @@
 // ?cards=5 adds Finance Bot as 05; ?look=before shows the cards before review round 3.
 // ?blur=<0..1.5> sets one distance for every card (0 hard edges, 1 the study's softness);
 // without it each card uses its own. Clicking the value goes back to per card.
-// ?anna=turn|journey|stack picks ANNA's staging (lab only); ?name=glare sweeps a glare across the name.
+// ?anna=window|turn|journey|stack picks ANNA's staging (lab only; window by default); ?chat=<seconds>
+// holds one moment of the window's conversation; ?name=glare sweeps a glare across the name.
 import { glassCards, benched, h2Card, annaExploded, type GlassCard, type AnnaPane } from "../config/glass.ts";
-import { annaLead, annaLevels } from "../config/home";
+import { annaLead, annaLevels, annaCalls } from "../config/home";
+import { annaDemo } from "../config/anna-demo";
 import { LABEL_Y, TURN_PANE, JOURNEY_PANE } from "../scripts/glass/anna-scene.js";
 import site from "../config/site";
 import Terminal from "../components/overzicht/Terminal.astro";
@@ -41,7 +43,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       h.dataset.look = q.get('look') === 'before' ? 'before' : 'now';
       if (q.get('lab') === '1') h.dataset.lab = '';
       h.dataset.name = q.get('name') === 'glare' ? 'glare' : 'plain';
-      h.dataset.anna = ['journey', 'stack'].includes(q.get('anna')) ? q.get('anna') : 'turn';
+      h.dataset.anna = ['turn', 'journey', 'stack'].includes(q.get('anna')) ? q.get('anna') : 'window';
     </script>
   </head>
   <body>
@@ -93,6 +95,43 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
           <span class="readout">{h2Card.readout}</span>
           <span class="go" aria-hidden="true">→</span>
         </a>
+      </section>
+
+      <!-- lab only, the default staging (?anna=window): what ANNA may do and for whom, beside a frosted
+           glass window where the site's 'week' conversation plays once as it comes into view. Every
+           beat is in the page from the start, hidden until it lands (anna-window.js). -->
+      <section class="anna-window" aria-labelledby="anna-window-h">
+        <div class="aw-copy">
+          <h2 id="anna-window-h">ANNA</h2>
+          <p class="aw-lead">{annaLead.text}.</p>
+          <h3>{annaCalls.heading}</h3>
+          <ol class="aw-rules">
+            {annaCalls.rules.map((r) => <li><strong class="rule">{r.rule}</strong> <span class="why">{r.why}</span> <span class="how">{r.how}</span></li>)}
+          </ol>
+          <p class="aw-closing">{annaCalls.closing}</p>
+          <a class="more" href={annaCalls.more.href}>{annaCalls.more.label} <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="aw-stage">
+          <div class="aw-glow" aria-hidden="true"></div>
+          <div class="glass-window aw-window">
+            <div class="glass-bar aw-bar"><span class="glass-title aw-title">{annaCalls.window}</span><button type="button" class="aw-replay">{annaCalls.replay}</button></div>
+            <div class="aw-chat">
+              <div class="aw-log">
+                <div class="msg joris" data-beat="person"><span class="who">{annaDemo.who}</span><p class="text">{annaDemo.person}</p></div>
+                <div class="msg anna" data-beat="answer"><span class="who">ANNA</span><p class="text">{annaDemo.answer}</p></div>
+                <div class="work">
+                  <p class="sources" data-beat="sources"><span class="read">{annaCalls.read}</span> {annaDemo.sources.join(" · ")}</p>
+                  <ol class="steps">{annaDemo.steps.map((s, i) => <li data-beat={`step-${i}`}>{s}</li>)}</ol>
+                </div>
+                <div class="msg anna" data-beat="question"><p class="text">{annaDemo.question}</p></div>
+                <div class="msg joris" data-beat="reply"><span class="who">{annaDemo.who}</span><p class="text">{annaDemo.reply}</p></div>
+                <div class="msg anna" data-beat="result"><span class="who">ANNA</span><p class="text">{annaDemo.result}</p></div>
+                <div class="record" data-beat="record"><p class="rec-head">{annaDemo.recordHeading}</p><ul>{annaDemo.record.map((r) => <li>{r}</li>)}</ul></div>
+              </div>
+            </div>
+            <div class="aw-compose" aria-hidden="true"><span class="aw-field"><span class="aw-typed"></span><i class="aw-caret"></i></span></div>
+          </div>
+        </div>
       </section>
 
       <!-- lab only, staging A (?anna=turn): the ANNA card, turned. Face-on its four level lights are
@@ -172,13 +211,13 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
            colours; the hero's panes reflect, upside down and faint, along its top inside edge -->
       <section class="term-lab" aria-label="Terminal">
         <div class="term-glow" aria-hidden="true"></div>
-        <div class="term-window">
+        <div class="glass-window term-window">
           <div class="term-reflect" aria-hidden="true">
             {glassCards.map(c => (
               <span class="glass-card mini" data-light={c.light} data-base={JSON.stringify(c.base)} data-tune={c.tune && JSON.stringify(c.tune)} data-distance={Math.max(1, c.distance)} data-wash={JSON.stringify(c.wash)} data-quiet="off" style={`--base: ${rgb(c)}`}><canvas></canvas></span>
             ))}
           </div>
-          <div class="term-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="term-title">ezra@hulsman: ~</span></div>
+          <div class="glass-bar term-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="glass-title term-title">ezra@hulsman: ~</span></div>
           <Terminal />
         </div>
       </section>
@@ -189,7 +228,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       <span class="seg"><a href="?cards=4" data-key="cards" data-val="4">4</a><a href="?cards=5" data-key="cards" data-val="5">5</a></span>
       <span class="seg"><a href="?look=now" data-key="look" data-val="now" title="the cards now">now</a><a href="?look=before" data-key="look" data-val="before" title="before review round 3: no wash, upright flame, darker Henk">before</a></span>
       <span class="seg"><a href="?name=plain" data-key="name" data-val="plain" title="the name as plain text">name</a><a href="?name=glare" data-key="name" data-val="glare" title="a glare sweeps across the name (hover it to replay)">glare</a></span>
-      <span class="seg"><a href="?anna=turn" data-key="anna" data-val="turn" title="ANNA: the card, turned">turn</a><a href="?anna=journey" data-key="anna" data-val="journey" title="ANNA: the question goes down and comes back">journey</a><a href="?anna=stack" data-key="anna" data-val="stack" title="ANNA: the exploded stack">stack</a></span>
+      <span class="seg"><a href="?anna=window" data-key="anna" data-val="window" title="ANNA: what she may do, beside a conversation in a glass window">window</a><a href="?anna=turn" data-key="anna" data-val="turn" title="ANNA: the card, turned">turn</a><a href="?anna=journey" data-key="anna" data-val="journey" title="ANNA: the question goes down and comes back">journey</a><a href="?anna=stack" data-key="anna" data-val="stack" title="ANNA: the exploded stack">stack</a></span>
       <label class="dial">distance <input id="blur" type="range" min="0" max="1.5" step="0.05" value="1" /> <output id="blur-out" title="back to each card's own">per card</output></label>
     </nav>
 
@@ -199,6 +238,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       import "../scripts/glass/anna-turn.js";
       import "../scripts/glass/anna-journey.js";
       import "../scripts/glass/glare.js";
+      import "../scripts/glass/anna-window.js";
     </script>
   </body>
 </html>
@@ -325,7 +365,7 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   html[data-cards="4"] .lab a[data-key="cards"][data-val="4"], html[data-cards="5"] .lab a[data-key="cards"][data-val="5"],
   html[data-look="now"] .lab a[data-key="look"][data-val="now"], html[data-look="before"] .lab a[data-key="look"][data-val="before"],
   html[data-name="plain"] .lab a[data-key="name"][data-val="plain"], html[data-name="glare"] .lab a[data-key="name"][data-val="glare"],
-  html[data-anna="turn"] .lab a[data-key="anna"][data-val="turn"], html[data-anna="journey"] .lab a[data-key="anna"][data-val="journey"], html[data-anna="stack"] .lab a[data-key="anna"][data-val="stack"] { background: #EEEAE3; color: #111; }
+  html[data-anna="window"] .lab a[data-key="anna"][data-val="window"], html[data-anna="turn"] .lab a[data-key="anna"][data-val="turn"], html[data-anna="journey"] .lab a[data-key="anna"][data-val="journey"], html[data-anna="stack"] .lab a[data-key="anna"][data-val="stack"] { background: #EEEAE3; color: #111; }
 
   /* lab: four or five cards; five keep the original 296 x 360 card */
   html[data-cards="4"] .cards li.bench { display: none; }
@@ -443,8 +483,9 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       radial-gradient(closest-side at 86% 64%, rgb(150 190 110 / 0.42), transparent);
     filter: blur(28px);
   }
-  .term-window {
-    position: relative; width: min(100%, 780px); height: 460px; display: flex; flex-direction: column; overflow: hidden;
+  /* a frosted glass window: the terminal's, and ANNA's */
+  .glass-window {
+    position: relative; display: flex; flex-direction: column; overflow: hidden;
     border-radius: 18px;
     background: rgb(250 248 244 / 0.42);
     -webkit-backdrop-filter: blur(26px) saturate(1.5); backdrop-filter: blur(26px) saturate(1.5);
@@ -453,8 +494,9 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
       inset 0 -1px 0 rgb(80 60 40 / 0.08),
       0 1px 2px rgb(70 50 30 / 0.08), 0 30px 60px -28px rgb(70 50 30 / 0.45);
   }
+  .term-window { width: min(100%, 780px); height: 460px; }
   /* a sheen across the glass, top left to bottom right */
-  .term-window::before {
+  .glass-window::before {
     content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
     background: linear-gradient(115deg, rgb(255 255 255 / 0.32), rgb(255 255 255 / 0) 34%, rgb(255 255 255 / 0) 70%, rgb(255 255 255 / 0.12));
   }
@@ -467,10 +509,11 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   }
   .term-reflect .glass-card.mini { position: relative; display: block; width: auto; height: 100%; aspect-ratio: auto; border-radius: 10px; box-shadow: none; transition: none; }
   .term-reflect .glass-card.mini::after { display: none; }
-  .term-bar { position: relative; z-index: 3; display: flex; align-items: center; gap: 14px; height: 40px; padding: 0 16px; flex: none; border-bottom: 1px solid rgb(17 17 16 / 0.06); }
+  .glass-bar { position: relative; z-index: 3; display: flex; align-items: center; gap: 14px; height: 40px; padding: 0 16px; flex: none; border-bottom: 1px solid rgb(17 17 16 / 0.06); }
+  .glass-title { font-size: 13px; font-weight: 500; color: rgb(17 17 16 / 0.55); }
   .term-bar .dots { display: flex; gap: 7px; }
   .term-bar .dots i { width: 11px; height: 11px; border-radius: 50%; background: rgb(17 17 16 / 0.14); box-shadow: inset 0 0.5px 0 rgb(255 255 255 / 0.5); }
-  .term-title { flex: 1; text-align: center; margin-right: 47px; font-size: 13px; font-weight: 500; color: rgb(17 17 16 / 0.55); }
+  .term-title { flex: 1; text-align: center; margin-right: 47px; }
   .term-window .term { position: relative; z-index: 3; flex: 1; min-height: 0; }
   .term-window .term-head { display: none; }
   .term-window .term-body { height: 100%; padding: 16px 22px 20px; overflow-y: auto; overflow-x: hidden; font: 14px/1.6 ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; color: #3a3632; outline: none; scrollbar-width: thin; scrollbar-color: rgb(17 17 16 / 0.18) transparent; cursor: text; }
@@ -485,6 +528,89 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
   .term-window .terminal-cursor { display: inline-block; min-width: 8px; height: 1.1em; vertical-align: text-bottom; background: var(--ink); color: var(--stone); animation: term-blink 1s steps(1) infinite; }
   .term-window .terminal-cursor.typing { animation: none; }
   @keyframes term-blink { 50% { opacity: 0; } }
+
+  /* ---- ANNA, the default staging: her rules beside a glass window where she works (lab, ?anna=window) ---- */
+  html:not([data-lab]) .anna-window, html:not([data-anna="window"]) .anna-window { display: none; }
+  .anna-window {
+    display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: center;
+    column-gap: clamp(24px, 5vw, 96px); padding: clamp(48px, 10svh, 120px) var(--gutter);
+  }
+  .aw-copy { max-width: 480px; }
+  .aw-copy h2 { margin: 0; font: 900 clamp(48px, 6.4vw, 104px)/0.9 "Archivo"; font-stretch: 88%; letter-spacing: -0.04em; }
+  .aw-lead { margin: 0.8em 0 0; font-size: clamp(18px, 1.6vw, 23px); line-height: 1.34; color: var(--ink-2); text-wrap: pretty; }
+  .aw-copy h3 { margin: 1.7em 0 0; font-weight: 700; font-size: clamp(20px, 1.75vw, 26px); letter-spacing: -0.02em; line-height: 1.15; }
+  .aw-rules { list-style: none; margin: 0.9em 0 0; padding: 0; display: grid; gap: 1.05em; }
+  .aw-rules li { font-size: clamp(15px, 1.1vw, 16.5px); line-height: 1.4; color: var(--ink-2); text-wrap: pretty; }
+  .aw-rules .rule { display: block; font-weight: 680; font-size: clamp(17px, 1.3vw, 19.5px); letter-spacing: -0.012em; color: var(--ink); margin-bottom: 0.15em; }
+  .aw-rules .how { display: block; margin-top: 0.2em; font-size: 0.88em; font-style: italic; color: #645c53; }
+  .aw-closing { margin: 1.5em 0 0; font-size: clamp(15px, 1.1vw, 16.5px); line-height: 1.4; color: var(--ink-2); }
+  .aw-copy .more { display: inline-block; margin-top: 1em; font-weight: 600; }
+
+  .aw-stage { position: relative; display: grid; justify-items: center; }
+  /* what the window frosts: ANNA's flame, red at its foot, yellow at its heart, amber around */
+  .aw-glow {
+    position: absolute; inset: 14% -7% 10%;
+    background:
+      radial-gradient(closest-side at 28% 66%, rgb(214 58 34 / 0.5), transparent),
+      radial-gradient(closest-side at 52% 42%, rgb(255 196 96 / 0.6), transparent),
+      radial-gradient(closest-side at 78% 58%, rgb(240 160 118 / 0.55), transparent);
+    filter: blur(28px);
+  }
+  .aw-window { width: min(100%, 620px); height: min(600px, 74svh); }
+  .aw-bar { display: grid; grid-template-columns: 1fr auto 1fr; }
+  .aw-title { grid-column: 2; color: rgb(17 17 16 / 0.66); } /* over the flame the terminal's 0.55 measures 4.0:1 */
+  .aw-replay {
+    grid-column: 3; justify-self: end; border: 0; background: none; padding: 4px 2px; cursor: pointer;
+    font: 500 12.5px/1 "Archivo"; color: rgb(17 17 16 / 0.66); border-radius: 6px;
+  }
+  .aw-replay:hover { color: var(--ink); }
+  .aw-replay:focus-visible { outline: 2px solid rgb(17 17 16 / 0.4); outline-offset: 2px; }
+  .aw-chat {
+    position: relative; z-index: 3; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: thin; scrollbar-color: rgb(17 17 16 / 0.16) transparent;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 18px); mask-image: linear-gradient(to bottom, transparent, black 18px);
+  }
+  .aw-log { display: flex; flex-direction: column; padding: 22px 22px 18px; font-size: 15px; line-height: 1.45; color: var(--ink); }
+  .aw-log p { margin: 0; }
+  /* each beat is in the page from the start; it shows when it lands */
+  .aw-window [data-beat] { opacity: 0; transform: translateY(6px); transition: opacity 0.45s ease, transform 0.5s cubic-bezier(.2,.7,.2,1); }
+  .aw-window [data-beat].on { opacity: 1; transform: none; }
+  .msg { max-width: 86%; text-wrap: pretty; }
+  .msg .who { display: block; margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.01em; color: rgb(17 17 16 / 0.66); }
+  .msg .text { padding: 10px 14px; border-radius: 14px; }
+  /* Joris: to the right, a faint ink tint; ANNA: on the left, lifted a little lighter than the glass */
+  .msg.joris { align-self: flex-end; text-align: left; }
+  .msg.joris .who { text-align: right; }
+  .msg.joris .text { background: rgb(17 17 16 / 0.055); }
+  .msg.anna { align-self: flex-start; }
+  .msg.anna .text { background: rgb(255 255 255 / 0.34); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35); }
+  .msg + .msg, .msg + .work, .work + .msg { margin-top: 6px; }
+  .msg.joris + .msg.anna, .msg.anna + .msg.joris { margin-top: 18px; }
+  /* her steps: read from the sources named above them, each ticking in */
+  .work { align-self: flex-start; max-width: 86%; margin-top: 10px; padding: 2px 14px 6px; }
+  .aw-log .sources { margin: 0 0 8px; font-size: 12.5px; line-height: 1.4; color: rgb(17 17 16 / 0.7); }
+  .sources .read { font-weight: 600; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; font-size: 13.5px; line-height: 1.4; color: #4a453f; }
+  .steps li { position: relative; padding-left: 20px; }
+  .steps li::before { content: "✓" / ""; position: absolute; left: 0; top: 0; font-size: 12px; font-weight: 700; color: #B4432B; opacity: 0.8; }
+  /* what she did: under her report, a quiet record */
+  .record { align-self: flex-start; max-width: 86%; margin-top: 8px; padding: 10px 14px 12px; border-radius: 12px; box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.07); }
+  .rec-head { font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: rgb(17 17 16 / 0.66); }
+  .record ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; font-size: 13.5px; color: #3a3632; font-variant-numeric: tabular-nums; }
+  /* the box Joris types into: his reply goes in here first, then is sent */
+  .aw-compose { position: relative; z-index: 3; flex: none; padding: 10px 14px 14px; opacity: 0.4; transition: opacity 0.4s ease; }
+  .aw-compose.typing { opacity: 1; }
+  .aw-field {
+    display: flex; align-items: center; height: 40px; padding: 0 14px; border-radius: 12px;
+    background: rgb(255 255 255 / 0.3); box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.07);
+    font-size: 15px; color: var(--ink); white-space: nowrap; overflow: hidden;
+  }
+  .aw-caret { display: none; width: 1.5px; height: 1.15em; margin-left: 1px; background: var(--ink); }
+  .aw-compose.typing .aw-caret { display: inline-block; }
+  @media (prefers-reduced-motion: reduce) {
+    .aw-window [data-beat] { transition: none; transform: none; }
+    .aw-replay { display: none; }
+  }
   .term-window:focus-within { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.6), 0 0 0 2px rgb(17 17 16 / 0.18), 0 30px 60px -28px rgb(70 50 30 / 0.45); }
 
   @media (max-width: 760px) {
@@ -497,6 +623,12 @@ const lit = (p: AnnaPane) => ({ "data-light": p.light, "data-base": JSON.stringi
     .levels h3 { font-size: 15px; }
     .levels p { display: none; }
     .turn-caption { display: block; margin: 0; min-height: 4.2em; font-size: 15px; line-height: 1.38; color: var(--ink-2); }
+    .anna-window { grid-template-columns: 1fr; row-gap: 40px; padding-block: 48px 72px; }
+    .aw-copy h2 { font-size: 56px; }
+    .aw-window { height: min(560px, 78svh); }
+    .aw-glow { inset: 14% calc(-1 * var(--gutter)) 10%; }
+    .aw-log { padding: 18px 14px 14px; font-size: 14.5px; }
+    .msg, .work, .record { max-width: 92%; }
     .anna-journey { grid-template-columns: 1fr; }
     .journey-stage { grid-column: 1; grid-row: 1; height: 56svh; z-index: 2; background: var(--stone); }
     .glass-card.journey-pane { height: 52svh; }
