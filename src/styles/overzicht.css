@@ -61,14 +61,15 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .sig-dot { color: var(--red); }
 .sig::after { content: ""; display: inline-block; width: 1px; height: 18px; background: var(--hair); margin: 0 12px; vertical-align: -3px; }
 .bar nav { display: flex; gap: clamp(16px, 2.6vw, 40px); }
-/* the page you are on, in the name's heavy, narrow Archivo; a soft glow of the hero's warm light
-   behind a link under the pointer (Ezra, 2026-11-11: sketch B3 b, with c on hover) */
+/* the page you are on, in the name's heavy, narrow Archivo; a soft glow behind a link under the
+   pointer (Ezra, 2026-11-11: sketch B3 b, with c on hover), each link in its own page's light from
+   pageLights, set by Bar.astro as --glow-near / --glow-deep (Ezra, 2026-11-10: the hero's four) */
 .bar nav { isolation: isolate; }
 .bar nav a { position: relative; }
 .bar nav a[aria-current="page"] { font-weight: 800; font-stretch: 86%; letter-spacing: -.01em; }
 .bar nav a::before {
   content: ""; position: absolute; z-index: -1; left: -14px; right: -14px; top: -10px; bottom: -12px; pointer-events: none;
-  background: radial-gradient(closest-side, rgb(242 168 112 / .55), rgb(255 196 96 / .18) 60%, transparent);
+  background: radial-gradient(closest-side, rgb(var(--glow-near, 242 168 112) / .6), rgb(var(--glow-deep, 255 196 96) / .2) 60%, transparent);
   filter: blur(6px); opacity: 0; transition: opacity .25s ease;
 }
 .bar nav a:hover { color: inherit; }

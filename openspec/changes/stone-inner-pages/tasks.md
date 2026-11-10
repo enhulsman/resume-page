@@ -48,9 +48,9 @@ those of `tests/sheets.e2e.mjs` at ba3e05b.
 
 ## 2. The bar's lights (stone-homepage: the current page in weight, a link glows)
 
-- [ ] 2.1 Tests: "Each link its own light" and "Not on a phone" in `tests/glass-chrome.e2e.mjs`; keep "A glow under the pointer" (line 182 there) and "The current page in weight" as they are
-- [ ] 2.2 `.bar nav a::before` per link from `pageLights` (a custom property per link set from config in `Bar.astro`), desktop only as now
-- [ ] 2.3 Run all test commands
+- [x] 2.1 Tests: "Each link its own light" and "Not on a phone" in `tests/glass-chrome.e2e.mjs`; keep "A glow under the pointer" (line 182 there) and "The current page in weight" as they are
+- [x] 2.2 `.bar nav a::before` per link from `pageLights` (a custom property per link set from config in `Bar.astro`), desktop only as now
+- [x] 2.3 Run all test commands
 
 ## 3. The article on project pages (stone-article-layout; stone-project-pages: head, facts, numbers, the three existing windows)
 

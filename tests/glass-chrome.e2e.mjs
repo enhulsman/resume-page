@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { footer, siteNav } from '../src/config/home.ts';
 import site from '../src/config/site.ts';
+import { pageLights } from '../src/config/glass.ts';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
 const PAGES = ['/', '/projects', '/projects/Henk', '/blog', '/blog/bible-tui', '/resume', '/contact'];
@@ -198,6 +199,43 @@ test('a glow under the pointer: resting on "Blog" lights a soft glow behind it a
   const off = await glows();
   await context.close();
   assert.ok(off.every((g) => g.op === 0), `gone: ${JSON.stringify(off)}`);
+});
+
+// ---- each link its own light (openspec stone-inner-pages, stone-homepage: the hero's four lights
+// in card order, from pageLights; Ezra, 2026-11-10 "Bar hover colours") ----
+
+const firstRgb = (img) => { const m = img.match(/rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)/); return m ? [+m[1], +m[2], +m[3]] : null; };
+
+test('each link its own light: on /resume, resting on each link in turn lights its own page\'s near colour from pageLights, no two alike', async () => {
+  const { context, page } = await open('/resume');
+  const seen = [];
+  for (const l of siteNav.links) {
+    const sel = `.bar nav a[href="${l.href}"]`;
+    await page.hover(sel);
+    await page.waitForFunction((s) => +getComputedStyle(document.querySelector(s), '::before').opacity > 0.5, sel, { timeout: 3000 }).catch(() => {});
+    const g = await page.$eval(sel, (a) => { const b = getComputedStyle(a, '::before'); return { op: +b.opacity, img: b.backgroundImage }; });
+    assert.ok(g.op > 0.5, `${l.label} lit: ${g.op}`);
+    assert.match(g.img, /radial-gradient/, `${l.label}: a radial gradient`);
+    assert.deepEqual(firstRgb(g.img), pageLights[l.id].near, `${l.label}: ${g.img}`);
+    seen.push(firstRgb(g.img).join(','));
+  }
+  await context.close();
+  assert.equal(new Set(seen).size, siteNav.links.length, `no two links share a colour: ${seen.join(' | ')}`);
+  // the four lights are the hero's, in card order
+  assert.deepEqual(siteNav.links.map((l) => l.id), ['projects', 'blog', 'resume', 'contact']);
+});
+
+test('not on a phone: on /blog at 860 x 900 and at 390 x 844 with the menu open, no link\'s glow is drawn', async () => {
+  const { context, page } = await open('/blog', { width: 860, height: 900 });
+  const shown = () => page.$$eval('.bar nav a', (as) => as.map((a) => [a.textContent.trim(), getComputedStyle(a, '::before').display]));
+  const at860 = await shown();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('.bar .menu-btn').click();
+  await page.waitForFunction(() => document.querySelector('.bar .menu-btn').getAttribute('aria-expanded') === 'true');
+  const at390 = await shown();
+  await context.close();
+  assert.equal(at860.length, 4);
+  for (const [t, d] of [...at860, ...at390]) assert.equal(d, 'none', `${t}: ::before display ${d}`);
 });
 
 test('as a real phone (mobile viewport) every page keeps its 390 px layout: nothing in the chrome, the menu\'s glows included, widens it', async () => {

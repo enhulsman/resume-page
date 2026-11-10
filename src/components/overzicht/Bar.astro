@@ -3,9 +3,11 @@
 // favicon's "EH.") with the full name beside it, linking home; the four page links with the one
 // you are on marked; and "Get in touch". At 860px and below the four links fold into the menu
 // (src/scripts/overzicht/chrome.js); the mark and "Get in touch" stay. The menu button comes before
-// the links so they follow it in keyboard order; CSS draws it last. Every word is in config.
+// the links so they follow it in keyboard order; CSS draws it last. Every word is in config, and so is each link's hover light: its own page's
+// light from `pageLights` (Projects the flame, Blog the tide, Résumé the sunset, Contact the moss).
 import site from "../../config/site";
 import { siteNav } from "../../config/home.ts";
+import { pageLights } from "../../config/glass.ts";
 
 interface Props {
   /** The inner page this bar sits on; leave it out on the homepage. */
@@ -22,7 +24,7 @@ const { current } = Astro.props;
     </svg>
   </button>
   <nav id="bar-nav" aria-label="Site">
-    {siteNav.links.map((l, i) => <a href={l.href} style={`--i:${i}`} aria-current={l.id === current ? "page" : undefined}>{l.label}</a>)}
+    {siteNav.links.map((l, i) => <a href={l.href} style={`--i:${i};--glow-near:${pageLights[l.id].near.join(" ")};--glow-deep:${pageLights[l.id].deep.join(" ")}`} aria-current={l.id === current ? "page" : undefined}>{l.label}</a>)}
   </nav>
   <a class="bar-cta" href={siteNav.cta.href}>{siteNav.cta.label}</a>
 </header>
