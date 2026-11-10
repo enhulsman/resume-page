@@ -1,0 +1,89 @@
+---
+// The stone article, layout ac (openspec stone-inner-pages, stone-article-layout; Ezra, 2026-11-10):
+// one article for project pages and posts. The head (the index in its card's hue where the project
+// has one, the title, the lead) and the prose share the left column; one wide right column (`aside`)
+// runs the article's length: the page's window opens it and scrolls away, then the sticky block holds
+// "On this page", the facts and the numbers (and, for a post, its project or "Other writing", slot
+// "side"). Below 1000 px it is one column: head, window, prose, then the block without its contents
+// list. Every word comes from the page's frontmatter, its prose or pageWords; the side's data from
+// src/lib/article.ts.
+//
+// Slots: the default slot is the prose (rendered here, so the contents list reads its h2s);
+// "window" is the page's window (its glass moment named by `moment`); "side" ends the block.
+import "../../styles/stone.css";
+import { contentsOf, type Fact, type Stat } from "../../lib/article.ts";
+import { pageWords } from "../../config/pages.ts";
+
+interface Props {
+  title: string;
+  lead?: string;
+  /** The project's hero-card index ("02") and its hue ink, where it has a card. */
+  index?: string;
+  hue?: string;
+  facts: Fact[];
+  numbers?: Stat[];
+  /** The glass moment the window slot holds, as `innerGlass` names it. */
+  moment?: string;
+}
+const { title, lead, index, hue, facts, numbers = [], moment } = Astro.props;
+const prose = await Astro.slots.render("default");
+const contents = contentsOf(prose);
+// a conditional slot counts as present, so the window is whatever it renders
+const windowHtml = Astro.slots.has("window") ? (await Astro.slots.render("window")).trim() : "";
+const hasWindow = windowHtml.length > 0;
+const w = pageWords.article;
+---
+
+<article class:list={["art", hasWindow ? "has-window" : "no-window"]}>
+  <header class="art-head">
+    {index && <span class="art-idx" aria-hidden="true" style={hue && `color: ${hue}`}>{index}</span>}
+    <h1 class="art-title">{title}</h1>
+    {lead && <p class="art-lead">{lead}</p>}
+  </header>
+
+  <aside class="art-side">
+    {hasWindow && <div class="art-window" data-glass-moment={moment}><Fragment set:html={windowHtml} /></div>}
+    <div class="art-stick">
+      {contents.length > 0 && (
+        <nav class="art-toc" aria-labelledby="art-toc-h">
+          <p class="art-label" id="art-toc-h">{w.contents}</p>
+          <ol>{contents.map((c) => <li><a href={`#${c.id}`}>{c.text}</a></li>)}</ol>
+        </nav>
+      )}
+      {facts.length > 0 && (
+        <dl class="art-facts">
+          {facts.map((f) => (
+            <div>
+              <dt>{f.label}</dt>
+              <dd>{f.href ? <a href={f.href}>{f.value}</a> : f.iso ? <time datetime={f.iso}>{f.value}</time> : f.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {numbers.length > 0 && (
+        <ul class="art-nums">
+          {numbers.map((n) => <li><span class="value">{n.value}</span><span class="label">{n.label}</span></li>)}
+        </ul>
+      )}
+      <slot name="side" />
+    </div>
+  </aside>
+
+  <div class="prose art-prose"><Fragment set:html={prose} /></div>
+
+  <script is:inline>
+    // hide the window's lines as soon as they are parsed; if artefacts.js has not taken over by
+    // load (blocked or broken), show them whole
+    (function (s) {
+      var ps = s.querySelectorAll('[data-play]');
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      for (var i = 0; i < ps.length; i++) ps[i].classList.add('pending');
+      addEventListener('load', function () { for (var i = 0; i < ps.length; i++) if (!ps[i].classList.contains('live')) ps[i].classList.remove('pending'); });
+    })(document.currentScript.parentElement);
+  </script>
+</article>
+
+<script>
+  import "../../scripts/glass/artefacts.js";
+  import "../../scripts/stone/contents.js";
+</script>

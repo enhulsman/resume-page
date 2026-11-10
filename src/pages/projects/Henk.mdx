@@ -15,15 +15,7 @@ dateLabel: "Running since"
 hook: "A personal homelab agent (Henk, the Dutch neighbor who knows where everything is) that turns infrastructure alerts into Signal conversations. Built on the Claude Agent SDK around a default-deny security posture, with an event pipeline whose delivery guarantees were proven on real hardware, not just in tests."
 ---
 
-import StatStrip from "../../components/StatStrip.astro";
 import HenkFlow from "../../components/diagrams/HenkFlow.astro";
-
-<StatStrip stats={[
-  { value: "3,660", label: "tests, SDK mocked out" },
-  { value: "1", label: "owner; everyone else is dropped" },
-  { value: "4", label: "egress ports, zero inbound" },
-  { value: "exactly once", label: "event replay across restarts" },
-]} />
 
 ## What I Built
 

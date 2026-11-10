@@ -1,29 +1,38 @@
 ---
-// A case study, drawn as a sheet in the set: title block, the project's own drawing at full
-// size (ANNA's is the homepage's model; projects without one have no plate), then the write-up.
+// A project page (openspec stone-inner-pages, stone-project-pages): the stone article, layout ac.
+// The head opens like the project's chapter on the homepage (its card's index in that card's hue,
+// the title, the hook); the right column holds the window `innerGlass` names for the route, then
+// the contents, the facts and the numbers (its `stats` frontmatter, else its listing's first three
+// dims). ANNA's page keeps her plate in the window's place until her own window replaces it.
 import OverzichtLayout from "./OverzichtLayout.astro";
+import Article from "../components/stone/Article.astro";
+import ProjectWindow from "../components/stone/ProjectWindow.astro";
 import AnnaPlate from "../components/overzicht/AnnaPlate.astro";
-import { drawings } from "../components/overzicht/drawings";
-import { annaLead, details } from "../config/home";
+import { details, annaLead } from "../lib/project-pages.ts";
+import { factsOf, numbersOf } from "../lib/article.ts";
+import { glassCards, hueInk, innerGlass } from "../config/glass.ts";
 import site from "../config/site";
 
 const { frontmatter } = Astro.props;
-const { title, date, dateLabel = "", hook = "", tech = [], preview = "", github = "", description = "" } = frontmatter;
-const githubUrl = github.startsWith("http") ? github : `${site.social.GitHub}/${github}`;
-const bare = (url: string) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
-
-const formattedDate = date
-  ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", timeZone: "UTC" })
-  : null;
+const { title, hook = "", tech = [], description = "" } = frontmatter;
 
 const path = Astro.url.pathname.replace(/\/$/, "");
 const detail = details.find((d) => d.href === path);
-const Drawing = detail && drawings[detail.id];
 const isAnna = path === annaLead.href;
+const cardId = isAnna ? "anna" : detail?.id;
+const ci = glassCards.findIndex((c) => c.id === cardId);
+const index = ci >= 0 ? String(ci + 1).padStart(2, "0") : undefined;
+const hue = ci >= 0 ? hueInk(glassCards[ci]) : undefined;
 
-const projectDescription =
-  description ||
-  `Case study: ${title} - A detailed look at the development process, technologies used, and key learnings from this project.`;
+// every built project route has an entry (tests/inner-pages.test.mjs); a sketch that renders a
+// project's MDX under its own route gets none
+const moments = innerGlass[path] ?? [];
+const ARTEFACTS = ["henk", "sandbox", "bible"] as const;
+const artefact = moments.find((m): m is (typeof ARTEFACTS)[number] => (ARTEFACTS as readonly string[]).includes(m));
+
+const facts = factsOf(frontmatter, "project");
+const numbers = numbersOf({ kind: "project", stats: frontmatter.stats, dims: detail?.dims });
+
 const projectKeywords =
   tech.length > 0
     ? `${site.seo.keywords}, ${tech.join(", ")}, project case study, portfolio`
@@ -33,35 +42,15 @@ const projectKeywords =
 <OverzichtLayout
   current="projects"
   title={`${title} — ${site.name}`}
-  description={projectDescription}
+  description={description}
   keywords={projectKeywords}
   ogTitle={`${title} — Project by ${site.name}`}
-  ogDescription={projectDescription}
+  ogDescription={description}
   ogType="article"
 >
-  <article class="sheet sheet-first case">
-    <header class="sheet-head case-head">
-      <h1>{title}</h1>
-      <div class="case-meta">
-        {hook && <p class="lede">{hook}</p>}
-        <table class="titleblock">
-          <tr><th scope="row">Project</th><td>{title}</td></tr>
-          {formattedDate && <tr><th scope="row">{dateLabel}</th><td>{formattedDate}</td></tr>}
-          {tech.length > 0 && <tr><th scope="row">Stack</th><td>{tech.join(", ")}</td></tr>}
-          {github && <tr><th scope="row">Code</th><td><a href={githubUrl}>{bare(githubUrl)}</a></td></tr>}
-          {preview && <tr><th scope="row">Preview</th><td><a href={preview}>{bare(preview)}</a></td></tr>}
-        </table>
-      </div>
-    </header>
-
-    {(Drawing || isAnna) && (
-      <div class="plate">
-        {isAnna ? <AnnaPlate /> : <div class="dwg-wrap"><div class="dwg-scroll"><Drawing /></div></div>}
-      </div>
-    )}
-
-    <div class="prose">
-      <slot />
-    </div>
-  </article>
+  <Article title={title} lead={hook} index={index} hue={hue} facts={facts} numbers={numbers} moment={artefact ?? (isAnna ? "anna" : undefined)}>
+    {artefact && <ProjectWindow slot="window" id={artefact} class="art-stage" />}
+    {!artefact && isAnna && <div slot="window" class="plate"><AnnaPlate /></div>}
+    <slot />
+  </Article>
 </OverzichtLayout>

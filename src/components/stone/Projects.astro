@@ -12,11 +12,11 @@
 // column. The artefacts land once when well in view (src/scripts/glass/artefacts.js); without a
 // script, or with reduced motion, they show whole.
 import "../../styles/stone.css";
-import GlassWindow from "./GlassWindow.astro";
+import ProjectWindow from "./ProjectWindow.astro";
 import { details, register } from "../../lib/project-pages.ts";
 import { homeRows } from "../../lib/projects.ts";
 import { glassCards, hueInk } from "../../config/glass.ts";
-import { homeSections, siteNav, projectWindows, projectChapters } from "../../config/home.ts";
+import { homeSections, siteNav, projectChapters } from "../../config/home.ts";
 
 const rows = homeRows(details, register, glassCards.map((c) => c.id));
 const rowOf = (id: string) => {
@@ -31,7 +31,6 @@ const ink = (id?: string) => {
   return c ? `color: ${hueInk(c)}` : undefined;
 };
 const all = siteNav.links.find((l) => l.id === "projects")!;
-const { henk, sandbox, bible } = projectWindows;
 ---
 
 <section class="stone-section projects" aria-labelledby="projects-h">
@@ -46,34 +45,7 @@ const { henk, sandbox, bible } = projectWindows;
           {row.number && <p class="num"><span class="value">{row.number.value}</span><span class="label">{row.number.label}</span></p>}
           <p class="since">{row.status}</p>
         </div>
-        <GlassWindow title={projectWindows[id].title} glow={id} dots={id !== "henk"} class="pj-stage" windowClass={`pj-window pj-w-${id}`}>
-          {id === "henk" && (
-            <div class="pw sgl" data-play data-gap="1100">
-              <div class="sgl-alert b"><span class="from pw-quiet">{henk.alert.from}</span><span class="pw-text">{henk.alert.text}</span></div>
-              {henk.messages.map((m, i) => (
-                <div class:list={["sgl-msg", "b", m.from]}>
-                  {i === 0 && <span class="who pw-quiet">{henk.name}</span>}
-                  <p><span class={m.from === "me" ? "pw-me" : "pw-text"}>{m.text}</span></p>
-                </div>
-              ))}
-            </div>
-          )}
-          {id === "sandbox" && (
-            <div class="pw rep" data-play data-gap="260">
-              <p class="b"><b class="pw-strong">$</b> <span class="pw-text">{sandbox.command}</span></p>
-              {sandbox.lines.map((l) => <p class="b"><span class="k pw-quiet">{l.key}</span><span class="pw-text">{l.value}</span></p>)}
-              <p class="b risk"><span class="k pw-quiet">{sandbox.risk.key}</span><b class="pw-strong">{sandbox.risk.score}</b> <span class="pw-text">{sandbox.risk.of}</span></p>
-              {sandbox.risk.why.map((w) => <p class="b"><span class="k"></span><span class="pw-text">{w}</span></p>)}
-            </div>
-          )}
-          {id === "bible" && (
-            <div class="pw tui" data-play data-gap="120">
-              <div class="tui-head b"><span class="pw-strong">{bible.book}</span><span class="pw-quiet">{bible.translation}</span></div>
-              <ol class="tui-vv">{bible.verses.map((v, k) => <li class:list={["b", k === 0 && "hl"]}><span class="n">{k + 1}</span><span class="pw-text">{v}</span></li>)}</ol>
-              <p class="tui-foot b pw-quiet">{bible.keys}</p>
-            </div>
-          )}
-        </GlassWindow>
+        <ProjectWindow id={id} />
       </article>
     ))}
     <ol class="stone-rows pj-rows">
@@ -135,43 +107,6 @@ const { henk, sandbox, bible } = projectWindows;
   .since { margin: 0.8em 0 0; font-size: var(--stone-t-small); line-height: 1.35; color: var(--stone-ink-2); }
 
   .pj-chapter :global(.pj-stage) { width: min(100%, 600px); justify-self: start; }
-  .pj-chapter :global(.pj-window) { background: rgb(250 248 244 / 0.32); }
-
-  /* the artefacts land line by line, once (artefacts.js) */
-  [data-play].pending .b:not(.on) { opacity: 0; transform: translateY(5px); }
-  /* only the landing moves: hiding them is instant */
-  [data-play].pending .b.on { transition: opacity 0.45s ease, transform 0.5s cubic-bezier(.2,.7,.2,1); }
-  .pw { position: relative; z-index: 3; }
-  .pw p { margin: 0; }
-
-  /* Henk in Signal */
-  .sgl { display: flex; flex-direction: column; gap: 8px; padding: 20px 20px 18px; font-size: 14.5px; line-height: 1.42; }
-  .sgl-alert { align-self: center; max-width: 92%; padding: 9px 12px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.1); font: 12.5px/1.45 ui-monospace, Menlo, monospace; }
-  .sgl-alert .from { display: block; margin-bottom: 3px; font: 600 11.5px/1.2 var(--stone-sans); }
-  .sgl-msg { max-width: 84%; }
-  .sgl-msg .who { display: block; margin: 6px 0 4px; font-size: 12px; font-weight: 600; }
-  .sgl-msg p { padding: 9px 13px; border-radius: 16px; }
-  .sgl-msg.henk { align-self: flex-start; }
-  .sgl-msg.henk p { background: rgb(255 255 255 / 0.4); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4); }
-  .sgl-msg.me { align-self: flex-end; margin-top: 8px; }
-  .sgl-msg.me p { background: rgb(36 70 140 / 0.86); }
-  .sgl-msg.me + .henk { margin-top: 8px; }
-
-  /* the sandbox's report */
-  .rep { padding: 20px 24px; font: 14px/1.75 ui-monospace, "JetBrains Mono", Menlo, monospace; overflow: hidden; }
-  .rep .b { display: flex; white-space: pre; }
-  .rep .k { flex: none; width: 9ch; }
-  .rep .b > .pw-strong:first-child { margin-right: 1ch; }
-  .rep .risk .pw-strong { font-size: 1.15em; margin-right: 0.5ch; }
-
-  /* bible-tui */
-  .tui { display: flex; flex-direction: column; padding: 14px 18px 12px; font: 13.5px/1.6 ui-monospace, "JetBrains Mono", Menlo, monospace; }
-  .tui-head { display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgb(17 17 16 / 0.12); font-weight: 700; }
-  .tui-vv { list-style: none; margin: 8px 0 0; padding: 0; }
-  .tui-vv li { display: grid; grid-template-columns: 2.2ch 1fr; gap: 1ch; padding: 2px 6px; border-radius: 4px; transition: background 0.3s, opacity 0.45s, transform 0.5s; }
-  .tui-vv li.hl { background: rgb(17 17 16 / 0.07); }
-  .tui-vv .n { color: var(--glass-ink-red); font-weight: 700; }
-  .tui-foot { margin-top: 8px !important; padding-top: 8px; border-top: 1px solid rgb(17 17 16 / 0.12); white-space: pre; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; }
 
   /* the rest, as rows under the sandbox */
   .pj-rows .row {
@@ -184,19 +119,12 @@ const { henk, sandbox, bible } = projectWindows;
   .pj-rows .since { margin-top: 0.5em; }
   .pj-rows .value { font-size: clamp(32px, 2.4vw, 38px); }
 
-  @media (prefers-reduced-motion: reduce) {
-    [data-play].pending .b.on, .tui-vv li { transition: none; }
-  }
-
   /* a phone: one column, Henk, the sandbox, bible-tui, then the rows, tight */
   @media (max-width: 760px) {
     .pj-grid { display: flex; flex-direction: column; gap: 72px; }
     .pj-sandbox { margin-top: 0; }
     .pj-chapter { gap: 24px; }
     .pj-text .title { font-size: 40px; }
-    .rep { font-size: 12px; padding: 16px; }
-    .tui { font-size: 12.5px; padding: 12px; }
-    .tui-foot { font-size: 11px; }
     .pj-rows .row { grid-template-columns: 2.6em minmax(0, 1fr); }
   }
 </style>

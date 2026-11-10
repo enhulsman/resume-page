@@ -236,22 +236,9 @@ test('reduced motion: every plate arrives drawn', async () => {
 
 // ---------- a project page: title block, plate, then the write-up ----------
 
-test('a project page opens with its title block and its own drawing', async () => {
-  const src = readFileSync(new URL('../src/pages/projects/Henk.mdx', import.meta.url), 'utf8');
-  const label = src.match(/^dateLabel: "(.*)"/m)[1];
-  const { context, page } = await open('/projects/Henk');
-  const block = page.locator('.titleblock');
-  assert.deepEqual(await block.locator('th').allInnerTexts(), ['PROJECT', label.toUpperCase(), 'STACK', 'CODE']);
-  assert.match(await block.innerText(), /July 2026/);
-  assert.equal(await page.locator('.plate .dwg').count(), 1, 'Henk\'s detail drawing');
-  // drawn near its own scale, so its lettering matches the page's and the write-up keeps the stage
-  const w = await page.locator('.plate .dwg').evaluate(d => d.getBoundingClientRect().width);
-  assert.ok(w >= 480 && w <= 680, `the drawing is ${Math.round(w)}px wide`);
-  // the stats are dimension strings, and the write-up is set in the sheet's type
-  assert.ok(await page.locator('.prose .dims div').count() >= 4);
-  assert.match(await page.locator('.prose h2').first().evaluate(h => getComputedStyle(h).fontFamily), /^"?Archivo/);
-  await context.close();
-});
+// 'a project page opens with its title block and its own drawing' retired (openspec stone-inner-pages,
+// decision 2026-11-10: P1 head with layout ac, the drawings retire): tests/inner-article.e2e.mjs
+// checks the stone head, the facts, the numbers and the window instead.
 
 test('ANNA\'s case study carries the section drawing; a project without a drawing has none', async () => {
   let { context, page } = await open('/projects/AnnaAssistant');
@@ -519,7 +506,7 @@ test('the homelab counts the workstation: in the drawing, the figure and the wri
   await context.close();
 });
 
-test('bible-tui has its own sheet, linked to the live reader, the code and the blog post', async () => {
+test('bible-tui has its own page, linked to the live reader, the code and the blog post', async () => {
   const { context, page, errors, res } = await open('/projects/BibleTui');
   assert.equal(res.status(), 200);
   assert.match(await page.locator('h1').innerText(), /bible-tui/i);

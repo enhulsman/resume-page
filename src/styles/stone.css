@@ -78,3 +78,119 @@
 @media (max-width: 760px) {
   .stone-section > h2 { font-size: 56px; }
 }
+
+/* ---- the stone article: project pages and posts, layout ac (openspec stone-article-layout) ----
+   Head and prose in the left column, at most 42rem; one wide right column (aside) the article's
+   length: the window opens it and scrolls away, the block under it sticks below the bar. Below
+   1000 px one column: head, window, prose, then the block, without its contents list. */
+main.page:has(> .art) { padding-inline: 0; }
+.art {
+  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
+  overflow-x: clip; /* the window's glow reaches past its sides; never the page */
+}
+.art :focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
+.art a:hover { color: inherit; }
+
+.art-idx { display: block; margin-bottom: 0.7em; font-size: var(--stone-t-small); font-weight: 650; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+.art-title {
+  margin: 0; padding-bottom: 0.1em; max-width: 15ch;
+  font: 900 clamp(48px, 5.6vw, 92px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; text-wrap: balance;
+}
+.art-lead { margin: 0.9em 0 0; max-width: 36em; font-size: var(--stone-t-lead); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
+
+/* the window, as wide as the column allows, never more than 600 px */
+.art-window { min-width: 0; }
+.art-window .glass-stage { width: 100%; max-width: 600px; }
+
+/* the block: contents, facts, numbers */
+.art-label { margin: 0 0 8px; font-size: var(--stone-t-small); font-weight: 600; color: #5C5650; }
+.art-toc ol { list-style: none; margin: 0; padding: 0; }
+.art-toc li { padding: 7px 0; border-top: 1px solid var(--stone-hair); font-size: 14.5px; line-height: 1.35; }
+.art-toc li:last-child { border-bottom: 1px solid var(--stone-hair); }
+.art-toc a { color: var(--stone-ink); font-weight: 400; text-decoration: none; }
+.art-toc a:hover { text-decoration: underline; }
+.art-toc a[aria-current="true"] { font-weight: 800; }
+.art-toc a[aria-current="true"]::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 8px 2px -14px; border-radius: 50%; background: var(--stone-ink);
+}
+.art-facts {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 28px; align-items: start;
+  margin: 28px 0 0; font-size: 14.5px; line-height: 1.4;
+}
+.art-stick > .art-facts:first-child { margin-top: 0; }
+.art-facts dt { font-size: var(--stone-t-small); font-weight: 600; color: #5C5650; }
+.art-facts dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.art-facts a { color: var(--stone-ink); }
+.art-nums {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 28px; align-items: start;
+  list-style: none; margin: 28px 0 0; padding: 0;
+}
+.art-nums li { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.art-nums .value { font-weight: 800; font-size: 30px; line-height: 1; font-stretch: 88%; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.art-nums .label { max-width: 15em; font-size: var(--stone-t-small); line-height: 1.35; color: var(--stone-ink-2); text-wrap: pretty; }
+
+/* the prose on stone: Archivo, its h2s at the h3 scale. Overrides the drawing sheet's .prose
+   (hanging heads, red markers, mono code), which the posts still use until they move here. */
+.art .prose { display: block; max-width: 42rem; font-size: 17px; line-height: 1.62; color: var(--stone-ink-2); }
+.art .prose > * { max-width: none; }
+.art .prose > :first-child { margin-top: 0; }
+.art .prose p, .art .prose li { color: var(--stone-ink-2); }
+.art .prose p { margin: 0 0 1.05em; text-wrap: pretty; }
+.art .prose > h2, .art .prose h2 {
+  margin: 2.4em 0 0.6em; padding: 0; border: 0;
+  font: 700 var(--stone-t-h3)/1.15 var(--stone-sans); font-stretch: 100%; letter-spacing: -0.02em; color: var(--stone-ink); text-wrap: balance;
+}
+.art .prose > h2:first-child { margin-top: 0; }
+.art .prose > h2 + * { margin-top: 0; padding-top: 0; }
+.art .prose h3 { margin: 1.8em 0 0.4em; font: 700 19px/1.2 var(--stone-sans); font-stretch: 100%; letter-spacing: -0.01em; color: var(--stone-ink); }
+.art .prose strong { font-weight: 680; color: var(--stone-ink); }
+.art .prose a { color: var(--stone-ink); text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+.art .prose ul, .art .prose ol { margin: 0 0 1.2em; padding-left: 1.2em; }
+.art .prose li { margin-bottom: 0.5em; padding-left: 0.2em; }
+.art .prose ul li::marker, .art .prose ol li::marker { content: normal; font: inherit; color: #5C5650; }
+.art .prose blockquote { margin: 0 0 1em; padding: 2px 0 2px 18px; border-left: 1px solid var(--stone-hair); }
+.art .prose hr { border: 0; border-top: 1px solid var(--stone-hair); margin: 2em 0; }
+.art .prose code { font: 0.86em/1 ui-monospace, "JetBrains Mono", Menlo, monospace; color: var(--stone-ink); overflow-wrap: anywhere; }
+.art .prose pre {
+  margin: 0 0 1.2em; padding: 14px 16px; overflow-x: auto; border: 0;
+  border-top: 1px solid var(--stone-hair); border-bottom: 1px solid var(--stone-hair);
+  font: 13.5px/1.6 ui-monospace, "JetBrains Mono", Menlo, monospace;
+}
+.art .prose pre, .art .prose pre * { background: none !important; color: var(--stone-ink) !important; }
+.art .prose pre code { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+.art .prose img { max-width: 100%; height: auto; border: 0; }
+.art .prose th, .art .prose td { border: 1px solid var(--stone-hair); padding: 6px 10px; text-align: left; }
+
+@media (min-width: 1000px) {
+  .art {
+    display: grid; grid-template-columns: minmax(0, 7fr) minmax(18rem, 5fr); grid-template-rows: auto 1fr;
+    column-gap: clamp(40px, 6vw, 120px); align-items: start;
+  }
+  .art-head { grid-column: 1; grid-row: 1; max-width: 42rem; }
+  .art .prose { grid-column: 1; grid-row: 2; margin-top: clamp(40px, 6svh, 72px); }
+  .art-side { grid-column: 2; grid-row: 1 / span 2; align-self: stretch; }
+  .art-window, .art-stick { max-width: 36rem; margin-left: auto; }
+  .art-window + .art-stick { margin-top: 56px; }
+  .art-stick { position: sticky; top: calc(var(--bar) + 32px); }
+}
+@media (max-width: 999px) {
+  .art { display: flex; flex-direction: column; }
+  .art-side { display: contents; }
+  .art-head { order: 0; }
+  .art-window { order: 1; margin-top: 32px; }
+  .art .prose { order: 2; margin-top: clamp(40px, 6svh, 72px); }
+  .art-stick { order: 3; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--stone-hair); }
+  .art-toc { display: none; }
+}
+@media (max-width: 760px) {
+  .art-title { font-size: clamp(40px, 11vw, 56px); }
+  .art .prose { font-size: 16.5px; }
+}
+
+/* TEMPORARY until ANNA's window replaces her plate (stone-inner-pages chunk 4): the plate in the
+   window's place, its levels and Replay under the model */
+.art-window .plate { display: block; margin: 0; padding: 0; border: 0; }
+.art-window .anna-plate { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
+.art-window .anna-plate .plate-stage { grid-row: auto; }
+.art-window .anna-plate .replay { grid-column: 1; }
