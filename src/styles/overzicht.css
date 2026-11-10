@@ -157,9 +157,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 
 /* ---------- the other sheets ---------- */
 .sheet { padding: clamp(80px, 12vh, 140px) calc(var(--gutter) + var(--wide)) 40px; border-top: 1.5px solid var(--ink); position: relative; }
-.sheet-head { display: grid; grid-template-columns: minmax(0, 38fr) 62fr; gap: var(--gutter); align-items: end; margin-bottom: clamp(36px, 6vh, 64px); }
-.sheet-head h2 { text-wrap: balance; font-size: clamp(40px, 5vw, 80px); line-height: .9; font-stretch: 112%; font-weight: 780; letter-spacing: -.03em; }
-.sheet-head p { margin: 0; color: var(--ink-2); max-width: 34em; }
 .sub { font: 700 12px/1 var(--sans); font-stretch: 80%; letter-spacing: .1em; text-transform: uppercase; margin: 64px 0 18px; }
 
 .details { display: grid; grid-template-columns: 1fr 1fr; border-top: .75px solid var(--ink); border-left: .75px solid var(--ink); }
@@ -201,9 +198,7 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .register .card:has(.card-link:hover) { background: color-mix(in srgb, var(--ink) 4%, var(--panel)); }
 
 /* /projects: every project under where it stands */
-.status-group { margin-top: 88px; }
 .group { font: 700 clamp(30px, 3vw, 44px)/1 var(--sans); font-stretch: 85%; letter-spacing: -.01em; margin: 0 0 26px; }
-.status-group .details-rows + .register { margin-top: 32px; }
 
 .side { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: .75px solid var(--ink); }
 .side li { padding: 14px 18px 18px 0; display: grid; gap: 6px; }
@@ -243,14 +238,8 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 
 
 /* ---------- the inner sheets: /projects, the case studies, the blog, the CV, contact ---------- */
-.sheet-first { border-top: 0; padding-top: clamp(56px, 10vh, 112px); }
-.sheet-head h1 { font-size: clamp(40px, 5vw, 80px); line-height: .9; font-stretch: 112%; font-weight: 780; letter-spacing: -.03em; }
 .detail-text h2 { font-size: 22px; font-stretch: 90%; letter-spacing: -.005em; margin-bottom: .45em; }
-.detail-status { font: 400 11.5px/1.3 var(--mono) !important; color: var(--ink) !important; }
 
-/* /projects: ANNA leads across the whole width, its model on the left */
-.detail-lead { grid-column: 1 / -1; grid-template-columns: minmax(0, 62fr) minmax(0, 38fr); gap: 22px var(--gutter); }
-.detail-lead .detail-text { align-self: start; }
 .anna-plate { display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, 250px); grid-template-rows: 1fr auto; column-gap: 28px; row-gap: 18px; align-items: end; }
 .plate-stage { grid-row: 1 / span 2; position: relative; aspect-ratio: 1 / 1; max-height: 62svh; width: 100%; cursor: grab; touch-action: pan-y; }
 .plate-stage.turning { cursor: grabbing; }
@@ -262,19 +251,13 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
 .plate-levels li.hot b { color: var(--red); }
 .anna-plate .replay { grid-column: 2; justify-self: start; }
 
-/* /projects: one project to a row, the text beside its drawing */
-.details-rows { grid-template-columns: 1fr; }
-.details-rows .detail { grid-template-columns: minmax(0, 56fr) minmax(0, 44fr); column-gap: calc(var(--gutter) * 1.4); align-items: center; padding: 64px 32px 66px; }
-
 /* a detail drawing stays near its own scale (viewBox 520 wide), so its lettering stays legible;
    where the sheet is too narrow for two cards or a row, the cards stack instead of shrinking */
 .dwg-wrap { max-width: 620px; container-type: inline-size; }
 @media (min-width: 861px) and (max-width: 1200px) {
-  .details, .details-rows .detail { grid-template-columns: 1fr; }
+  .details { grid-template-columns: 1fr; }
   .register { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-.details-rows .detail-text :is(h2, h3) { font-size: clamp(24px, 2vw, 30px); }
-.details-rows .detail-text p { font-size: 16.5px; }
 
 /* a drawn project is one target: its title's link covers the card; its other links stay on top */
 .detail { position: relative; }
@@ -351,7 +334,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
   }
   .js .bar.open nav { visibility: visible; clip-path: inset(0 0 -2px 0); transition: clip-path .22s cubic-bezier(.4,0,.2,1); }
   .js .bar nav a { padding: 16px var(--stone-gutter); font-size: 18px; border-top: 1px solid var(--hair); }
-  .sheet-head { grid-template-columns: 1fr; gap: 14px; }
   .details { grid-template-columns: 1fr; }
   .detail { padding: 20px 16px 24px; }
   .dims { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 14px; }
@@ -359,20 +341,15 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
   .register { grid-template-columns: 1fr; }
   .register .card { padding: 20px 16px 22px; }
   .register .reg-title { font-size: 18px; }
-  .status-group { margin-top: 56px; }
   .side { grid-template-columns: 1fr 1fr; }
   .foot { flex-direction: column; }
   /* inner sheets */
-  .detail-lead { grid-template-columns: 1fr; }
   .anna-plate { grid-template-columns: 1fr; grid-template-rows: none; }
   .plate-stage, .plate .anna-plate .plate-stage { grid-row: auto; aspect-ratio: 1 / 1; max-height: 70svh; }
   .plate-levels { grid-template-columns: 1fr 1fr; column-gap: 16px; }
   .anna-plate .replay { grid-column: 1; }
   .plate { grid-template-columns: 1fr; }
   .plate > * { grid-column: 1; }
-  .details-rows .detail { grid-template-columns: 1fr; padding: 32px 16px 36px; }
-  /* the sheets close up on a phone: a screen of blank paper reads as the end of the page */
-  .sheet:not(.sheet-first) { padding-top: 56px; }
   .sub { margin-top: 44px; }
   .prose { grid-template-columns: 1fr; }
   .prose > *, .prose > h2 { grid-column: 1; }
@@ -427,9 +404,6 @@ main.page { padding: 0 clamp(14px, 1.4vw, 20px); }
   body::before, body::after, .bar, .foot, .skip, .dim-hl, .replay, .turn, .xhair, .pencil-mark, .pencil-line { display: none !important; }
   main { padding: 0; }
   .sheet { padding: 18px 0 0; border-top: 0; min-height: 0; }
-  .sheet-first { padding-top: 0; }
-  .sheet-head { margin-bottom: 18px; }
-  .sheet-head h1, .sheet-head h2 { font-size: 26pt; }
   .detail { break-inside: avoid; }
   .actions .act { border: 0; padding: 0; background: none; color: #000; }
   *, *::before, *::after { animation: none !important; transition: none !important; }

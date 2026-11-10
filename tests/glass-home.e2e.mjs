@@ -393,9 +393,11 @@ test('the four levels are not on the homepage', async () => {
   }
 });
 
-test('the four levels live on /projects: ANNA\'s plate shows each name with its text, in order', async () => {
+// rewritten for openspec stone-inner-pages 9.1 (decision 2026-11-10: the plate retires, the levels
+// are rows under ANNA's text on /projects)
+test('the four levels live on /projects: rows under ANNA\'s lead, each name with its text, in order', async () => {
   const { context, page, errors } = await open('projects', { ready: false });
-  const levels = await page.$$eval('.anna-plate .plate-levels li', (lis) => lis.map((li) => [li.querySelector('b').textContent, li.querySelector('span').textContent]));
+  const levels = await page.$$eval('.pi-lead .anna-levels > li', (lis) => lis.map((li) => [li.querySelector('b').textContent, li.querySelector('span').textContent]));
   await context.close();
   assert.deepEqual(levels, annaLevels.map((l) => [l.name, l.text]));
   assert.deepEqual(errors, []);

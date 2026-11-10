@@ -31,26 +31,8 @@ async function open(path, { width = 1440, height = 900, scale = 1, reducedMotion
   return { context, page, errors, res };
 }
 
-/** In the page: how much of the section drawing is inked. */
-function inkedIn() {
-  const c = document.querySelector('canvas.drawing');
-  if (!c || !c.width) return 0;
-  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-  let n = 0; for (let i = 3; i < d.length; i += 4 * 16) if (d[i] > 0) n++;
-  return n;
-}
-const inked = page => page.evaluate(inkedIn);
-/** Wait (on state, not a sleep) until the section drawing has plotted; the test asserts after. */
-const untilInked = page => page.waitForFunction(`(${inkedIn})() > 500`, null, { timeout: 15000 }).catch(() => {});
 /** Let the page render `n` more frames. */
 const frames = (page, n = 2) => page.evaluate(n => new Promise(done => { const f = k => (k ? requestAnimationFrame(() => f(k - 1)) : done()); f(n); }), n);
-/** In the page: true once ANNA's model on her case study is at least `min` px tall. */
-function modelHeight(min) {
-  const c = document.querySelector('.plate-stage canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-  let y0 = 1e9, y1 = -1;
-  for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 4) if (d[(y * c.width + x) * 4 + 3] > 20) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
-  return (y1 - y0) / devicePixelRatio >= min;
-}
 
 // ---------- every inner page is a sheet in the set ----------
 
@@ -147,84 +129,49 @@ test('keyboard focus is visible on the inner pages', async () => {
   await context.close();
 });
 
-// ---------- /projects: the lead drawings, then the register ----------
+// ---------- /projects: ANNA's lead, then a ribbed card per project under its status ----------
 
-const DRAWN = ['henk', 'finance', 'homelab', 'bible', 'pytaiga', 'sandbox'];
+// rewritten for openspec stone-inner-pages 9.2 (decision 2026-11-10: I2e; the plate and the drawings
+// on /projects retire): ANNA's lead with her window and levels, then one card per project
+const CARDED = ['henk', 'finance', 'homelab', 'site', 'bible', 'chat', 'pytaiga', 'sandbox'];
 
-test('/projects leads with ANNA, then every project under its status: running, paused, done', async () => {
+test('/projects leads with ANNA, then every project under its status as a ribbed card: running, paused, done', async () => {
   const { context, page } = await open('/projects');
-  assert.deepEqual(await page.locator('.detail').evaluateAll(els => els.map(e => e.id)), ['anna', ...DRAWN]);
-  // ANNA's plate is the real section drawing; the others are their detail drawings
-  assert.equal(await page.locator('#anna canvas.drawing').count(), 1);
-  assert.equal(await page.locator('.detail .dwg').count(), DRAWN.length);
-  // every drawn project links to its case study, and every case study exists
-  const cases = await page.locator('.detail .links a', { hasText: 'Case study' }).evaluateAll(as => as.map(a => a.getAttribute('href')));
-  assert.equal(cases.length, DRAWN.length + 1);
-  // each drawn project carries its two strongest dimensions, not a row of three
-  for (const id of DRAWN) assert.equal(await page.locator(`#${id} .dims > div`).count(), 2, `${id} dims`);
-  // the undrawn ones are cards; together they cover every project page exactly once
-  const reg = await page.locator('.register .reg-title a').evaluateAll(as => as.map(a => a.getAttribute('href')));
-  const all = [...cases, ...reg].map(h => h.replace('/projects/', '')).sort();
-  assert.deepEqual(all, [...PROJECTS].sort());
+  // ANNA leads: her name to her page, her case study, her window and her four levels; no plate
+  assert.equal(await page.locator('.pi-lead h2 a').getAttribute('href'), '/projects/AnnaAssistant');
+  assert.equal(await page.locator('.pi-lead a', { hasText: 'Case study' }).getAttribute('href'), '/projects/AnnaAssistant');
+  assert.equal(await page.locator('.pi-lead [data-glass-moment="anna"] [data-glass="frosted"]').count(), 1);
+  assert.equal(await page.locator('.pi-lead .anna-levels > li').count(), 4);
+  assert.equal(await page.locator('.plate, .anna-plate, canvas.drawing, .dwg').count(), 0, 'no plate, no drawing');
+  // then a card per project, each one link, together every project page except ANNA's, once
+  assert.deepEqual(await page.locator('.pc').evaluateAll(cs => cs.map(c => c.dataset.project)), CARDED);
+  const hrefs = await page.locator('.pc').evaluateAll(cs => cs.map(c => c.getAttribute('href')));
+  assert.deepEqual(hrefs.map(h => h.replace('/projects/', '')).sort(), PROJECTS.filter(p => p !== 'AnnaAssistant').sort());
+  // a detailed project carries its two strongest dimensions, not a row of three; a register entry none
+  for (const id of ['henk', 'finance', 'homelab', 'bible', 'pytaiga', 'sandbox']) assert.equal(await page.locator(`.pc[data-project="${id}"] .pc-nums > div`).count(), 2, `${id} dims`);
+  for (const id of ['site', 'chat']) assert.equal(await page.locator(`.pc[data-project="${id}"] .pc-nums`).count(), 0, `${id} dims`);
   // grouped by status, so a lighter treatment reads as paused, not as less
-  assert.deepEqual(await page.locator('section:has(#projects-h) h2.group').allInnerTexts(), ['Running', 'Paused', 'Done']);
-  const groupOf = async sel => page.locator(sel).evaluate(el => el.closest('.status-group')?.dataset.group);
-  for (const [sel, g] of [['#henk', 'running'], ['#finance', 'running'], ['#homelab', 'running'], ['a[href="/projects/ResumePage"]', 'running'],
-    ['#bible', 'paused'], ['a[href="/projects/EncryptedChatTUI"]', 'paused'], ['#pytaiga', 'done'], ['#sandbox', 'done']]) {
-    assert.equal(await groupOf(sel), g, `${sel} is ${g}`);
+  assert.deepEqual(await page.locator('.pi-group > h2').allInnerTexts(), ['Running', 'Paused', 'Done']);
+  const groupOf = async id => page.locator(`.pc[data-project="${id}"]`).evaluate(el => el.closest('.pi-group')?.querySelector('h2')?.textContent);
+  for (const [id, g] of [['henk', 'Running'], ['finance', 'Running'], ['homelab', 'Running'], ['site', 'Running'],
+    ['bible', 'Paused'], ['chat', 'Paused'], ['pytaiga', 'Done'], ['sandbox', 'Done']]) {
+    assert.equal(await groupOf(id), g, `${id} is ${g}`);
   }
   assert.equal(await page.locator('#register-h').count(), 0);
   // the fun side pieces are in the set too; bible-tui has its own project now
-  assert.ok(await page.locator('.side li').count() >= 3);
-  assert.equal(await page.locator('.side a[href="https://bible.hulsman.dev"]').count(), 0);
-  await page.locator('#anna').scrollIntoViewIfNeeded();
-  await untilInked(page);
-  assert.ok(await inked(page) > 500, 'the ANNA plate plotted');
+  assert.ok(await page.locator('.pi-side li').count() >= 3);
+  assert.equal(await page.locator('.pi-side a[href="https://bible.hulsman.dev"]').count(), 0);
   await context.close();
 });
 
-test('the ANNA plate turns by hand and by its buttons', async () => {
-  const { context, page } = await open('/projects');
-  await page.locator('#anna').scrollIntoViewIfNeeded();
-  await untilInked(page);
-  const spin = () => page.evaluate(() => window.__plate?.state.spin);
-  const before = await spin();
-  assert.equal(typeof before, 'number', 'the plate exposes its scene in tests');
-  await page.locator('#anna [data-turn="1"]').click();
-  assert.ok(await spin() > before, 'the turn button turns it');
-  await context.close();
-});
+// 'the ANNA plate turns by hand and by its buttons', 'turning the ANNA plate by hand draws no pencil
+// line on the page' and 'reduced motion: every plate arrives drawn' retired (openspec
+// stone-inner-pages 9.2, decision 2026-11-10: the plate retires on /projects, her window and her levels
+// take its place): tests/inner-projects.e2e.mjs checks the lead instead.
 
 // 'ANNA's project page draws the model large' retired (openspec stone-inner-pages 4.2, decision
 // 2026-11-10: ANNA's plate retires on her page, her window and levels take its place):
 // tests/inner-windows.e2e.mjs checks her page instead.
-
-// on /projects, where the plate stays until that page moves to stone (her own page has none since
-// stone-inner-pages chunk 4)
-test('turning the ANNA plate by hand draws no pencil line on the page', async () => {
-  const { context, page } = await open('/projects');
-  const stage = page.locator('#anna .plate-stage');
-  await stage.scrollIntoViewIfNeeded();
-  await untilInked(page);
-  const b = await stage.boundingBox();
-  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
-  await page.mouse.down();
-  for (let i = 1; i <= 10; i++) await page.mouse.move(b.x + b.width / 2 + 12 * i, b.y + b.height / 2);
-  await page.mouse.up();
-  await page.waitForTimeout(150);
-  assert.equal(await page.locator('.pencil-line, .pencil-mark').count(), 0);
-  await context.close();
-});
-
-test('reduced motion: every plate arrives drawn', async () => {
-  const { context, page } = await open('/projects', { reducedMotion: 'reduce' });
-  await page.waitForFunction(() => !document.querySelector('.dwg:not(.drawn)'), null, { timeout: 5000 }).catch(() => {});
-  assert.equal(await page.locator('.dwg:not(.drawn)').count(), 0);
-  await page.locator('#anna').scrollIntoViewIfNeeded();
-  await untilInked(page);
-  assert.ok(await inked(page) > 500);
-  await context.close();
-});
 
 // ---------- a project page: title block, plate, then the write-up ----------
 
@@ -400,63 +347,11 @@ for (const path of ['/projects', '/projects/Henk', '/resume']) {
 
 // ---------- a drawn project is one target: drawing, title or link ----------
 
-test('clicking a project\'s drawing opens its case study, on /projects', async () => {
-  {
-    const { context, page } = await open('/projects');
-    const dwg = page.locator('#henk .dwg');
-    await dwg.scrollIntoViewIfNeeded();
-    await frames(page, 2);
-    const r = await dwg.boundingBox();
-    await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
-    await page.waitForURL(/\/projects\/Henk\/?$/); // the live site adds a trailing slash
-    await context.close();
-  }
-  // the numbers are part of the card too
-  {
-    const { context, page } = await open('/projects');
-    const dims = page.locator('#henk .dims');
-    await dims.scrollIntoViewIfNeeded();
-    const hit = await dims.evaluate(d => { const r = d.getBoundingClientRect(); return document.elementFromPoint(r.x + 20, r.y + r.height / 2)?.closest('a')?.getAttribute('href'); });
-    assert.equal(hit, '/projects/Henk');
-    await context.close();
-  }
-  // the card's own Code link still goes to the code, not to the case study
-  const { context, page } = await open('/projects');
-  const code = page.locator('#pytaiga .links a', { hasText: 'Code' });
-  await code.scrollIntoViewIfNeeded();
-  const top = await code.evaluate(a => { const r = a.getBoundingClientRect(); return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === a; });
-  assert.ok(top, 'the Code link is on top of the card link');
-  await context.close();
-});
-
-test('on a phone a project\'s drawing fits the screen whole', async () => {
-  const { context, page } = await open('/projects', { width: 390, height: 844 });
-  for (const id of DRAWN) {
-    const r = await page.locator(`#${id} .dwg`).evaluate(d => ({ right: d.getBoundingClientRect().right, left: d.getBoundingClientRect().left }));
-    assert.ok(r.left >= 0 && r.right <= 390, `${id}: drawing spans ${Math.round(r.left)}..${Math.round(r.right)}`);
-  }
-  await context.close();
-});
-
-test('/projects on a wide screen: the text sits beside each drawing, and ANNA is read on arrival', async () => {
-  const { context, page } = await open('/projects');
-  // ANNA's name and line are on the first screen, not under a screen of drawing
-  const lead = await page.locator('#anna .detail-text p').first().evaluate(p => p.getBoundingClientRect().bottom);
-  assert.ok(lead < 900, `ANNA's line ends at ${Math.round(lead)}px`);
-  for (const id of ['anna', ...DRAWN]) {
-    const [art, text] = await page.locator(`#${id}`).evaluate(a => [a.querySelector('.dwg-wrap, .anna-plate').getBoundingClientRect().right, a.querySelector('.detail-text').getBoundingClientRect().left]);
-    assert.ok(text >= art, `${id}: text starts at ${Math.round(text)}, drawing ends at ${Math.round(art)}`);
-  }
-  // each project gets room to breathe before the next one starts
-  for (const id of DRAWN) {
-    const pad = await page.locator(`#${id}`).evaluate(a => parseFloat(getComputedStyle(a).paddingTop));
-    assert.ok(pad >= 56, `${id}: ${pad}px above it`);
-  }
-  // the smaller projects read at body size, not as a footnote
-  const size = await page.locator('.register .reg-title').first().evaluate(t => parseFloat(getComputedStyle(t).fontSize));
-  assert.ok(size >= 18, `register titles are ${size}px`);
-  await context.close();
-});
+// 'clicking a project's drawing opens its case study, on /projects', 'on a phone a project's drawing
+// fits the screen whole' and '/projects on a wide screen: the text sits beside each drawing' retired
+// (openspec stone-inner-pages 9.2, decision 2026-11-10: I2e, the drawings on /projects retire):
+// tests/inner-projects.e2e.mjs checks "A card's contents" (each card is one link), "Two per row, then
+// one" and "The lead" instead.
 
 // ---------- keyboard and screen-reader paths ----------
 
@@ -482,40 +377,24 @@ test('/resume: every section is a heading a screen reader can jump to', async ()
 
 // ---------- the drawings keep legible lettering at every width ----------
 
-for (const width of [900, 1024, 1180, 1440]) {
-  test(`at ${width}px every detail drawing is drawn at a legible scale`, async () => {
-    for (const path of ['/projects', '/projects/Henk']) {
-      const { context, page } = await open(path, { width, height: 900 });
-      const scales = await page.locator('.dwg').evaluateAll(ds => ds.map(d => d.getBoundingClientRect().width / d.viewBox.baseVal.width));
-      // 11.5px lettering at the drawing's own scale; 0.9 keeps it above 10px
-      for (const k of scales) assert.ok(k >= 0.9 && k <= 1.3, `${path}: scales ${scales.map(x => x.toFixed(2)).join(', ')}`);
-      await context.close();
-    }
-  });
-}
-
-test('no project drawing scrolls sideways at any width, and none says it does', async () => {
-  for (const path of ['/projects', '/projects/Henk']) for (const [width, height] of [[390, 844], [820, 1180], [844, 390]]) {
-    const { context, page } = await open(path, { width, height });
-    const r = await page.locator('.dwg-scroll').evaluateAll(els => els.map(el => ({ over: el.scrollWidth > el.clientWidth + 1, hint: getComputedStyle(el, '::after').content })));
-    for (const x of r) {
-      assert.equal(x.over, false, `${path} ${width}: a drawing overflows`);
-      assert.ok(x.hint === 'none' || x.hint === 'normal', `${path} ${width}: hint ${x.hint}`);
-    }
-    await context.close();
-  }
-});
+// 'every detail drawing is drawn at a legible scale' and 'no project drawing scrolls sideways at any
+// width' retired (openspec stone-inner-pages 9.2, decision 2026-11-10: the drawings retire):
+// pytaiga-mcp's "It fits" (tests/inner-windows.e2e.mjs) and "The post drawing fits"
+// (tests/inner-blog.e2e.mjs) check the two drawings left.
 
 // ---------- the 2026-10-09 additions: the workstation, Finance Bot and bible-tui drawn ----------
 
-test('the homelab counts the workstation: in the drawing, the figure and the write-up', async () => {
+// rewritten for openspec stone-inner-pages 9.2 (decision 2026-11-10: the drawings retire): the figures
+// on Homelab's card and its page, and the write-up
+test('the homelab counts the workstation: the figures on its card and its page, and the write-up', async () => {
   const { context, page } = await open('/projects');
-  assert.match(await page.locator('#homelab .dwg').textContent(), /w11/);
-  assert.match(await page.locator('#homelab .dwg title').textContent(), /workstation/);
-  assert.deepEqual(await page.locator('#homelab .dims dt').allInnerTexts(), ['4', '7']);
+  const card = page.locator('.pc[data-project="homelab"]');
+  assert.deepEqual(await card.locator('.pc-nums dt').allInnerTexts(), ['4', '7']);
   // and the card says the same: three servers and the workstation, not three devices
-  assert.match(await page.locator('#homelab .detail-text p').first().innerText(), /^Three servers and my workstation/);
+  assert.match(await card.locator('.pc-intro').innerText(), /^Three servers and my workstation/);
   await page.goto(BASE + '/projects/HomelabInfrastructure');
+  const nums = await page.locator('.art-nums .value').allInnerTexts();
+  assert.ok(nums.includes('4') && nums.includes('7'), `its page's numbers: ${nums}`);
   assert.match(await page.locator('main').innerText(), /is the fourth machine on the mesh/);
   await context.close();
 });

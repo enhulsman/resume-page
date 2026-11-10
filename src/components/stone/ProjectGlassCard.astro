@@ -1,0 +1,133 @@
+---
+// A project on /projects (openspec stone-projects-index, Ezra 2026-11-10, I2e): one piece of ribbed
+// glass holding its light, and one link to its page. Every word is HTML over the glass; the panes
+// are drawn by src/scripts/glass/panes.js through the page's one WebGL context.
+//
+// The rib pitch is fixed in study units (8 per 296-wide pane), so one pane stretched across a wide
+// card would rib twice as coarse as the hero. Wider than 760 px the card is therefore two equal
+// ribbed panes side by side (296 / 8 = 37 whole ribs each, so the ribs run on unbroken across the
+// join): the text half holds only the faint wash; the light sits in the other half, a third pane
+// over it fading in across its left 40%. The text column is 60% of the card (the sketch's 52%, made
+// a bit wider: Ezra's fix). At 760 px and below a wash pane spans the card, and the light pane, as
+// wide as the card (the same pitch), is pinned to its bottom at 300 px and masked upward, so the
+// light keeps its place whatever the text's length and no text sits low over it. A pane hidden at
+// the current width has no size and is never drawn.
+//
+// Without WebGL the light's panes keep the card's ground and a soft gradient of its light; the wash
+// panes keep the ground alone, so the text half stays plain.
+import "../../styles/stone.css";
+import { fallbackFor, type GlassCard } from "../../config/glass.ts";
+
+interface Props {
+  /** The project's ribbed light (`projectLights[id].card`). */
+  card: GlassCard;
+  /** Its listing id, for tests and hooks. */
+  id: string;
+  /** Its hero card's index ("02"), where it has one. */
+  index?: string;
+  title: string;
+  href: string;
+  status: string;
+  /** Its intro: the listing's `text`, This site's hook, or the one line. */
+  text: string;
+  /** Its first two dimensions as figures; none for a register entry. */
+  dims: { value: string; label: string }[];
+}
+const { card, id, index, title, href, status, text, dims } = Astro.props;
+
+type Tune = NonNullable<GlassCard["tune"]>;
+/** The card's light moved by (dx, dy) study px and scaled by k, every layer alike. */
+const shift = (dx: number, dy = 0, k = 1): Tune => (card.tune ?? []).map((t) => (t ? { ...t, dx: (t.dx ?? 0) + dx, dy: (t.dy ?? 0) + dy, scale: (t.scale ?? 1) * k } : t));
+/** Every layer of the light off: the pane holds its ground and the faint wash only. */
+const washOnly: Tune = [0, 1, 2, 3].map(() => ({ set: { opacity: 0 } }));
+const pane = (tune: Tune, light: boolean) => ({
+  "data-glass": "ribbed",
+  "data-light": card.light,
+  "data-base": JSON.stringify(card.base),
+  "data-tune": JSON.stringify(tune),
+  "data-distance": card.distance,
+  "data-wash": JSON.stringify(card.wash),
+  // no readout to keep quiet
+  "data-quiet": "off",
+  "aria-hidden": "true",
+  style: `--base: rgb(${card.base.join(" ")}); --fallback: ${light ? fallbackFor(card) : "none"}`,
+});
+---
+<a class="pc" href={href} data-project={id} style={`--base: rgb(${card.base.join(" ")})`}>
+  <span class="glass-card pc-pane pc-left" {...pane(washOnly, false)}><canvas aria-hidden="true"></canvas></span>
+  <span class="glass-card pc-pane pc-under" {...pane(washOnly, false)}><canvas aria-hidden="true"></canvas></span>
+  <span class="glass-card pc-pane pc-light" {...pane(shift(28), true)}><canvas aria-hidden="true"></canvas></span>
+  <span class="glass-card pc-pane pc-wash" {...pane(washOnly, false)}><canvas aria-hidden="true"></canvas></span>
+  <span class="glass-card pc-pane pc-band" {...pane(shift(74, 70, 0.8), true)}><canvas aria-hidden="true"></canvas></span>
+  <div class="pc-text">
+    <div class="pc-top">
+      <h3 class="pc-title">{title}</h3>
+      {index && <span class="pc-idx" aria-hidden="true">{index}</span>}
+    </div>
+    <p class="pc-status">{status}</p>
+    <p class="pc-intro">{text}</p>
+    {dims.length > 0 && <dl class="pc-nums">{dims.slice(0, 2).map((d) => <div><dt>{d.value}</dt><dd>{d.label}</dd></div>)}</dl>}
+  </div>
+</a>
+
+<style is:global>
+  .pc {
+    position: relative; display: block; min-height: clamp(300px, 24vw, 340px); overflow: hidden;
+    border-radius: clamp(12px, 1.3vw, 18px); background: var(--base); color: var(--stone-ink); text-decoration: none;
+    box-shadow: 0 1px 1px rgb(70 50 30 / 0.06), 0 14px 28px -18px rgb(70 50 30 / 0.35);
+    transition: transform 0.35s cubic-bezier(.2,.7,.2,1);
+  }
+  /* the glass edge, over every pane */
+  .pc::after {
+    content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.85),
+      inset 1px 0 0 rgb(255 255 255 / 0.6), inset -1px 0 0 rgb(255 255 255 / 0.6),
+      inset 0 -1px 0 rgb(80 60 40 / 0.12),
+      inset 0 0 0 1px rgb(255 255 255 / 0.18),
+      inset 0 0 9px 1px rgb(255 255 255 / 0.22);
+  }
+  .pc:hover, .pc:focus-visible { transform: translateY(-3px); }
+  .pc:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; }
+  .pc .pc-pane {
+    position: absolute; top: 0; bottom: 0; height: auto; aspect-ratio: auto; border-radius: 0; box-shadow: none; transition: none;
+    /* no WebGL: the ground and, on the light's panes, a soft gradient of the light; panes.js swaps in the light (.lit) */
+    background: var(--fallback, none), var(--base);
+  }
+  .pc .pc-pane.lit { background: var(--base); }
+  .pc .pc-pane canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .pc .pc-pane::after { display: none; }
+  .pc .pc-left { left: 0; width: 50%; }
+  .pc .pc-under { left: 50%; width: 50%; }
+  .pc .pc-light {
+    left: 50%; width: 50%;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, rgb(0 0 0 / 0.5) 18%, black 40%);
+    mask-image: linear-gradient(to right, transparent 0, rgb(0 0 0 / 0.5) 18%, black 40%);
+  }
+  .pc .pc-wash { left: 0; width: 100%; display: none; }
+  .pc .pc-band {
+    left: 0; width: 100%; display: none; top: auto; height: 300px;
+    -webkit-mask-image: linear-gradient(to top, black 55%, transparent 85%);
+    mask-image: linear-gradient(to top, black 55%, transparent 85%);
+  }
+  .pc .pc-text { position: relative; z-index: 1; display: flex; flex-direction: column; box-sizing: border-box; width: 60%; min-height: inherit; padding: 18px 20px; }
+  .pc .pc-top { display: flex; align-items: baseline; gap: 12px; }
+  .pc .pc-title { margin: 0; font: 760 clamp(20px, 1.7vw, 26px)/1.08 var(--stone-sans); letter-spacing: -0.02em; text-wrap: balance; color: var(--stone-ink); }
+  .pc .pc-idx { font-size: 12.5px; font-weight: 550; font-variant-numeric: tabular-nums; }
+  .pc .pc-status { margin: 6px 0 0; font-size: 13px; font-weight: 550; }
+  .pc .pc-intro { margin: 10px 0 0; font-size: 15px; line-height: 1.45; color: var(--stone-ink-2); text-wrap: pretty; }
+  .pc .pc-nums { margin: auto 0 0; padding-top: 14px; display: flex; gap: 22px; }
+  .pc .pc-nums dt { font: 800 24px/1 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .pc .pc-nums dd { margin: 3px 0 0; font-size: 12px; line-height: 1.25; max-width: 13em; color: var(--stone-ink-2); }
+  @media (prefers-reduced-motion: reduce) {
+    .pc { transition: none; }
+    .pc:hover, .pc:focus-visible { transform: none; }
+  }
+  @media (max-width: 760px) {
+    .pc .pc-left, .pc .pc-under, .pc .pc-light { display: none; }
+    .pc .pc-wash, .pc .pc-band { display: block; }
+    .pc .pc-text { width: auto; padding: 16px 16px 84px; }
+    .pc .pc-intro { font-size: 14.5px; }
+    .pc .pc-nums dt { font-size: 22px; }
+  }
+</style>

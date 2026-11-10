@@ -59,7 +59,9 @@ function fit(c) {
   // mirrored reflection) would report its transformed box
   const cs = getComputedStyle(c.el);
   const box = { width: parseFloat(cs.width) || 0, height: parseFloat(cs.height) || 0 };
-  if (!box.width || cs.display === 'none' || !c.el.offsetParent) return;
+  // a pane hidden at this width (/projects' cards keep a desktop and a phone set) has no size, so
+  // it is never drawn until a resize shows it again
+  if (!box.width || cs.display === 'none' || !c.el.offsetParent) { c.size = null; return; }
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = Math.round(box.width * dpr), h = Math.round(box.height * dpr);
   if (c.canvas.width !== w || c.canvas.height !== h) { c.canvas.width = w; c.canvas.height = h; }
