@@ -74,9 +74,14 @@ hero card (benched in config, can return as 05); usage or adoption facts for ANN
 4. **Frosted windows: one component, two contents.** `GlassWindow.astro` renders the frosted body
    (translucent ground, backdrop blur, light rim, title bar) and a glow beneath it (`data-glow`,
    `aria-hidden`), a few soft radial gradients with no hard edge. ANNA's window glows in the flame's
-   colours; the terminal's in the four card colours, as in the lab. The terminal keeps the lab's
-   faint upside-down reflection of the four cards along its inside top edge (four mini ribbed panes,
-   decoration, `aria-hidden`, inside the terminal moment).
+   colours. The terminal's glow and its reflection (Ezra, 2026-11-10: "just one or two colors in a
+   different configuration, so it's less busy and feels more premium") use two card hues, ANNA's warm
+   wash and Henk's cool one: the glow's two lights sit diagonally, warm high left, cool low right;
+   the reflection is two mini ribbed panes of those cards (`terminalReflection` in `glass.ts`),
+   upside down, each an oval that fades to nothing under a 10 px blur, a large one near the top left
+   and a smaller one lower on the right, never a row (decoration, `aria-hidden`, inside the terminal
+   moment). The lab's row of four panes along the top edge read as four colour blocks with straight
+   edges.
 
 5. **One shared contrast fix: opaque inks on glass.** `stone.css` defines `--glass-ink-quiet`, an
    opaque warm grey (start `#5C5650`: about 7.2:1 on white, 6.0:1 on stone), and it replaces exactly
@@ -84,7 +89,7 @@ hero card (benched in config, can return as 05); usage or adoption facts for ANN
    sources, record heading) plus the terminal's dim `#8a8278` (about 3.8:1 even on white). Inks that
    are already opaque and darker (steps `#4a453f`, record items `#3a3632`, body ink) stay. The
    terminal's red prompt and error text take `--glass-ink-red` (start `#8F3320`), because `#B4432B`
-   is likely about 3.5:1 over the four-colour glow and turning it grey would lose the prompt. If the
+   is likely about 3.5:1 over the terminal's glow and turning it grey would lose the prompt. If the
    measured test fails, the failing token darkens in its one place; nothing else changes. The hero
    cards' title, index and readout stay full ink.
 

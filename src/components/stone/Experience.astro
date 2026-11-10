@@ -1,9 +1,11 @@
 ---
 // Experience (openspec stone-glass-homepage, design 8): every résumé entry as years, role and
 // company, type on stone between hairlines, then a link to the full résumé. Years run from
-// startDate to endDate, or to the word for now (homeSections.now) for a current job.
+// startDate to endDate, or to the word for now (homeSections.now) for a current job. Newest first
+// (byRecency, src/lib/experience.ts); /resume keeps the résumé's order.
 import "../../styles/stone.css";
 import { experience } from "../../config/resume.ts";
+import { byRecency } from "../../lib/experience.ts";
 import { homeSections, siteNav } from "../../config/home.ts";
 
 const resume = siteNav.links.find((l) => l.id === "resume")!;
@@ -12,7 +14,7 @@ const resume = siteNav.links.find((l) => l.id === "resume")!;
 <section class="stone-section experience" aria-labelledby="experience-h">
   <h2 id="experience-h">{homeSections.headings.experience}</h2>
   <ol class="stone-rows">
-    {experience.map((e) => (
+    {byRecency(experience).map((e) => (
       <li class="row">
         <span class="years">{e.startDate}–{e.endDate ?? homeSections.now}</span>
         <h3 class="job">{e.role}</h3>

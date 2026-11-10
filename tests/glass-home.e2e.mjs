@@ -8,7 +8,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { glassCards, glassMoments } from '../src/config/glass.ts';
+import { glassCards, glassMoments, terminalReflection } from '../src/config/glass.ts';
 import { homeSections, annaLead, annaCalls, annaLevels } from '../src/config/home.ts';
 import { annaDemo } from '../src/config/anna-demo.ts';
 import { coverer, strings, textsUnder } from './lib/copy.mjs';
@@ -450,6 +450,7 @@ for (const moment of ['anna', 'terminal']) {
 import { readFileSync, readdirSync } from 'node:fs';
 import * as homeConfig from '../src/config/home.ts';
 import * as resumeConfig from '../src/config/resume.ts';
+import { byRecency } from '../src/lib/experience.ts';
 import { buildProjects, homeRows } from '../src/lib/projects.ts';
 import { latestEntries } from '../src/lib/frontmatter.ts';
 
@@ -526,7 +527,7 @@ test('the number is the project\'s: set large in tabular figures, its label besi
   assert.deepEqual(errors, []);
 });
 
-test('Experience: one row per résumé entry in order, years, role and company, hairline rules, a link to /resume', async () => {
+test('Experience: one row per résumé entry, newest first, years, role and company, hairline rules, a link to /resume', async () => {
   const { context, page, errors } = await open();
   const rows = await page.$$eval(`${SECTION.experience} li.row`, (lis) => lis.map((li) => ({
     years: li.querySelector('.years').textContent.replace(/\s+/g, ''),
@@ -537,7 +538,15 @@ test('Experience: one row per résumé entry in order, years, role and company, 
   const more = await page.$eval(`${SECTION.experience} a.more`, (a) => [a.getAttribute('href'), a.textContent.replace(/→/, '').trim()]);
   await context.close();
   assert.equal(rows.length, resumeConfig.experience.length);
-  for (const [i, e] of resumeConfig.experience.entries()) {
+  // newest first (Ezra, 2026-11-10): the jobs that run to now lead, then by end year, then by start year
+  const ordered = byRecency(resumeConfig.experience);
+  const nowRows = rows.map((r) => r.years.endsWith(homeSections.now));
+  assert.deepEqual(nowRows, [...nowRows].sort((a, b) => b - a), `every current job above every job that ended: ${rows.map((r) => r.years)}`);
+  const ends = rows.filter((r, i) => !nowRows[i]).map((r) => +r.years.slice(-4));
+  assert.deepEqual(ends, [...ends].sort((a, b) => b - a), `end years descending: ${ends}`);
+  assert.equal(rows[0].role, 'Forward Deployed Engineer');
+  assert.ok(rows.findIndex((r) => r.role === 'Pega DevOps Engineer') < rows.findIndex((r) => r.role === 'DevOps Engineer'), 'Pega DevOps Engineer (2023 to now) above DevOps Engineer (2023 to 2024)');
+  for (const [i, e] of ordered.entries()) {
     assert.equal(rows[i].role, e.role);
     assert.equal(rows[i].client, e.client);
     assert.ok(rows[i].years.startsWith(e.startDate), `${e.role}: ${rows[i].years}`);
@@ -711,7 +720,7 @@ test('one WebGL context for every pane: at 390 x 844 there is one, and every pan
   const s = await spread(page, '[data-glass="ribbed"] canvas');
   await context.close();
   assert.equal(n, 1, 'one WebGL context on the page');
-  assert.deepEqual(panes.map((p) => p.moment), ['hero', 'hero', 'hero', 'hero', 'terminal', 'terminal', 'terminal', 'terminal']);
+  assert.deepEqual(panes.map((p) => p.moment), [...Array(4).fill('hero'), ...Array(terminalReflection.panes.length).fill('terminal')]);
   assert.ok(panes.every((p) => p.lit), 'every pane is lit');
   s.forEach((v, i) => assert.ok(v > 40, `pane ${i + 1} is lit (${v})`));
   assert.deepEqual(errors, []);
@@ -840,7 +849,7 @@ test('no WebGL: both windows still show their content; the reflections keep thei
   assert.equal(term.shown, true);
   assert.equal(term.title, homeSections.terminalTitle);
   assert.ok(term.cmds >= 6, `the intro typed (${term.cmds} commands)`);
-  assert.equal(term.minis.length, 4);
+  assert.equal(term.minis.length, terminalReflection.panes.length);
   for (const m of term.minis) { assert.equal(m.lit, false); assert.match(m.bg, /radial-gradient/); }
   assert.deepEqual(errors, []);
 });
@@ -934,7 +943,7 @@ test('the kinds: four ribbed cards in the hero, one frosted window for ANNA, one
   assert.deepEqual(kinds.map((k) => [k.id, k.own]), [['hero', ['ribbed', 'ribbed', 'ribbed', 'ribbed']], ['anna', ['frosted']], ['terminal', ['frosted']]]);
   assert.deepEqual(kinds[0].inner, []);
   assert.deepEqual(kinds[1].inner, []);
-  assert.deepEqual(kinds[2].inner, Array(4).fill({ kind: 'ribbed', hidden: true }), 'four reflection minis inside the terminal\'s window');
+  assert.deepEqual(kinds[2].inner, Array(terminalReflection.panes.length).fill({ kind: 'ribbed', hidden: true }), 'the reflection minis inside the terminal\'s window');
   assert.deepEqual(errors, []);
 });
 

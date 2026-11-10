@@ -1,6 +1,6 @@
 // The terminal as a frosted glass window, on the homepage's About section (openspec
-// stone-glass-homepage, chunk 6; ported from the glass lab). The window frosts a soft glow of the
-// hero's four colours; the hero's panes reflect, upside down and faint, along its top inside edge;
+// stone-glass-homepage, chunk 6; ported from the glass lab). The window frosts a soft glow of one or
+// two of the hero's lights; those lights reflect, upside down, faint and blurred, near its top;
 // inside it is the real terminal. Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/glass-terminal.e2e.mjs
 // Every wait is on state (__glassReady, terminal output, animation frames), never a fixed sleep.
@@ -8,6 +8,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { homeSections } from '../src/config/home.ts';
+import { glassCards, terminalReflection } from '../src/config/glass.ts';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
 const TERM = '[data-glass-moment="terminal"]';
@@ -75,18 +76,84 @@ test('the terminal window: frosted, see-through, titled from config, without the
   assert.deepEqual(errors, []);
 });
 
-test('the hero\'s four panes reflect in it: ribbed, lit, upside down, decoration only', async () => {
+test('one or two of the hero\'s lights reflect in it: ribbed, lit, upside down, decoration only, soft ovals', async () => {
   const { context, page } = await open();
   const r = await page.$eval(`${WIN} .term-reflect`, (el) => ({
     hidden: el.getAttribute('aria-hidden'),
     panes: [...el.querySelectorAll('[data-glass="ribbed"]')].map((p) => ({ canvas: !!p.querySelector('canvas'), lit: p.classList.contains('lit'), link: p.tagName === 'A' })),
+    masks: [...el.querySelectorAll('[data-glass="ribbed"]')].map((p) => { const cs = getComputedStyle(p); return cs.maskImage || cs.webkitMaskImage; }),
     flipped: getComputedStyle(el).transform,
   }));
   await context.close();
   assert.equal(r.hidden, 'true');
-  assert.equal(r.panes.length, 4);
+  assert.equal(r.panes.length, terminalReflection.panes.length);
+  assert.ok(r.panes.length >= 1 && r.panes.length <= 2, `${r.panes.length} reflections`);
   for (const p of r.panes) assert.deepEqual(p, { canvas: true, lit: true, link: false });
+  for (const m of r.masks) assert.match(m, /radial-gradient/, 'each pane fades out as an oval, no straight side');
   assert.match(r.flipped, /matrix\(1, 0, 0, -1/, 'mirrored top to bottom');
+});
+
+/** The hue of an "rgb(r g b / a)" or "rgb(r, g, b)" colour, with its alpha. */
+const hueA = (s) => {
+  const [r, g, b, a = 1] = s.match(/[\d.]+/g).map(Number);
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  const h = !d ? 0 : mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return { h: (h * 60 + 360) % 360, a };
+};
+
+test('the reflection and the glow behind the window use at most two hues', async () => {
+  const { context, page, errors } = await open();
+  const r = await page.$eval(TERM, (m) => ({
+    washes: [...m.querySelectorAll('.term-reflect [data-glass="ribbed"]')].map((p) => JSON.parse(p.dataset.wash).color),
+    glow: getComputedStyle(m.querySelector('[data-glow]')).backgroundImage,
+  }));
+  await context.close();
+  // every colour stop of the glow that shows (alpha above 0), and every reflected card's wash
+  const stops = (r.glow.match(/rgba?\([^)]*\)/g) ?? []).map(hueA).filter((c) => c.a > 0).map((c) => c.h);
+  const hues = [...stops, ...r.washes.map((w) => hueA(`rgb(${w.join(' ')})`).h)];
+  assert.ok(stops.length >= 1, `the glow has colour: ${r.glow}`);
+  const fams = hues.reduce((fs, h) => (fs.some((f) => Math.min(Math.abs(f - h), 360 - Math.abs(f - h)) < 25) ? fs : [...fs, h]), []);
+  assert.ok(fams.length <= 2, `hues ${hues.map(Math.round)} make ${fams.length} families`);
+  // the reflected washes are the cards' own, from config
+  for (const w of r.washes) assert.ok(glassCards.some((c) => c.wash.color.join() === w.join()), `wash ${w}`);
+  assert.deepEqual(errors, []);
+});
+
+for (const [width, height] of [[1440, 900], [390, 844]]) test(`the reflection has no straight hard edge at ${width} x ${height}: the window's top half, its words hidden, changes softly everywhere`, async () => {
+  const { context, page, errors } = await open('?t=2.4', { width, height });
+  await intoView(page);
+  // the reflection and the glow alone: the title bar, its rule and the terminal's text hidden
+  await page.addStyleTag({ content: `${WIN} .glass-bar, ${WIN} .term { visibility: hidden !important; }` });
+  await frames(page, 3);
+  // inside the window's rim (its light inset edge), down to half its height
+  const b = await page.$eval(WIN, (w) => { const r = w.getBoundingClientRect(); return { x: Math.ceil(r.left) + 14, y: Math.ceil(r.top) + 6, w: Math.floor(r.width) - 28, h: Math.floor(r.height / 2) }; });
+  const png = (await page.screenshot({ clip: { x: b.x, y: b.y, width: b.w, height: b.h } })).toString('base64');
+  const m = await page.evaluate(async (b64) => {
+    const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
+    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, img.width, img.height).data, W = img.width, H = img.height;
+    const L = (i, j) => { const k = (j * W + i) * 4; return (d[k] + d[k + 1] + d[k + 2]) / 3; };
+    // a straight edge is a step that holds along its own length: each step between neighbouring
+    // pixels, across and down, averaged over 5 px along the edge (the blur's own dither averages out)
+    const R = 2; let jump = 0, lo = 255, hi = 0;
+    for (let j = R; j < H - R; j++) for (let i = 1; i < W; i++) {
+      let s = 0; for (let k = -R; k <= R; k++) s += L(i, j + k) - L(i - 1, j + k);
+      jump = Math.max(jump, Math.abs(s) / (2 * R + 1));
+    }
+    for (let i = R; i < W - R; i++) for (let j = 1; j < H; j++) {
+      let s = 0; for (let k = -R; k <= R; k++) s += L(i + k, j) - L(i + k, j - 1);
+      jump = Math.max(jump, Math.abs(s) / (2 * R + 1));
+    }
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { lo = Math.min(lo, L(i, j)); hi = Math.max(hi, L(i, j)); }
+    return { jump, spread: hi - lo, w: W, h: H };
+  }, png);
+  await context.close();
+  assert.ok(m.w > 200 && m.h > 100, `a band ${m.w} x ${m.h}`);
+  assert.ok(m.spread > 5, `the band holds the reflection and the glow (${m.spread.toFixed(1)} levels)`);
+  // the four-pane row stepped by 3.6 to 4.3 levels along its panes' sides (measured 2026-11-10);
+  // soft light, by about 2
+  assert.ok(m.jump <= 3, `a step of ${m.jump.toFixed(2)} levels holds along a 5 px edge`);
+  assert.deepEqual(errors, []);
 });
 
 test('the terminal still runs: it types its intro, then ls lists the project directories and whoami answers "ezra"', async () => {
@@ -164,7 +231,7 @@ test('reduced motion switched on mid-typing: the rest of the intro at once, an i
   const a = await page.$$eval(cards, (cs) => cs.map((c) => c.toDataURL()));
   await page.evaluate(() => window.__glass.at(2.4));
   const b = await page.$$eval(cards, (cs) => cs.map((c) => c.toDataURL()));
-  assert.equal(a.length, 8, 'four cards and four reflections');
+  assert.equal(a.length, 4 + terminalReflection.panes.length, 'four cards and the reflections');
   a.forEach((x, i) => assert.equal(x, b[i], `pane ${i + 1} is not the still frame`));
 
   // and nothing on screen moves: the terminal's passing hint gone, two screenshots 30 frames apart

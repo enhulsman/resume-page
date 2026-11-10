@@ -60,12 +60,17 @@ The Projects section SHALL list, as rows of type on stone with no glass, every p
 - **THEN** the row shows the new value with no other edit
 
 ### Requirement: Experience, Writing, About and Contact keep their sources
-Experience SHALL list every entry in `resume.ts` `experience` as years (`startDate`–`endDate`, or `startDate`– and the word for now from config), `role` and the company (`client`), divided by hairline rules, ending with a link to /resume. Writing SHALL list the first five of `diaryEntries` from `src/lib/frontmatter.ts` (published posts, newest first), each with its `title`, date `label` and one-line `line` (the post's `diary` line, or its description when it has none), ending with a link to /blog. About SHALL show `notes` from `home.ts`, the site photo as a plain image with its alt text from config, and the terminal in a frosted window. Contact SHALL show `site.social.email` set large as a `mailto:` link, then links to /contact, LinkedIn and GitHub from `site.ts`, as type with no glass.
+Experience SHALL list every entry in `resume.ts` `experience` newest first (entries without an `endDate` first, then by `endDate`, then by `startDate`, each descending; a full tie keeps the résumé's order), as years (`startDate`–`endDate`, or `startDate`– and the word for now from config), `role` and the company (`client`), divided by hairline rules, ending with a link to /resume. The order SHALL be computed in code (`byRecency` in `src/lib/experience.ts`), not by reordering `resume.ts`, whose order /resume keeps. Writing SHALL list the first five of `diaryEntries` from `src/lib/frontmatter.ts` (published posts, newest first), each with its `title`, date `label` and one-line `line` (the post's `diary` line, or its description when it has none), ending with a link to /blog. About SHALL show `notes` from `home.ts`, the site photo as a plain image with its alt text from config, and the terminal in a frosted window. Contact SHALL show `site.social.email` set large as a `mailto:` link, then links to /contact, LinkedIn and GitHub from `site.ts`, as type with no glass.
 
 #### Scenario: Experience
 - **GIVEN** the homepage loaded
 - **WHEN** the Experience rows are read
-- **THEN** there is one row per `experience` entry in order, each showing its `role`, its `client` and the years starting with `startDate`
+- **THEN** there is one row per `experience` entry, newest first (every job running to now above every job that ended, end years descending), each showing its `role`, its `client` and the years starting with `startDate`; "Pega DevOps Engineer" (2023 to now) sits above "DevOps Engineer" (2023 to 2024)
+
+#### Scenario: Newest first, in code
+- **GIVEN** `byRecency` called in a unit test on entries with and without an `endDate`, and on the real `experience`
+- **WHEN** the result is read
+- **THEN** current entries come first, then by `endDate`, then by `startDate`, each descending, a full tie keeps the input order, the input is left unchanged, and /resume does not use it
 
 #### Scenario: A new post
 - **GIVEN** the Writing list built from `diaryEntries(...).slice(0, 5)` in a unit test, with one more published post dated after all others added to the sources

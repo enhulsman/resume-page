@@ -130,19 +130,46 @@ export interface WindowGlow {
   blur: number;
   lights: { at: [number, number]; color: RGB; opacity: number }[];
 }
+/** A card's faint broad light (its wash), by id: the hue a window's glow borrows from the hero. */
+const washOf = (id: GlassCard['id']): RGB => {
+  const c = glassCards.find((x) => x.id === id);
+  if (!c) throw new Error(`glass.ts has no card ${id}`);
+  return c.wash.color;
+};
+
+/** One of the hero's lights reflected in the terminal's glass. */
+export interface ReflectionPane {
+  card: GlassCard['id'];
+  /** Where it shows on the window, upright, in % of the window: left, top, width, height. */
+  box: [number, number, number, number];
+}
+/**
+ * The terminal's reflection of the hero (Ezra, 2026-11-10: "just one or two colors in a different
+ * configuration, so it's less busy and feels more premium"): two of the cards' lights, one warm and
+ * one cool, far behind the glass. Each pane is an oval that fades to nothing under a wide blur, the
+ * warm one large near the top left, the cool one smaller and lower on the right, never a row. The
+ * terminal's glow beneath the window holds the same two hues (windowGlows.cards).
+ */
+export const terminalReflection: { blur: number; opacity: number; panes: ReflectionPane[] } = {
+  blur: 10,
+  opacity: 0.34,
+  panes: [
+    { card: 'anna', box: [2, 0, 60, 36] },
+    { card: 'henk', box: [62, 10, 34, 24] },
+  ],
+};
+
 // As tuned in the glass lab (2026-11-09): ANNA's flame, red at its foot, yellow at its heart, amber
-// around; the terminal's, the hero's four lights as one soft field.
+// around. The terminal's: the two reflected cards' hues, warm high on the left, cool low on the right.
 export const windowGlows: Record<'flame' | 'cards', WindowGlow> = {
   flame: { inset: '14% -7% 10%', blur: 28, lights: [
     { at: [28, 66], color: [214, 58, 34], opacity: 0.5 },
     { at: [52, 42], color: [255, 196, 96], opacity: 0.6 },
     { at: [78, 58], color: [240, 160, 118], opacity: 0.55 },
   ] },
-  cards: { inset: '6% -8% 10%', blur: 28, lights: [
-    { at: [22, 40], color: [236, 120, 70], opacity: 0.55 },
-    { at: [46, 62], color: [110, 150, 214], opacity: 0.45 },
-    { at: [70, 38], color: [240, 150, 120], opacity: 0.45 },
-    { at: [86, 64], color: [150, 190, 110], opacity: 0.42 },
+  cards: { inset: '6% -8% 10%', blur: 32, lights: [
+    { at: [30, 34], color: washOf('anna'), opacity: 0.5 },
+    { at: [76, 70], color: washOf('henk'), opacity: 0.42 },
   ] },
 };
 /** The glow's CSS background: one soft radial gradient per light, each fading to nothing. */

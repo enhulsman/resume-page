@@ -215,10 +215,10 @@ test('each card\'s no-WebGL ground is a soft radial gradient of its own light\'s
 
 // ---- the frosted windows' glows ----
 
-test('each window has a glow of soft radial lights in config: the flame for ANNA, the four cards for the terminal', () => {
+test('each window has a glow of soft radial lights in config: the flame for ANNA, two card lights for the terminal', () => {
   assert.deepEqual(Object.keys(windowGlows).sort(), ['cards', 'flame']);
   assert.equal(windowGlows.flame.lights.length, 3);
-  assert.equal(windowGlows.cards.lights.length, 4);
+  assert.ok(windowGlows.cards.lights.length >= 1 && windowGlows.cards.lights.length <= 2, `the terminal's glow: ${windowGlows.cards.lights.length} lights`);
   for (const g of Object.values(windowGlows)) {
     for (const l of g.lights) {
       assert.equal(l.color.length, 3);
@@ -226,6 +226,59 @@ test('each window has a glow of soft radial lights in config: the flame for ANNA
     }
     assert.ok(g.blur >= 20, 'blurred well past any edge');
   }
+});
+
+// ---- the terminal's reflection: one or two hues, soft, not a row (Ezra, 2026-11-10) ----
+
+import { terminalReflection } from '../src/config/glass.ts';
+
+/** A colour's hue in degrees. */
+const hueOf = ([r, g, b]) => {
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  if (!d) return 0;
+  const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (h * 60 + 360) % 360;
+};
+/** How many hue families: hues within `near` degrees of a family's first hue join it. */
+const families = (rgbs, near = 25) => rgbs.map(hueOf).reduce((fs, h) => {
+  if (!fs.some((f) => Math.min(Math.abs(f - h), 360 - Math.abs(f - h)) < near)) fs.push(h);
+  return fs;
+}, []).length;
+
+test('the terminal\'s reflection: one or two of the hero\'s lights, each a card in config, none twice', () => {
+  const ids = terminalReflection.panes.map((p) => p.card);
+  assert.ok(ids.length >= 1 && ids.length <= 2, `${ids.length} reflection panes`);
+  assert.equal(new Set(ids).size, ids.length, 'no card twice');
+  for (const id of ids) assert.ok(glassCards.some((c) => c.id === id), `${id} is a hero card`);
+});
+
+test('the reflection and its glow use at most two hues: the glow\'s lights are the reflected cards\' own washes', () => {
+  const cards = terminalReflection.panes.map((p) => glassCards.find((c) => c.id === p.card));
+  const washes = cards.map((c) => c.wash.color);
+  for (const l of windowGlows.cards.lights) {
+    assert.ok(washes.some((w) => w.join() === l.color.join()), `glow light ${l.color} is a reflected card's wash`);
+  }
+  assert.ok(families([...washes, ...windowGlows.cards.lights.map((l) => l.color)]) <= 2, 'at most two hues');
+});
+
+test('the reflection is soft and not a row: blurred well, two panes at different heights and sizes, the glow\'s lights apart on both axes', () => {
+  assert.ok(terminalReflection.blur >= 6, `blurred (${terminalReflection.blur}px)`);
+  assert.ok(terminalReflection.opacity > 0 && terminalReflection.opacity < 0.5, 'faint');
+  const [a, b] = terminalReflection.panes;
+  if (b) {
+    const [, ta, wa, ha] = a.box, [, tb, wb, hb] = b.box;
+    assert.ok(Math.abs(ta - tb) >= 5, `different heights (${ta}% and ${tb}%)`);
+    assert.ok(Math.max(wa, wb) / Math.min(wa, wb) >= 1.4 && Math.max(ha, hb) / Math.min(ha, hb) >= 1.2, 'different sizes');
+  }
+  const ls = windowGlows.cards.lights;
+  if (ls.length === 2) {
+    assert.ok(Math.abs(ls[0].at[0] - ls[1].at[0]) >= 20 && Math.abs(ls[0].at[1] - ls[1].at[1]) >= 15, `the glow's lights diagonal, not a row: ${ls.map((l) => l.at)}`);
+  }
+  // in the markup: each pane an oval that fades to nothing (no straight side), no four-column grid
+  const src = read('src/components/stone/About.astro');
+  assert.match(src, /terminalReflection\.panes\.map/);
+  assert.match(src, /mask-image:\s*radial-gradient\(closest-side/);
+  assert.doesNotMatch(src, /repeat\(4/);
 });
 
 // ---- the components and the driver, as written ----
@@ -478,6 +531,50 @@ test('Projects, Experience and Writing: type on stone from their sources, no gla
   assert.ok(experience.length >= 1);
 });
 
+// ---- Experience, newest first (Ezra, 2026-11-10) ----
+
+import { byRecency } from '../src/lib/experience.ts';
+
+test('Experience newest first: current jobs first, then by end year, then by start year, each descending', () => {
+  const e = (role, startDate, endDate) => ({ role, client: 'x', startDate, endDate, stack: [], summary: '', group: 'prior' });
+  const input = [
+    e('old', '2015', '2017'),
+    e('current, older start', '2021'),
+    e('ended 2024, started 2020', '2020', '2024'),
+    e('ended 2024, started 2022', '2022', '2024'),
+    e('current, newer start', '2024'),
+    e('ended 2025', '2019', '2025'),
+  ];
+  const before = input.map((x) => x.role);
+  assert.deepEqual(byRecency(input).map((x) => x.role), [
+    'current, newer start', 'current, older start', 'ended 2025', 'ended 2024, started 2022', 'ended 2024, started 2020', 'old',
+  ]);
+  assert.deepEqual(input.map((x) => x.role), before, 'the input keeps its order');
+  // a full tie keeps the source order
+  assert.deepEqual(byRecency([e('a', '2025'), e('b', '2025')]).map((x) => x.role), ['a', 'b']);
+  assert.deepEqual(byRecency([e('b', '2025'), e('a', '2025')]).map((x) => x.role), ['b', 'a']);
+});
+
+test('Experience newest first, on the real résumé: the three jobs without an end year lead, Pega DevOps above the jobs that ended', () => {
+  const rows = byRecency(experience).map((x) => `${x.role} @ ${x.client}`);
+  assert.deepEqual(rows, [
+    'Forward Deployed Engineer @ Anamata',
+    'DevOps & Software Engineer @ Major European bank',
+    'Pega DevOps Engineer @ Anamata',
+    'Platform & Software Engineer @ Nordic financial regulator',
+    'DevOps Engineer @ European staffing company',
+    'Junior Support Engineer @ MovingMedia BV',
+    'Tutoring Teacher @ Self-employed',
+  ]);
+  assert.equal(rows.length, experience.length, 'every entry, once');
+});
+
+test('the homepage sorts Experience through byRecency; /resume keeps the résumé order (it groups under Anamata)', () => {
+  const src = read('src/components/stone/Experience.astro');
+  assert.match(src, /byRecency\(experience\)\.map/);
+  assert.doesNotMatch(read('src/pages/resume.astro'), /byRecency/);
+});
+
 // ---- About and Contact (chunk 6) ----
 
 test('Contact\'s link labels live in config, moved from the old contact sheet', () => {
@@ -485,14 +582,14 @@ test('Contact\'s link labels live in config, moved from the old contact sheet', 
   assert.equal(typeof home.homeSections.terminalInput, 'string', 'the terminal\'s input label');
 });
 
-test('About: the notes, the photo with its alt from config, the terminal in a frosted window over the four lights, its reflections', () => {
+test('About: the notes, the photo with its alt from config, the terminal in a frosted window over its glow, its reflections', () => {
   const src = read('src/components/stone/About.astro');
   assert.match(src, /data-glass-moment="terminal"/);
   assert.match(src, /<GlassWindow /);
   assert.match(src, /title=\{homeSections\.terminalTitle\}/);
   assert.match(src, /glow="cards"/);
   assert.match(src, /<GlassCard [^>]*mini/, 'the reflection minis');
-  assert.match(src, /glassCards\.map/);
+  assert.match(src, /terminalReflection\.panes\.map/);
   assert.match(src, /<Terminal /);
   assert.match(src, /notes\.map/);
   assert.match(src, /alt=\{homeSections\.photoAlt\}/);

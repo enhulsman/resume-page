@@ -1,8 +1,9 @@
 ---
 // About (openspec stone-glass-homepage, design 8): the notes and the site photo, type and a plain
 // image on stone; beside them (below them on a phone) the real terminal in a frosted window over a
-// soft glow of the hero's four lights. The third glass moment. The hero's panes reflect, upside down
-// and faint, along the window's top inside edge: four mini ribbed panes, decoration only.
+// soft glow of two of the hero's lights, one warm and one cool. The third glass moment. Those two
+// lights reflect in the glass, upside down, faint and far behind it: two mini ribbed panes, each an
+// oval that fades to nothing, placed off-centre from config (terminalReflection), decoration only.
 // Every word comes from config: notes and homeSections (home.ts); the terminal's own output is the
 // terminal's (src/components/overzicht/Terminal.astro). The colours of its text on glass are in
 // stone.css, keyed on the terminal's .terminal-* and .text-theme-* class names.
@@ -11,8 +12,10 @@ import "../../styles/stone.css";
 import GlassWindow from "./GlassWindow.astro";
 import GlassCard from "./GlassCard.astro";
 import Terminal from "../overzicht/Terminal.astro";
-import { glassCards } from "../../config/glass.ts";
+import { glassCards, terminalReflection } from "../../config/glass.ts";
 import { homeSections, notes } from "../../config/home.ts";
+
+const reflect = terminalReflection.panes.map((p) => ({ card: glassCards.find((c) => c.id === p.card)!, box: p.box }));
 ---
 
 <section class="stone-section about" aria-labelledby="about-h">
@@ -26,8 +29,11 @@ import { homeSections, notes } from "../../config/home.ts";
     </div>
     <div class="about-term" data-glass-moment="terminal">
       <GlassWindow title={homeSections.terminalTitle} glow="cards" dots class="term-stage" windowClass="term-window">
-        <div slot="reflect" class="term-reflect" aria-hidden="true">
-          {glassCards.map((c) => <GlassCard card={c} mini />)}
+        <div slot="reflect" class="term-reflect" aria-hidden="true" style={`--reflect-blur: ${terminalReflection.blur}px; --reflect-opacity: ${terminalReflection.opacity}`}>
+          {/* the container is flipped, so `bottom` is the upright top */}
+          {reflect.map(({ card, box: [x, y, w, h] }) => (
+            <span class="reflect-pane" style={`left: ${x}%; bottom: ${y}%; width: ${w}%; height: ${h}%`}><GlassCard card={card} mini /></span>
+          ))}
         </div>
         <Terminal />
       </GlassWindow>
@@ -54,12 +60,19 @@ import { homeSections, notes } from "../../config/home.ts";
   .about :global(.term-stage) { width: min(100%, 780px); margin-inline: auto; }
   .about :global(.term-window) { height: 460px; }
 
-  /* the hero's panes, reflected: mirrored top to bottom, small, soft, fading down */
+  /* two of the hero's lights, reflected: mirrored top to bottom, far behind the glass, each an oval
+     that fades to nothing, so no side of a pane ever shows */
   .term-reflect {
-    position: absolute; left: 4%; right: 4%; top: 0; height: 120px; z-index: 0; pointer-events: none;
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-    transform: scaleY(-1); opacity: 0.22; filter: blur(2.5px) saturate(1.2);
-    -webkit-mask-image: linear-gradient(to top, black, transparent 85%); mask-image: linear-gradient(to top, black, transparent 85%);
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    transform: scaleY(-1); opacity: var(--reflect-opacity);
+    /* lifted to the glass's own brightness, so the panes' stone ground never shows as a grey smudge */
+    filter: blur(var(--reflect-blur)) brightness(1.08) saturate(1.2);
+  }
+  .reflect-pane { position: absolute; display: block; }
+  .term-reflect :global(.glass-card.mini) {
+    width: 100%; height: 100%; border-radius: 50%;
+    -webkit-mask-image: radial-gradient(closest-side, black 20%, transparent 100%);
+    mask-image: radial-gradient(closest-side, black 20%, transparent 100%);
   }
 
   /* the terminal inside the glass: no sheet border, no ground, no ring of its own (the window has one) */
@@ -83,6 +96,5 @@ import { homeSections, notes } from "../../config/home.ts";
     .about :global(.term-stage) { margin-top: 40px; }
     .about :global(.term-window) { height: min(460px, 70svh); }
     .about :global(.term-window .term-body) { padding: 14px 14px 16px; font-size: 13px; }
-    .term-reflect { height: 80px; gap: 6px; }
   }
 </style>

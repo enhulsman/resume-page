@@ -78,3 +78,9 @@ decision behind it.
 - [x] 9.2 Codex adversarial review of the branch; fix MUST findings; rerun all test commands
 - [x] 9.3 Follow-ups to file: inner page bodies in stone; dark mode after the light redesign; frame time on a mid Android phone (listed in the 2026-11-11 morning handoff)
 - [x] 9.4 Do not archive: Ezra reviews the real page first (not archived)
+
+## 10. Ezra's review, 2026-11-10 morning
+
+- [x] 10.1 Experience newest first: `byRecency` in `src/lib/experience.ts` (current jobs, then end year, then start year, descending), used by `Experience.astro`; /resume keeps the résumé order (it groups under Anamata). Unit tests in `tests/glass-home.test.mjs`, rendered order in `tests/glass-home.e2e.mjs`
+- [x] 10.2 The terminal's reflection calmer: two hues (ANNA warm, Henk cool), `terminalReflection` in `glass.ts`, two soft oval panes placed off-centre, the glow's two lights diagonal; tests for at most two hues and no straight hard edge (`tests/glass-home.test.mjs`, `tests/glass-terminal.e2e.mjs`); the four-mini and four-colour assertions updated
+- [x] 10.3 Run all test commands and `openspec validate stone-glass-homepage --strict`

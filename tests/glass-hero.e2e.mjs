@@ -5,6 +5,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
+import { terminalReflection } from '../src/config/glass.ts';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
 let browser;
@@ -86,13 +87,13 @@ test('the four cards fill the row: no gap after the last card', async () => {
 
 // Phones keep only a few WebGL contexts alive and drop the oldest: with one context per pane the
 // first hero cards went blank once the lab added ANNA's stack and the terminal (2026-11-09). The
-// homepage has the four cards and the terminal's four reflection minis.
+// homepage has the four cards and the terminal's reflection minis.
 test('every pane draws on a phone, however many panes the page has: one WebGL context in all', async () => {
   const { context, page, errors } = await home('', { width: 390, height: 844 });
   const kinds = await page.$$eval('.glass-card[data-light] canvas', cs => cs.map(c => (c.getContext('2d') ? '2d' : 'other')));
   const spreads = await spread(page, `${HERO} .glass-card canvas`);
   await context.close();
-  assert.ok(kinds.length >= 8, `the homepage has eight panes (${kinds.length})`);
+  assert.ok(kinds.length >= 4 + terminalReflection.panes.length, `the homepage has the cards and the reflections (${kinds.length})`);
   assert.ok(kinds.every(k => k === '2d'), 'each pane shows a copy, not its own context');
   spreads.forEach((s, i) => assert.ok(s > 40, `hero card ${i + 1} is lit (${s})`));
   assert.deepEqual(errors, []);

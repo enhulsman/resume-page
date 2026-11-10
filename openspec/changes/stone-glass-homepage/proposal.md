@@ -35,7 +35,10 @@ real page; you judge the real page instead.
    and on /resume and /contact.
 5. **Contact adds three small links** under the large address: the contact page, LinkedIn, GitHub.
 6. **Writing shows the five newest posts** with each post's one-line diary line, and a link to /blog.
-7. **The terminal keeps the lab's faint upside-down reflection of the four cards** along its top edge.
+7. **The terminal's reflection is calmer (your call, 2026-11-10):** two of the cards' lights, ANNA's
+   warm and Henk's cool, upside down and far behind the glass as two soft ovals, a large one top left
+   and a smaller one lower right; the glow under the window holds the same two colours. The lab's
+   row of four colour blocks along the top edge is gone.
 8. **The terminal's red prompt becomes a darker red** (`#8F3320` to start) so it reads at 4.5:1
    over the glow; it darkens further only if the measurement asks.
 9. **On a slow phone the lights hold still:** if drawing them takes over 20 ms a frame for 2 s,
@@ -72,7 +75,8 @@ With reduced motion the terminal's intro is already shown at once today; that st
   connectors arrive, a link to anna-site, and beside it a frosted Teams window where a real
   conversation ("Close my week") plays once as it comes into view, with a Replay button.
 - Then the other projects as quiet rows of type, each with its strongest number set large;
-  experience as years, role and company; the newest writing; About with the notes, the photo and
+  experience as years, role and company, newest first (current jobs on top; /resume keeps its
+  own order under Anamata); the newest writing; About with the notes, the photo and
   the live terminal in a frosted window; contact as the e-mail address set large.
 - ANNA's four levels are no longer on the homepage; they stay on /projects.
 - Glass appears in three places only, never two on one screen. Anyone who asks for reduced motion
