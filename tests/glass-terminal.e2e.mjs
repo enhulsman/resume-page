@@ -1,5 +1,5 @@
 // The terminal as a frosted glass window, on the homepage's About section (openspec
-// stone-glass-homepage, chunk 6; ported from /hero-lab?lab=1). The window frosts a soft glow of the
+// stone-glass-homepage, chunk 6; ported from the glass lab). The window frosts a soft glow of the
 // hero's four colours; the hero's panes reflect, upside down and faint, along its top inside edge;
 // inside it is the real terminal. Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/glass-terminal.e2e.mjs

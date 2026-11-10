@@ -1,4 +1,4 @@
-// ANNA in a glass window (the homepage's ANNA section; /hero-lab?lab=1 until the lab goes): the
+// ANNA in a glass window (the homepage's ANNA section): the
 // site's 'week' conversation plays once when the window is about 40% in view; Replay plays it again.
 // Every beat is in the page from the start (anna-window-model.js says when each shows). The window
 // keeps its height and scrolls itself to the newest beat, unless the reader has scrolled it
@@ -93,7 +93,7 @@ if (section) {
     if (!e.isIntersecting) return;
     if (still.matches && !cur.done) finish();
     else if (e.intersectionRatio >= 0.4 && !played && !still.matches && hold == null) play();
-    else kick(); // shown again (the lab bar, a font swap): settle the scroll where it belongs
+    else kick(); // shown again (a resize, a font swap): settle the scroll where it belongs
   }, { threshold: [0, 0.4] }).observe(win);
   document.fonts.ready.then(kick);
   // reduced motion switched on while the page is open: stop, and show the end

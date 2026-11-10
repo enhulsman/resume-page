@@ -1,4 +1,4 @@
-// ANNA in a glass window (/hero-lab?lab=1, ?anna=window): the conversation's timeline, and its copy.
+// ANNA in a glass window (the homepage's ANNA section): the conversation's timeline, and its copy.
 // The words are Anamata's public site's (anna-site app/page.tsx, the 'week' scenario), copied verbatim.
 //
 //   node --test tests/glass-anna-window.test.mjs

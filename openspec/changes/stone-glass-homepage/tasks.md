@@ -67,10 +67,10 @@ decision behind it.
 
 ## 8. Remove the lab and the rejected stagings (last)
 
-- [ ] 8.1 Tests from: no lab page (404, nothing in `dist/`), no staging code, no contact strip. Files: `tests/glass-retired.test.mjs`, `tests/glass-retired.e2e.mjs`
-- [ ] 8.2 Delete `src/pages/hero-lab.astro`, `glare.js`, `anna.js`, `anna-model.js`, `anna-scene.js`, `anna-turn.js`, `anna-journey.js`, `hero.js` (and `words.js`/`words-model.js` if any remain); remove `h2Card`, `annaExploded`, `AnnaPane`, `AnnaVariant`, `beforeTune` and `before` from `glass.ts`; delete their tests (`glass-anna.test.mjs`, `glass-anna-scene.test.mjs`, `glass-anna.e2e.mjs`, `glass-anna-stagings.e2e.mjs`, `glass-glare.e2e.mjs`, the lab-only and H2 tests left in `glass-hero.*`)
-- [ ] 8.3 Add the glass unit tests to `npm test` and the glass e2e files to `test:e2e` in `package.json`, so CI runs them
-- [ ] 8.4 Run all test commands and `openspec validate stone-glass-homepage --strict`
+- [x] 8.1 Tests from: no lab page (404, nothing in `dist/`), no staging code, no contact strip. Files: `tests/glass-retired.test.mjs`, `tests/glass-retired.e2e.mjs`
+- [x] 8.2 Delete `src/pages/hero-lab.astro`, `glare.js`, `anna.js`, `anna-model.js`, `anna-scene.js`, `anna-turn.js`, `anna-journey.js`, `hero.js` (and `words.js`/`words-model.js` if any remain); remove `h2Card`, `annaExploded`, `AnnaPane`, `AnnaVariant`, `beforeTune` and `before` from `glass.ts`; delete their tests (`glass-anna.test.mjs`, `glass-anna-scene.test.mjs`, `glass-anna.e2e.mjs`, `glass-anna-stagings.e2e.mjs`, `glass-glare.e2e.mjs`, the lab-only and H2 tests left in `glass-hero.*`)
+- [x] 8.3 Add the glass unit tests to `npm test` and the glass e2e files to `test:e2e` in `package.json`, so CI runs them
+- [x] 8.4 Run all test commands and `openspec validate stone-glass-homepage --strict`
 
 ## 9. Check, not close
 

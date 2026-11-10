@@ -1,10 +1,10 @@
-// The glass hero prototype (/hero-lab): its cards say only what the site's data says,
+// The glass hero (the homepage's four cards): its cards say only what the site's data says,
 // and the [04] glass behaves as the study measured it.
 //
 //   node --test tests/glass-hero.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { glassCards, h2Card, benched } from '../src/config/glass.ts';
+import { glassCards, benched } from '../src/config/glass.ts';
 import { details, annaLead } from '../src/config/home.ts';
 import { cardState, pixelAt, glassAt, PERIOD, REF, toRef } from '../src/scripts/glass/model.js';
 
@@ -27,11 +27,6 @@ test('every readout number is one of the project\'s own dimensions, never typed 
   // ANNA's one fact is the one annaLead states
   assert.match(annaLead.text, /in production/i);
   assert.match(glassCards[0].readout, /^In production/);
-});
-
-test('the H2 card is ANNA', () => {
-  assert.equal(h2Card.id, 'anna');
-  assert.equal(h2Card.href, annaLead.href);
 });
 
 test('each light runs on one loop: t and t + PERIOD are the same frame', () => {
@@ -206,17 +201,4 @@ test('Finance Bot is benched, not deleted: its card can come back as 05', () => 
   assert.deepEqual(benched.map(c => c.title), ['Finance Bot']);
   const d = details.find(x => x.id === 'finance');
   assert.ok(d.dims.some(dim => dim.value === benched[0].value));
-});
-
-test('the "before round 3" look: the lights as they were, no wash', () => {
-  const all = [...glassCards, ...benched];
-  for (const c of all) assert.ok(c.before, `${c.id} has a before look`);
-  const by = id => all.find(c => c.id === id).before.tune;
-  assert.equal(by('anna')[2].lean, undefined);
-  assert.equal(by('anna')[2].stretch, undefined);
-  assert.deepEqual(by('henk')[0].set.color2, [30, 70, 150]);
-  assert.equal(by('henk')[0].scale, 1.1);
-  assert.deepEqual(by('finance')[0].set.color, [168, 176, 190]);
-  // the cards round 3 did not touch keep their tune
-  for (const id of ['homelab', 'sandbox']) assert.deepEqual(by(id), all.find(c => c.id === id).tune);
 });

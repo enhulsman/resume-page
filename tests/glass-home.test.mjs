@@ -331,9 +331,7 @@ test('nothing on the homepage imports the four levels: the page and the stone co
   for (const f of files) assert.doesNotMatch(read(f), /annaLevels/, f);
 });
 
-// glass.ts still feeds the lab's exploded stack (annaExploded) from annaLevels; that export leaves
-// with the lab in chunk 8, and this test then passes: drop the todo there.
-test('nothing on the homepage imports the four levels: glass.ts', { todo: 'annaExploded leaves glass.ts in chunk 8' }, () => {
+test('nothing on the homepage imports the four levels: glass.ts', () => {
   assert.doesNotMatch(read('src/config/glass.ts'), /annaLevels/);
 });
 
@@ -578,8 +576,7 @@ test('overzicht.css holds no rule for the old homepage: no sheet-you, scrolly, s
 
 test('every class overzicht.css styles is used by a page, a component, a layout or a script', () => {
   const walk = (dir) => readdirSync(new URL(dir, root), { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? walk(`${dir}${d.name}/`) : [`${dir}${d.name}`]));
-  // the lab goes in chunk 8 and does not load overzicht.css, so it cannot keep a rule alive
-  const code = walk('src/').filter((p) => /\.(astro|ts|js|mjs|mdx)$/.test(p) && p !== 'src/pages/hero-lab.astro').map(read).join('\n');
+  const code = walk('src/').filter((p) => /\.(astro|ts|js|mjs|mdx)$/.test(p)).map(read).join('\n');
   const classes = [...new Set(rules(read('src/styles/overzicht.css')).flatMap((r) => [...r.selector.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1])))];
   // set from the layout's `current` prop: page-projects, page-blog, ...
   const dynamic = new Set(['js']);

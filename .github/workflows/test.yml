@@ -1,7 +1,7 @@
 name: Test
 
 # Unit tests, then the browser tests against the production build (served by astro preview),
-# so a change that breaks the homepage, its arrival or the inner sheets fails before it deploys.
+# so a change that breaks the homepage, its glass or the inner pages fails before it deploys.
 on:
   push:
     branches: [ main ]

@@ -46,7 +46,7 @@ export const annaLead = {
   href: '/projects/AnnaAssistant',
 };
 
-/** ANNA's rules, beside the window where she works (/hero-lab, the window staging): a rule, why, and what enforces it. */
+/** ANNA's rules, beside the window where she works (the homepage's ANNA section): a rule, why, and what enforces it. */
 export const annaCalls = {
   heading: 'What she may do, and for whom.',
   rules: [
@@ -65,7 +65,7 @@ export const annaCalls = {
 
 /**
  * The stone homepage's own words (openspec stone-glass-homepage): the hero's role and intro lines
- * (moved from /hero-lab unchanged), the section headings and link labels, the word for a current
+ * (moved from the glass lab unchanged), the section headings and link labels, the word for a current
  * job's end year, the terminal window's title and its input's label (moved from
  * interactive-terminal.ts), the photo's alt text, and Contact's three links (moved from the old
  * contact sheet). ANNA's heading is annaLead.title; the name is site.name.

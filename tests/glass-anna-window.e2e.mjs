@@ -1,8 +1,7 @@
 // ANNA in a glass window, in a real browser. Her section's own tests run on the homepage (`/`),
 // where it shipped (openspec stone-glass-homepage, chunk 4): left, what she may do and for whom;
 // right, a frosted window where anna-site's 'week' conversation plays once as it comes into view.
-// The lab's staging switch stays on /hero-lab until the lab goes (chunk 8). The timeline itself:
-// tests/glass-anna-window.test.mjs. Needs a running site:
+// The timeline itself: tests/glass-anna-window.test.mjs. Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/glass-anna-window.e2e.mjs
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -52,26 +51,6 @@ const newestInView = (page) => page.evaluate(() => {
   const on = [...chat.querySelectorAll('[data-beat].on')];
   const newest = on.at(-1), c = chat.getBoundingClientRect(), r = newest.getBoundingClientRect();
   return { beat: newest.dataset.beat, above: c.bottom - r.bottom, belowTop: r.top - c.top, gap: chat.scrollHeight - chat.clientHeight - chat.scrollTop };
-});
-
-test('lab: ?lab=1 shows the window staging by default; turn, journey and stack stay on the switch', async () => {
-  for (const [q, want] of [['', 'window'], ['&anna=window', 'window'], ['&anna=turn', 'turn'], ['&anna=journey', 'journey'], ['&anna=stack', 'stack']]) {
-    const { context, page, errors } = await open(`lab=1${q}`, { path: '/hero-lab' });
-    for (const [sel, name] of [['.anna-window', 'window'], ['.anna-turn', 'turn'], ['.anna-journey', 'journey'], ['.anna-x', 'stack']]) {
-      assert.equal(await page.isVisible(sel), want === name, `${q || 'default'}: ${name}`);
-    }
-    await context.close();
-    assert.deepEqual(errors, []);
-  }
-  const { context, page } = await open('lab=1', { path: '/hero-lab' });
-  const seg = await page.$$eval('.lab a[data-key="anna"]', (as) => as.map((a) => a.dataset.val));
-  assert.deepEqual(seg, ['window', 'turn', 'journey', 'stack'], 'window first in the lab bar');
-  const active = await page.$eval('.lab a[data-key="anna"][data-val="window"]', (a) => getComputedStyle(a).backgroundColor);
-  assert.equal(active, 'rgb(238, 234, 227)', 'and marked as the one showing');
-  await context.close();
-  const bare = await open('', { path: '/hero-lab' });
-  assert.equal(await bare.page.isVisible('.anna-window'), false, 'none without ?lab=1');
-  await bare.context.close();
 });
 
 test('the left copy, verbatim', async () => {
