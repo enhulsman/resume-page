@@ -1,6 +1,6 @@
 // /contact in stone, in a real browser (openspec stone-inner-pages, chunk 8: stone-contact, C2 wide):
 // the heading and the address set large on the left, the form in a frosted "New message" window on
-// the right, over the flame's glow; the form works as before; its text on glass reads clearly; the
+// the right, over the moss's glow (pageLights.contact); the form works as before; its text on glass reads clearly; the
 // transmittal is gone. Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/inner-contact.e2e.mjs
 //
@@ -13,6 +13,7 @@ import { chromium } from 'playwright';
 import site from '../src/config/site.ts';
 import { homeSections, siteNav } from '../src/config/home.ts';
 import { pageWords } from '../src/config/pages.ts';
+import { pageLights } from '../src/config/glass.ts';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
 const W = pageWords.contact;
@@ -95,11 +96,14 @@ test('Wide: at 1440 the window stands right of the heading, at most 820 px and 1
     const t = win.querySelector('.glass-title');
     const gz = glow && +getComputedStyle(glow).zIndex, wz = +getComputedStyle(win).zIndex;
     const gb = glow?.getBoundingClientRect(), wb = win.getBoundingClientRect();
-    return { title: t?.textContent.trim(), glow: !!glow, beneath: glow && gz < wz && !!(glow.compareDocumentPosition(win) & Node.DOCUMENT_POSITION_FOLLOWING), overlaps: gb && gb.left < wb.right && gb.right > wb.left && gb.top < wb.bottom && gb.bottom > wb.top };
+    const colours = glow ? [...new Set([...getComputedStyle(glow).backgroundImage.matchAll(/rgba?\((\d+), (\d+), (\d+)/g)].map((m) => `${m[1]},${m[2]},${m[3]}`))] : [];
+    return { title: t?.textContent.trim(), glow: !!glow, colours, beneath: glow && gz < wz && !!(glow.compareDocumentPosition(win) & Node.DOCUMENT_POSITION_FOLLOWING), overlaps: gb && gb.left < wb.right && gb.right > wb.left && gb.top < wb.bottom && gb.bottom > wb.top };
   }, WIN);
   assert.equal(g.title, W.window);
   assert.equal(g.title, 'New message');
   assert.ok(g.glow && g.beneath && g.overlaps, 'a [data-glow] beneath the window');
+  // the moss, /contact's own light (Ezra, 2026-11-10: the bar mapping carries into the pages, Contact = moss)
+  assert.deepEqual(g.colours.sort(), [pageLights.contact.near, pageLights.contact.deep].map((c) => c.join()).sort(), `the glow's lights: ${g.colours}`);
   // the address, a mailto link, set large in the left column under the lead
   const mail = page.locator('main a[href^="mailto:"]');
   assert.equal(await mail.count(), 1);

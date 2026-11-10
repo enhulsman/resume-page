@@ -217,15 +217,6 @@ test('On /projects (anna-section): four rows under her lead text, named in order
   assert.equal(l.inside, 0, 'no glass or canvas in them');
 });
 
-test('On a phone (lead): the window after the levels, within 0..390, no sideways scroll', async () => {
-  await width(still, 390);
-  const levels = await box(still, `${LEAD} .anna-levels`);
-  const win = await box(still, `${AW} [data-glass="frosted"]`);
-  assert.ok(win.top >= levels.bottom, `window top ${win.top} under the levels' bottom ${levels.bottom}`);
-  assert.ok(win.left >= 0 && win.right <= 390, `window spans ${win.left}..${win.right}`);
-  assert.ok(await sideways(still) <= 0, 'no sideways scroll');
-});
-
 // ---------- stone-projects-index: each project is one piece of ribbed glass ----------
 
 test('A card\'s contents: Henk\'s link holds its title, "02", status, text and two figures; This site\'s its hook and no figures', async () => {
@@ -265,6 +256,44 @@ test('A card\'s contents: Henk\'s link holds its title, "02", status, text and t
   assert.deepEqual(chat.nums, []);
 });
 
+test('The text column: 60% of the card at 1440; the light\'s pane starts at the card\'s middle', async () => {
+  await width(still, 1440);
+  const m = await still.$$eval(CARD, (cs) => cs.map((c) => {
+    const cb = c.getBoundingClientRect(), t = c.querySelector('.pc-text').getBoundingClientRect(), l = c.querySelector('.pc-light').getBoundingClientRect();
+    return { href: c.getAttribute('href'), share: t.width / cb.width, textLeft: t.left - cb.left, lightAt: (l.left - cb.left) / cb.width, lightEnd: l.right - cb.right };
+  }));
+  assert.equal(m.length, 8);
+  for (const x of m) {
+    assert.ok(Math.abs(x.share - 0.6) <= 0.01, `${x.href}: text column ${(x.share * 100).toFixed(1)}%`);
+    assert.ok(Math.abs(x.textLeft) <= 0.5, `${x.href}: the text column starts at the card's edge`);
+    assert.ok(Math.abs(x.lightAt - 0.5) <= 0.005, `${x.href}: light pane starts at ${(x.lightAt * 100).toFixed(1)}%`);
+    assert.ok(Math.abs(x.lightEnd) <= 0.5, `${x.href}: and runs to the card's right edge`);
+  }
+});
+
+test('Still on request: with reduced motion a card holds one frame for 30 frames, and a hovered card does not move', async () => {
+  await width(still, 1440);
+  const sel = `${CARD}[href="/projects/Henk"]`;
+  await still.locator(sel).evaluate((c) => c.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await frames(still, 2);
+  const shot = () => still.$$eval(`${sel} canvas`, (cs) => cs.map((c) => c.toDataURL()));
+  const a = await shot();
+  await frames(still, 30);
+  const b = await shot();
+  assert.ok(a.length >= 3);
+  a.forEach((x, i) => assert.equal(x, b[i], `pane ${i + 1} moved`));
+  const before = await box(still, sel);
+  await still.hover(sel);
+  await frames(still, 3);
+  const after_ = await box(still, sel);
+  const transform = await still.$eval(sel, (c) => getComputedStyle(c).transform);
+  await still.mouse.move(0, 0);
+  assert.equal(after_.top, before.top, 'the hovered card stays put');
+  assert.equal(transform, 'none');
+});
+
+// (the tests that end at 390 come last among the still page's layout checks: each width change on
+// /projects redraws every pane, so the page changes width as few times as it can)
 test('Two per row, then one: at 1440 and 999 two cards share each row; at 390 one, as wide as the column, within the screen', async () => {
   const rows = () => still.$$eval('.pi-group .pi-cards', (uls) => uls.map((ul) => ({
     col: ul.getBoundingClientRect().width,
@@ -295,21 +324,6 @@ test('Two per row, then one: at 1440 and 999 two cards share each row; at 390 on
   assert.ok(await sideways(still) <= 0, 'no sideways scroll');
 });
 
-test('The text column: 60% of the card at 1440; the light\'s pane starts at the card\'s middle', async () => {
-  await width(still, 1440);
-  const m = await still.$$eval(CARD, (cs) => cs.map((c) => {
-    const cb = c.getBoundingClientRect(), t = c.querySelector('.pc-text').getBoundingClientRect(), l = c.querySelector('.pc-light').getBoundingClientRect();
-    return { href: c.getAttribute('href'), share: t.width / cb.width, textLeft: t.left - cb.left, lightAt: (l.left - cb.left) / cb.width, lightEnd: l.right - cb.right };
-  }));
-  assert.equal(m.length, 8);
-  for (const x of m) {
-    assert.ok(Math.abs(x.share - 0.6) <= 0.01, `${x.href}: text column ${(x.share * 100).toFixed(1)}%`);
-    assert.ok(Math.abs(x.textLeft) <= 0.5, `${x.href}: the text column starts at the card's edge`);
-    assert.ok(Math.abs(x.lightAt - 0.5) <= 0.005, `${x.href}: light pane starts at ${(x.lightAt * 100).toFixed(1)}%`);
-    assert.ok(Math.abs(x.lightEnd) <= 0.5, `${x.href}: and runs to the card's right edge`);
-  }
-});
-
 test('The light keeps its band on a phone: as wide as the card, 300 px tall, at its bottom; the text ends 84 px above it', async () => {
   await width(still, 390);
   const m = await still.$$eval(CARD, (cs, TEXTS) => cs.map((c) => {
@@ -325,25 +339,13 @@ test('The light keeps its band on a phone: as wide as the card, 300 px tall, at 
   }
 });
 
-test('Still on request: with reduced motion a card holds one frame for 30 frames, and a hovered card does not move', async () => {
-  await width(still, 1440);
-  const sel = `${CARD}[href="/projects/Henk"]`;
-  await still.locator(sel).evaluate((c) => c.scrollIntoView({ block: 'center', behavior: 'instant' }));
-  await frames(still, 2);
-  const shot = () => still.$$eval(`${sel} canvas`, (cs) => cs.map((c) => c.toDataURL()));
-  const a = await shot();
-  await frames(still, 30);
-  const b = await shot();
-  assert.ok(a.length >= 3);
-  a.forEach((x, i) => assert.equal(x, b[i], `pane ${i + 1} moved`));
-  const before = await box(still, sel);
-  await still.hover(sel);
-  await frames(still, 3);
-  const after_ = await box(still, sel);
-  const transform = await still.$eval(sel, (c) => getComputedStyle(c).transform);
-  await still.mouse.move(0, 0);
-  assert.equal(after_.top, before.top, 'the hovered card stays put');
-  assert.equal(transform, 'none');
+test('On a phone (lead): the window after the levels, within 0..390, no sideways scroll', async () => {
+  await width(still, 390);
+  const levels = await box(still, `${LEAD} .anna-levels`);
+  const win = await box(still, `${AW} [data-glass="frosted"]`);
+  assert.ok(win.top >= levels.bottom, `window top ${win.top} under the levels' bottom ${levels.bottom}`);
+  assert.ok(win.left >= 0 && win.right <= 390, `window spans ${win.left}..${win.right}`);
+  assert.ok(await sideways(still) <= 0, 'no sideways scroll');
 });
 
 // ---------- stone-projects-index: every word on a card reads at 4.5:1 ----------
@@ -381,14 +383,13 @@ async function shootSlice(page, w, bar, sl) {
 }
 async function acrossTheLoop(page, w) {
   const { bar, slices } = await cardSlices(page, w);
-  // the drawing sheet's crosshair and dimension line (pointer.js, gone in 11.2) follow the mouse:
-  // rest it on the bar and keep them off the cards
+  // the mouse rests on the bar, off the cards
   await page.mouse.move(w / 2, 20);
   const items = await page.$$eval(CARD, (cs, TEXTS) => cs.flatMap((c, ci) => TEXTS.flatMap((s) => [...c.querySelectorAll(s)].map((el) => {
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0 ? { ci, card: c.getAttribute('href'), sel: s, color: getComputedStyle(el).color, box: { x: r.x, y: r.y + scrollY, w: r.width, h: r.height } } : null;
   }).filter(Boolean))), TEXTS);
-  const tag = await page.addStyleTag({ content: `${CARD}, ${CARD} * { color: transparent !important; text-shadow: none !important; } .xhair, .dim-hl { display: none !important; }` });
+  const tag = await page.addStyleTag({ content: `${CARD}, ${CARD} * { color: transparent !important; text-shadow: none !important; }` });
   const worst = {};
   for (const t of [0, 1.5, 3, 4.5, 6, 7.5, 9]) {
     await page.evaluate((t) => window.__glass.at(t), t);
@@ -479,7 +480,7 @@ test('Without WebGL: no error, every card links to its page, and every card\'s g
   const hrefs = await page.$$eval(CARD, (cs) => cs.map((c) => (c.tagName === 'A' ? c.getAttribute('href') : null)));
   assert.deepEqual(hrefs, GROUPS.flatMap((g) => g.items.map((i) => i.href)));
   assert.equal(await page.$$eval(CARD, (cs) => cs.filter((c) => c.querySelector('.lit')).length), 0, 'no pane claims a light it cannot draw');
-  await page.addStyleTag({ content: `${CARD} .pc-text { visibility: hidden !important; } ${CARD}::after { display: none !important; } .xhair, .dim-hl { display: none !important; }` });
+  await page.addStyleTag({ content: `${CARD} .pc-text { visibility: hidden !important; } ${CARD}::after { display: none !important; }` });
   const { bar, slices } = await cardSlices(page, 1440);
   const boxes = await page.$$eval(CARD, (cs) => cs.map((c) => { const r = c.getBoundingClientRect(); return { x: r.x, y: r.y + scrollY, w: r.width, h: r.height }; }));
   for (const sl of slices) {

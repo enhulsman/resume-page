@@ -1,12 +1,10 @@
-// The chrome on every page: the phone menu of the stone bar. On the inner pages, which are still
-// drawing sheets, also the detail drawings plotting in, the dimension line under a pointed-at
-// link, the crosshair and the pencil; the stone homepage has none of those (openspec
-// stone-glass-homepage: the drawing-sheet look leaves the homepage). No theme: one light stone.
+// The chrome on every page: the phone menu of the stone bar, and the two Overzicht drawings left
+// (pytaiga-mcp's and the henk-exactly-once post's, each in its frosted pane) plotting in when they
+// arrive. The drawing sheet's pointer (crosshair, pencil, dimension line) is gone with the sheet
+// (openspec stone-inner-pages: the drawing-sheet look leaves the inner pages). No theme: one light stone.
 
 // (the 'js' class is set in the layout's head, before first paint)
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-// an inner page names itself in the layout (main.page); the homepage does not
-const sheet = !!document.querySelector('main.page');
 
 // ---------- the phone menu: the bar's page links, folded away below 860px ----------
 const bar = document.querySelector('.bar');
@@ -65,6 +63,3 @@ addEventListener('scroll', () => {
   queued = true;
   requestAnimationFrame(() => { queued = false; for (const d of dwgs) if (!d.classList.contains('drawn') && shown(d, 0.35)) plotIn(d); });
 }, { passive: true });
-
-// The drawing sheet answers the pointer: inner pages only (src/scripts/overzicht/pointer.js).
-if (sheet) import('./pointer.js');

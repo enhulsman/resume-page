@@ -5,12 +5,14 @@
 // bible-tui's reader, or the henk-exactly-once drawing in a frosted pane), then the contents, the
 // facts (Date, Updated, Reading) and the project's first number, and ends with the post's project
 // (its index, title, line and status) or, for a post with neither window nor project, "Other
-// writing". Fenced code sits in a frosted window over the glow of the post's project.
+// writing". Fenced code sits in a frosted window over the glow of the post's project. A post whose
+// moments name `diagram` (henk-exactly-once) gets the "View larger" dialog for its pane's drawing.
 import OverzichtLayout from "./OverzichtLayout.astro";
 import Article from "../components/stone/Article.astro";
 import GlassWindow from "../components/stone/GlassWindow.astro";
 import ProjectWindow from "../components/stone/ProjectWindow.astro";
 import DrawingPane from "../components/stone/DrawingPane.astro";
+import DiagramView from "../components/stone/DiagramView.astro";
 import site from "../config/site";
 import { readingMinutes, relatedProject } from "../lib/post";
 import { factsOf, numbersOf, otherWriting } from "../lib/article.ts";
@@ -92,4 +94,5 @@ const w = pageWords.article;
       </nav>
     )}
   </Article>
+  {moments.includes("diagram") && <DiagramView />}
 </OverzichtLayout>

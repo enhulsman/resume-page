@@ -244,12 +244,12 @@ export const innerGlass: Record<string, InnerMoment[]> = {
   '/projects/BibleTui': ['bible'],
   '/projects/HomelabInfrastructure': ['homelab'],
   '/projects/FinanceBot': ['finance'],
-  '/projects/PytaigaMcp': ['pytaiga'],
+  '/projects/PytaigaMcp': ['pytaiga', 'diagram'],
   '/projects/EncryptedChatTUI': [],
   '/projects/ResumePage': [],
   '/blog': [],
   '/blog/henk-watchdog': ['henk', 'code'],
-  '/blog/henk-exactly-once': ['post-drawing'],
+  '/blog/henk-exactly-once': ['post-drawing', 'diagram'],
   '/blog/bible-tui': ['bible'],
   '/blog/spec-factory': [],
   '/blog/successor-scoreboard': [],
@@ -262,12 +262,12 @@ export const innerGlass: Record<string, InnerMoment[]> = {
 // The projects' windows (sketch A2, 2026-11-11): each project's own light, near high on the left,
 // deep low on the right: Henk's tide and the sandbox's moss from their cards, a new amber for bible-tui.
 // Inner pages (2026-11-10): Homelab's window glows in its card's sun and plum (dusk), Finance Bot's
-// in its own light.
+// in its own light, and /contact's "New message" in the moss, its page's light (the bar's Contact link).
 const projectGlow = ({ near, deep }: { near: RGB; deep: RGB }): WindowGlow => ({ inset: '4% -7% 2%', blur: 26, lights: [
   { at: [30, 38], color: near, opacity: 0.95 },
   { at: [70, 66], color: deep, opacity: 0.62 },
 ] });
-export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible' | 'dusk' | 'finance', WindowGlow> = {
+export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible' | 'dusk' | 'finance' | 'moss', WindowGlow> = {
   henk: projectGlow(projectLights.henk),
   sandbox: projectGlow(projectLights.sandbox),
   bible: projectGlow(projectLights.bible),
@@ -285,6 +285,7 @@ export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible
     { at: [68, 66], color: projectLights.homelab.deep, opacity: 0.6 },
   ] },
   finance: projectGlow(projectLights.finance),
+  moss: projectGlow(pageLights.contact),
 };
 // TEMPORARY, goes in stone-inner-pages task 12.2 with src/pages/sketches/: the untracked sketches
 // pick a window's glow by its projectWindows id, so `homelab` (now a projectWindows entry) must

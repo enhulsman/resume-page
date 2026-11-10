@@ -66,9 +66,9 @@ deploying.
    `/projects/AnnaAssistant`: `anna`; `/projects/Henk`: `henk`, `diagram`;
    `/projects/ClaudeSandbox`: `sandbox`, `diagram`; `/projects/BibleTui`: `bible`;
    `/projects/HomelabInfrastructure`: `homelab`; `/projects/FinanceBot`: `finance`;
-   `/projects/PytaigaMcp`: `pytaiga`; `/projects/EncryptedChatTUI`, `/projects/ResumePage`,
+   `/projects/PytaigaMcp`: `pytaiga`, `diagram`; `/projects/EncryptedChatTUI`, `/projects/ResumePage`,
    `/blog`, `/resume`, `/blog/spec-factory`, `/blog/successor-scoreboard`: none;
-   `/blog/henk-watchdog`: `henk`, `code`; `/blog/henk-exactly-once`: `post-drawing`;
+   `/blog/henk-watchdog`: `henk`, `code`; `/blog/henk-exactly-once`: `post-drawing`, `diagram`;
    `/blog/bible-tui`: `bible`; `/contact`: `compose`. The layouts read their window from it; a unit
    test fails when a built route (a new post or project) has no entry. `glassMoments` (the
    homepage's list) is unchanged. *Why:* the homepage's "the page matches the list" gate, extended;

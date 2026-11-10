@@ -188,7 +188,8 @@ test('The window per post: Henk\'s chat, the exactly-once drawing in a pane, bib
   assert.match(s[WATCHDOG].asideFirst, /\bart-window\b/);
   assert.equal(s[WATCHDOG].moment, 'henk');
 
-  assert.deepEqual(innerGlass[ONCE], ['post-drawing']);
+  // its pane's drawing gets "View larger" too (chunk 11, Ezra 2026-11-10): the dialog is a moment after the article
+  assert.deepEqual(innerGlass[ONCE], ['post-drawing', 'diagram']);
   assert.match(s[ONCE].asideFirst, /\bart-window\b/);
   assert.equal(s[ONCE].moment, 'post-drawing');
   assert.equal(s[ONCE].paneDrawings, 1, 'a frosted pane holding one svg.dwg');

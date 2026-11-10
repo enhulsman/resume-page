@@ -17,7 +17,9 @@ const INNER = ['/projects', '/projects/Henk', '/projects/AnnaAssistant', '/proje
 const ours = errors => errors.filter(e => !/turnstile|challenges\.cloudflare/i.test(e));
 
 let browser;
-before(async () => { browser = await chromium.launch(); });
+// swiftshader's GL, as the glass files use: /projects (ribbed cards since stone-inner-pages chunk 9)
+// loads and draws in a tenth of the default headless GL's time, and nothing here screenshots it often
+before(async () => { browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); });
 after(async () => { await browser?.close(); });
 
 async function open(path, { width = 1440, height = 900, scale = 1, reducedMotion = 'no-preference', colorScheme = 'light', storage } = {}) {
@@ -27,7 +29,9 @@ async function open(path, { width = 1440, height = 900, scale = 1, reducedMotion
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   page.on('console', m => m.type() === 'error' && errors.push(m.text()));
-  const res = await page.goto(BASE + path, { waitUntil: 'load' });
+  // /projects' ribbed cards draw their light on the CPU in a headless browser; no test here looks at
+  // that light, so /projects loads with it frozen (?t=, the glass's test hook): the same page, still
+  const res = await page.goto(BASE + path + (path === '/projects' ? '?t=2.4' : ''), { waitUntil: 'load' });
   return { context, page, errors, res };
 }
 
@@ -59,15 +63,9 @@ for (const path of INNER) {
     await context.close();
   });
 
-  test(`${path} has no sideways scroll at 390px`, async () => {
-    const { context, page } = await open(path, { width: 390, height: 844 });
-    await page.evaluate(() => document.fonts.ready);
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await frames(page, 2);
-    const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    assert.ok(over <= 0, `page is ${over}px wider than the viewport`);
-    await context.close();
-  });
+  // '${path} has no sideways scroll at 390px' retired (openspec stone-inner-pages 11.3, decision
+  // 2026-11-10: every page in stone): stone-inner-pages "Every route" (tests/inner-site.e2e.mjs) checks
+  // every inner route at 390, and the article pages at 320, in the loads it already makes.
 }
 
 test('one stone bar on every page: EH. | Ezra Hulsman, Projects, Blog, Résumé, Contact, Get in touch, no theme button', async () => {

@@ -1,12 +1,12 @@
 ## ADDED Requirements
 
 ### Requirement: The message is written in a frosted window
-/contact SHALL show (Ezra, 2026-11-10, C2 wide): on the left the `h1` "Get in touch", `site.contactMessage` as the lead, and under it the address `site.social.email` set large as a `mailto:` link with "LinkedIn" and "GitHub" (`homeSections.contact` labels, `site.social` hrefs) under it; on the right the form inside a frosted window titled "New message" (approved), over the flame's glow (`windowGlows.flame`), in the moment `data-glass-moment="compose"`. From 980 px the two columns SHALL be `0.78fr` and `1.22fr` and the window as wide as its column up to 820 px. Below 980 px the page SHALL read: heading and lead, the window, then the address and its links.
+/contact SHALL show (Ezra, 2026-11-10, C2 wide): on the left the `h1` "Get in touch", `site.contactMessage` as the lead, and under it the address `site.social.email` set large as a `mailto:` link with "LinkedIn" and "GitHub" (`homeSections.contact` labels, `site.social` hrefs) under it; on the right the form inside a frosted window titled "New message" (approved), over the moss's glow (`windowGlows.moss`, built from `pageLights.contact`, the bar's Contact light: Ezra, 2026-11-10, "the bar mapping carries into the pages"), in the moment `data-glass-moment="compose"`. From 980 px the two columns SHALL be `0.78fr` and `1.22fr` and the window as wide as its column up to 820 px. Below 980 px the page SHALL read: heading and lead, the window, then the address and its links.
 
 #### Scenario: Wide
 - **GIVEN** /contact loaded at 1440x900
 - **WHEN** the columns are measured
-- **THEN** the window stands right of the heading, its width is at most 820 px and at least 1.4 times the left column's width, its title reads "New message", a `[data-glow]` sits beneath it, and the address link (href `mailto:` + `site.social.email`) stands in the left column under the lead
+- **THEN** the window stands right of the heading, its width is at most 820 px and at least 1.4 times the left column's width, its title reads "New message", a `[data-glow]` sits beneath it whose lights are only `pageLights.contact`'s near and deep colours (the moss), and the address link (href `mailto:` + `site.social.email`) stands in the left column under the lead
 
 #### Scenario: The 980 px boundary
 - **GIVEN** /contact loaded at 980x900 and at 979x900

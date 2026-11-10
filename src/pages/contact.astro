@@ -1,7 +1,7 @@
 ---
 // /contact (openspec stone-inner-pages, stone-contact; Ezra, 2026-11-10, C2 wide): the heading, the
 // message and the address set large on the left; the form inside a frosted "New message" window over
-// the flame's glow on the right. The form's fields, names, script and Turnstile are unchanged; its
+// the moss's glow on the right (the page's own light, as on the bar's Contact link). The form's fields, names, script and Turnstile are unchanged; its
 // words come from pageWords. The Worker (/api/contact) checks Turnstile, the honeypot and the elapsed
 // time server-side.
 import OverzichtLayout from "../layouts/OverzichtLayout.astro";
@@ -34,7 +34,7 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
     </header>
 
     <div class="ct-formcol" data-glass-moment="compose">
-      <GlassWindow title={w.window} glow="flame" class="ct-stage" windowClass="ct-window">
+      <GlassWindow title={w.window} glow="moss" class="ct-stage" windowClass="ct-window">
         <div class="ct-body">
           <form id="contactForm" class="ct-form" method="POST" data-turnstile-sitekey={turnstileSiteKey}>
             <div class="ct-row"><label for="name">{w.name}</label><input id="name" name="name" autocomplete="name" required /></div>

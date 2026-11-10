@@ -54,7 +54,8 @@ test('innerGlass lists each route\'s moments top to bottom, as the spec names th
     '/projects/BibleTui': ['bible'],
     '/projects/HomelabInfrastructure': ['homelab'],
     '/projects/FinanceBot': ['finance'],
-    '/projects/PytaigaMcp': ['pytaiga'],
+    // the drawings in panes get "View larger" too (Ezra, 2026-11-10, chunk 11): the dialog is a moment
+    '/projects/PytaigaMcp': ['pytaiga', 'diagram'],
     '/projects/EncryptedChatTUI': [],
     '/projects/ResumePage': [],
     '/blog': [],
@@ -62,7 +63,7 @@ test('innerGlass lists each route\'s moments top to bottom, as the spec names th
     '/blog/spec-factory': [],
     '/blog/successor-scoreboard': [],
     '/blog/henk-watchdog': ['henk', 'code'],
-    '/blog/henk-exactly-once': ['post-drawing'],
+    '/blog/henk-exactly-once': ['post-drawing', 'diagram'],
     '/blog/bible-tui': ['bible'],
     '/contact': ['compose'],
   });
@@ -139,6 +140,17 @@ test('windowGlows.dusk: the homelab card\'s sun and plum, soft, as Homelab\'s li
   assert.deepEqual(projectLights.homelab.near, glassCards.find((c) => c.id === 'homelab').tune[0].set.color, 'the sun');
   assert.ok(g.blur >= 20);
   for (const l of g.lights) assert.ok(l.opacity > 0 && l.opacity < 1);
+});
+
+test('/contact\'s window glows in the moss (Ezra, 2026-11-10: the bar mapping carries into the pages): windowGlows.moss is pageLights.contact, and contact.astro uses it', () => {
+  const g = windowGlows.moss;
+  assert.ok(g, 'moss exists');
+  assert.deepEqual(g.lights.map((l) => l.color), [pageLights.contact.near, pageLights.contact.deep]);
+  assert.ok(g.blur >= 20);
+  for (const l of g.lights) assert.ok(l.opacity > 0 && l.opacity < 1);
+  const src = read('src/pages/contact.astro');
+  assert.match(src, /<GlassWindow\b[^>]*\bglow="moss"/, 'the "New message" window takes the moss');
+  assert.doesNotMatch(src, /glow="flame"/, 'no longer the flame');
 });
 
 // ---- stone-project-pages: Homelab's window ----
@@ -437,4 +449,109 @@ test('This site\'s numbers hold: the terminal\'s command count and its theme ans
   const answer = term.match(/commands\.set\('theme',[\s\S]*?handler: \(\) => '([^']+)'/)?.[1];
   assert.equal(answer, 'There is one theme: light.');
   assert.ok(bodyOf(src).includes(`with \`theme\`. ${answer}`), 'the page quotes the answer');
+});
+
+// ---- stone-inner-pages, chunk 11: every inner page ----
+
+const walk = (dir) => readdirSync(new URL(dir, root), { withFileTypes: true })
+  .flatMap((d) => (d.isDirectory() ? walk(`${dir}${d.name}/`) : [`${dir}${d.name}`]));
+/** Source without its comments (JS line and block comments, HTML comments), so they are never read. */
+const uncomment = (src) => src
+  .replace(/<!--[\s\S]*?-->/g, ' ')
+  .replace(/\/\*[\s\S]*?\*\//g, ' ')
+  .replace(/(^|[\s;{}(,])\/\/[^\n]*/g, '$1');
+/** The inner pages' style sources: stone.css, and every <style> block of the stone components, the layouts and the pages. */
+const INNER_SOURCES = [
+  ...walk('src/components/stone/'), ...walk('src/layouts/'),
+  ...walk('src/pages/').filter((p) => !p.startsWith('src/pages/sketches/')),
+].filter((p) => p.endsWith('.astro'));
+const styleBlocks = (src) => [...src.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]);
+/** Every rule of a stylesheet (nested @media walked): its selector and its declarations. */
+const cssRules = (css) => {
+  const out = [];
+  const body = (txt) => {
+    let i = 0;
+    while (i < txt.length) {
+      const open = txt.indexOf('{', i);
+      if (open < 0) break;
+      const head = txt.slice(i, open).trim();
+      let depth = 1, j = open + 1;
+      for (; j < txt.length && depth; j++) depth += txt[j] === '{' ? 1 : txt[j] === '}' ? -1 : 0;
+      const inner = txt.slice(open + 1, j - 1);
+      if (head.startsWith('@')) { if (/^@(media|supports|container|layer)/.test(head)) body(inner); }
+      else out.push({ selector: head.replace(/^[;}\s]+/, ''), decls: inner });
+      i = j;
+    }
+  };
+  body(uncomment(css));
+  return out;
+};
+
+test('Opaque inks only: every text colour set inside a glass object, in stone.css and the inner pages\' <style> blocks, has no alpha', () => {
+  // a selector reaches inside a glass object when it names the glass or a class only a glass object holds
+  const GLASS = /\[data-glass|\.glass-(window|bar|title|dots)|\.pj-window|\.pw-|\.hl\b|\.dc\b|\.dc-|\.dp-|\.dv(-|\b)|\.aw-|\.msg\b|\.anna-window|\.ct-(window|body|form|row|foot|send|ways)|#statusMessage|\.art-code|\.term\b|\.term-body|\.terminal-/;
+  const TEXT = /(?:^|;)\s*(color|fill|-webkit-text-fill-color)\s*:\s*([^;]+)/g;
+  const alpha = (v) => {
+    v = v.replace(/!important/, '').trim();
+    if (/^(transparent)$/i.test(v)) return 0;
+    let m = v.match(/^#([0-9a-f]{4}|[0-9a-f]{8})$/i);
+    if (m) return parseInt(m[1].length === 4 ? m[1][3].repeat(2) : m[1].slice(6), 16) / 255;
+    m = v.match(/^rgba?\(([^)]*)\)$/i) || v.match(/^hsla?\(([^)]*)\)$/i);
+    if (m) {
+      const parts = m[1].split(/[\s,/]+/).filter(Boolean);
+      if (parts.length < 4) return 1;
+      const a = parts[3];
+      return a.endsWith('%') ? parseFloat(a) / 100 : parseFloat(a);
+    }
+    m = v.match(/color-mix\(/i);
+    if (m) return /transparent/i.test(v) ? 0 : 1;
+    return 1; // a named colour, a variable, currentColor, inherit
+  };
+  const vars = Object.fromEntries([...read('src/styles/stone.css').matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
+  const resolve = (v) => v.replace(/var\((--[\w-]+)(?:,\s*([^)]+))?\)/g, (_, n, fb) => vars[n] ?? fb ?? 'inherit');
+  const found = [];
+  const sheets = [['src/styles/stone.css', read('src/styles/stone.css')], ...INNER_SOURCES.flatMap((p) => styleBlocks(read(p)).map((css) => [p, css]))];
+  for (const [file, css] of sheets) {
+    for (const r of cssRules(css)) {
+      if (!GLASS.test(r.selector)) continue;
+      for (const m of r.decls.matchAll(TEXT)) found.push({ file, selector: r.selector, prop: m[1], value: m[2].trim(), alpha: alpha(resolve(m[2])) });
+    }
+  }
+  assert.ok(found.length >= 20, `${found.length} text colours read inside glass`);
+  const low = found.filter((f) => f.alpha < 1);
+  assert.deepEqual(low, [], JSON.stringify(low));
+});
+
+const LABELS = ['On this page', 'Other writing', 'View larger', 'Close', 'New message', 'Made for fun', 'Case study'];
+test('The labels live in config: pageWords holds the approved labels; no stone component, layout or page types one in', () => {
+  const words = stringsOf(pageWords);
+  for (const w of LABELS) assert.ok(words.includes(w), `pageWords holds "${w}"`);
+  const files = [
+    ...walk('src/components/stone/'), ...walk('src/layouts/'),
+    ...walk('src/pages/').filter((p) => !p.startsWith('src/pages/sketches/')),
+  ].filter((p) => /\.(astro|ts|js|mjs)$/.test(p));
+  assert.ok(files.length > 20, `${files.length} files read`);
+  const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const typed = [];
+  for (const f of files) {
+    const src = uncomment(read(f));
+    for (const w of LABELS) {
+      if (new RegExp(`(["'\`])\\s*${esc(w)}\\s*\\1`).test(src) || new RegExp(`>\\s*${esc(w)}\\s*<`).test(src)) typed.push(`${f}: ${w}`);
+    }
+  }
+  assert.deepEqual(typed, []);
+});
+
+test('The stylesheet and scripts: overzicht.css styles no drawing sheet; chrome.js loads no pointer; the layout has no B612 and no hatch', () => {
+  const css = read('src/styles/overzicht.css');
+  const selectors = cssRules(css).map((r) => r.selector);
+  const SHEET = /\.(titleblock|revs|rev|schedule|stamp|transmittal|plate|detail|register|xhair|pencil)(?![\w])/;
+  assert.ok(selectors.length > 20, `${selectors.length} rules read`);
+  assert.deepEqual(selectors.filter((s) => SHEET.test(s)), []);
+  const chrome = read('src/scripts/overzicht/chrome.js');
+  assert.doesNotMatch(uncomment(chrome), /pointer\.js/);
+  const layout = read('src/layouts/OverzichtLayout.astro');
+  assert.doesNotMatch(layout, /B612/);
+  assert.doesNotMatch(layout, /id="hatch"/);
+  assert.doesNotMatch(layout, /id="arrow"/);
 });

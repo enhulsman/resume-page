@@ -1,6 +1,7 @@
 ---
 // "View larger" for a page's diagrams (openspec stone-inner-pages, stone-article-layout: "Diagrams
-// stay on stone, with 'View larger' where they shrink"; Ezra, 2026-11-10). The diagrams stay line
+// stay on stone, with 'View larger' where they shrink"; Ezra, 2026-11-10), and for the drawing in a
+// frosted pane (pytaiga-mcp's, the henk-exactly-once post's) by the same rule. The diagrams stay line
 // drawings on stone in the prose; this is the one native <dialog> per page that shows one large, in
 // a frosted panel over the blurred page (glass moment `diagram`). The panel's "behind" is that
 // blurred page, so it is the one frosted panel without a [data-glow].
@@ -26,16 +27,17 @@ const w = pageWords.article;
 </script>
 
 <style is:global>
-  /* the button under a diagram that is drawn smaller than its natural size */
-  .art .prose .dv-open {
+  /* the button under a diagram (or a pane) that is drawn smaller than its natural size */
+  .art .dv-open {
     display: inline-flex; align-items: center; margin: -16px 0 32px; padding: 9px 16px;
     border: 1px solid #6b645c; border-radius: 999px; background: none; cursor: pointer;
     font: 600 14px/1 var(--stone-sans); color: var(--stone-ink);
   }
-  .art .prose .dv-open:hover { background: rgb(17 17 16 / 0.05); }
-  .art .prose .dv-open:focus-visible, .dv-close:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; }
+  .art-window .dv-open { margin: 18px 0 0; }
+  .art .dv-open:hover { background: rgb(17 17 16 / 0.05); }
+  .art .dv-open:focus-visible, .dv-close:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; }
   /* only then is the diagram itself a way in (the button stays the keyboard's) */
-  .art .prose .dv-larger svg { cursor: zoom-in; }
+  .art .prose .dv-larger svg, .art-window .dv-larger svg.dwg { cursor: zoom-in; }
 
   .dv {
     width: min(calc(100vw - 2 * var(--stone-gutter)), 1180px); max-width: none; max-height: 92svh;
@@ -60,4 +62,10 @@ const w = pageWords.article;
     display: block; margin: 0 auto; width: 100%; height: auto;
     min-width: var(--dv-w); min-height: var(--dv-h); max-height: calc(92svh - 110px);
   }
+  /* a pane's drawing, copied: whole at once, on glass without the paper halo, red labels in the
+     glass red (as in its pane) */
+  .dv-body .dwg path, .dv-body .dwg text, .dv-body .dwg .fill { transition: none !important; }
+  .dv-body .dwg .lbl text { stroke: none; }
+  .dv-body .dwg .lbl .red-t { fill: var(--glass-ink-red); }
+  .dv-body .dwg .ln .faint, .dv-body .dwg .ln .plot { stroke: #6b645c; }
 </style>

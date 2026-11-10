@@ -35,6 +35,8 @@ const D = Drawing as typeof postDrawings[string];
   .dp-body .dwg { display: block; width: 100%; max-width: 100%; height: auto; }
   /* the labels sat on paper with a paper-coloured halo; on glass the halo goes */
   .dp-body .dwg .lbl text { stroke: none; }
+  /* its red labels in the glass red, an opaque ink that holds 4.5:1 over the glow */
+  .dp-body .dwg .lbl .red-t { fill: var(--glass-ink-red); }
   .dp-body .dwg .ln .faint, .dp-body .dwg .ln .plot { stroke: #6b645c; }
   /* still on request: the labels arrive with the lines, no delayed fade */
   @media (prefers-reduced-motion: reduce) {

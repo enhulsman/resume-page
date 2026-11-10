@@ -591,6 +591,74 @@ test('The diagram itself has no glass: no data-glass or backdrop-filter on it or
   }
 });
 
+// ---------- the drawings in panes: "View larger" too (chunk 11; Ezra, 2026-11-10) ----------
+
+const PANE_ROUTES = ['/projects/PytaigaMcp', '/blog/henk-exactly-once'];
+const PANE_SVG = '.art-window .dp-body svg.dwg';
+const PANE_OPEN = '.art-window .dv-open';
+
+test('Drawings in panes: "View larger" under the pane exactly while its drawing is drawn under its natural width; the dialog holds it whole, named by its title', async () => {
+  const seen = {};
+  for (const route of PANE_ROUTES) {
+    // with motion: the copy must be whole even while the pane's own drawing is still plotting in
+    const page = await at(route, { motion: 'no-preference' });
+    seen[route] = [];
+    for (const [w, h] of [[1440, 900], [390, 844], [1440, 900]]) {
+      await page.setViewportSize({ width: w, height: h });
+      await frames(page, 3);
+      const m = await page.locator(PANE_SVG).evaluate((svg) => ({ drawn: svg.getBoundingClientRect().width, natural: svg.viewBox.baseVal.width }));
+      const want = m.drawn < m.natural - 1 ? 1 : 0;
+      seen[route].push(`${w}: ${Math.round(m.drawn)}/${m.natural} -> ${want}`);
+      if (w === 390) assert.equal(want, 1, `${route} at 390 draws its drawing under its natural width (${m.drawn} of ${m.natural})`);
+      await page.waitForFunction(([sel, n]) => document.querySelectorAll(sel).length === n, [PANE_OPEN, want]);
+      assert.equal(await page.locator('.art .prose .dv-open').count(), 0, `${route}: no button in the prose`);
+      const cursor = await page.locator(PANE_SVG).evaluate((svg) => getComputedStyle(svg).cursor);
+      if (want) {
+        const b = await page.locator(PANE_OPEN).evaluate((btn) => {
+          const stage = document.querySelector('.art-window .dp-stage');
+          return { text: btn.textContent.trim(), after: stage.nextElementSibling === btn, under: btn.getBoundingClientRect().top >= stage.querySelector('[data-glass]').getBoundingClientRect().bottom - 0.5, glass: !!btn.closest('[data-glass]') };
+        });
+        assert.deepEqual(b, { text: pageWords.article.viewLarger, after: true, under: true, glass: false }, `${route} at ${w}`);
+        assert.equal(cursor, 'zoom-in', `${route} at ${w}: the drawing is a way in`);
+      } else {
+        assert.notEqual(cursor, 'zoom-in', `${route} at ${w}: not clickable`);
+      }
+    }
+    // at 390, opened at once on arrival (before the pane's drawing has finished plotting)
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForFunction((sel) => document.querySelectorAll(sel).length === 1, PANE_OPEN);
+    const title = norm(await page.locator(`${PANE_SVG} title`).textContent());
+    const paneWidth = await page.locator(PANE_SVG).evaluate((svg) => svg.getBoundingClientRect().width);
+    const opened = await page.evaluate(([open, dialog]) => {
+      document.querySelector(open).click();
+      const d = document.querySelector(dialog), copy = d.querySelector('.dv-body svg');
+      const cs = (el) => getComputedStyle(el);
+      return {
+        open: d.open, modal: d.matches(':modal'), dwg: copy?.classList.contains('dwg') ?? false, width: copy?.getBoundingClientRect().width ?? 0,
+        // whole in the first frame: every path drawn to its end, every label and fill shown
+        unplotted: [...copy.querySelectorAll('path')].filter((p) => parseFloat(cs(p).strokeDashoffset) !== 0).length,
+        hidden: [...copy.querySelectorAll('text, .fill')].filter((t) => cs(t).opacity !== '1').length,
+        paths: copy.querySelectorAll('path').length, texts: copy.querySelectorAll('text').length,
+      };
+    }, [PANE_OPEN, DIALOG]);
+    assert.ok(opened.open && opened.modal && opened.dwg, `${route}: the dialog opens modal on a copy of the drawing`);
+    assert.ok(opened.width > paneWidth + 1, `${route}: the copy (${opened.width}) wider than the pane's (${paneWidth})`);
+    assert.ok(opened.paths > 5 && opened.texts > 3, `${route}: ${opened.paths} paths, ${opened.texts} labels`);
+    assert.equal(opened.unplotted, 0, `${route}: every path drawn`);
+    assert.equal(opened.hidden, 0, `${route}: every label and fill shown`);
+    assert.equal(await page.getByRole('dialog', { name: title, exact: true }).count(), 1, `${route}: the dialog is named by the drawing's title`);
+    await page.locator(`${DIALOG} .dv-close`).click();
+    await page.waitForFunction((sel) => !document.querySelector(sel).open, DIALOG);
+    // the dialog's close event (which hands focus back) follows the close itself
+    const back = await page.waitForFunction((sel) => document.activeElement === document.querySelector(sel), PANE_OPEN, { timeout: 3000 }).then(() => true, () => false);
+    assert.equal(back, true, `${route}: focus back on "View larger"`);
+  }
+  // the rule decides, not a width: at 1440 pytaiga-mcp's drawing (520 wide) is drawn under its size
+  // and the exactly-once drawing (400 wide) is not, so the two pages differ there
+  assert.notEqual(seen['/projects/PytaigaMcp'][0].endsWith('-> 1'), seen['/blog/henk-exactly-once'][0].endsWith('-> 1'), JSON.stringify(seen));
+});
+
 // ---------- stone-project-pages: This site's page speaks stone (chunk 10) ----------
 
 test('The approved texts and no drawing sheet left: This site\'s lead, its five sections in the approved words, the description; no sheet words, no Claude', async () => {

@@ -26,8 +26,9 @@ async function open(path, { width = 1440, height = 900, colorScheme = 'light', s
   const page = await context.newPage();
   // the homepage's light held still (?t=): these checks are about the chrome, and a screenshot or a
   // click under swiftshader waits on every frame of a running light (a 3 px screenshot: ~1.4 s
-  // against ~0.1 s; the whole screen: ~20 s against ~0.4 s, measured 2026-11-10)
-  await page.goto(BASE + path + (path === '/' ? '?t=2.4' : ''), { waitUntil: 'load' });
+  // against ~0.1 s; the whole screen: ~20 s against ~0.4 s, measured 2026-11-10). /projects has
+  // ribbed cards too since stone-inner-pages chunk 9, so its light is held the same way.
+  await page.goto(BASE + path + (path === '/' || path === '/projects' ? '?t=2.4' : ''), { waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: 'astro-dev-toolbar{display:none!important}' });
   return { context, page };
@@ -141,7 +142,9 @@ for (const path of PAGES) {
       const over = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
       assert.ok(over <= 0, `${path}: ${over}px of sideways scroll with the menu open`);
       await link.click();
-      await page.waitForURL(new RegExp(`${href.replace('/', '\\/')}\\/?$`));
+      // reached once the browser has committed to the new page's URL; waiting for its load event too
+      // (and /projects drawing its cards) adds nothing to what this checks
+      await page.waitForURL(new RegExp(`${href.replace('/', '\\/')}\\/?$`), { waitUntil: 'commit' });
       await context.close();
     }
   });

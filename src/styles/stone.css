@@ -83,7 +83,6 @@
    Head and prose in the left column, at most 42rem; one wide right column (aside) the article's
    length: the window opens it and scrolls away, the block under it sticks below the bar. Below
    1000 px one column: head, window, prose, then the block, without its contents list. */
-main.page:has(> .art) { padding-inline: 0; }
 .art {
   padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
   font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
@@ -175,6 +174,9 @@ main.page:has(> .art) { padding-inline: 0; }
 }
 .art .prose pre, .art .prose pre * { background: none !important; color: var(--stone-ink) !important; }
 .art .prose pre code { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* a long line wraps rather than scrolling sideways, and hangs 2ch in under its start, so it never
+   reads as a line of its own (each source line is a .line from the highlighter) */
+.art .prose pre .line { display: inline-block; width: 100%; padding-left: 2ch; text-indent: -2ch; }
 /* a post's fenced code in a frosted window: dots, no title, the project's glow beneath; the text in
    the artefacts' opaque ink, wrapping rather than scrolling (inline code stays on stone) */
 .art .prose .art-code { margin: 0.6em 0 1.6em; }
@@ -217,7 +219,6 @@ main.page:has(> .art) { padding-inline: 0; }
 /* ---- a page's head light (openspec stone-inner-pages, "One light per page"): /blog's tide and
    /resume's sunset, far behind the heading. Two radial gradients that fade to nothing under a wide
    blur, beneath the head's text in an isolated head; the page clips it at the screen's sides. ---- */
-main.page:has(> .bl), main.page:has(> .cv) { padding-inline: 0; }
 .page-head { position: relative; isolation: isolate; }
 .page-light {
   position: absolute; z-index: -1; pointer-events: none;
@@ -303,10 +304,9 @@ main.page:has(> .bl), main.page:has(> .cv) { padding-inline: 0; }
 }
 
 /* ---- /contact (stone-contact, C2 wide): the heading and the address set large on the left, the
-   form in a frosted "New message" window over the flame's glow on the right; from 980 px the
+   form in a frosted "New message" window over the moss's glow on the right; from 980 px the
    columns are 0.78 / 1.22 and the window as wide as its column up to 820 px. Below 980 px: heading
    and lead, the window, then the address. ---- */
-main.page:has(> .ct) { padding-inline: 0; }
 .ct {
   padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
   font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
@@ -372,7 +372,6 @@ main.page:has(> .ct) { padding-inline: 0; }
 /* ---- /projects (stone-projects-index, I2e): the heading and its line; ANNA's lead, her text and
    levels beside her window (after the levels at 860 px and below); the groups, two ribbed cards per
    row (one at 760 px and below; the card itself is ProjectGlassCard.astro); "Made for fun" as rows. ---- */
-main.page:has(> .pi) { padding-inline: 0; }
 .pi {
   padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
   font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
