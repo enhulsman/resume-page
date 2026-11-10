@@ -54,9 +54,9 @@ decision behind it.
 
 ## 6. About and Contact (stone-homepage; glass-material)
 
-- [ ] 6.1 Tests from: About, the terminal window, the terminal still runs (`ls`, `whoami`), one context with every pane lit including the reflection minis, window text measured at 4.5:1 (both windows, after `ls`), something behind every window and a window's glow has no edge (both windows), no-WebGL fallback (windows part), Contact, no contact strip, reduced motion switched on after load (mid-typing). Port `tests/glass-terminal.e2e.mjs` to `/`
-- [ ] 6.2 `About.astro` (notes, plain photo with alt from config, `GlassWindow` titled from `homeSections` wrapping `Terminal.astro`, four-colour glow, the reflection minis, `data-glass-moment="terminal"`); `terminal-animation.ts` listens for the reduced-motion change and renders the rest instantly, and the caret stops blinking under reduced motion; `Contact.astro`
-- [ ] 6.3 Run all test commands; if a text on glass is under 4.5:1, darken `--glass-ink-quiet` or `--glass-ink-red` (one place each) and rerun
+- [x] 6.1 Tests from: About, the terminal window, the terminal still runs (`ls`, `whoami`), one context with every pane lit including the reflection minis, window text measured at 4.5:1 (both windows, after `ls`), something behind every window and a window's glow has no edge (both windows), no-WebGL fallback (windows part), Contact, no contact strip, reduced motion switched on after load (mid-typing). Port `tests/glass-terminal.e2e.mjs` to `/`
+- [x] 6.2 `About.astro` (notes, plain photo with alt from config, `GlassWindow` titled from `homeSections` wrapping `Terminal.astro`, four-colour glow, the reflection minis, `data-glass-moment="terminal"`); `terminal-animation.ts` listens for the reduced-motion change and renders the rest instantly, and the caret stops blinking under reduced motion; `Contact.astro`
+- [x] 6.3 Run all test commands; if a text on glass is under 4.5:1, darken `--glass-ink-quiet` or `--glass-ink-red` (one place each) and rerun
 
 ## 7. The whole page (stone-homepage; glass-material)
 

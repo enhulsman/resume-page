@@ -6,7 +6,6 @@ import { VirtualFS, SENTINEL_EXPERIENCE, SENTINEL_SKILLS, SENTINEL_EDUCATION, SE
 import { ShellEnv } from './shell-env';
 import { parseLine } from './shell-parser';
 import type { ParsedCommand } from './shell-parser';
-import { getCurrentTheme, setTheme } from '../lib/theme';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -61,6 +60,8 @@ interface TerminalSite {
 
 export interface TerminalData {
   prompt: string;
+  /** The hidden input's accessible name (homeSections.terminalInput). */
+  inputLabel?: string;
   site: TerminalSite;
   projects: TerminalProject[];
   experience: TerminalExperience[];
@@ -189,7 +190,7 @@ export class InteractiveTerminal {
     input.setAttribute('autocorrect', 'off');
     input.setAttribute('autocapitalize', 'off');
     input.spellcheck = false;
-    input.setAttribute('aria-label', 'Terminal input');
+    input.setAttribute('aria-label', this.data.inputLabel ?? 'Terminal input');
     Object.assign(input.style, {
       position: 'absolute',
       top: '0',
@@ -660,11 +661,6 @@ export class InteractiveTerminal {
       ]);
       subcmds.delete('sudo');
       return [...subcmds].filter((s) => s.startsWith(p));
-    }
-
-    if (resolved === 'theme') {
-      const options = ['dark', 'light', 'toggle'];
-      return options.filter((x) => x.startsWith(p));
     }
 
     // Default: filesystem completion (files + dirs)
@@ -1253,29 +1249,11 @@ export class InteractiveTerminal {
       },
     });
 
+    // The site has one theme since the dark theme left (openspec stone-glass-homepage); the
+    // command stays and says so, whatever it is asked.
     this.commands.set('theme', {
-      description: 'Switch theme (dark/light/toggle)',
-      handler: (args: string[], ctx: CommandContext) => {
-        const current = getCurrentTheme();
-
-        if (args.length === 0) {
-          return `Current theme: ${current}`;
-        }
-
-        const target = args[0].toLowerCase();
-        if (target === 'toggle') {
-          const next = current === 'dark' ? 'light' : 'dark';
-          setTheme(next);
-          return `Switched to ${next} theme`;
-        }
-        if (target === 'dark' || target === 'light') {
-          if (target === current) return `Already using ${current} theme`;
-          setTheme(target as 'dark' | 'light');
-          return `Switched to ${target} theme`;
-        }
-
-        return { error: `Unknown theme: ${target}. Usage: theme [dark|light|toggle]` };
-      },
+      description: 'Show the theme (there is one)',
+      handler: () => 'There is one theme: light.',
     });
   }
 

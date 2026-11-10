@@ -1,0 +1,42 @@
+---
+// Contact (openspec stone-glass-homepage, design 8): the address set large as a mailto link, then
+// the contact page, LinkedIn and GitHub, as type on stone. No glass. The address comes from site.ts,
+// the link labels from homeSections.contact (moved from the old contact sheet).
+import "../../styles/stone.css";
+import site from "../../config/site";
+import { homeSections, siteNav } from "../../config/home.ts";
+
+const page = siteNav.links.find((l) => l.id === "contact")!;
+---
+
+<section class="stone-section contact" aria-labelledby="contact-h">
+  <h2 id="contact-h">{homeSections.headings.contact}</h2>
+  <a class="contact-mail" href={`mailto:${site.social.email}`}>{site.social.email}</a>
+  <ul class="contact-links">
+    <li><a href={page.href}>{homeSections.contact.message} <span aria-hidden="true">→</span></a></li>
+    <li><a href={site.social.LinkedIn}>{homeSections.contact.linkedin}</a></li>
+    <li><a href={site.social.GitHub}>{homeSections.contact.github}</a></li>
+  </ul>
+</section>
+
+<style>
+  /* the address is the section's largest text, the heading above it included */
+  .contact-mail {
+    display: inline-block; max-width: 100%;
+    font: 850 clamp(40px, 8.4vw, 150px)/0.95 var(--stone-sans); font-stretch: 84%; letter-spacing: -0.035em;
+    color: var(--stone-ink); text-decoration: none; overflow-wrap: anywhere;
+  }
+  .contact-mail:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.12em; }
+  .contact-mail:focus-visible, .contact-links a:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
+  .contact-links {
+    list-style: none; margin: clamp(20px, 2.4vw, 36px) 0 0; padding: 0;
+    display: flex; flex-wrap: wrap; column-gap: clamp(20px, 2.6vw, 40px); row-gap: 10px;
+    font-size: var(--stone-t-body); font-weight: 600;
+  }
+  .contact-links a { color: var(--stone-ink); }
+
+  @media (max-width: 760px) {
+    .contact > h2 { font-size: 40px; }
+    .contact-mail { font-size: 11.2vw; }
+  }
+</style>

@@ -66,8 +66,9 @@ export const annaCalls = {
 /**
  * The stone homepage's own words (openspec stone-glass-homepage): the hero's role and intro lines
  * (moved from /hero-lab unchanged), the section headings and link labels, the word for a current
- * job's end year, the terminal window's title and the photo's alt text. ANNA's heading is
- * annaLead.title; the name is site.name.
+ * job's end year, the terminal window's title and its input's label (moved from
+ * interactive-terminal.ts), the photo's alt text, and Contact's three links (moved from the old
+ * contact sheet). ANNA's heading is annaLead.title; the name is site.name.
  */
 export const homeSections = {
   role: `${site.role} at ${site.company}.`,
@@ -76,7 +77,9 @@ export const homeSections = {
   links: { projects: 'See all projects', resume: 'Full résumé', writing: 'All writing' },
   now: 'now',
   terminalTitle: 'ezra@hulsman: ~',
+  terminalInput: 'Terminal input',
   photoAlt: `${site.name}, photographed from below`,
+  contact: { message: 'Send a message', linkedin: 'LinkedIn', github: 'GitHub' },
 };
 
 /** The two drawn in full on the homepage; the others are its cards. */

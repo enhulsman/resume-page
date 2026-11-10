@@ -465,3 +465,56 @@ test('Projects, Experience and Writing: type on stone from their sources, no gla
   assert.ok(at('AnnaSection') < at('Projects') && at('Projects') < at('Experience') && at('Experience') < at('Writing'), 'in order');
   assert.ok(experience.length >= 1);
 });
+
+// ---- About and Contact (chunk 6) ----
+
+test('Contact\'s link labels live in config, moved from the old contact sheet', () => {
+  assert.deepEqual(home.homeSections.contact, { message: 'Send a message', linkedin: 'LinkedIn', github: 'GitHub' });
+  assert.equal(typeof home.homeSections.terminalInput, 'string', 'the terminal\'s input label');
+});
+
+test('About: the notes, the photo with its alt from config, the terminal in a frosted window over the four lights, its reflections', () => {
+  const src = read('src/components/stone/About.astro');
+  assert.match(src, /data-glass-moment="terminal"/);
+  assert.match(src, /<GlassWindow /);
+  assert.match(src, /title=\{homeSections\.terminalTitle\}/);
+  assert.match(src, /glow="cards"/);
+  assert.match(src, /<GlassCard [^>]*mini/, 'the reflection minis');
+  assert.match(src, /glassCards\.map/);
+  assert.match(src, /<Terminal /);
+  assert.match(src, /notes\.map/);
+  assert.match(src, /alt=\{homeSections\.photoAlt\}/);
+  assert.match(src, /homeSections\.headings\.about/);
+  assert.doesNotMatch(src, /data-glass="/, 'its glass objects are GlassWindow\'s and GlassCard\'s');
+});
+
+test('Contact: the address as a mailto link, then the contact page, LinkedIn and GitHub; no glass', () => {
+  const src = read('src/components/stone/Contact.astro');
+  assert.match(src, /mailto:\$\{site\.social\.email\}/);
+  assert.match(src, /\{site\.social\.email\}/);
+  assert.match(src, /site\.social\.LinkedIn/);
+  assert.match(src, /site\.social\.GitHub/);
+  assert.match(src, /homeSections\.contact\./);
+  assert.match(src, /homeSections\.headings\.contact/);
+  assert.doesNotMatch(src, /data-glass|GlassWindow|GlassCard|<canvas|backdrop-filter/, 'no contact strip');
+});
+
+test('the page ends with About, then Contact', () => {
+  const index = read('src/pages/index.astro');
+  const at = (tag) => index.indexOf(`<${tag} />`);
+  for (const tag of ['Writing', 'About', 'Contact']) assert.ok(at(tag) > 0, `${tag} on the page`);
+  assert.ok(at('Writing') < at('About') && at('About') < at('Contact'), 'in order');
+});
+
+test('the terminal listens for reduced motion switched on, and its window version has no drawing-sheet head', () => {
+  const anim = read('src/scripts/terminal-animation.ts');
+  assert.match(anim, /addEventListener\('change'/, 'a change listener on the reduced-motion query');
+  assert.doesNotMatch(read('src/components/overzicht/Terminal.astro'), /term-head/);
+});
+
+test('the terminal\'s theme command no longer switches anything: the theme helper is gone', () => {
+  const term = read('src/scripts/interactive-terminal.ts');
+  assert.doesNotMatch(term, /lib\/theme|setTheme|getCurrentTheme/);
+  assert.match(term, /commands\.set\('theme'/, 'the command stays, and answers');
+  assert.equal(existsSync(new URL('src/lib/theme.ts', root)), false);
+});

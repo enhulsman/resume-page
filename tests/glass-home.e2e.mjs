@@ -1,6 +1,7 @@
 // The stone homepage in a real browser (openspec stone-glass-homepage): the hero and its ribbed
 // glass, the arrival gone, ANNA's section and its one frosted window (her conversation itself:
-// tests/glass-anna-window.e2e.mjs). Later chunks add the rows, About and Contact here.
+// tests/glass-anna-window.e2e.mjs), the rows of type, About with the terminal's frosted window (the
+// terminal itself: tests/glass-terminal.e2e.mjs) and Contact.
 // Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/glass-home.e2e.mjs
 // Every wait is on state (__glassReady, __glass.slow, animation frames), never a fixed sleep.
@@ -150,9 +151,12 @@ test('one WebGL context for every pane: at 390 x 844 there is one, and all four 
 
 test('off screen: the light redraws in view and stops out of view', async () => {
   const { context, page } = await open('?guard=off');
-  const a = await page.evaluate(() => window.__glass.draws);
+  // the hero's four cards come first in page order; the terminal's reflections, far below, wait
+  const n = await page.$$eval(CARDS, (cs) => cs.length);
+  const a = (await page.evaluate(() => window.__glass.draws)).slice(0, n);
   await frames(page, 30);
-  const b = await page.evaluate(() => window.__glass.draws);
+  const b = (await page.evaluate(() => window.__glass.draws)).slice(0, n);
+  assert.equal(n, 4);
   a.forEach((x, i) => assert.ok(b[i] > x, `card ${i + 1} redrew in view (${x} → ${b[i]})`));
   // room below the hero, whatever the page holds yet, then scroll the cards out of view
   await page.evaluate(() => {
@@ -354,7 +358,7 @@ test('the four levels live on /projects: ANNA\'s plate shows each name with its 
   assert.deepEqual(errors, []);
 });
 
-test('the page matches the list so far: the hero, then ANNA; every canvas and every blur in main inside a moment', async () => {
+test('the page matches the list: the hero, ANNA, the terminal; every canvas and every blur in main inside a moment', async () => {
   const { context, page, errors } = await open();
   const r = await page.evaluate(() => {
     const main = document.querySelector('main');
@@ -366,51 +370,54 @@ test('the page matches the list so far: the hero, then ANNA; every canvas and ev
     return { moments, loose };
   });
   await context.close();
-  // the terminal joins in chunk 6, with About
-  assert.deepEqual(r.moments, glassMoments.slice(0, 2));
+  assert.deepEqual(r.moments, glassMoments);
   assert.deepEqual(r.loose, []);
   assert.deepEqual(errors, []);
 });
 
-test('something behind ANNA\'s window: a glow beneath it, and the area it covers is not flat stone', async () => {
-  const { context, page, errors } = await open('?t=2.4');
-  const win = page.locator(`${ANNA} [data-glass="frosted"]`);
-  await win.scrollIntoViewIfNeeded();
-  const under = await page.$eval(`${ANNA} [data-glass="frosted"]`, (w) => {
-    const glow = w.parentElement.querySelector(':scope > [data-glow]');
-    if (!glow) return null;
-    const a = w.getBoundingClientRect(), b = glow.getBoundingClientRect();
-    const ix = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
-    const iy = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
-    return {
-      hidden: glow.getAttribute('aria-hidden'),
-      before: !!(glow.compareDocumentPosition(w) & Node.DOCUMENT_POSITION_FOLLOWING),
-      z: [+getComputedStyle(glow).zIndex, +getComputedStyle(w).zIndex],
-      cover: (ix * iy) / (a.width * a.height),
-    };
+for (const moment of ['anna', 'terminal']) {
+  test(`something behind every window (${moment}): a glow beneath it, and the area it covers is not flat stone`, async () => {
+    const W = `[data-glass-moment="${moment}"] [data-glass="frosted"]`;
+    const { context, page, errors } = await open('?t=2.4');
+    const win = page.locator(W);
+    await page.$eval(W, (w) => w.scrollIntoView({ block: 'center' }));
+    await frames(page, 2);
+    const under = await page.$eval(W, (w) => {
+      const glow = w.parentElement.querySelector(':scope > [data-glow]');
+      if (!glow) return null;
+      const a = w.getBoundingClientRect(), b = glow.getBoundingClientRect();
+      const ix = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+      const iy = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      return {
+        hidden: glow.getAttribute('aria-hidden'),
+        before: !!(glow.compareDocumentPosition(w) & Node.DOCUMENT_POSITION_FOLLOWING),
+        z: [+getComputedStyle(glow).zIndex, +getComputedStyle(w).zIndex],
+        cover: (ix * iy) / (a.width * a.height),
+      };
+    });
+    assert.ok(under, 'a [data-glow] beside the window, in its stage');
+    assert.equal(under.hidden, 'true');
+    assert.ok(under.before && under.z[0] < under.z[1], `painted beneath it (z ${under.z})`);
+    assert.ok(under.cover > 0.6, `it lies behind most of the window (${under.cover.toFixed(2)})`);
+    // the window's box, then the window hidden: what is left there is what it frosts
+    const clip = await win.boundingBox();
+    await page.addStyleTag({ content: `${W} { visibility: hidden !important; }` });
+    await frames(page, 2);
+    const png = (await page.screenshot({ clip })).toString('base64');
+    const spread_ = await page.evaluate(async (b64) => {
+      const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
+      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+      const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      const d = x.getImageData(0, 0, img.width, img.height).data;
+      let out = 0;
+      for (let ch = 0; ch < 3; ch++) { let lo = 255, hi = 0; for (let k = ch; k < d.length; k += 4) { lo = Math.min(lo, d[k]); hi = Math.max(hi, d[k]); } out = Math.max(out, hi - lo); }
+      return out;
+    }, png);
+    await context.close();
+    assert.ok(spread_ > 20, `the covered area varies by ${spread_} levels`);
+    assert.deepEqual(errors, []);
   });
-  assert.ok(under, 'a [data-glow] beside the window, in its stage');
-  assert.equal(under.hidden, 'true');
-  assert.ok(under.before && under.z[0] < under.z[1], `painted beneath it (z ${under.z})`);
-  assert.ok(under.cover > 0.6, `it lies behind most of the window (${under.cover.toFixed(2)})`);
-  // the window's box, then the window hidden: what is left there is what it frosts
-  const clip = await win.boundingBox();
-  await page.addStyleTag({ content: `${ANNA} [data-glass="frosted"] { visibility: hidden !important; }` });
-  await frames(page, 2);
-  const png = (await page.screenshot({ clip })).toString('base64');
-  const spread_ = await page.evaluate(async (b64) => {
-    const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
-    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
-    const x = c.getContext('2d'); x.drawImage(img, 0, 0);
-    const d = x.getImageData(0, 0, img.width, img.height).data;
-    let out = 0;
-    for (let ch = 0; ch < 3; ch++) { let lo = 255, hi = 0; for (let k = ch; k < d.length; k += 4) { lo = Math.min(lo, d[k]); hi = Math.max(hi, d[k]); } out = Math.max(out, hi - lo); }
-    return out;
-  }, png);
-  await context.close();
-  assert.ok(spread_ > 20, `the covered area varies by ${spread_} levels`);
-  assert.deepEqual(errors, []);
-});
+}
 
 // ---- Projects, Experience, Writing (chunk 5): type on stone ----
 
@@ -427,13 +434,15 @@ const sourcesIn = (dir) => {
 const joined = buildProjects(sourcesIn('src/pages/projects/'));
 const ROWS = homeRows(joined.details, joined.register, glassCards.map((c) => c.id));
 const POSTS = latestEntries(sourcesIn('src/pages/blog/'));
-const SECTION = { projects: 'section[aria-labelledby="projects-h"]', experience: 'section[aria-labelledby="experience-h"]', writing: 'section[aria-labelledby="writing-h"]' };
+const SECTION = { projects: 'section[aria-labelledby="projects-h"]', experience: 'section[aria-labelledby="experience-h"]', writing: 'section[aria-labelledby="writing-h"]', contact: 'section[aria-labelledby="contact-h"]' };
+const ABOUT = 'section[aria-labelledby="about-h"]';
 
-test('the sections so far, in order: ANNA, Projects, Experience, Writing, each heading from config', async () => {
+test('the sections in order: ANNA, Projects, Experience, Writing, About, Contact, each heading from config', async () => {
   const { context, page, errors } = await open();
   const h2s = await page.$$eval('main h2', (hs) => hs.map((h) => h.textContent.trim()));
   await context.close();
-  assert.deepEqual(h2s.slice(0, 4), [annaLead.title, homeSections.headings.projects, homeSections.headings.experience, homeSections.headings.writing]);
+  assert.deepEqual(h2s, [annaLead.title, homeSections.headings.projects, homeSections.headings.experience, homeSections.headings.writing, homeSections.headings.about, homeSections.headings.contact]);
+  assert.deepEqual(h2s, ['ANNA', 'Projects', 'Experience', 'Writing', 'About', 'Contact']);
   assert.deepEqual(errors, []);
 });
 
@@ -530,7 +539,7 @@ test('Writing: the five newest posts, each with its date and one line, then a li
   assert.deepEqual(errors, []);
 });
 
-test('Projects, Experience and Writing are written in config only', async () => {
+test('Projects, Experience, Writing and Contact are written in config only', async () => {
   const { context, page, errors } = await open();
   const texts = await page.evaluate(([fn, sels]) => sels.flatMap((s) => new Function(`return (${fn})`)()(document.querySelector(s))), [textsUnder.toString(), Object.values(SECTION)]);
   await context.close();
@@ -541,7 +550,7 @@ test('Projects, Experience and Writing are written in config only', async () => 
   assert.deepEqual(errors, []);
 });
 
-test('no glass anywhere else: the bar, Projects, Experience and Writing hold no canvas, no glass, no blur', async () => {
+test('no glass anywhere else: the bar, Projects, Experience, Writing and Contact hold no canvas, no glass, no blur', async () => {
   const { context, page, errors } = await open();
   const found = await page.evaluate((sels) => sels.map((s) => {
     const root = document.querySelector(s);
@@ -554,12 +563,12 @@ test('no glass anywhere else: the bar, Projects, Experience and Writing hold no 
   assert.deepEqual(errors, []);
 });
 
-test('no colour panels in Projects, Experience and Writing: every ground is stone, ink or nothing', async () => {
+test('no colour panels in Projects, Experience, Writing, Contact and About outside its window: every ground is stone, ink or nothing', async () => {
   const { context, page, errors } = await open();
-  const panels = await page.evaluate((sels) => sels.flatMap((s) => [document.querySelector(s), ...document.querySelectorAll(`${s} *`)].map((el) => {
+  const panels = await page.evaluate((sels) => sels.flatMap((s) => [document.querySelector(s), ...document.querySelectorAll(`${s} *`)].filter((el) => !el.closest('[data-glass-moment], [data-glow]')).map((el) => {
     const b = el.getBoundingClientRect();
     return { sel: `${s} ${el.tagName}.${el.className}`, bg: getComputedStyle(el).backgroundColor, img: getComputedStyle(el).backgroundImage, w: b.width, h: b.height };
-  })), Object.values(SECTION));
+  })), [...Object.values(SECTION), ABOUT]);
   const ink = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--stone-ink').trim());
   await context.close();
   const ok = (bg) => { const c = parseColor(bg); return c && (c[3] === 0 || [parseColor('#EEEAE3'), parseColor(ink)].some((k) => k.slice(0, 3).every((v, j) => Math.abs(v - c[j]) < 1))); };
@@ -568,12 +577,13 @@ test('no colour panels in Projects, Experience and Writing: every ground is ston
   assert.deepEqual(errors, []);
 });
 
-test('phone: Projects, Experience and Writing stay within the screen, the page never scrolls sideways', async () => {
+test('phone: Projects, Experience, Writing, About and Contact stay within the screen, the page never scrolls sideways', async () => {
   const { context, page, errors } = await open('', { width: 390, height: 844 });
-  for (const s of Object.values(SECTION)) {
+  for (const s of [...Object.values(SECTION), ABOUT]) {
     await page.$eval(s, (el) => el.scrollIntoView({ block: 'start' }));
     const r = await page.$eval(s, (el) => {
-      const boxes = [el, ...el.querySelectorAll('*')].map((e) => e.getBoundingClientRect()).filter((b) => b.width > 0);
+      // a window's glow reaches past its sides by design; the section clips it, so it never scrolls
+      const boxes = [el, ...el.querySelectorAll('*')].filter((e) => !e.closest('[data-glow]')).map((e) => e.getBoundingClientRect()).filter((b) => b.width > 0);
       return { l: Math.min(...boxes.map((b) => b.left)), r: Math.max(...boxes.map((b) => b.right)), sw: document.documentElement.scrollWidth, w: innerWidth };
     });
     assert.ok(r.l >= -0.5 && r.r <= 390.5, `${s} spans ${r.l}..${r.r}`);
@@ -582,3 +592,252 @@ test('phone: Projects, Experience and Writing stay within the screen, the page n
   await context.close();
   assert.deepEqual(errors, []);
 });
+
+// ---- About and Contact (chunk 6): the terminal's frosted window, then the address ----
+
+import { momentsOverlap } from './lib/moments.mjs';
+
+const CONTACT = SECTION.contact;
+const TERM = '[data-glass-moment="terminal"]';
+const TERM_BODY = `${TERM} [data-glass="frosted"] .term-body`;
+/** Scroll the terminal into view and wait for its intro to finish (its first input line). */
+async function termReady(page) {
+  await page.$eval(`${TERM} [data-glass="frosted"]`, (w) => w.scrollIntoView({ block: 'center' }));
+  await page.waitForFunction((sel) => document.querySelector(`${sel} .terminal-input-line`), TERM_BODY, { timeout: 90000 });
+}
+/** Type a command into the terminal and wait for its next input line. */
+async function termRun(page, cmd) {
+  const box = await page.locator(TERM_BODY).boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height - 30);
+  const n0 = await page.$eval(TERM_BODY, (b) => b.children.length);
+  await page.keyboard.type(cmd, { delay: 15 });
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(([sel, n0, cmd]) => {
+    const b = document.querySelector(sel), last = b.lastElementChild;
+    return b.children.length > n0 && last.classList.contains('terminal-input-line') && !last.textContent.trim().endsWith(cmd);
+  }, [TERM_BODY, n0, cmd], { timeout: 20000 });
+}
+
+test('About: every note, one plain photo with its alt from config, and one frosted window holding the terminal', async () => {
+  const { context, page, errors } = await open();
+  const a = await page.$eval(ABOUT, (s) => ({
+    text: s.textContent.replace(/\s+/g, ' '),
+    imgs: [...s.querySelectorAll('img')].map((i) => ({ alt: i.getAttribute('alt'), glass: !!i.closest('[data-glass]'), filter: getComputedStyle(i).filter, clip: getComputedStyle(i).clipPath })),
+    windows: [...s.querySelectorAll('[data-glass="frosted"]')].map((w) => ({ terminal: !!w.querySelector('#terminal-body'), moment: w.closest('[data-glass-moment]')?.dataset.glassMoment })),
+  }));
+  await context.close();
+  for (const n of homeConfig.notes) assert.ok(a.text.includes(n.replace(/\s+/g, ' ')), `note: ${n}`);
+  assert.equal(a.imgs.length, 1, 'one photo');
+  assert.equal(a.imgs[0].alt, homeSections.photoAlt);
+  assert.deepEqual([a.imgs[0].glass, a.imgs[0].filter, a.imgs[0].clip], [false, 'none', 'none'], 'a plain image');
+  assert.deepEqual(a.windows, [{ terminal: true, moment: 'terminal' }]);
+  assert.deepEqual(errors, []);
+});
+
+test('Contact: the address is the largest text, a mailto link; then the contact page, LinkedIn and GitHub', async () => {
+  const { context, page, errors } = await open();
+  const c = await page.$eval(CONTACT, (s) => {
+    const sized = [...s.querySelectorAll('*')].filter((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()));
+    const big = sized.map((e) => ({ text: e.textContent.trim(), size: parseFloat(getComputedStyle(e).fontSize) })).sort((x, y) => y.size - x.size);
+    return {
+      big,
+      mail: [...s.querySelectorAll('a[href^="mailto:"]')].map((a) => [a.getAttribute('href'), a.textContent.trim(), parseFloat(getComputedStyle(a).fontSize)]),
+      links: [...s.querySelectorAll('a:not([href^="mailto:"])')].map((a) => [a.getAttribute('href'), a.textContent.replace(/→/, '').trim()]),
+    };
+  });
+  await context.close();
+  assert.deepEqual(c.mail.map((m) => m.slice(0, 2)), [[`mailto:${site.social.email}`, site.social.email]]);
+  assert.equal(c.big[0].text, site.social.email, `largest: ${JSON.stringify(c.big.slice(0, 2))}`);
+  assert.ok(c.big[0].size > c.big[1].size, 'larger than everything else, the heading too');
+  assert.deepEqual(c.links, [
+    ['/contact', homeSections.contact.message],
+    [site.social.LinkedIn, homeSections.contact.linkedin],
+    [site.social.GitHub, homeSections.contact.github],
+  ]);
+  assert.deepEqual(errors, []);
+});
+
+test('no contact strip: Contact holds no canvas, no glass and no blur', async () => {
+  const { context, page } = await open();
+  const bad = await page.$eval(CONTACT, (s) => [s, ...s.querySelectorAll('*')]
+    .filter((el) => el.tagName === 'CANVAS' || el.hasAttribute('data-glass') || getComputedStyle(el).backdropFilter !== 'none')
+    .map((el) => el.tagName));
+  await context.close();
+  assert.deepEqual(bad, []);
+});
+
+test('About is written in config only (the terminal\'s own output aside)', async () => {
+  const { context, page, errors } = await open();
+  await termReady(page);
+  const texts = await page.evaluate(([fn, sel]) => new Function(`return (${fn})`)()(document.querySelector(sel), '.term-body'), [textsUnder.toString(), ABOUT]);
+  await context.close();
+  assert.ok(texts.length >= homeConfig.notes.length + 3, `${texts.length} texts read`);
+  const check = coverer(strings(homeConfig, site));
+  const left = texts.map(check).filter(Boolean);
+  assert.deepEqual(left, [], `typed into the markup: ${JSON.stringify(left)}`);
+  assert.deepEqual(errors, []);
+});
+
+test('one WebGL context for every pane: at 390 x 844 there is one, and every pane is lit, the reflections too', async () => {
+  const { context, page, errors } = await open('', { width: 390, height: 844, init: [countGL] });
+  const n = await page.evaluate(() => window.__glCanvases.size);
+  const panes = await page.$$eval('[data-glass="ribbed"]', (ps) => ps.map((p) => ({ moment: p.closest('[data-glass-moment]')?.dataset.glassMoment, lit: p.classList.contains('lit') })));
+  const s = await spread(page, '[data-glass="ribbed"] canvas');
+  await context.close();
+  assert.equal(n, 1, 'one WebGL context on the page');
+  assert.deepEqual(panes.map((p) => p.moment), ['hero', 'hero', 'hero', 'hero', 'terminal', 'terminal', 'terminal', 'terminal']);
+  assert.ok(panes.every((p) => p.lit), 'every pane is lit');
+  s.forEach((v, i) => assert.ok(v > 40, `pane ${i + 1} is lit (${v})`));
+  assert.deepEqual(errors, []);
+});
+
+/**
+ * In the page: every text element in one window that lies wholly in view (and inside its scroll
+ * box), with its own colour; then that window's text made transparent and the screen captured;
+ * each element's lowest contrast against the pixels behind it.
+ */
+async function windowContrast(page, moment, sels) {
+  const W = `[data-glass-moment="${moment}"] [data-glass="frosted"]`;
+  const items = await page.evaluate(([W, sels]) => {
+    const w = document.querySelector(W), wb = w.getBoundingClientRect();
+    return sels.flatMap((sel) => [...w.querySelectorAll(sel)].map((el) => {
+      const r = el.getBoundingClientRect();
+      const clip = el.closest('.term-body, .aw-chat')?.getBoundingClientRect() ?? wb;
+      const inside = r.width > 0 && r.height > 0 && el.textContent.trim()
+        && r.top >= Math.max(0, clip.top, wb.top) && r.bottom <= Math.min(innerHeight, clip.bottom, wb.bottom);
+      return inside ? { sel, color: getComputedStyle(el).color, box: { x: r.x, y: r.y, w: r.width, h: r.height } } : null;
+    }).filter(Boolean));
+  }, [W, sels]);
+  const tag = await page.addStyleTag({ content: `${W}, ${W} * { color: transparent !important; text-shadow: none !important; } ${W} .steps li::before { content: none !important; } ${W} .terminal-cursor { visibility: hidden !important; }` });
+  await frames(page, 2);
+  const png = (await page.screenshot()).toString('base64');
+  await tag.evaluate((t) => t.remove());
+  return page.evaluate(async ([png, items]) => {
+    const img = new Image(); img.src = `data:image/png;base64,${png}`; await img.decode();
+    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    const L = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    return items.map(({ sel, color, box }) => {
+      const [r, g, b, a = 1] = color.match(/[\d.]+/g).map(Number);
+      const d = x.getImageData(Math.round(box.x), Math.round(box.y), Math.max(1, Math.round(box.w)), Math.max(1, Math.round(box.h))).data;
+      let min = 99;
+      for (let i = 0; i < d.length; i += 16) {
+        const bg = [d[i], d[i + 1], d[i + 2]];
+        const fg = [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)];
+        const [hi, lo] = [L(bg), L(fg)].sort((p, q) => q - p);
+        min = Math.min(min, (hi + 0.05) / (lo + 0.05));
+      }
+      return { sel, color, ratio: +min.toFixed(2) };
+    });
+  }, [png, items]);
+}
+
+test('window text reads at 4.5:1, measured: both windows, their titles, ANNA\'s steps and record, the terminal\'s prompt, dim text and errors after ls', async () => {
+  const { context, page, errors } = await open('?t=2.4');
+  // ANNA's window: her conversation finished, measured with the chat at its top and at its end
+  await annaDone(page);
+  await frames(page, 4);
+  const ANNA_SEL = ['.glass-title', '.aw-replay', '.msg .who', '.msg .text', '.sources', '.steps li', '.rec-head', '.record li'];
+  await page.$eval('.anna-window .aw-chat', (c) => { c.scrollTop = 0; });
+  await frames(page, 2);
+  const annaTop = await windowContrast(page, 'anna', ANNA_SEL);
+  await page.$eval('.anna-window .aw-chat', (c) => { c.scrollTop = c.scrollHeight; });
+  await frames(page, 2);
+  const annaEnd = await windowContrast(page, 'anna', ANNA_SEL);
+  // the terminal: help (its dim descriptions), a command it does not know (an error), then ls
+  await termReady(page);
+  for (const cmd of ['help', 'nosuchcommand', 'ls']) await termRun(page, cmd);
+  await page.$eval(`${TERM} [data-glass="frosted"]`, (w) => w.scrollIntoView({ block: 'center' }));
+  await frames(page, 4);
+  const term = await windowContrast(page, 'terminal', ['.glass-title', '.terminal-user', '.terminal-separator', '.terminal-path', '.terminal-dollar', '.terminal-cmd', '.terminal-accent', '.terminal-dim', '.terminal-error', '.term-body > div']);
+  await context.close();
+  const all = [...annaTop, ...annaEnd, ...term];
+  const seen = (list, sel) => list.filter((w) => w.sel === sel);
+  for (const sel of ['.glass-title', '.steps li', '.record li']) assert.ok(seen([...annaTop, ...annaEnd], sel).length, `ANNA's window: ${sel} measured`);
+  for (const sel of ['.glass-title', '.terminal-user', '.terminal-dollar', '.terminal-dim', '.terminal-error', '.terminal-accent']) assert.ok(seen(term, sel).length, `the terminal: ${sel} measured`);
+  // the window titles are the one shared quiet ink (the 0.55 and 0.66 alpha inks are gone)
+  for (const t of [...seen(annaTop, '.glass-title'), ...seen(term, '.glass-title')]) {
+    assert.equal(parseColor(t.color)[3], 1, `title ink is opaque: ${t.color}`);
+    assert.ok(t.ratio >= 4.5, `title: ${t.ratio}:1`);
+  }
+  const low = all.filter((w) => w.ratio < 4.5);
+  assert.deepEqual(low, [], JSON.stringify(low));
+  assert.deepEqual(errors, []);
+});
+
+test('a window\'s glow has no edge: a line through the middle of each window, with the windows hidden', async () => {
+  const { context, page, errors } = await open('?t=2.4');
+  await page.addStyleTag({ content: '[data-glass="frosted"] { visibility: hidden !important; }' });
+  const worst = {};
+  for (const moment of ['anna', 'terminal']) {
+    const W = `[data-glass-moment="${moment}"] [data-glass="frosted"]`;
+    await page.$eval(W, (w) => w.scrollIntoView({ block: 'center' }));
+    await frames(page, 2);
+    const b = await page.$eval(W, (w) => { const r = w.getBoundingClientRect(); return { x: Math.ceil(r.left), y: Math.round(r.top + r.height / 2), w: Math.floor(r.width) }; });
+    const png = (await page.screenshot({ clip: { x: b.x, y: b.y, width: b.w, height: 1 } })).toString('base64');
+    worst[moment] = await page.evaluate(async (b64) => {
+      const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
+      const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      const d = x.getImageData(0, 0, img.width, 1).data;
+      let jump = 0, lo = 255, hi = 0;
+      for (let i = 4; i < d.length; i += 4) for (let ch = 0; ch < 3; ch++) jump = Math.max(jump, Math.abs(d[i + ch] - d[i - 4 + ch]));
+      for (let i = 0; i < d.length; i += 4) { const v = (d[i] + d[i + 1] + d[i + 2]) / 3; lo = Math.min(lo, v); hi = Math.max(hi, v); }
+      return { jump, spread: hi - lo, n: img.width };
+    }, png);
+  }
+  await context.close();
+  for (const [m, w] of Object.entries(worst)) {
+    assert.ok(w.n > 100, `${m}: a line ${w.n}px long`);
+    assert.ok(w.spread > 5, `${m}: the line crosses the glow (${w.spread} levels)`);
+    assert.ok(w.jump <= 6, `${m}: neighbouring pixels differ by ${w.jump} levels`);
+  }
+  assert.deepEqual(errors, []);
+});
+
+test('no WebGL: both windows still show their content; the reflections keep their soft ground', async () => {
+  const { context, page, errors } = await open('', { init: [noGL] });
+  await annaDone(page);
+  const anna = await page.$eval('[data-glass-moment="anna"] [data-glass="frosted"]', (w) => ({
+    shown: getComputedStyle(w).visibility === 'visible' && w.getBoundingClientRect().height > 100,
+    title: w.querySelector('.glass-title').textContent,
+    beats: [...w.querySelectorAll('[data-beat]')].every((b) => b.classList.contains('on')),
+  }));
+  await termReady(page);
+  const term = await page.$eval(`${TERM} [data-glass="frosted"]`, (w) => ({
+    shown: getComputedStyle(w).visibility === 'visible' && w.getBoundingClientRect().height > 100,
+    title: w.querySelector('.glass-title').textContent,
+    cmds: w.querySelectorAll('.term-body .text-theme-primary').length,
+    minis: [...w.querySelectorAll('[data-glass="ribbed"]')].map((p) => ({ lit: p.classList.contains('lit'), bg: getComputedStyle(p).backgroundImage })),
+  }));
+  await context.close();
+  assert.deepEqual(anna, { shown: true, title: annaCalls.window, beats: true });
+  assert.equal(term.shown, true);
+  assert.equal(term.title, homeSections.terminalTitle);
+  assert.ok(term.cmds >= 6, `the intro typed (${term.cmds} commands)`);
+  assert.equal(term.minis.length, 4);
+  for (const m of term.minis) { assert.equal(m.lit, false); assert.match(m.bg, /radial-gradient/); }
+  assert.deepEqual(errors, []);
+});
+
+for (const [width, height] of [[1440, 900], [1280, 720], [390, 844]]) {
+  test(`one glass moment per screen at ${width} x ${height}: no two neighbouring moments can share the screen, on load and after both windows have played`, async () => {
+    const { context, page, errors } = await open('', { width, height });
+    const boxes = () => page.evaluate(() => [...document.querySelectorAll('[data-glass-moment]')].map((m) => {
+      const rs = [...m.querySelectorAll('[data-glass]')].map((g) => g.getBoundingClientRect());
+      return { id: m.dataset.glassMoment, box: [Math.min(...rs.map((r) => r.top)) + scrollY, Math.max(...rs.map((r) => r.bottom)) + scrollY] };
+    }));
+    const check = (list, when) => {
+      assert.deepEqual(list.map((m) => m.id), glassMoments, when);
+      for (let i = 1; i < list.length; i++) {
+        const [a, b] = [list[i - 1], list[i]];
+        assert.equal(momentsOverlap(a.box, b.box, height), false, `${when}: ${a.id} [${a.box.map(Math.round)}] and ${b.id} [${b.box.map(Math.round)}] can share a ${height}px screen`);
+      }
+    };
+    check(await boxes(), 'on load');
+    await annaDone(page);
+    await termReady(page);
+    check(await boxes(), 'after play');
+    await context.close();
+    assert.deepEqual(errors, []);
+  });
+}

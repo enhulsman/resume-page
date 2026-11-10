@@ -43,8 +43,11 @@
 [data-glass="frosted"] .terminal-dollar,
 [data-glass="frosted"] .terminal-error { color: var(--glass-ink-red); }
 [data-glass="frosted"] .terminal-cmd,
-[data-glass="frosted"] .terminal-accent { color: var(--stone-ink); }
-/* already opaque and darker: kept */
+[data-glass="frosted"] .terminal-accent,
+[data-glass="frosted"] .term-body .text-theme-primary { color: var(--stone-ink); }
+/* already opaque and darker: kept (the terminal's output, as in the lab) */
+[data-glass="frosted"] .term-body,
+[data-glass="frosted"] .term-body .text-theme-secondary { color: #3a3632; }
 [data-glass="frosted"] .steps { color: #4a453f; }
 [data-glass="frosted"] .record ul { color: #3a3632; }
 
