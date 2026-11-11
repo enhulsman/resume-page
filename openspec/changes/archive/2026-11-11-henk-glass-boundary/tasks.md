@@ -17,4 +17,4 @@
 
 - [x] 4.1 `npm test`, `npm run build`, the full browser suite against the build
 - [x] 4.2 Screenshots at 1440x900 and 390x844 and of "Made for fun"
-- [ ] 4.3 `openspec archive henk-glass-boundary --yes`
+- [x] 4.3 `openspec archive henk-glass-boundary --yes`
