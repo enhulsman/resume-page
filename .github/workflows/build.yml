@@ -28,7 +28,7 @@ jobs:
       - name: Install Playwright (browsers & deps)
         # install browser binaries and system deps needed by Playwright
         run: |
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
 
       - name: Serve `dist` (background)
         # start a small HTTP server for the runner (http-server is fetched by npx)
