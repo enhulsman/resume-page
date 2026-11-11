@@ -1,0 +1,229 @@
+---
+// Henk's trust boundary on one frosted pane (openspec stone-project-pages "Henk's trust boundary is
+// one frosted pane"; Ezra, 2026-11-12, sketch variant D). The boundary is a pane of the site's
+// frosted glass (.glass-window, data-glass="frosted": the material, rim and grain of Henk's Signal
+// window, whose GlassWindow puts those styles on this page); what is inside Henk sits on it, the
+// untrusted lanes above it stand on bare stone. Beneath the pane, its glow: a cool pale wash high up
+// and Henk's blue far back behind the lower half (the choke point and the tools). The glow is
+// clipped to the pane's own box, after its blur, so no light reaches the stone. The boxes on the
+// pane are translucent tiles, so the blue shows through the tools; every line and label is ink in
+// front of the glass. No loop and no WebGL: the pane is CSS, so reduced motion, the slow-device
+// guard and a browser without WebGL all see the same still pane. In print the light goes.
+//
+// The svg sits inside the pane and reaches above it (the pane does not clip): hiding the pane hides
+// the drawing too, and the window tests measure the labels on the glass like any window's text.
+// The figure keeps .henk-flow, which "View larger" (diagram-view.js) finds; its copy in the dialog
+// takes the ink and tile styles below but none of the pane's placement, and draws the pane's
+// outline (.pane-edge) in its place, so the boundary still shows there.
+import { projectLights } from "../../config/glass.ts";
+
+// what the glass frosts, in % of the pane: a cool pale wash up top; Henk's near blue broad and low,
+// his deep blue under the tools. The blur softens them toward the pane's edges; the clip (below)
+// keeps all of it on the pane.
+const rgb = (c: number[], a: number) => `rgb(${c.join(" ")} / ${a})`;
+const { near, deep } = projectLights.henk;
+const PALE = [206, 220, 238];
+const glow = [
+  `radial-gradient(56% 26% at 50% 18%, ${rgb(PALE, 0.6)}, ${rgb(PALE, 0)})`,
+  `radial-gradient(80% 46% at 50% 84%, ${rgb(near, 1)}, ${rgb(near, 0)})`,
+  `radial-gradient(42% 28% at 28% 89%, ${rgb(deep, 0.95)}, ${rgb(deep, 0)})`,
+  `radial-gradient(42% 28% at 72% 87%, ${rgb(deep, 0.9)}, ${rgb(deep, 0)})`,
+].join(", ");
+---
+
+<div class="henk-flow hgb" data-glass-moment="henk-boundary">
+  <div class="hgb-stage">
+    <div class="hgb-glow" data-glow aria-hidden="true" style={`background: ${glow}`}></div>
+    <div class="glass-window hgb-pane" data-glass="frosted">
+      <svg
+        class="hgb-ink"
+        viewBox="0 0 440 652"
+        role="img"
+        aria-labelledby="henk-flow-title henk-flow-desc"
+      >
+        <title id="henk-flow-title">Henk's trust boundary and event flow</title>
+        <desc id="henk-flow-desc">
+          Untrusted sensor alerts and owner Signal messages both cross a trust
+          boundary into Henk, where events pass an intake cursor and cadence gate,
+          owner messages pass an allowlist, and everything converges on a serial
+          agent core whose every tool call must pass a default-deny PreToolUse
+          choke point before reaching read-only tools, the audit log, or Signal.
+        </desc>
+
+        <defs>
+          <marker
+            id="henk-arrow"
+            viewBox="0 0 8 8"
+            refX="7"
+            refY="4"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto-start-reverse"
+          >
+            <path d="M0 0 L8 4 L0 8 Z" class="arrow-head" />
+          </marker>
+        </defs>
+
+        <!-- the pane's outline, for the drawing away from its pane (its copy in "View larger"):
+             hidden while the drawing sits on the pane itself -->
+        <rect x="14" y="188" width="412" height="448" rx="14" class="pane-edge" />
+
+        <!-- on stone, above the pane: the zone captions and the two lanes in from outside -->
+        <text x="115" y="20" class="zone zone-untrusted" text-anchor="middle">UNTRUSTED INPUT</text>
+        <text x="325" y="20" class="zone" text-anchor="middle">OWNER</text>
+
+        <rect x="30" y="30" width="170" height="48" class="box box-untrusted" />
+        <text x="115" y="50" class="label" text-anchor="middle">Gatus · Prometheus</text>
+        <text x="115" y="67" class="sub" text-anchor="middle">Grafana alert rules</text>
+
+        <rect x="240" y="30" width="170" height="48" class="box" />
+        <text x="325" y="50" class="label" text-anchor="middle">Owner on Signal</text>
+        <text x="325" y="67" class="sub" text-anchor="middle">dedicated number</text>
+
+        <line x1="115" y1="78" x2="115" y2="100" class="edge" marker-end="url(#henk-arrow)" />
+        <line x1="325" y1="78" x2="325" y2="100" class="edge" marker-end="url(#henk-arrow)" />
+
+        <rect x="30" y="104" width="170" height="48" class="box box-untrusted" />
+        <text x="115" y="124" class="label" text-anchor="middle">ntfy henk-events</text>
+        <text x="115" y="141" class="sub" text-anchor="middle">deny-all topic</text>
+
+        <rect x="240" y="104" width="170" height="48" class="box" />
+        <text x="325" y="124" class="label" text-anchor="middle">signal-cli bridge</text>
+        <text x="325" y="141" class="sub" text-anchor="middle">no published ports</text>
+
+        <!-- the trust boundary: the pane's top edge, just under this caption -->
+        <text x="220" y="178" class="zone zone-untrusted" text-anchor="middle">TRUST BOUNDARY</text>
+
+        <line x1="115" y1="152" x2="115" y2="236" class="edge" marker-end="url(#henk-arrow)" />
+        <line x1="325" y1="152" x2="325" y2="236" class="edge" marker-end="url(#henk-arrow)" />
+
+        <!-- Henk, on the glass -->
+        <text x="220" y="212" class="header" text-anchor="middle">Henk · rp5 · tailnet tag:henk · zero inbound</text>
+
+        <rect x="30" y="240" width="170" height="48" class="box in" />
+        <text x="115" y="260" class="label" text-anchor="middle">event intake</text>
+        <text x="115" y="277" class="sub" text-anchor="middle">durable replay cursor</text>
+
+        <rect x="240" y="240" width="170" height="48" class="box in" />
+        <text x="325" y="260" class="label" text-anchor="middle">owner allowlist</text>
+        <text x="325" y="277" class="sub" text-anchor="middle">others dropped + logged</text>
+
+        <line x1="115" y1="288" x2="115" y2="310" class="edge" marker-end="url(#henk-arrow)" />
+
+        <rect x="30" y="314" width="170" height="48" class="box in" />
+        <text x="115" y="334" class="label" text-anchor="middle">cadence gate</text>
+        <text x="115" y="351" class="sub" text-anchor="middle">debounce · cooldown · cap</text>
+
+        <line x1="115" y1="362" x2="185" y2="392" class="edge" marker-end="url(#henk-arrow)" />
+        <line x1="325" y1="288" x2="255" y2="392" class="edge" marker-end="url(#henk-arrow)" />
+
+        <rect x="135" y="396" width="170" height="48" class="box in" />
+        <text x="220" y="416" class="label" text-anchor="middle">serial agent core</text>
+        <text x="220" y="433" class="sub" text-anchor="middle">Claude Agent SDK</text>
+
+        <line x1="220" y1="444" x2="220" y2="466" class="edge" marker-end="url(#henk-arrow)" />
+
+        <!-- the point of the diagram -->
+        <rect x="110" y="470" width="220" height="52" class="box in box-choke" />
+        <text x="220" y="491" class="label label-choke" text-anchor="middle">PreToolUse choke point</text>
+        <text x="220" y="509" class="sub" text-anchor="middle">default-deny · closed toolset</text>
+
+        <line x1="160" y1="522" x2="86" y2="554" class="edge" marker-end="url(#henk-arrow)" />
+        <line x1="220" y1="522" x2="220" y2="554" class="edge" marker-end="url(#henk-arrow)" />
+        <line x1="280" y1="522" x2="354" y2="554" class="edge" marker-end="url(#henk-arrow)" />
+
+        <rect x="24" y="558" width="124" height="48" class="box in box-safe" />
+        <text x="86" y="578" class="label label-out" text-anchor="middle">read-only tools</text>
+        <text x="86" y="594" class="sub sub-out" text-anchor="middle">health · todos</text>
+
+        <rect x="158" y="558" width="124" height="48" class="box in" />
+        <text x="220" y="578" class="label label-out" text-anchor="middle">audit log</text>
+        <text x="220" y="594" class="sub sub-out" text-anchor="middle">append-only JSONL</text>
+
+        <rect x="292" y="558" width="124" height="48" class="box in" />
+        <text x="354" y="578" class="label label-out" text-anchor="middle">Signal + handoff</text>
+        <text x="354" y="594" class="sub sub-out" text-anchor="middle">owner only</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="flow-caption">
+    Two ways in, one way through: every tool call passes the default-deny
+    choke point, every outcome lands in the audit log.
+  </div>
+</div>
+
+<style>
+  .henk-flow { margin: 8px 0 32px; }
+  /* the drawing's own proportions; the pane, its glow and the ink are placed in its units */
+  .hgb-stage { position: relative; aspect-ratio: 440 / 652; }
+  /* the pane in the drawing's own units: x 14..426, y 188..636 of the 440 x 652 viewBox */
+  .hgb-glow, .hgb-pane {
+    position: absolute; border-radius: clamp(12px, 1.4vw, 18px);
+    left: calc(14 / 440 * 100%); width: calc(412 / 440 * 100%);
+    top: calc(188 / 652 * 100%); height: calc(448 / 652 * 100%);
+  }
+
+  /* what the pane frosts: soft, and clipped to the pane after the blur, so it stays on the glass */
+  .hgb-glow {
+    z-index: 0; pointer-events: none;
+    filter: blur(16px);
+    clip-path: inset(0 round clamp(12px, 1.4vw, 18px));
+  }
+
+  /* the pane: the frosted window's material, without its bar, and real-glass edges: a bright thin
+     rim top and left, a slightly darker one bottom and right, a hairline where the sheet meets the
+     stone, and a soft shadow lifting it off. It does not clip: the drawing reaches above it. */
+  .hgb-pane {
+    z-index: 1; display: block; overflow: visible;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.95),
+      inset 1px 0 0 rgb(255 255 255 / 0.75),
+      inset 0 2px 3px -1px rgb(255 255 255 / 0.5),
+      inset 0 -1px 0 rgb(70 52 36 / 0.2),
+      inset -1px 0 0 rgb(70 52 36 / 0.12),
+      0 0 0 0.5px rgb(70 52 36 / 0.2),
+      0 1px 2px rgb(70 50 30 / 0.12),
+      0 8px 16px -10px rgb(70 50 30 / 0.3),
+      0 26px 44px -28px rgb(70 50 30 / 0.42);
+  }
+  /* the frost's grain, quieter here: small labels sit on it */
+  .hgb-pane::after { opacity: 0.32; }
+  /* the whole drawing over the pane, reaching above it: the viewBox again, in the pane's units */
+  .hgb-pane > .hgb-ink {
+    position: absolute; z-index: 3;
+    left: calc(-14 / 412 * 100%); width: calc(440 / 412 * 100%);
+    top: calc(-188 / 448 * 100%); height: calc(652 / 448 * 100%);
+  }
+
+  /* the drawing: stone ink in front of the glass, as the line drawing was on stone */
+  .hgb-ink { display: block; overflow: visible; }
+  .hgb-ink .pane-edge { fill: rgb(128 170 226 / 0.14); stroke: #8a8278; stroke-width: 1; }
+  .hgb-pane > .hgb-ink .pane-edge { display: none; }
+  .hgb-ink .box { fill: var(--stone); stroke: var(--stone-ink); stroke-width: 1; }
+  /* on the glass the boxes are tiles of frosted white: the light shows through, the box still reads */
+  .hgb-ink .box.in { fill: rgb(250 248 244 / 0.55); }
+  .hgb-ink .box-untrusted { stroke: var(--glass-ink-red); stroke-dasharray: 5 4; }
+  .hgb-ink .box-safe { stroke-width: 1.5; }
+  .hgb-ink .box-choke { stroke: var(--glass-ink-red); stroke-width: 2; }
+  .hgb-ink .label { font: 600 14px var(--stone-sans); font-stretch: 88%; fill: var(--stone-ink); }
+  .hgb-ink .label-choke { fill: var(--glass-ink-red); font-weight: 700; }
+  .hgb-ink .label-out { font-size: 13px; }
+  /* .sub is also the sheet's subhead class: undo its lettering here */
+  .hgb-ink .sub { font: 400 10px var(--stone-sans); fill: #4A453F; text-transform: none; letter-spacing: 0; margin: 0; }
+  .hgb-ink .sub-out { font-size: 9.5px; }
+  .hgb-ink .zone { font: 600 10px var(--stone-sans); letter-spacing: .1em; fill: var(--glass-ink-quiet); }
+  .hgb-ink .zone-untrusted { fill: var(--glass-ink-red); }
+  .hgb-ink .header { font: 400 10.5px var(--stone-sans); fill: #4A453F; }
+  .hgb-ink .edge { stroke: var(--stone-ink); stroke-width: 1; }
+  .hgb-ink .arrow-head { fill: var(--stone-ink); }
+  .flow-caption { margin-top: 10px; font: 400 13.5px/1.45 var(--stone-sans); color: var(--glass-ink-quiet); }
+
+  /* print: no light, a plain pane with a thin edge, the ink as on screen */
+  @media print {
+    .hgb-glow { display: none; }
+    .hgb-pane { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 0 0 1px #8a8278; }
+    .hgb-pane::before, .hgb-pane::after { display: none; }
+    .hgb-ink .box.in { fill: #fff; }
+  }
+</style>

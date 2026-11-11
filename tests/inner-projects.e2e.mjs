@@ -142,6 +142,16 @@ test('Made for fun: the last section lists every side piece as a link reading it
   assert.ok(!s.body.includes('Other sheets, drawn for fun'));
 });
 
+test('Made for fun holds licht: right after sleep, a link to licht.hulsman.dev beside "Genesis 1, lit only by its own letters"', async () => {
+  const rows = await still.$$eval('.pi-side li', (lis) => lis.map((li) => {
+    const a = li.querySelector('a');
+    return { text: a.textContent.trim(), href: a.getAttribute('href'), line: a.nextElementSibling?.textContent.trim() };
+  }));
+  const at = rows.findIndex((r) => r.text === 'sleep.hulsman.dev');
+  assert.ok(at >= 0, JSON.stringify(rows));
+  assert.deepEqual(rows[at + 1], { text: 'licht.hulsman.dev', href: 'https://licht.hulsman.dev', line: 'Genesis 1, lit only by its own letters' });
+});
+
 // ---------- stone-projects-index: ANNA leads in her window; anna-section "On /projects" ----------
 
 test('The lead: "01" in her hue, her name to her page, her text, status and "Case study", the four rows, her window to their right', async () => {

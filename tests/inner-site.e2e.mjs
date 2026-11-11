@@ -1,6 +1,6 @@
 // Every inner page at once, in a real browser (openspec stone-inner-pages, chunk 11: the glass list,
 // the windows, their text on glass, the copy, still on request, no sideways scroll, the drawing sheet
-// gone; glass-material "Only the three exceptions hold a drawing"; chunk 12: no sketch routes). Needs a running site:
+// gone; glass-material "Only the four exceptions hold a drawing"; chunk 12: no sketch routes). Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/inner-site.e2e.mjs
 //
 // Test cost: one browser context with reduced motion (every window finished on arrival, nothing to
@@ -364,7 +364,8 @@ before(async () => {
           label: s.getAttribute('aria-label') ?? s.getAttribute('aria-labelledby') ?? s.getAttribute('class') ?? '',
         };
       }),
-      proseOrLevels: [...document.querySelectorAll('.art .prose svg, .anna-levels')].filter((s) => s.closest('[data-glass]')).length,
+      // Henk's trust boundary is the one prose diagram on a pane of its own (henk-glass-boundary)
+      proseOrLevels: [...document.querySelectorAll('.art .prose svg, .anna-levels')].filter((s) => s.closest('[data-glass]') && s.closest('[data-glass-moment]')?.dataset.glassMoment !== 'henk-boundary').length,
     }));
     if (dialog) {
       r.contrast390.push(...(await windowContrast(`${DIALOG} [data-glass="frosted"]`)).map((c) => ({ ...c, width: 390, dialog: true })));
@@ -509,20 +510,22 @@ test('None on any inner page: no drawing-sheet selector, no B612 preload, no hat
   }
 });
 
-// ---------- glass-material: only the three exceptions hold a drawing ----------
+// ---------- glass-material: only the four exceptions hold a drawing ----------
 
-test('Only the three exceptions hold a drawing: at 390, the dialog open, every svg in glass is pytaiga-mcp\'s, the exactly-once drawing, or a dialog\'s copy, apart from dots and icons', () => {
+test('Only the four exceptions hold a drawing: at 390, the dialog open, every svg in glass is pytaiga-mcp\'s, the exactly-once drawing, Henk\'s trust boundary, or a dialog\'s copy, apart from dots and icons', () => {
   let drawings = 0;
   for (const route of ROUTES) {
     for (const s of R[route].svgs.inGlass) {
       if (s.icon && !s.dwg && !s.copy) continue;
       drawings++;
-      const ok = (s.moment === 'pytaiga' && s.dwg) || (s.moment === 'post-drawing' && s.dwg) || (s.moment === 'diagram' && s.copy);
+      const ok = (s.moment === 'pytaiga' && s.dwg) || (s.moment === 'post-drawing' && s.dwg) || (s.moment === 'diagram' && s.copy)
+        || (route === '/projects/Henk' && s.moment === 'henk-boundary' && !s.dwg && !s.copy);
       assert.ok(ok, `${route}: an svg in glass (${JSON.stringify(s)})`);
     }
     assert.equal(R[route].svgs.proseOrLevels, 0, `${route}: a prose diagram or ANNA's levels in glass`);
   }
-  assert.ok(drawings >= 6, `${drawings} drawings in glass: two panes and four opened copies`);
+  assert.ok(drawings >= 7, `${drawings} drawings in glass: three panes and four opened copies`);
+  assert.equal(R['/projects/Henk'].svgs.inGlass.filter((s) => s.moment === 'henk-boundary').length, 1, 'Henk\'s trust boundary on its pane');
   assert.deepEqual(ROUTES.filter((r) => R[r].dialogOpened).sort(), ['/blog/henk-exactly-once', '/projects/ClaudeSandbox', '/projects/Henk', '/projects/PytaigaMcp']);
 });
 

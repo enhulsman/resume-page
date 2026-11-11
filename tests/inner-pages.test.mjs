@@ -49,7 +49,8 @@ test('innerGlass lists each route\'s moments top to bottom, as the spec names th
   assert.deepEqual(innerGlass, {
     '/projects': ['anna', 'project-cards'],
     '/projects/AnnaAssistant': ['anna'],
-    '/projects/Henk': ['henk', 'diagram'],
+    // Henk's trust boundary is one frosted pane in the prose (henk-glass-boundary, Ezra, 2026-11-12)
+    '/projects/Henk': ['henk', 'henk-boundary', 'diagram'],
     '/projects/ClaudeSandbox': ['sandbox', 'diagram'],
     '/projects/BibleTui': ['bible'],
     '/projects/HomelabInfrastructure': ['homelab'],
@@ -67,6 +68,17 @@ test('innerGlass lists each route\'s moments top to bottom, as the spec names th
     '/blog/bible-tui': ['bible'],
     '/contact': ['compose'],
   });
+});
+
+// ---- stone-projects-index: the side pieces (henk-glass-boundary) ----
+
+test('The side pieces in config: flag, sleep, licht, wordle, licht\'s line verbatim', () => {
+  assert.deepEqual(site.sidePieces, [
+    { url: 'https://flag.hulsman.dev', line: '781 one-minute chess games, drawn as time' },
+    { url: 'https://sleep.hulsman.dev', line: 'One night of sleep, drawn' },
+    { url: 'https://licht.hulsman.dev', line: 'Genesis 1, lit only by its own letters' },
+    { url: 'https://wordle.hulsman.dev', line: 'A word game' },
+  ]);
 });
 
 // ---- stone-inner-pages: one light per page ----

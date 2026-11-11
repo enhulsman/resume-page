@@ -15,7 +15,7 @@ dateLabel: "Running since"
 hook: "A personal homelab agent (Henk, the Dutch neighbor who knows where everything is) that turns infrastructure alerts into Signal conversations. Built on the Claude Agent SDK around a default-deny security posture, with an event pipeline whose delivery guarantees were proven on real hardware, not just in tests."
 ---
 
-import HenkFlow from "../../components/diagrams/HenkFlow.astro";
+import HenkBoundary from "../../components/diagrams/HenkBoundary.astro";
 
 ## What I Built
 
@@ -25,7 +25,7 @@ import HenkFlow from "../../components/diagrams/HenkFlow.astro";
 
 **Security posture.** Default-deny everywhere: a closed toolset enforced at a PreToolUse choke point, read-only tools for everything it inspects, and four write tools that touch only its own memory, notes inbox and reminders, and only on my own messages, one ntfy token scoped per-topic server-side, and its own Tailscale identity with egress to just the four ports its tools use. No SSH keys, no broad API credentials, nothing it doesn't need.
 
-<HenkFlow />
+<HenkBoundary />
 
 ## Key Decisions
 

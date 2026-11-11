@@ -607,7 +607,9 @@ test('Reduced motion: the sandbox\'s dialog opens with no animation, fully opaqu
   assert.ok(m.open && m.animations >= 1, `with motion the dialog fades in (${m.animations} animations)`);
 });
 
-test('The diagram itself has no glass: no data-glass or backdrop-filter on it or any ancestor in main; its labels and caption in Archivo, stone ink', async () => {
+// Henk's diagram is drawn in front of one frosted pane, its trust boundary (henk-glass-boundary,
+// Ezra, 2026-11-12): the only glass between its svg and main is that pane; the sandbox's has none.
+test('The diagram itself has no glass (the sandbox\'s; Henk\'s only its one pane): no other data-glass or backdrop-filter on it or any ancestor in main; its labels and caption in Archivo, stone ink', async () => {
   for (const route of Object.keys(DIAGRAMS)) {
     const page = await at(route);
     const d = await page.locator(DIAGRAMS[route]).evaluate((fig) => {
@@ -615,7 +617,8 @@ test('The diagram itself has no glass: no data-glass or backdrop-filter on it or
       for (let el = fig.querySelector('svg'); el && el.tagName !== 'MAIN'; el = el.parentElement) chain.push(el);
       const texts = [...fig.querySelectorAll('text'), ...fig.querySelectorAll('.flow-caption, figcaption')];
       return {
-        glass: chain.filter((el) => el.hasAttribute('data-glass') || getComputedStyle(el).backdropFilter !== 'none').map((el) => el.tagName),
+        glass: chain.filter((el) => el.hasAttribute('data-glass') || getComputedStyle(el).backdropFilter !== 'none')
+          .map((el) => `${el.tagName} ${el.dataset.glass ?? ''} ${el.closest('[data-glass-moment]')?.dataset.glassMoment ?? ''}`.trim()),
         fonts: [...new Set(texts.map((t) => getComputedStyle(t).fontFamily))],
         inks: [...new Set([...fig.querySelectorAll('text')].map((t) => getComputedStyle(t).fill))],
         caption: [...fig.querySelectorAll('.flow-caption, figcaption')].map((c) => getComputedStyle(c).color),
@@ -623,7 +626,7 @@ test('The diagram itself has no glass: no data-glass or backdrop-filter on it or
       };
     });
     assert.ok(d.texts > 10, `${route}: ${d.texts} texts read`);
-    assert.deepEqual(d.glass, [], route);
+    assert.deepEqual(d.glass, route === '/projects/Henk' ? ['DIV frosted henk-boundary'] : [], route);
     for (const f of d.fonts) assert.match(f, /^"?Archivo/, `${route}: a label in ${f}`);
     // stone ink, its quieter greys and the glass red: opaque inks only
     const OK = ['rgb(17, 17, 16)', 'rgb(42, 40, 38)', 'rgb(74, 69, 63)', 'rgb(92, 86, 80)', 'rgb(143, 51, 32)'];
