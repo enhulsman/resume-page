@@ -45,10 +45,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { lane: still, shard: 1/4 }
-          - { lane: still, shard: 2/4 }
-          - { lane: still, shard: 3/4 }
-          - { lane: still, shard: 4/4 }
+          - { lane: still, shard: 1/6 }
+          - { lane: still, shard: 2/6 }
+          - { lane: still, shard: 3/6 }
+          - { lane: still, shard: 4/6 }
+          - { lane: still, shard: 5/6 }
+          - { lane: still, shard: 6/6 }
           - { lane: live, shard: 1/2 }
           - { lane: live, shard: 2/2 }
     steps:
@@ -83,6 +85,9 @@ jobs:
         env:
           BASE: http://localhost:4321
           SHARD: ${{ matrix.shard }}
+          # two still files at a time on a 4-core runner: at four, a running light in one starved the
+          # page loads of another past their 30 s (CI, 2026-11-11); the live lane ignores it
+          CONC: 2
 
       - name: Server log
         if: failure()

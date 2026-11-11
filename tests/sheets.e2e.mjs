@@ -389,11 +389,13 @@ test('the homelab counts the workstation: the figures on its card and its page, 
   assert.deepEqual(await card.locator('.pc-nums dt').allInnerTexts(), ['4', '7']);
   // and the card says the same: three servers and the workstation, not three devices
   assert.match(await card.locator('.pc-intro').innerText(), /^Three servers and my workstation/);
-  await page.goto(BASE + '/projects/HomelabInfrastructure');
-  const nums = await page.locator('.art-nums .value').allInnerTexts();
-  assert.ok(nums.includes('4') && nums.includes('7'), `its page's numbers: ${nums}`);
-  assert.match(await page.locator('main').innerText(), /is the fourth machine on the mesh/);
   await context.close();
+  // its page in a fresh context: leaving /projects' WebGL page costs ~1 s idle, >30 s on a loaded CI runner
+  const art = await open('/projects/HomelabInfrastructure');
+  const nums = await art.page.locator('.art-nums .value').allInnerTexts();
+  assert.ok(nums.includes('4') && nums.includes('7'), `its page's numbers: ${nums}`);
+  assert.match(await art.page.locator('main').innerText(), /is the fourth machine on the mesh/);
+  await art.context.close();
 });
 
 test('bible-tui has its own page, linked to the live reader, the code and the blog post', async () => {
