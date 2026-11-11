@@ -237,6 +237,23 @@ test('bible-tui\'s facts: Online since, Stack, Code and Preview, the links witho
   for (const f of p.facts) assert.ok(f.labelAbove, `${f.label} above its value`);
 });
 
+test('bible-tui\'s reader keeps one type size: every verse, the highlighted one too, the same on the project page and the post, at 1440 and 390', async () => {
+  const sizes = {};
+  for (const route of ['/projects/BibleTui', '/blog/bible-tui']) {
+    const page = await at(route);
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+      await frames(page);
+      const v = await page.$$eval('.pj-w-bible .tui-vv li', (lis) => lis.map((li) => ({ hl: li.classList.contains('hl'), size: getComputedStyle(li.querySelector('.pw-text')).fontSize })));
+      assert.ok(v.length > 1 && v.some((x) => x.hl), `${route} at ${width}: the verses, one of them highlighted`);
+      assert.deepEqual([...new Set(v.map((x) => x.size))], [v[0].size], `${route} at ${width}: ${JSON.stringify(v)}`);
+      (sizes[width] ??= []).push(v[0].size);
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+  }
+  for (const [width, s] of Object.entries(sizes)) assert.equal(s[0], s[1], `at ${width} the project page and the post agree`);
+});
+
 test('Numbers from the listing: Homelab\'s first three dims', async () => {
   const p = (await survey())['/projects/HomelabInfrastructure'];
   assert.deepEqual(p.numbers.map((n) => [n.value, n.label]), [['4', 'machines, one mesh'], ['7', 'scrape targets'], ['19', 'alert rules, in Grafana']]);

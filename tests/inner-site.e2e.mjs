@@ -249,6 +249,11 @@ before(async () => {
       };
     }));
 
+    // the display type: every heavy heading of 32 px and up, with its word gap
+    r.display = await page.$$eval('main h1, main h2, main h3', (hs) => hs.map((h) => ({ h, cs: getComputedStyle(h) }))
+      .filter(({ h, cs }) => +cs.fontWeight >= 850 && parseFloat(cs.fontSize) >= 32 && !h.closest('[data-glass], .prose'))
+      .map(({ h, cs }) => ({ text: h.textContent.trim(), wordSpacing: parseFloat(cs.wordSpacing) || 0, size: parseFloat(cs.fontSize) })));
+
     // the drawing sheet, gone: selectors, the B612 preload, the layout's defs
     r.sheet = await page.evaluate((SHEET) => ({
       hits: SHEET.filter((s) => document.querySelector(s)),
@@ -390,6 +395,15 @@ test('The kinds: project-cards holds only ribbed panes hidden from readers; ever
       } else {
         assert.deepEqual([k.frosted, k.ribbed], [1, 0], `${route} ${k.id}`);
       }
+    }
+  }
+});
+
+test('The display type keeps its word gaps: every heavy heading on every inner page has a positive word-spacing, at most 0.2em', () => {
+  for (const route of ROUTES) {
+    assert.ok(R[route].display.length > 0, `${route} has display headings`);
+    for (const d of R[route].display) {
+      assert.ok(d.wordSpacing > 0 && d.wordSpacing <= d.size * 0.2, `${route} "${d.text}": word-spacing ${d.wordSpacing}px at ${d.size}px`);
     }
   }
 });

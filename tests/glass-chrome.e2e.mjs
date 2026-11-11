@@ -69,6 +69,9 @@ for (const path of PAGES) {
   });
 }
 
+/** Each inner page's bar links at 1440, as the chrome test below reads them. */
+const barLinks = {};
+
 for (const path of INNER) {
   test(`${path} carries the chrome: stone ground, the bar with the name and its links, the stone footer`, async () => {
     const { context, page } = await open(path);
@@ -98,6 +101,11 @@ for (const path of INNER) {
     assert.equal(await cta.getAttribute('href'), '/contact');
     assert.equal(await cta.isVisible(), true);
     assert.match(await page.locator('.bar').evaluate((b) => getComputedStyle(b).fontFamily), /^"?Archivo/);
+    // where each link sits, and the one you are on, for the test below: read on this same load
+    barLinks[path] = await nav.evaluateAll((as) => as.map((a) => ({
+      left: a.getBoundingClientRect().left, width: a.getBoundingClientRect().width,
+      current: a.getAttribute('aria-current') === 'page', weight: +getComputedStyle(a).fontWeight,
+    })));
     // the footer, from config: the line, the name and its full stop, then the verse as a link
     const foot = page.locator('footer.foot');
     assert.equal(await foot.count(), 1);
@@ -108,6 +116,23 @@ for (const path of INNER) {
     await context.close();
   });
 }
+
+test('the bar holds still between pages: each link at the same x and width on every inner page at 1440; the one you are on in 800', () => {
+  const MOVE = ['/projects', '/blog', '/resume', '/contact'];
+  assert.deepEqual(Object.keys(barLinks).sort(), [...INNER].sort(), 'every inner page read');
+  const first = barLinks[INNER[0]];
+  for (const path of INNER) {
+    barLinks[path].forEach((l, i) => {
+      assert.equal(l.left, first[i].left, `${path}: ${LINKS[i][0]} starts at ${l.left}, on ${INNER[0]} at ${first[i].left}`);
+      assert.equal(l.width, first[i].width, `${path}: ${LINKS[i][0]} is ${l.width} wide, on ${INNER[0]} ${first[i].width}`);
+    });
+  }
+  for (const path of MOVE) {
+    const i = LINKS.findIndex((l) => l[1] === path);
+    assert.deepEqual(barLinks[path].map((l) => l.current), LINKS.map((_, k) => k === i), `${path}: only its own link is current`);
+    assert.deepEqual(barLinks[path].map((l) => l.weight === 800), LINKS.map((_, k) => k === i), `${path}: its own link in 800, the others lighter`);
+  }
+});
 
 for (const path of PAGES) {
   test(`dark system theme on ${path}: the ground stays stone, no theme button`, async () => {

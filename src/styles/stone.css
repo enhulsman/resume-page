@@ -18,6 +18,8 @@
   --stone-t-lead: clamp(18px, 1.6vw, 23px);
   --stone-t-body: clamp(15px, 1.1vw, 16.5px);
   --stone-t-small: 13px;
+  /* the display type's word gap: tracked in at -0.04em, its spaces need this back to read */
+  --stone-display-word: 0.08em;
 
   /* The one shared fix for text on glass: opaque inks, never alpha-blended, so a light behind
      the glass can never pull them under 4.5:1. If the measured test fails, darken here only. */
@@ -65,7 +67,7 @@
 }
 .stone-section > h2 {
   margin: 0 0 clamp(20px, 2.6vw, 40px);
-  font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em;
+  font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word);
 }
 /* rows divided by hairlines, one above each and one closing the list */
 .stone-rows { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid var(--stone-hair); }
@@ -94,7 +96,7 @@
 .art-idx { display: block; margin-bottom: 0.7em; font-size: var(--stone-t-small); font-weight: 650; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
 .art-title {
   margin: 0; padding-bottom: 0.1em; max-width: 15ch;
-  font: 900 clamp(48px, 5.6vw, 92px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; text-wrap: balance;
+  font: 900 clamp(48px, 5.6vw, 92px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); text-wrap: balance;
 }
 .art-lead { margin: 0.9em 0 0; max-width: 36em; font-size: var(--stone-t-lead); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
 
@@ -233,7 +235,7 @@
 @media (max-width: 760px) { .page-light { left: -30%; width: 150%; } }
 .page-head .page-title {
   margin: 0; padding-bottom: 0.1em;
-  font: 900 var(--stone-t-h2)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; color: var(--stone-ink); text-wrap: balance;
+  font: 900 var(--stone-t-h2)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink); text-wrap: balance;
 }
 
 /* ---- /blog (stone-blog, BI2): the titles, large, each between hairlines; a title lights up in its
@@ -252,7 +254,7 @@
 .bl-list time { font-size: var(--stone-t-small); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--stone-ink-2); }
 .bl-list h2 {
   margin: 0.35em 0 0; max-width: 20ch;
-  font: 900 clamp(36px, 4vw, 64px)/0.98 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.035em; color: var(--stone-ink); text-wrap: balance;
+  font: 900 clamp(36px, 4vw, 64px)/0.98 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.035em; word-spacing: var(--stone-display-word); color: var(--stone-ink); text-wrap: balance;
   overflow-wrap: break-word;
 }
 .bl-list h2 a { position: relative; isolation: isolate; color: inherit; text-decoration: none; }
@@ -274,7 +276,7 @@
 .cv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin: 1.8em 0 0; font-weight: 600; font-size: var(--stone-t-body); }
 .cv-actions .cv-main { padding: 11px 20px; border-radius: 999px; background: var(--stone-ink); color: var(--stone); text-decoration: none; }
 .cv-actions .cv-main:hover { background: var(--stone-ink-2); color: var(--stone); }
-.cv-h2 { margin: 0; font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; color: var(--stone-ink); }
+.cv-h2 { margin: 0; font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink); }
 .cv-exp { margin-top: clamp(72px, 11svh, 132px); }
 .cv-group { margin: 2.2em 0 0.8em; font-size: var(--stone-t-small); font-weight: 700; letter-spacing: 0.01em; color: var(--stone-ink-2); }
 .cv-row { display: grid; grid-template-columns: minmax(6.5em, 0.32fr) minmax(0, 1fr); column-gap: clamp(16px, 2.6vw, 44px); align-items: baseline; padding: clamp(18px, 1.8vw, 26px) 0; }
@@ -285,7 +287,7 @@
 .cv-client { font-weight: 450; color: var(--stone-ink-2); }
 .cv-row p { margin: 0.5em 0 0; max-width: 44em; font-size: var(--stone-t-body); line-height: 1.5; color: var(--stone-ink-2); text-wrap: pretty; }
 .cv-more { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(32px, 5vw, 96px); align-items: start; margin-top: clamp(72px, 10svh, 120px); }
-.cv-h3 { margin: 0 0 0.6em; font: 900 clamp(32px, 3vw, 48px)/0.95 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.035em; color: var(--stone-ink); }
+.cv-h3 { margin: 0 0 0.6em; font: 900 clamp(32px, 3vw, 48px)/0.95 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.035em; word-spacing: var(--stone-display-word); color: var(--stone-ink); }
 .cv-more section + section { margin-top: 1.6em; }
 .cv-table { margin: 0; }
 .cv-table > div { display: grid; grid-template-columns: 9em minmax(0, 1fr); column-gap: 20px; padding: 13px 0; border-top: 1px solid var(--stone-hair); font-size: var(--stone-t-body); line-height: 1.45; }
@@ -315,7 +317,7 @@
 .ct :focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
 .ct-title {
   margin: 0; padding-bottom: 0.1em;
-  font: 900 clamp(56px, 6.6vw, 112px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; color: var(--stone-ink); text-wrap: balance;
+  font: 900 clamp(56px, 6.6vw, 112px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink); text-wrap: balance;
 }
 .ct-lead { margin: 0.9em 0 0; max-width: 34em; font-size: clamp(19px, 1.7vw, 25px); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
 .ct-mail {
@@ -381,7 +383,7 @@
 .pi .pc:focus-visible { border-radius: clamp(12px, 1.3vw, 18px); }
 .pi-title {
   margin: 0; padding-bottom: 0.1em;
-  font: 900 clamp(64px, 9vw, 150px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; color: var(--stone-ink); text-wrap: balance;
+  font: 900 clamp(64px, 9vw, 150px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink); text-wrap: balance;
 }
 .pi-line { margin: 0.6em 0 0; font-size: var(--stone-t-body); color: var(--stone-ink-2); }
 .pi h2 a { color: inherit; text-decoration: none; }
@@ -392,7 +394,7 @@
   align-items: start; margin-top: clamp(56px, 8svh, 104px);
 }
 .pi-idx { display: block; margin-bottom: 0.7em; font-size: var(--stone-t-small); font-weight: 650; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
-.pi-lead-title { margin: 0; font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; color: var(--stone-ink); }
+.pi-lead-title { margin: 0; font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink); }
 .pi-lead-line { margin: 0.9em 0 0; max-width: 36em; font-size: var(--stone-t-lead); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
 .pi-status { margin: 0.6em 0 0; font-size: var(--stone-t-small); color: var(--stone-ink-2); }
 .pi-more { display: inline-block; margin-top: 1.2em; font-weight: 600; color: var(--stone-ink); }
@@ -403,7 +405,7 @@
 .pi-group { margin: clamp(56px, 8svh, 96px) 0 0; }
 .pi-group > h2, .pi-side > h2 {
   margin: 0 0 clamp(16px, 2vw, 28px);
-  font: 900 clamp(40px, 4.4vw, 72px)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; color: var(--stone-ink);
+  font: 900 clamp(40px, 4.4vw, 72px)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink);
 }
 .pi-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 1.2vw, 18px); }
 

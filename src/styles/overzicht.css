@@ -67,6 +67,15 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .bar nav { isolation: isolate; }
 .bar nav a { position: relative; }
 .bar nav a[aria-current="page"] { font-weight: 800; font-stretch: 86%; letter-spacing: -.01em; }
+/* every link holds both of its widths, so the links stand still from page to page: its label again,
+   unseen and unread, in the other cut (the heavy, narrow one under a plain link, the plain one under
+   the current), and the link as wide as the wider of the two */
+.bar nav a { display: inline-flex; flex-direction: column; }
+.bar nav a::after {
+  content: attr(data-text) / ""; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; user-select: none;
+  font-weight: 800; font-stretch: 86%; letter-spacing: -.01em;
+}
+.bar nav a[aria-current="page"]::after { font-weight: 450; font-stretch: 100%; letter-spacing: normal; }
 .bar nav a::before {
   content: ""; position: absolute; z-index: -1; left: -14px; right: -14px; top: -10px; bottom: -12px; pointer-events: none;
   background: radial-gradient(closest-side, rgb(var(--glow-near, 242 168 112) / .6), rgb(var(--glow-deep, 255 196 96) / .2) 60%, transparent);

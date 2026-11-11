@@ -27,12 +27,12 @@ const hl = projectWindows.homelab;
      row stays one line, as a terminal prints it; only where even 10 px is too wide does the text wrap
      inside its own column, the spacing kept, so nothing is cut and nothing scrolls */
   .pj-w-homelab { container-type: inline-size; }
-  .pj-window .hl { padding: 18px 22px 20px; font: 12px/1.7 ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: clamp(10px, calc((100cqi - 46px) / 79 / 0.61), 12px); }
-  .pj-window .hl .b { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pj-w-homelab .hl { padding: 18px 22px 20px; font: 12px/1.7 ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: clamp(10px, calc((100cqi - 46px) / 79 / 0.61), 12px); }
+  .pj-w-homelab .hl .b { white-space: pre-wrap; overflow-wrap: anywhere; }
   .pj-window .hl-h { margin-top: 6px !important; }
   .pj-window .hl-row { display: grid; grid-template-columns: 4ch 12ch minmax(0, 1fr); }
   @media (max-width: 760px) {
-    .pj-window .hl { padding: 14px; }
+    .pj-w-homelab .hl { padding: 14px; }
     .pj-window .hl-row { grid-template-columns: 4ch minmax(0, 1fr); }
     .pj-window .hl-row .hl-host:empty { display: none; }
     .pj-window .hl-row .hl-host + .pw-text { grid-column: 2; }

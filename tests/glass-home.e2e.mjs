@@ -487,7 +487,10 @@ const ABOUT = 'section[aria-labelledby="about-h"]';
 test('the sections in order: ANNA, Projects, Experience, Writing, About, Contact, each heading from config', async () => {
   const { context, page, errors } = await open();
   const h2s = await page.$$eval('main h2', (hs) => hs.map((h) => h.textContent.trim()));
+  // the display type keeps its word gaps: the name and every section heading
+  const gaps = await page.$$eval('main h1, main h2', (hs) => hs.map((h) => [h.textContent.trim(), parseFloat(getComputedStyle(h).wordSpacing) || 0]));
   await context.close();
+  for (const [text, ws] of gaps) assert.ok(ws > 0, `"${text}": word-spacing ${ws}px`);
   assert.deepEqual(h2s, [annaLead.title, homeSections.headings.projects, homeSections.headings.experience, homeSections.headings.writing, homeSections.headings.about, homeSections.headings.contact]);
   assert.deepEqual(h2s, ['ANNA', 'Projects', 'Experience', 'Writing', 'About', 'Contact']);
   assert.deepEqual(errors, []);
