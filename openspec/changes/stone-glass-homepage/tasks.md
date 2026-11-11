@@ -111,3 +111,14 @@ mostly waiting out ANNA's 20.5 s conversation and the terminal's intro in real t
 - [x] 12.4 Tests that need the artefacts landed or the terminal's intro finished load with `?speed=10`; the chrome tests on `/` hold the light (`?t=2.4`): a screenshot under swiftshader waits on every frame of a running light; `tests/sheets.e2e.mjs` waits on the plate's ink and on frames, not on sleeps
 - [x] 12.5 `panes.js`: when the loop stops (reduced motion switched on) every pane goes to the still frame, off screen too, whether or not the query's change event fires (the flaky "reduced motion switched on mid-typing")
 - [x] 12.6 Run all test commands: `npm run test:e2e` 297 s against the dev server, 274 s against the build
+
+## 13. The hero arrives and the cards' light reaches the name (sketch round 3, 2026-11-11)
+
+Ezra approved the spill variant of `/sketches/hero-name` (round 3); the sketch is archived at
+`~/.local/state/handoffs/threads-saved/2026-11-12-inner-pages/src/sketches/hero-name/`.
+
+- [x] 13.1 Spec: "The hero arrives and the cards' light reaches the name"; "The name is plain", "The name's size" and "Arrival" amended (design decision 18)
+- [x] 13.2 Tests first: the timeline as functions and the resting level (`tests/glass-hero.test.mjs`); `spill` hues in config; the cards arrive in order (`?at=`), the resting tint follows the loop, the phone tint follows the row, the mouse light (mouse only), reduced motion / `?t=` / no WebGL, the contrast probe, the name's sizes and no overlap (`tests/glass-hero.e2e.mjs`); "the name is plain" and "arrival" in `tests/glass-home.e2e.mjs` rewritten for the amended scenarios; existing tests that read the cards right after load wait for the arrival (`__glass.glow` all 1); "hero fits the first screen" at 1280x720 checks that the row starts on it with 90% inside (the amended scenario)
+- [x] 13.3 `panes.js`: the glow hook (`setGlow`, `lightTime`, `heroPanes`); `arrival-model.js` and `arrival.js`; `spill` in `glassCards`; `Hero.astro`: the larger name, the narrower intro, `data-ink`, `data-spill`, the `::after`, the pending class
+- [x] 13.4 Remove the sketch (`src/pages/sketches/`, `src/scripts/sketches/`) after archiving it
+- [x] 13.5 Run all test commands and `openspec validate stone-glass-homepage --strict`; screenshots at 1440 (resting) and 390 against the sketch's round-3 shots

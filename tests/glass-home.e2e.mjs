@@ -64,6 +64,8 @@ const spread = (page, sel = `${CARDS} canvas`) => page.$$eval(sel, (cs) => cs.ma
   for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 250) { const v = (d[i] + d[i + 1] + d[i + 2]) / 3; lo = Math.min(lo, v); hi = Math.max(hi, v); }
   return hi - lo;
 }));
+/** The hero's cards have arrived, every light full and drawn (the arrival, sketch round 3). */
+const arrived = async (page) => { await page.waitForFunction(() => window.__glass.glow.every((g) => g === 1), null, { timeout: 10000 }); await frames(page, 3); };
 const norm = (s) => s.replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
 
 test('hero content: the name, the intro line verbatim, four cards in order, each to its project page', async () => {
@@ -85,17 +87,22 @@ test('hero content: the name, the intro line verbatim, four cards in order, each
   assert.deepEqual(errors, []);
 });
 
-test('the name is plain: no glare, nothing after it, nothing moving on it', async () => {
+test('the name is plain: no glare, no CSS animation, read once; with reduced motion nothing over it', async () => {
   const { context, page } = await open();
   const h = await page.$eval('main h1', (h) => ({
     glare: h.hasAttribute('data-glare'),
-    after: getComputedStyle(h, '::after').content,
     anims: h.getAnimations({ subtree: true }).length,
   }));
+  const snap = await page.locator('main h1').ariaSnapshot();
   await context.close();
   assert.equal(h.glare, false);
-  assert.ok(h.after === 'none' || h.after === 'normal', `::after content ${h.after}`);
   assert.equal(h.anims, 0);
+  // its ::after copy of the name (the cards' light) is silent: readers hear the name once
+  assert.equal(norm(snap), `- heading "${site.name}" [level=1]`);
+  const still = await open('', { reducedMotion: 'reduce' });
+  const after_ = await still.page.$eval('main h1', (h) => getComputedStyle(h, '::after').display);
+  await still.context.close();
+  assert.equal(after_, 'none', 'reduced motion: nothing over the name');
 });
 
 test('screen reader reads the card: the first card\'s name holds "ANNA" and "In production"; every canvas is hidden', async () => {
@@ -140,6 +147,7 @@ test('reduced motion: every card holds one still frame', async () => {
 
 test('one WebGL context for every pane: at 390 x 844 there is one, and all four cards are lit', async () => {
   const { context, page, errors } = await open('', { width: 390, height: 844, init: [countGL] });
+  await arrived(page);
   const n = await page.evaluate(() => window.__glCanvases.size);
   const kinds = await page.$$eval(`${CARDS} canvas`, (cs) => cs.map((c) => (c.getContext('2d') ? '2d' : 'other')));
   const s = await spread(page);
@@ -292,7 +300,7 @@ test('card text reads at 4.5:1 at 20 moments of the loop: title, index and reado
   for (const [k, { ratio, t }] of Object.entries(worst)) assert.ok(ratio >= 4.5, `${k}: ${ratio.toFixed(2)}:1 at t = ${t}`);
 });
 
-test('arrival: the hero shows in the first painted frame, no intro class ever, the body not clipped', async () => {
+test('arrival: the name and intro show in the first painted frame (the cards arrive), no intro class ever, the body not clipped', async () => {
   const watch = () => {
     window.__sawIntro = false;
     // before any page script, and before <html> exists: watch the whole document for it
@@ -304,10 +312,13 @@ test('arrival: the hero shows in the first painted frame, no intro class ever, t
       const shown = (el) => { for (let e = el; e; e = e.parentElement) { const s = getComputedStyle(e); if (+s.opacity < 1 || s.visibility !== 'visible' || s.display === 'none') return false; } return true; };
       const r = h1?.getBoundingClientRect();
       const cards = [...document.querySelectorAll('[data-glass-moment="hero"] [data-glass="ribbed"]')];
+      const p = document.querySelector('.hero-intro');
       window.__first = {
         intro: document.documentElement.classList.contains('intro'),
         h1: !!h1 && shown(h1) && r.top >= 0 && r.left >= 0 && r.bottom <= innerHeight && r.right <= innerWidth,
-        cards: cards.length === 4 && cards.every((c) => shown(c) && c.getBoundingClientRect().top < innerHeight),
+        p: !!p && shown(p),
+        // the cards are laid out on the first screen, waiting for their arrival
+        cards: cards.length === 4 && cards.every((c) => c.getBoundingClientRect().top < innerHeight),
         transform: getComputedStyle(document.body).transform,
       };
     }));
@@ -321,7 +332,8 @@ test('arrival: the hero shows in the first painted frame, no intro class ever, t
   await context.close();
   assert.equal(first.intro, false);
   assert.equal(first.h1, true, 'the name is on screen in the first frame');
-  assert.equal(first.cards, true, 'the cards are there in the first frame');
+  assert.equal(first.p, true, 'the intro is on screen in the first frame');
+  assert.equal(first.cards, true, 'the cards are laid out in the first frame');
   assert.equal(first.transform, 'none', 'the page is not tilted');
   assert.equal(after_.saw, false, 'the document never got an intro class');
   assert.ok(!['hidden', 'clip'].includes(after_.oy), `body overflow ${after_.oy}`);
@@ -746,6 +758,7 @@ test('About is written in config only (the terminal\'s own output aside)', async
 
 test('one WebGL context for every pane: at 390 x 844 there is one, and every pane is lit, the reflections too', async () => {
   const { context, page, errors } = await open('', { width: 390, height: 844, init: [countGL] });
+  await arrived(page);
   const n = await page.evaluate(() => window.__glCanvases.size);
   const panes = await page.$$eval('[data-glass="ribbed"]', (ps) => ps.map((p) => ({ moment: p.closest('[data-glass-moment]')?.dataset.glassMoment, lit: p.classList.contains('lit') })));
   const s = await spread(page, '[data-glass="ribbed"] canvas');

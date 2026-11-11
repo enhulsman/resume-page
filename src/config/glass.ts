@@ -32,6 +32,8 @@ export interface GlassCard {
   distance: number;
   /** One faint broad light under the rest, in the card's hue, so the ribs show across the whole card. */
   wash: { color: RGB; opacity: number };
+  /** The colour this card's light throws on the hero's name (its light's own hue, not its stone; sketch round 3, 2026-11-11). */
+  spill?: RGB;
 }
 
 const dim = (id: DetailListing['id'], i: number) => {
@@ -41,9 +43,9 @@ const dim = (id: DetailListing['id'], i: number) => {
 };
 
 const card = (id: DetailListing['id'], title: string, i: number, words: (v: string) => string,
-  light: number, base: GlassCard['base'], ink: GlassCard['ink'], distance: number, wash: GlassCard['wash'], tune?: GlassCard['tune']): GlassCard => {
+  light: number, base: GlassCard['base'], ink: GlassCard['ink'], distance: number, wash: GlassCard['wash'], spill: RGB | undefined, tune?: GlassCard['tune']): GlassCard => {
   const { d, value } = dim(id, i);
-  return { id, title, href: d.href, value, readout: words(value), light, base, ink, distance, wash, tune };
+  return { id, title, href: d.href, value, readout: words(value), light, base, ink, distance, wash, spill, tune };
 };
 
 // warm stone glass, a shade under the page (#EEEAE3) so the card edge reads. One stone for all
@@ -55,25 +57,25 @@ const tint = (d: RGB): GlassCard['base'] => STONE.map((v, j) => v + d[j]) as RGB
 // Every light gets one hard contour (sigma ~0.05-0.12: a few px) for the ribs to break.
 export const glassCards: GlassCard[] = [
   // the flame: a soft halo, then one hard-edged tongue, yellow at its root, red at the tip
-  { id: 'anna', title: 'ANNA', href: annaLead.href, value: '', readout: 'In production', light: 0, base: tint([4, -1, -5]), ink: 'dark', distance: 0.35, wash: { color: [236, 150, 96], opacity: 0.2 },
+  { id: 'anna', title: 'ANNA', href: annaLead.href, value: '', readout: 'In production', light: 0, base: tint([4, -1, -5]), ink: 'dark', distance: 0.35, wash: { color: [236, 150, 96], opacity: 0.2 }, spill: [238, 92, 30],
     tune: [
       { scale: 1.9, dy: 10, set: { color: [242, 168, 112], sigma: 1.0, opacity: 0.75 } },
       { set: { opacity: 0 } },
       { scale: 1.45, stretch: [0.8, 1.15], lean: 0.15, dy: -22, set: { color: [214, 58, 34], color2: [255, 196, 96], g0: 150, g1: 300, sigma: 0.07 } },
     ] },
   // the tide: a deep sea band with crisp edges, paler at its crest
-  card('henk', 'Henk', 0, v => `${v} ports · 0 inbound`, 1, tint([-3, -1, 3]), 'dark', 0.8, { color: [120, 156, 210], opacity: 0.18 }, [
+  card('henk', 'Henk', 0, v => `${v} ports · 0 inbound`, 1, tint([-3, -1, 3]), 'dark', 0.8, { color: [120, 156, 210], opacity: 0.18 }, [40, 110, 235], [
     { scale: 0.95, set: { color: [128, 170, 226], color2: [48, 92, 172], g0: 130, g1: 260, sigma: 0.1 } },
   ]),
   // the sunset: a sun disc, yellow above and coral below, setting into a plum ground that fills
   // everything below the horizon, so the sun never shows again under it
-  card('homelab', 'Homelab', 0, v => `${v} machines`, 3, tint([5, -5, -6]), 'dark', 0.5, { color: [236, 160, 132], opacity: 0.18 }, [
+  card('homelab', 'Homelab', 0, v => `${v} machines`, 3, tint([5, -5, -6]), 'dark', 0.5, { color: [236, 160, 132], opacity: 0.18 }, [240, 78, 70], [
     { scale: 1.5, dy: -3, dist: 0.45, set: { color: [255, 180, 104], color2: [242, 92, 80], g0: 115, g1: 255, sigma: 0.05 } },
     { ground: 150, dy: -55, set: { sx: 900, color: [150, 122, 150], color2: [226, 212, 208], g0: 222, g1: 292, sigma: 0.018 } },
     { set: { opacity: 0 } },
   ]),
   // the moss: a pale halo, and a hard-rimmed pod, lit at the top
-  card('sandbox', 'Claude Sandbox', 1, v => `${v} risk`, 4, tint([-2, 1, -3]), 'dark', 0.45, { color: [150, 188, 110], opacity: 0.18 }, [
+  card('sandbox', 'Claude Sandbox', 1, v => `${v} risk`, 4, tint([-2, 1, -3]), 'dark', 0.45, { color: [150, 188, 110], opacity: 0.18 }, [100, 170, 30], [
     { scale: 2.2, set: { color: [196, 214, 160], sigma: 1.0, opacity: 0.6 } },
     { scale: 1.12, dy: 10, set: { color: [214, 234, 150], color2: [86, 140, 50], g0: 140, g1: 290, sigma: 0.07, opacity: 1 } },
   ]),
@@ -294,7 +296,7 @@ export const glowBackground = (g: WindowGlow) =>
 // Off the hero for now (Ezra, 2026-11-09: he barely uses it); it can come back as 05.
 export const benched: GlassCard[] = [
   // the mist: a deep haze, and over it one tilted pale band
-  card('finance', 'Finance Bot', 1, v => `${v} rules`, 2, tint([-2, 0, 3]), 'dark', 0.5, { color: [170, 180, 198], opacity: 0.18 }, [
+  card('finance', 'Finance Bot', 1, v => `${v} rules`, 2, tint([-2, 0, 3]), 'dark', 0.5, { color: [170, 180, 198], opacity: 0.18 }, undefined, [
     { scale: 2.6, dy: -30, set: { color: [146, 156, 176], sigma: 1.0 } },
     { scale: 1.25, dy: -24, lean: 0.15, set: { color: [250, 251, 253], color2: [186, 196, 216], g0: 190, g1: 260, sigma: 0.08 } },
   ]),

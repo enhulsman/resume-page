@@ -9,7 +9,7 @@ The homepage SHALL show, top to bottom: the hero, then the sections ANNA, Projec
 - **THEN** they are "ANNA", "Projects", "Experience", "Writing", "About", "Contact"
 
 ### Requirement: The hero is the name and four ribbed cards
-The hero SHALL show the name (`site.name`) as a real `h1` in plain type, set on two lines (no glare, no effect on the name), the role and the intro line ("I build ANNA, an AI assistant in Microsoft Teams that does the admin no one should spend their day on."), and four ribbed glass cards in this order: ANNA, Henk, Homelab, Claude Sandbox, each a link to its project page, each with its index `01` to `04`. Each card's readout SHALL come from config: ANNA's is "In production", the others one of that project's dimensions in `home.ts`.
+The hero SHALL show the name (`site.name`) as a real `h1` in plain ink type, set on two lines (no glare; the only light on it is the cards' own, see "The hero arrives and the cards' light reaches the name"), the role and the intro line ("I build ANNA, an AI assistant in Microsoft Teams that does the admin no one should spend their day on."), and four ribbed glass cards in this order: ANNA, Henk, Homelab, Claude Sandbox, each a link to its project page, each with its index `01` to `04`. Each card's readout SHALL come from config: ANNA's is "In production", the others one of that project's dimensions in `home.ts`.
 
 #### Scenario: Hero content
 - **GIVEN** the homepage loaded at 1440x900
@@ -19,7 +19,12 @@ The hero SHALL show the name (`site.name`) as a real `h1` in plain type, set on 
 #### Scenario: The name is plain
 - **GIVEN** the homepage loaded
 - **WHEN** the `h1` and its pseudo-elements are inspected
-- **THEN** it has no `data-glare` attribute, its `::after` has no content, and no animation runs on it
+- **THEN** it has no `data-glare` attribute, no CSS animation runs on it, its accessible name is `site.name` once (its `::after` copy of the name has empty alternative text), and with reduced motion its `::after` is not displayed
+
+#### Scenario: The name's size
+- **GIVEN** the homepage loaded at 1440x900, 1280x800, 1000x800 and 390x844, fonts ready
+- **WHEN** the `h1`'s font size is read
+- **THEN** it is 233 px, 207 px, 150 px and 88 px (each within 1 px), the name does not overlap the intro, the intro does not overlap the cards, and at 390 the page has no sideways scroll
 
 #### Scenario: Readouts from the project data
 - **GIVEN** `glassCards` and `details` in config
@@ -29,7 +34,7 @@ The hero SHALL show the name (`site.name`) as a real `h1` in plain type, set on 
 #### Scenario: Hero fits the first screen
 - **GIVEN** the homepage loaded at 1280x720, 1440x900 and 1920x1080
 - **WHEN** the card row is measured after fonts are ready
-- **THEN** the bottom of the card row is inside the viewport at each size
+- **THEN** the bottom of the card row is inside the viewport at 1440x900 and 1920x1080; at 1280x720 (the larger name, sketch round 3) the row starts on the first screen and at least 90% of its height is inside
 
 #### Scenario: Phone
 - **GIVEN** the homepage loaded at 390x844
@@ -193,12 +198,12 @@ At 860 px wide and below, the bar SHALL fold the four page links into a menu but
 - **THEN** focus moves to the first of the four links
 
 ### Requirement: The drawing-sheet homepage retires
-The homepage SHALL NOT play an arrival animation (the layout's head block that sets `html.intro`, the `html.intro` CSS, `intro.js` and the terminal's wait for `ovz:arrived` all go) and SHALL NOT render the title block, the revision letters, the stamp, the drawings, the ANNA 3D scene or ANNA's section with its levels. The retired homepage code (`intro.js`, the homepage `main.js`, `YouSheet`, `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`, `NotesSheet`, `ContactSheet`) SHALL be deleted; `AnnaPlate` and `plate.js` stay for /projects, and with them `scene.js` (the model `plate.js` draws) and `depth.js` (which `scene.js` imports).
+The homepage SHALL NOT play the drawing sheet's arrival animation (the layout's head block that sets `html.intro`, the `html.intro` CSS, `intro.js` and the terminal's wait for `ovz:arrived` all go) and SHALL NOT render the title block, the revision letters, the stamp, the drawings, the ANNA 3D scene or ANNA's section with its levels. The retired homepage code (`intro.js`, the homepage `main.js`, `YouSheet`, `AnnaSection`, `DetailsSheet`, `RegisterSheet`, `RevisionsSheet`, `NotesSheet`, `ContactSheet`) SHALL be deleted; `AnnaPlate` and `plate.js` stay for /projects, and with them `scene.js` (the model `plate.js` draws) and `depth.js` (which `scene.js` imports).
 
 #### Scenario: Arrival
 - **GIVEN** a new browser session
 - **WHEN** the homepage loads
-- **THEN** the hero is fully visible in the first painted frame, the document never gets an `intro` class, and the body is not clipped to one screen
+- **THEN** the name and the intro are visible in the first painted frame (only the cards arrive, see "The hero arrives and the cards' light reaches the name"), with reduced motion or `?t=` the cards too, the document never gets an `intro` class, and the body is not clipped to one screen
 
 #### Scenario: Retired files are gone
 - **GIVEN** the repository
@@ -235,3 +240,42 @@ In the bar, the link of the page you are on SHALL be set in the name's heavy wei
 - **GIVEN** `/projects` loaded at 1440x900
 - **WHEN** the mouse rests on the "Blog" link, then moves away
 - **THEN** while it rests there the link's `::before` shows a radial-gradient glow (opacity above 0.5) and no other link's does; after it moves away the glow is gone (opacity 0)
+
+### Requirement: The hero arrives and the cards' light reaches the name
+Without reduced motion and without `?t=`, the hero's four cards SHALL arrive one after another, 160 ms apart (ANNA first), each fading in while its light comes up from dim and far behind the glass; the name and the intro are there from the first frame. Once the cards have landed (from 1.5 s), each card's light colour (`spill` in `glassCards`) SHALL rise faintly in the name's ink from below, at that card's horizontal position, hold until 3.7 s, and ease by 5 s to a resting tint of 46% of that peak at the card's brightest moment of the 10 s loop, which keeps following that card's light over the loop (lower when the light is dim). On a phone (760 px and below), where the cards are a sideways row, each card's hue SHALL sit on the name at that card's live position, so a swipe of the row moves it, stronger than on a desktop. A mouse over or near the name SHALL add a soft light at the pointer, in the colour of the card under or nearest it, fading when the mouse leaves; touch and pen add none. With reduced motion there is no arrival, no tint and no pointer light: the name is plain ink. With `?t=` there is no arrival and no pointer light; the resting tint at that moment may show. Without WebGL the cards keep their CSS fallback, the name stays plain ink and nothing errors; if the arrival's script never runs, the cards still show. Every pixel of the name SHALL read at 4.5:1 or more against the stone at every moment. Test hook: `?at=<0..1>` holds the arrival at that share of its 5 s.
+
+#### Scenario: The timeline, as functions
+- **GIVEN** the arrival model (`src/scripts/glass/arrival-model.js`)
+- **WHEN** a unit test reads each card's opacity, glow and spill over time
+- **THEN** card `i` starts at `0.12 + 0.16 i` s and is fully in 0.72 s later, its glow is 0 before its start and 1 within 1.01 s of it, the spill is 0 before 1.5 s, 1 from 2.2 s to 3.7 s, and from 5 s on `0.46 × (0.5 + 0.5 × amount)`, where `amount` is the card's light from 0 at its dimmest to 1 at its brightest; it is never above the peak
+
+#### Scenario: The cards arrive in order
+- **GIVEN** the homepage at 1440x900 with `?at=0.1`, `?at=0.2` and `?at=0.5`
+- **WHEN** the cards' opacity and glow are read
+- **THEN** at each moment the cards' opacity never rises from ANNA to Claude Sandbox, at 0.1 ANNA is partly in and Claude Sandbox not yet, at 0.5 all four are fully in at full glow, and the name is visible throughout
+
+#### Scenario: The resting tint follows the loop
+- **GIVEN** the homepage at 1440x900 after the arrival (`?at=1`)
+- **WHEN** the name's light layers are read at two moments of the loop where a card's light differs
+- **THEN** the name carries one tint layer per card, each centred at its card's horizontal centre, below the middle of the name, and its strength follows that card's light amount; each is at most 46% of the peak
+
+#### Scenario: Phone, the tint follows the row
+- **GIVEN** the homepage at 390x844 after the arrival
+- **WHEN** the card row is scrolled from ANNA to Henk
+- **THEN** ANNA's tint moves left with her card and Henk's appears at his card's new position, and the tint is stronger than at 1440 for the same moment
+
+#### Scenario: A mouse over the name
+- **GIVEN** the homepage at 1440x900 after the arrival
+- **WHEN** a mouse moves over the name above Henk's card, then leaves the page
+- **THEN** a soft light layer appears on the name at the pointer, nearest Henk's hue, and it fades to none after the mouse leaves; a touch tap on the name adds no light
+
+#### Scenario: Reduced motion, frozen, no WebGL
+- **GIVEN** the homepage with reduced motion, then with `?t=2.4`, then without WebGL
+- **WHEN** the hero is read in the first frame and after load
+- **THEN** with reduced motion the cards are all in from the first frame and the name's `::after` is not displayed; with `?t=` the cards are all in from the first frame and a mouse adds no light; without WebGL every card shows its fallback, the name has no tint and no error is logged
+
+#### Scenario: The name reads at 4.5:1 at every moment
+- **GIVEN** the homepage at 1440x900 and 390x844 with the name's ink and its light painted as solid blocks
+- **WHEN** the name's box is screenshotted at the spill's peak, at rest across the loop, and at rest with the mouse on the name
+- **THEN** every pixel reads at 4.5:1 or more against `#EEEAE3`
+

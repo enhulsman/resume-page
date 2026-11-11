@@ -266,3 +266,30 @@ All seven should-fix findings were right and are applied; none declined.
 17. **The bar: weight for the current page, a glow on hover.** `nav a[aria-current="page"]` takes
     weight 800 at 86% width with no underline; every page link has a `::before` radial glow of the
     hero's warm light at opacity 0, raised to 1 on hover. B3 a is parked.
+
+## Hero sketch round 3 decisions (2026-11-11)
+
+18. **The arrival and the name's light.** One timeline in `src/scripts/glass/arrival-model.js`
+    (pure, unit-tested) and its driver `src/scripts/glass/arrival.js`. Card `i` fades in from
+    `0.12 + 0.16 i` s over 0.72 s (out-cubic, rising 10 px), and its light's `glow` eases from 0 to 1
+    over 0.95 s: `panes.js` draws a hero card with glow below 1 further behind the glass (distance
+    times `1 + 2.2 (1 - glow)`) and fainter (every layer's opacity times smoothstep(glow)); glow 1
+    draws exactly as before. `panes.js` exports `setGlow`, `lightTime` and the hero's panes; it
+    redraws once when a glow changes while the loop is held. The spill rises over 1.5-2.2 s, holds,
+    and settles over 3.7-5 s to `0.46 × (0.5 + 0.5 × amount)`, where `amount` is the card's light
+    (40 samples of its field over the loop, normalised to 0..1, computed once, lazily). Each card's
+    hue is `spill` in `glassCards` (its light's own colour, not its stone), rendered as `data-spill`.
+    The name's light is the `h1`'s `::after`, a copy of the name (`content: attr(data-ink) / ""`, so
+    readers hear the name once) with transparent text and a `background-clip: text` of soft radial
+    lights (six stops, no edge), one per card, placed under the letters at the card's live centre
+    (only the part of a card in view throws light; a phone multiplies by 1.9), plus a mouse-only
+    light at the pointer (alpha 0.5, eased in 0.22 s and out 0.45 s, hue blended from the cards by
+    horizontal distance). Reduced motion hides the `::after`; `?t=` skips the arrival and the
+    pointer light. The cards wait from the first paint (`arrive-pending`, set by an inline script in
+    `Hero.astro` only when the arrival will run, and dropped after 2.5 s if the driver never starts,
+    in which case the driver skips the arrival). Without WebGL there are no hero panes and the
+    driver does nothing. Contrast: the brightest light layer stays dark enough that the worst pixel
+    of the name measured 6.7:1 in the sketch; the e2e probe checks 4.5:1.
+    The name grows to `min(16.2vw, 26svh)` (15vw at 1099 px and below; gutter to gutter at 760 px
+    and below, `(100vw - 2 gutters) × 0.245`); the intro narrows to `clamp(16px, 1.45vw, 21px)` and
+    18em; the hero's top padding and the cards' top margin give back the height.

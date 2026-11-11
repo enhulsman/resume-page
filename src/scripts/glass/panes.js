@@ -14,6 +14,10 @@
 // The pointer is a light (2026-11-11): while the loop runs, each hero card's light eases (0.35 s)
 // toward its lean from pointer.js, and the pointed card's light comes nearer the glass. A mouse only;
 // reduced motion, the guard's still frame and ?t= hold every lean at zero.
+//
+// The arrival (2026-11-11, arrival.js): each hero card has a `glow` (setGlow, 0..1). Below 1 its
+// light sits further behind the glass and fainter; 1 draws it as always. heroPanes and lightTime
+// let arrival.js read the hero's lights for the name's tint. __glass.glow: each hero card's glow.
 import { cardState, GLASS, PERIOD, REF, toRef } from './model.js';
 import { createRenderer } from './shader.js';
 import { slowFrom, busyFrom } from './guard.js';
@@ -51,6 +55,7 @@ const panes = [...document.querySelectorAll('[data-glass="ribbed"]')].map((el) =
     // only the hero's cards answer the pointer; the terminal's reflections stay put
     leans: !!el.closest('[data-glass-moment="hero"]'),
     off: { x: 0, y: 0, near: 0 },
+    glow: 1,
   };
 }).filter(Boolean);
 
@@ -83,7 +88,10 @@ function drawPane(c, t) {
   const leaning = Math.abs(x) > 0.01 || Math.abs(y) > 0.01 || near > 0.001;
   // the light moved by its lean: every layer shifted alike, the card's own tune kept
   const tune = leaning ? Array.from({ length: 8 }, (_, j) => ({ ...(c.tune?.[j] ?? {}), dx: (c.tune?.[j]?.dx ?? 0) + x, dy: (c.tune?.[j]?.dy ?? 0) + y })) : c.tune;
-  const state = cardState(c.light, t, c.base, tune, c.distance * (1 - NEAR * near), c.wash);
+  // dim and far: until its glow is 1 the light sits further back (softer) and fainter
+  const g = c.glow;
+  const state = cardState(c.light, t, c.base, tune, c.distance * (1 - NEAR * near) * (g < 1 ? 1 + 2.2 * (1 - g) : 1), c.wash);
+  if (g < 1) { const k = g * g * (3 - 2 * g); state.layers = state.layers.map((L) => ({ ...L, opacity: (L.opacity ?? 1) * k })); }
   state.quiet = c.quiet;
   const w = c.canvas.width, h = c.canvas.height;
   r.draw(state, { size: c.size, radius: c.radius, px: c.px, glass: GLASS, target: { w, h } });
@@ -97,6 +105,18 @@ function drawPane(c, t) {
 const looping = () => frozen == null && !still.matches && !slow;
 const now = () => frozen ?? (still.matches || slow ? STILL_T : (performance.now() / 1000) % PERIOD);
 function drawAll(t = now()) { for (const c of panes) drawPane(c, t); }
+
+/** The hero's cards, in order (none without WebGL). */
+export const heroPanes = panes.filter((c) => c.leans);
+/** The moment of the loop the lights are drawn at now (frozen, still or running). */
+export const lightTime = () => now();
+let dirty = false; // a glow changed: drawn next frame even while the loop is held
+/** Set hero card i's glow: 0 dim and far behind the glass, 1 as it always draws. */
+export function setGlow(i, g) {
+  const c = heroPanes[i];
+  // a card out of view (a phone's row) is drawn once more when its light is full
+  if (c && c.glow !== g) { c.glow = g; dirty = true; c.stale = g === 1; }
+}
 
 const busy = (ms) => { const end = performance.now() + ms; while (performance.now() < end); };
 
@@ -120,13 +140,14 @@ function tick(stamp) {
   // the loop just stopped (reduced motion switched on): every pane to the still frame, in view or
   // not. The query's change event is not enough: reading .matches every frame (looping() does) can
   // keep Chromium from firing it, and an off-screen pane would keep a moment of the loop
-  if (ran && !run) drawAll();
+  if ((ran && !run) || (!run && dirty)) drawAll();
   ran = run;
+  dirty = false;
   if (run) {
     const t = now();
     const start = performance.now();
     let drawn = 0;
-    for (const c of panes) if (c.visible && drawPane(c, t)) drawn++;
+    for (const c of panes) if ((c.visible || c.stale) && drawPane(c, t)) { drawn++; c.stale = false; }
     if (drawn && busyMs > 0) busy(busyMs);
     const draw = performance.now() - start;
     // only frames that drew a pane are sampled, so idle frames off screen do not dilute the mean
@@ -168,6 +189,8 @@ window.__glass = {
   guard(on) { guardOn = !!on; samples = []; if (!on) slow = false; },
   /** Each pane's lean toward the pointer, in page order: x, y (study px), near (0..1). */
   get lean() { return panes.map((c) => ({ ...c.off })); },
+  /** Each hero card's glow (setGlow), in order. */
+  get glow() { return heroPanes.map((c) => c.glow); },
   /** Add this much busy work (ms, finite, at most 50) to every frame's draw; returns what it took. */
   busy(ms) { busyMs = busyFrom(ms); return busyMs; },
 };

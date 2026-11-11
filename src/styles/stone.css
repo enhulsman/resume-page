@@ -12,7 +12,7 @@
   --stone-gutter: clamp(16px, 2.2vw, 32px);
 
   /* the Archivo scale */
-  --stone-t-name: clamp(64px, min(13.6vw, 21svh), 212px);
+  --stone-t-name: min(16.2vw, 26svh); /* the hero name; Hero.astro narrows it below 1100 px */
   --stone-t-h2: clamp(48px, 6.4vw, 104px);
   --stone-t-h3: clamp(20px, 1.75vw, 26px);
   --stone-t-lead: clamp(18px, 1.6vw, 23px);

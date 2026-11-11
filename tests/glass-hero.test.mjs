@@ -202,3 +202,132 @@ test('Finance Bot is benched, not deleted: its card can come back as 05', () => 
   const d = details.find(x => x.id === 'finance');
   assert.ok(d.dims.some(dim => dim.value === benched[0].value));
 });
+
+// ---- the arrival and the name's light (stone-homepage: "The hero arrives and the cards' light
+// reaches the name", sketch round 3, 2026-11-11) ----
+import * as A from '../src/scripts/glass/arrival-model.js';
+import { readFileSync, existsSync } from 'node:fs';
+
+test('the timeline, as functions: each card starts 160 ms after the last and is in 0.72 s later', () => {
+  for (let i = 0; i < 4; i++) {
+    const s = 0.12 + 0.16 * i;
+    assert.ok(Math.abs(A.START(i) - s) < 1e-9, `card ${i} starts at ${s}`);
+    assert.equal(A.cardIn(i, s - 0.01), 0, `card ${i} is out before its start`);
+    assert.equal(A.cardIn(i, s), 0);
+    assert.ok(A.cardIn(i, s + 0.36) > 0 && A.cardIn(i, s + 0.36) < 1, 'partly in');
+    assert.equal(A.cardIn(i, s + 0.72), 1, `card ${i} is in 0.72 s after its start`);
+    assert.equal(A.glowIn(i, s), 0, `card ${i}'s light starts dim`);
+    assert.equal(A.glowIn(i, s + 1.01), 1, `card ${i}'s light is full within 1.01 s`);
+  }
+  // in order: at no moment is a later card further in than an earlier one
+  for (let t = 0; t <= 2.5; t += 0.05) for (let i = 1; i < 4; i++) {
+    assert.ok(A.cardIn(i, t) <= A.cardIn(i - 1, t), `t ${t}: card ${i} ahead of card ${i - 1}`);
+    assert.ok(A.glowIn(i, t) <= A.glowIn(i - 1, t), `t ${t}: light ${i} ahead of light ${i - 1}`);
+  }
+  assert.equal(A.T, 5);
+});
+
+test('the spill: nothing before 1.5 s, the peak from 2.2 s to 3.7 s, then 46% of it at a card\'s brightest by 5 s', () => {
+  for (const amount of [0, 0.3, 1]) {
+    for (let t = 0; t < 1.5; t += 0.1) assert.equal(A.spillK(t, amount), 0, `t ${t}`);
+    for (let t = 2.2; t <= 3.7; t += 0.1) assert.equal(A.spillK(t, amount), 1, `the peak at t ${t}`);
+    for (let t = 0; t <= 8; t += 0.05) assert.ok(A.spillK(t, amount) <= 1, 'never above the peak');
+    for (const t of [5, 6, 50]) assert.ok(Math.abs(A.spillK(t, amount) - A.restLevel(amount)) < 1e-9, `rest at ${t}`);
+  }
+  assert.ok(Math.abs(A.restLevel(1) - 0.46) < 1e-9, '46% at its brightest');
+  assert.ok(Math.abs(A.restLevel(0) - 0.23) < 1e-9, 'half that at its dimmest');
+  assert.ok(A.restLevel(0.5) > A.restLevel(0.2), 'the rest follows the light');
+});
+
+test('each card\'s light amount over the loop: 40 samples from 0 (dimmest) to 1 (brightest), wrapping', () => {
+  for (const c of glassCards) {
+    const row = A.loopAmounts(c);
+    assert.equal(row.length, 40, c.id);
+    assert.ok(row.every((v) => v >= 0 && v <= 1), `${c.id} in 0..1`);
+    assert.ok(Math.min(...row) === 0 || row.every((v) => v === 1), `${c.id} reaches its dimmest`);
+    assert.ok(Math.max(...row) === 1, `${c.id} reaches its brightest`);
+    // interpolated between samples, and one loop on: the same
+    assert.ok(Math.abs(A.amountAt(row, 0) - row[0]) < 1e-9);
+    assert.ok(Math.abs(A.amountAt(row, PERIOD / 80) - (row[0] + row[1]) / 2) < 1e-9, 'halfway between two samples');
+    assert.ok(Math.abs(A.amountAt(row, 3.3) - A.amountAt(row, 3.3 + PERIOD)) < 1e-9, 'loops');
+    assert.ok(Math.abs(A.amountAt(row, PERIOD - 1e-9) - row[0]) < 1e-3, 'the last sample runs into the first');
+  }
+  // a light that barely changes stays at full: the rest never dips for a still card
+  const flat = { light: 0, base: [226, 221, 213], tune: [{ set: { opacity: 0 } }, { set: { opacity: 0 } }, { set: { opacity: 0 } }], distance: 1, wash: { color: [200, 150, 100], opacity: 0.2 } };
+  assert.ok(A.loopAmounts(flat).every((v) => v === 1), 'a still light is 1 throughout');
+  // too few or no samples: the card shows its full rest
+  assert.equal(A.amountAt([], 2), 1);
+  assert.equal(A.amountAt(null, 2), 1);
+});
+
+test('a soft light: six stops from its strength to nothing, no edge', () => {
+  const css = A.softLight([100, 170, 30], 0.6, 200, 120, 40.25, 300);
+  assert.match(css, /^radial-gradient\(200px 120px at 40\.3px 300\.0px, /);
+  const stops = [...css.matchAll(/rgb\(([\d ]+) \/ ([\d.]+)\) (\d+)%/g)].map((m) => [+m[2], +m[3]]);
+  assert.equal(stops.length, 6);
+  assert.deepEqual(stops.map((s) => s[1]), [0, 18, 36, 56, 76, 100]);
+  assert.equal(stops[0][0], 0.6);
+  assert.equal(stops.at(-1)[0], 0, 'it fades to nothing');
+  for (let k = 1; k < 6; k++) assert.ok(stops[k][0] < stops[k - 1][0], 'falling all the way');
+});
+
+test('where a card\'s light sits on the name: under the letters at the card\'s centre, only the part in view, stronger on a phone', () => {
+  const name = { left: 30, top: 100, width: 900, height: 380 };
+  const row = { left: 0, right: 1440 };
+  const card = { left: 376, top: 530, width: 330, height: 360, right: 706 };
+  const d = A.spillPlace(card, row, name, 1440, false);
+  assert.equal(d.x, 376 + 165 - 30, 'at the card\'s centre');
+  assert.ok(d.y > name.height / 2, 'below the middle of the name');
+  assert.ok(d.y <= name.height * 1.45 + 1e-9, 'never further below than 1.45 of the name');
+  assert.equal(d.seen, 1);
+  assert.equal(d.gain, 1);
+  // a phone: the card half out of the row throws a little light, wider, and stronger
+  const p = A.spillPlace({ left: 200, right: 504, top: 380, width: 304, height: 349 }, { left: 0, right: 390 }, { left: 16, top: 80, width: 340, height: 150 }, 390, true);
+  assert.ok(p.seen > 0.6 && p.seen < 0.65, `seen ${p.seen}`);
+  assert.equal(p.gain, 1.9);
+  assert.ok(p.rx > 304 * 1.1, 'wider on a phone');
+  assert.equal(p.y, 150 * 1.45, 'brought up to just under the name');
+  // a card wholly out of view throws none
+  assert.equal(A.spillPlace({ left: 400, right: 700, top: 380, width: 300, height: 349 }, { left: 0, right: 390 }, name, 390, true).seen, 0);
+});
+
+test('the mouse light takes the hue of the card under the pointer, blended with its neighbours', () => {
+  const cards = glassCards.map((c, i) => ({ left: 32 + i * 344, width: 330, hue: c.spill }));
+  const dist = (a, b) => Math.hypot(...a.map((v, j) => v - b[j]));
+  cards.forEach((c, i) => {
+    const h = A.hueAt(c.left + c.width / 2, cards);
+    const nearest = cards.map((o) => dist(h, o.hue)).indexOf(Math.min(...cards.map((o) => dist(h, o.hue))));
+    assert.equal(nearest, i, `over card ${i} the light is nearest its hue`);
+  });
+});
+
+test('every hero card throws its light\'s own hue on the name: `spill` in config, near one of its light\'s colours', () => {
+  const hue = ([r, g, b]) => {
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    if (!d) return 0;
+    const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return (h * 60 + 360) % 360;
+  };
+  const apart = (a, b) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+  for (const c of glassCards) {
+    assert.ok(Array.isArray(c.spill) && c.spill.length === 3, `${c.id} has a spill hue`);
+    assert.ok(c.spill.every((v) => Number.isInteger(v) && v >= 0 && v <= 255), `${c.id} in 0..255`);
+    const own = (c.tune ?? []).flatMap((t) => [t?.set?.color, t?.set?.color2]).filter(Boolean);
+    assert.ok(own.some((col) => apart(hue(col), hue(c.spill)) <= 20), `${c.id}: ${c.spill} near its light`);
+  }
+});
+
+test('the hero carries the arrival: Hero.astro renders the hues and amounts, the pending class, the name\'s copy; index loads arrival.js', () => {
+  const hero = readFileSync(new URL('../src/components/stone/Hero.astro', import.meta.url), 'utf8');
+  assert.match(hero, /"data-spill": \(c\.spill/, 'each card\'s hue from config');
+  assert.match(hero, /"data-amount": loopAmounts\(c\)/, 'each card\'s light over the loop, at build time');
+  assert.match(hero, /<li \{\.\.\.lights\[i\]\}>/);
+  assert.match(hero, /data-ink=\{site\.name\}/, 'the copy of the name is site.name');
+  assert.match(hero, /arrive-pending/);
+  assert.match(hero, /content: attr\(data-ink\) \/ ""/, 'the copy is silent to readers');
+  const index = readFileSync(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
+  assert.match(index, /scripts\/glass\/arrival\.js/);
+  // one panes.js: no sketch copy left behind
+  assert.equal(existsSync(new URL('../src/scripts/sketches', import.meta.url)), false);
+  assert.equal(existsSync(new URL('../src/pages/sketches', import.meta.url)), false);
+});

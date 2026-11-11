@@ -22,6 +22,18 @@
 - Projects are A2 tight: Henk, Claude Sandbox and bible-tui each in their own frosted window holding a real artefact, two offset columns on a desktop, tight chapters on a phone; the rest stay rows. A1 and A3 are dropped.
 - The pointer is a light on a desktop (B1); grain in the frosted glass (B2); the current page in bold in the bar, with a soft glow on hover (B3 b and c). B3 a (the travelling full stop) is parked.
 
+**Your decisions from the hero sketch, round 3 (2026-11-11), binding on this change:**
+
+- The hero arrives: the four cards fade in one after another, 160 ms apart, each light coming up
+  from dim and far behind the glass. The name and the intro are there from the start.
+- The cards' light reaches the name ("spill"): once the cards have landed, their colours rise
+  faintly in the name's ink from below, each at its own card, hold about 1.5 s, and settle by 5 s
+  into a resting tint low in the letters that keeps following each card's light. On a phone each
+  card's colour sits where that card is in the swipe row. A mouse over the name adds a soft light in
+  the colour of the card nearest it. Reduced motion: today's plain name, no arrival.
+- The name is bigger (233 px at 1440, 88 px on a phone) with the intro narrower beside it; the
+  cards still start on the first screen.
+
 **Still standing from 2026-11-09:** the stone top bar, footer, colours and type go on every page
 (inner page bodies keep their layout); dark mode is dropped until after the light redesign; the
 drawing-sheet look leaves the homepage (no arrival, title block, stamp or 3D scene).
