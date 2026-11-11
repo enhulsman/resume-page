@@ -73,11 +73,14 @@ const { class: cls } = Astro.props;
   .anna-window .msg.anna { align-self: flex-start; }
   .anna-window .msg.anna .text { background: rgb(255 255 255 / 0.34); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35); }
   .anna-window .msg + .msg { margin-top: 6px; }
-  .anna-window .msg.joris + .msg.anna, .anna-window .msg.anna + .msg.joris, .anna-window .aw-work + .msg { margin-top: 18px; }
+  .anna-window .msg.joris + .msg.anna, .anna-window .msg.anna + .msg.joris { margin-top: 18px; }
+  .anna-window .aw-work + .msg { margin-top: 13px; }
 
-  /* her work: one line under her answer, a dot that pulses while she works; one line, fixed height */
-  .anna-window .aw-work {
-    display: flex; align-items: baseline; gap: 9px; margin: 13px 0 0 24px; max-width: calc(100% - 24px);
+  /* her work: one line under her answer, a dot that pulses while she works; one line, fixed height
+     (2026-11-11, Ezra: 5 px under the answer, 10 px in; .aw-log in the selector so the log's p reset
+     no longer zeroes it) */
+  .anna-window .aw-log .aw-work {
+    display: flex; align-items: baseline; gap: 9px; margin: 5px 0 0 10px; max-width: calc(100% - 10px);
     height: 1.45em; font-size: 13px; line-height: 1.45; white-space: nowrap; overflow: hidden;
   }
   .anna-window .aw-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--glass-ink-red); transform: translateY(-1px); }
