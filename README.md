@@ -1,41 +1,41 @@
 <div align="center">
 
-<img src="public/favicon-h.svg" alt="EH" width="64" height="64" />
+<img src="public/favicon.svg" alt="E." width="64" height="64" />
 
 # hulsman.dev
 
-**Portfolio & Resume for Ezra Hulsman**
+**Portfolio and résumé of Ezra Hulsman**
 
 [![Astro](https://img.shields.io/badge/Astro-7-ff5d01?logo=astro&logoColor=white)](https://astro.build) [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6?logo=typescript&logoColor=white)](https://typescriptlang.org) [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-f38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 
-*The site as a drawing set · Archivo + B612 Mono · An orthographic renderer on canvas · Interactive terminal*
+*Stone, ink and glass · Archivo · One WebGL shader · A real shell in the page*
 
-[Live Site](https://hulsman.dev) · [Resume](https://hulsman.dev/resume) · [Projects](https://hulsman.dev/projects)
+[Live site](https://hulsman.dev) · [Résumé](https://hulsman.dev/resume) · [Projects](https://hulsman.dev/projects)
 
 </div>
 
 ---
 
-Personal portfolio and resume site, drawn as an architect's drawing set ("Overzicht"). Static-first with Astro, no UI framework, deployed on Cloudflare Workers with a server-side contact form.
+My personal site: what I build (ANNA, Henk, the homelab and a few side projects), what I write, and my résumé. Static-first with Astro and no UI framework, deployed on Cloudflare Workers with a server-side contact form.
 
 ## Stack
 
 | Layer | Tool |
 | --- | --- |
 | Framework | [Astro](https://astro.build) 7, static output, no client framework |
-| Styling | One stylesheet, `src/styles/overzicht.css`, with the design tokens as CSS custom properties |
-| Drawing | `src/scripts/overzicht/scene.js`, a small orthographic renderer on canvas 2D; SVG for the detail drawings |
-| Content | MDX with auto-discovery for project case studies and blog posts |
-| Deployment | Cloudflare Workers (server-side contact form via Resend) |
-| Fonts | Archivo variable (lettering), B612 Mono (dimensions, title blocks, data) |
+| Styling | One stylesheet, `src/styles/stone.css`, with the design tokens as CSS custom properties |
+| Glass | `src/scripts/glass/`: one WebGL shader that draws the ribbed and frosted panes and the soft lights behind them |
+| Content | MDX with auto-discovery for project pages and blog posts |
+| Deployment | Cloudflare Workers (static assets, plus the contact form via Resend) |
+| Fonts | Archivo variable; the system monospace for code and the terminal |
 
-## Getting Started
+## Getting started
 
 ```bash
 npm install
 npm run dev        # Astro dev server at localhost:4321
 npm run build      # Production build to ./dist
-npm run preview    # Preview production build locally
+npm run preview    # Preview the production build
 ```
 
 For the contact form locally:
@@ -46,48 +46,48 @@ npx wrangler dev   # Runs the Cloudflare Worker locally
 
 ## Features
 
-* **Two themes**, whiteprint (light) and light table (dark), following the system until you choose one
-* **ANNA drawn as a section** through one real request, that turns into an exploded axonometric as you scroll; the page only reads the scroll position, it never takes it over
-* **Every page a sheet in the set**: the same frame, bar and title blocks; projects as a drawing register, experience as a revision table, contact as a transmittal
-* **Interactive terminal** in the About section: 42 commands, pipes, tab completion, history
+* **Glass project cards** on the homepage: four ribbed panes with soft lights behind them, on a 10 s loop that leans toward the pointer. Their colours settle as a faint tint in the name above them; on a phone the tint follows the swipe through the cards
+* **Real conversations**: a frosted Teams window plays an actual ANNA exchange once when it scrolls into view; project pages each have a window of their own (Henk, Homelab, Finance Bot and others)
+* **Interactive terminal** in the About section: a real shell parser with pipes, environment variables, a small virtual filesystem, tab completion and history
 * **MDX project pages and posts** with auto-discovery and frontmatter-driven routing
-* **Contact form** powered by Cloudflare Workers + Resend, with Turnstile and a honeypot
-* **Print-ready résumé**: `/resume` prints on white without the sheet's chrome; `scripts/generate-pdf.js` makes the PDF in CI
-* **Reduced motion respected**: drawings arrive drawn, nothing plots or types itself
+* **Contact form** on Cloudflare Workers + Resend, with Turnstile and a honeypot
+* **Print-ready résumé**: `/resume` prints clean; `scripts/generate-pdf.js` makes the PDF in CI
+* **Reduced motion respected**: with it on, or on a device too slow for the glass, every pane holds still and every conversation shows finished
 
-## Project Structure
+## Project structure
 
 ```tree
 src/
-├── components/overzicht/  # The sheets: bar, foot, ANNA section and plate, details, register, terminal
-│   └── drawings/          # The four detail drawings (SVG)
-├── components/diagrams/   # Case-study diagrams, drawn in the same tokens
-├── scripts/overzicht/     # chrome.js (every page), main.js (homepage), plate.js (ANNA plate), scene.js
-├── scripts/               # Interactive terminal engine (vanilla TS)
-├── config/                # site.ts, resume.ts, home.ts (homepage and /projects copy)
-├── layouts/               # OverzichtLayout (every page), ProjectLayout and BlogLayout for MDX
+├── components/stone/      # The pages' parts: hero, glass cards and windows, project and article layout
+├── components/overzicht/  # The bar, the footer and the terminal (named after the previous design)
+├── components/diagrams/   # Diagrams on the project pages
+├── scripts/glass/         # The WebGL glass, the arrival, the pointer light, the ANNA window, the slow-device guard
+├── scripts/               # The interactive terminal (vanilla TS)
+├── config/                # site.ts, resume.ts, home.ts, glass.ts, pages.ts: the copy and the numbers
+├── layouts/               # The page layout, ProjectLayout and BlogLayout for MDX
 ├── pages/                 # Homepage, /projects, /blog, /resume, /contact, rss.xml
-├── lib/                   # Theme and frontmatter helpers
-├── styles/overzicht.css   # Tokens, sheets, phone layout, print
+├── lib/                   # Frontmatter, projects and posts helpers
+├── styles/stone.css       # Tokens, pages, phone layout, print
 └── worker.ts              # Cloudflare Worker for the contact form (Resend API)
 scripts/
-└── generate-pdf.js        # Playwright-based resume PDF generation (CI-ready)
-tests/                     # node:test unit tests; *.e2e.mjs need a dev server on :4321
+└── generate-pdf.js        # Playwright-based résumé PDF (CI)
+tests/                     # node:test unit tests and Playwright browser tests (*.e2e.mjs)
 ```
 
 ## Configuration
 
-All personal content lives in three config files:
+The personal content lives in config files:
 
-* **`src/config/site.ts`** — name, role, company, location, skills, social links, projects, employment status, SEO metadata
-* **`src/config/resume.ts`** — experience timeline, education, certifications, skill categories, spoken languages
-* **`src/config/home.ts`** — homepage copy, the drawn projects and their dimensions (every number must match its case study), the register
+* **`src/config/site.ts`**: name, role, company, location, skills, social links, projects, SEO metadata
+* **`src/config/resume.ts`**: experience, education, certifications, skill categories, languages
+* **`src/config/home.ts`**: homepage copy, and the numbers on the project cards (each must match its project page)
+* **`src/config/glass.ts`**: the cards' and pages' lights and colours
 
-To update content, edit these files. The rest of the site reads from them.
+The rest of the site reads from them.
 
-## MDX Projects
+## MDX projects
 
-Project case studies live in `src/pages/projects/*.mdx`. Each file is auto-discovered and routed. Frontmatter controls display:
+Project pages live in `src/pages/projects/*.mdx`. Each file is auto-discovered and routed. Frontmatter controls display:
 
 ```yaml
 ---
@@ -98,25 +98,21 @@ tech: ["Python", "Docker", "Rust"]
 github: "repo-name"           # or full URL
 preview: "https://demo.com"   # optional live link
 layout: "../../layouts/ProjectLayout.astro"
-showcase: true                # appears on homepage
 ---
 ```
 
-Projects with `showcase: true` appear on the homepage. All projects appear in the `/projects` gallery.
+## The terminal
 
-## The Terminal
+The About section holds a terminal window. After its intro types itself (or you click to skip it), you can type real commands:
 
-The About section contains an interactive terminal disguised as a decorative element. After the typing animation plays (or is skipped by clicking), visitors can type real commands:
-
-* `help` — full command list
-* `cat resume`, `cat skills`, `cat education` — browse content
-* `ls projects/`, `cat projects/<name>` — explore projects
-* `cd resume`, `open contact` — navigate to pages
-* `neofetch` — ASCII art info card
-* `sudo hire-me`, `cowsay`, `fortune`, `sl`, `matrix` — easter eggs
+* `help`: the full command list
+* `cat resume`, `cat skills`, `cat education`: browse the content
+* `ls projects/`, `cat projects/<name>`: explore the projects
+* `cd resume`, `open contact`: go to a page
+* `neofetch`, and a few easter eggs
 * Tab completion and command history (arrow keys)
 
-## Contact Form
+## Contact form
 
 The contact form runs on Cloudflare Workers with the Resend API. Environment variables needed:
 
@@ -136,11 +132,19 @@ widget (site key in `src/config/site.ts`, verified server-side in `src/worker.ts
 field, and a minimum fill time. The worker fails closed when `TURNSTILE_SECRET_KEY` is missing.
 For the dev server the always-passing Turnstile test key is used automatically.
 
-Run the unit tests with `npm test`, and the end-to-end checks with `npm run test:e2e` against a running dev server.
+## Tests
 
-## PDF Generation
+```bash
+npm test                                       # unit tests
+npm run build && npx astro preview             # then, in another terminal:
+BASE=http://localhost:4321 npm run test:e2e    # browser tests against the build (~5 min)
+```
 
-The CI pipeline generates a PDF of the `/resume` page using Playwright:
+The browser tests run in two lanes. Most hold the glass light still (`?t=2.4`) and run four files at a time; the tests that need the light moving (the loop, the arrival, the pointer light, the slow-device guard) are in `*.live.e2e.mjs` and run one at a time. In CI each lane is split over several runners.
+
+## PDF generation
+
+The CI pipeline makes a PDF of the `/resume` page with Playwright:
 
 ```bash
 npm run build
@@ -148,13 +152,13 @@ npx http-server ./dist -p 8180 &
 node scripts/generate-pdf.js    # outputs dist/resume.pdf
 ```
 
-The GitHub Actions workflow (`.github/workflows/build.yml`) runs this automatically on push to main and uploads the PDF as an artifact.
+The GitHub Actions workflow (`.github/workflows/build.yml`) runs this on every push to main and uploads the PDF as an artifact.
 
 ## Deployment
 
 **Main is the deploy cycle.** Every push to `main` triggers Cloudflare Workers Builds, which
-builds and deploys the Worker automatically — there is no manual deploy step, ever. Verify a
-deploy by checking the live site a minute or two after pushing, not by running wrangler.
+builds and deploys the Worker automatically; there is no manual deploy step. Verify a deploy
+by checking the live site a minute or two after pushing, not by running wrangler.
 
-The `wrangler.toml` is configured with the build command and asset directory; it exists for
-the Workers Builds pipeline (and local `wrangler dev`), not for hand-run deploys.
+The `wrangler.toml` holds the build command and asset directory; it exists for the Workers
+Builds pipeline (and local `wrangler dev`), not for hand-run deploys.
