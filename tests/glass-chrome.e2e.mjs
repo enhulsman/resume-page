@@ -3,9 +3,9 @@
 // page, no drawing-sheet frame, no dark theme, and the phone menu. Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/glass-chrome.e2e.mjs
 // Every wait is on state (load, fonts, the menu's open state, the URL), never a fixed sleep.
-import { test, before, after } from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chromium } from 'playwright';
+import { useBrowser, SWIFTSHADER } from './lib/browser.mjs';
 import { footer, siteNav } from '../src/config/home.ts';
 import site from '../src/config/site.ts';
 import { pageLights } from '../src/config/glass.ts';
@@ -16,12 +16,10 @@ const INNER = PAGES.filter((p) => p !== '/');
 const STONE = 'rgb(238, 234, 227)';
 const LINKS = [['Projects', '/projects'], ['Blog', '/blog'], ['Résumé', '/resume'], ['Contact', '/contact']];
 
-let browser;
-before(async () => { browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); });
-after(async () => { await browser?.close(); });
+const pw = useBrowser({ args: SWIFTSHADER });
 
 async function open(path, { width = 1440, height = 900, colorScheme = 'light', storage } = {}) {
-  const context = await browser.newContext({ viewport: { width, height }, colorScheme });
+  const context = await pw.newContext({ viewport: { width, height }, colorScheme });
   if (storage) await context.addInitScript((s) => { for (const [k, v] of Object.entries(s)) localStorage.setItem(k, v); }, storage);
   const page = await context.newPage();
   // the homepage's light held still (?t=): these checks are about the chrome, and a screenshot or a
@@ -57,7 +55,7 @@ for (const path of PAGES) {
       off.push(await page.evaluate(async (b64) => {
         const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
         const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
-        const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+        const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
         const d = x.getImageData(0, 0, c.width, c.height).data;
         let n = 0; for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - 238) > 2 || Math.abs(d[i + 1] - 234) > 2 || Math.abs(d[i + 2] - 227) > 2) n++;
         return n;
@@ -268,9 +266,10 @@ test('not on a phone: on /blog at 860 x 900 and at 390 x 844 with the menu open,
 
 test('as a real phone (mobile viewport) every page keeps its 390 px layout: nothing in the chrome, the menu\'s glows included, widens it', async () => {
   for (const path of PAGES) {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const context = await pw.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     const page = await context.newPage();
-    await page.goto(BASE + path, { waitUntil: 'load' });
+    // the light held still on the two pages with ribbed glass, as in open()
+    await page.goto(BASE + path + (path === '/' || path === '/projects' ? '?t=2.4' : ''), { waitUntil: 'load' });
     const w = await page.evaluate(() => [innerWidth, document.documentElement.scrollWidth]);
     await context.close();
     assert.deepEqual(w, [390, 390], path);

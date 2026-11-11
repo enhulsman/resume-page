@@ -432,10 +432,12 @@ test('Henk\'s chat, as on the homepage: projectWindows.henk verbatim, the same t
   ]);
   const ours = norm(await page.locator(play).textContent());
   const home = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
-  const hp = await home.newPage();
-  await hp.goto(`${BASE}/?t=2.4`, { waitUntil: 'load' });
-  const theirs = norm(await hp.locator('.pj-w-henk [data-play]').textContent());
-  await home.close();
+  let theirs;
+  try {
+    const hp = await home.newPage();
+    await hp.goto(`${BASE}/?t=2.4`, { waitUntil: 'load' });
+    theirs = norm(await hp.locator('.pj-w-henk [data-play]').textContent());
+  } finally { await home.close(); }
   assert.equal(ours, theirs);
 });
 

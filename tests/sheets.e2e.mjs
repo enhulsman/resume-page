@@ -4,10 +4,10 @@
 // itself, in tests/glass-chrome.e2e.mjs. Needs a running site:
 //
 //   BASE=http://localhost:4321 node --test tests/sheets.e2e.mjs
-import { test, before, after } from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
-import { chromium } from 'playwright';
+import { useBrowser, SWIFTSHADER } from './lib/browser.mjs';
 
 const BASE = process.env.BASE || 'http://localhost:4321';
 const PROJECTS = readdirSync(new URL('../src/pages/projects/', import.meta.url)).filter(f => f.endsWith('.mdx')).map(f => f.slice(0, -4));
@@ -16,22 +16,21 @@ const INNER = ['/projects', '/projects/Henk', '/projects/AnnaAssistant', '/proje
 // Turnstile's own script logs to the console on a dev box without its real key; that is not ours
 const ours = errors => errors.filter(e => !/turnstile|challenges\.cloudflare/i.test(e));
 
-let browser;
 // swiftshader's GL, as the glass files use: /projects (ribbed cards since stone-inner-pages chunk 9)
 // loads and draws in a tenth of the default headless GL's time, and nothing here screenshots it often
-before(async () => { browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); });
-after(async () => { await browser?.close(); });
+const pw = useBrowser({ args: SWIFTSHADER });
 
 async function open(path, { width = 1440, height = 900, scale = 1, reducedMotion = 'no-preference', colorScheme = 'light', storage } = {}) {
-  const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: scale, reducedMotion, colorScheme });
+  const context = await pw.newContext({ viewport: { width, height }, deviceScaleFactor: scale, reducedMotion, colorScheme });
   if (storage) await context.addInitScript(s => { for (const [k, v] of Object.entries(s)) if (localStorage.getItem(k) === null) localStorage.setItem(k, v); }, storage);
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   page.on('console', m => m.type() === 'error' && errors.push(m.text()));
-  // /projects' ribbed cards draw their light on the CPU in a headless browser; no test here looks at
-  // that light, so /projects loads with it frozen (?t=, the glass's test hook): the same page, still
-  const res = await page.goto(BASE + path + (path === '/projects' ? '?t=2.4' : ''), { waitUntil: 'load' });
+  // /projects' and the homepage's ribbed cards draw their light on the CPU in a headless browser; no
+  // test here looks at that light (on /, only the head's links are read), so both load with it frozen
+  // (?t=, the glass's test hook): the same page, still
+  const res = await page.goto(BASE + path + (path === '/' || path === '/projects' ? '?t=2.4' : ''), { waitUntil: 'load' });
   return { context, page, errors, res };
 }
 
@@ -290,7 +289,7 @@ test('/contact reports a failed send in --glass-ink-red at 4.5:1, without Tailwi
   const png = (await page.screenshot({ clip: box })).toString('base64');
   const min = await page.evaluate(async (png) => {
     const img = new Image(); img.src = 'data:image/png;base64,' + png; await img.decode();
-    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
     const d = x.getImageData(0, 0, img.width, img.height).data;
     const lin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
     const L = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
@@ -324,7 +323,7 @@ async function greenAboveTheBar(page) {
   return page.evaluate(async b64 => {
     const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
     const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
-    const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
     const d = x.getImageData(0, 0, c.width, c.height).data;
     // any green tint counts, so a half-covered seam pixel is caught too
     let k = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 1] - Math.max(d[i], d[i + 2]) > 30) k++;
