@@ -24,8 +24,17 @@ async function open(q = '', { width = 1440, height = 900, reducedMotion = 'no-pr
   return { context, page, errors };
 }
 const state = (page) => page.evaluate(() => window.__annaWindow.state());
+/** Wait until `pred(state, arg)` holds and return the window's state; a timeout fails the test with what
+ *  it waited for and the last state it saw, so it reads as a timeout rather than as a wrong value. */
 async function until(page, pred, arg, timeout = 40000) {
-  await page.waitForFunction(([src, a]) => window.__annaWindow && new Function('s', 'a', `return (${src})(s, a)`)(window.__annaWindow.state(), a), [pred.toString(), arg], { timeout }).catch(() => {});
+  try {
+    await page.waitForFunction(([src, a]) => window.__annaWindow && new Function('s', 'a', `return (${src})(s, a)`)(window.__annaWindow.state(), a), [pred.toString(), arg], { timeout });
+  } catch (e) {
+    if (e?.name !== 'TimeoutError') throw e;
+    const last = await state(page).then((s) => JSON.stringify(s), (err) => `unreadable (${String(err?.message ?? err).split('\n')[0]})`);
+    const withArg = arg === undefined || arg === null ? '' : ` with ${JSON.stringify(arg)}`;
+    throw new Error(`until: timed out after ${timeout} ms waiting for ${pred}${withArg}; last state: ${last}`, { cause: e });
+  }
   return state(page);
 }
 const intoView = (page) => page.evaluate(() => document.querySelector('.anna-window .aw-window').scrollIntoView({ block: 'center' }));
