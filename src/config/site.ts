@@ -43,10 +43,11 @@ const site = {
   },
 
 
-  // Side pieces made for fun: the homepage's "Other sheets, drawn for fun"
+  // Side pieces made for fun: "Made for fun" on /projects
   sidePieces: [
     { url: 'https://flag.hulsman.dev', line: '781 one-minute chess games, drawn as time' },
     { url: 'https://sleep.hulsman.dev', line: 'One night of sleep, drawn' },
+    { url: 'https://licht.hulsman.dev', line: 'Genesis 1, lit only by its own letters' },
     { url: 'https://wordle.hulsman.dev', line: 'A word game' },
   ],
 

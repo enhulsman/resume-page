@@ -237,11 +237,12 @@ export const pageLights: Record<PageLightId, { near: RGB; deep: RGB }> = {
  * an entry, so a new post or project page cannot gain or lose glass by accident.
  */
 export type InnerMoment = 'anna' | 'project-cards' | 'henk' | 'sandbox' | 'bible' | 'homelab' | 'finance'
-  | 'pytaiga' | 'diagram' | 'code' | 'post-drawing' | 'compose';
+  | 'pytaiga' | 'diagram' | 'code' | 'post-drawing' | 'compose' | 'henk-boundary';
 export const innerGlass: Record<string, InnerMoment[]> = {
   '/projects': ['anna', 'project-cards'],
   '/projects/AnnaAssistant': ['anna'],
-  '/projects/Henk': ['henk', 'diagram'],
+  // henk-boundary: his trust-boundary diagram on one frosted pane, in the prose (Ezra, 2026-11-12)
+  '/projects/Henk': ['henk', 'henk-boundary', 'diagram'],
   '/projects/ClaudeSandbox': ['sandbox', 'diagram'],
   '/projects/BibleTui': ['bible'],
   '/projects/HomelabInfrastructure': ['homelab'],

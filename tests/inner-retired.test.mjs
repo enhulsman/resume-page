@@ -24,10 +24,12 @@ const RETIRED = [
   'src/scripts/overzicht/pointer.js',
   'src/components/StatStrip.astro', 'src/components/overzicht/DetailCard.astro', 'src/components/overzicht/ProjectCard.astro',
   'scripts/og-image.mjs',
+  // Henk's line drawing, replaced by his trust boundary on one frosted pane (henk-glass-boundary)
+  'src/components/diagrams/HenkFlow.astro',
 ];
 const KEPT = [
   'public/og-image.png', `${DRAWINGS}PytaigaDrawing.astro`, `${DRAWINGS}PostHenkDrawing.astro`,
-  'src/components/diagrams/HenkFlow.astro', 'src/components/diagrams/SandboxArchitecture.astro',
+  'src/components/diagrams/HenkBoundary.astro', 'src/components/diagrams/SandboxArchitecture.astro',
   // the glass pointer (the light under the mouse) is not the overzicht one
   'src/scripts/glass/pointer.js',
 ];
@@ -43,7 +45,7 @@ test('Files: the retired files are gone, the kept ones stay, no og-image script,
   const hits = code.flatMap((p) => {
     const s = read(p);
     const words = ['AnnaPlate', 'plate.js', 'scene.js', 'depth.js', 'StatStrip', 'overzicht/pointer', 'DetailCard', 'ProjectCard.astro',
-      'HenkDrawing', 'BibleDrawing', 'HomelabDrawing', 'SandboxDrawing', 'FinanceDrawing', 'og-image.mjs'];
+      'HenkDrawing', 'BibleDrawing', 'HomelabDrawing', 'SandboxDrawing', 'FinanceDrawing', 'og-image.mjs', 'HenkFlow'];
     // whole names: PostHenkDrawing stays, HenkDrawing went
     return words.filter((w) => new RegExp(`(?<![\\w-])${w.replace(/\./g, '\\.')}`).test(s)).map((w) => `${p}: ${w}`);
   });
