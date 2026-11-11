@@ -156,6 +156,20 @@ test('scrolled into view it plays once to the end: every beat in order, the repl
   assert.deepEqual(errors, []);
 });
 
+// A short, narrow or zoomed screen can make the window taller than 2.5 screens, where 40% of it can
+// never be in view at once (Codex review, 2026-11-12): there the trigger is 40% of the screen.
+test('a window more than 2.5 screens tall still plays once it fills the screen', async () => {
+  const { context, page, errors } = await open('speed=10', { width: 390, height: 260 });
+  const g = await page.evaluate(() => ({ win: document.querySelector('.anna-window .aw-window').getBoundingClientRect().height, vh: innerHeight }));
+  assert.ok(g.win > 2.5 * g.vh, `the window (${g.win}px) is more than 2.5 screens (${g.vh}px) tall`);
+  assert.equal((await state(page)).t, 0, 'not playing out of view');
+  await intoView(page);
+  const s = await until(page, (s) => s.t > 0, null, 5000);
+  assert.ok(s.t > 0, `plays once in view (t = ${s.t})`);
+  await context.close();
+  assert.deepEqual(errors, []);
+});
+
 // One desktop play runs in real time, above; Replay starts from the held end and plays at ?speed=4
 test('Replay plays it again from the start', async () => {
   const { context, page, errors } = await open(`chat=${END}&speed=4`);

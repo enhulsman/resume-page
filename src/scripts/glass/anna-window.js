@@ -1,10 +1,10 @@
 // ANNA in a glass window (the homepage's ANNA section): the site's 'week' conversation plays once
-// when the window is about 40% in view; Replay plays it again. Every beat is in the page from the
-// start (anna-window-model.js says when each shows). The window is as tall as the finished
-// conversation, so nothing scrolls (Ezra, 2026-11-11, sketch C2). Her work is one line under her
-// answer: what she read, then each step crossfading into the next (out 0.25 s, in 0.4 s), settling
-// into a summary when her question lands. ?chat=<seconds> holds one moment; reduced motion (also when
-// switched on later) shows the end at once.
+// when the window is about 40% in view (40% of the screen, for a window taller than the screen);
+// Replay plays it again. Every beat is in the page from the start (anna-window-model.js says when
+// each shows). The window is as tall as the finished conversation, so nothing scrolls (Ezra,
+// 2026-11-11, sketch C2). Her work is one line under her answer: what she read, then each step
+// crossfading into the next (out 0.25 s, in 0.4 s), settling into a summary when her question lands.
+// ?chat=<seconds> holds one moment; reduced motion (also when switched on later) shows the end at once.
 import { timeline, moment, held, workText } from './anna-window-model.js';
 import { pageSpeed } from './speed.js';
 
@@ -77,11 +77,17 @@ if (section) {
   else if (hold != null) apply(moment(tl, hold));
   else apply(moment(tl, 0));
 
+  // it plays when 40% of the window is in view, or, where the window is taller than the screen (a
+  // short, narrow or zoomed one), 40% of the screen's height: 40% of a window over 2.5 screens tall
+  // never fits at once. Fine thresholds, so the second case fires near its moment too.
+  const steps = [...Array.from({ length: 51 }, (_, i) => i / 50), 0.4].sort((x, y) => x - y);
   new IntersectionObserver(([e]) => {
     if (!e.isIntersecting) return;
+    const screen = e.rootBounds?.height || innerHeight;
+    const enough = e.intersectionRect.height >= 0.4 * Math.min(e.boundingClientRect.height, screen) - 0.5;
     if (still.matches && !cur.done) finish();
-    else if (e.intersectionRatio >= 0.4 && !played && !still.matches && hold == null) play();
-  }, { threshold: [0, 0.4] }).observe(win);
+    else if (enough && !played && !still.matches && hold == null) play();
+  }, { threshold: steps }).observe(win);
   // reduced motion switched on while the page is open: stop, and show the end
   still.addEventListener('change', () => { if (still.matches) finish(); });
 

@@ -32,7 +32,7 @@ The ANNA section SHALL NOT include a production-facts line (versions, release co
 - **THEN** there is exactly one `[data-glass]` element, a frosted window, and no element with class `anna-turn`, `anna-journey`, `anna-x` or `slab`
 
 ### Requirement: The Teams window plays "Close my week"
-Beside (desktop) or below (phone) the copy, a frosted window titled `annaCalls.window` SHALL hold anna-site's "Close my week" conversation from `src/config/anna-demo.ts`: Joris's request, ANNA's answer, one line of her work (below), her question, Joris's reply typed into the compose box and sent, and her result. Her steps list and the record SHALL NOT be shown, in the window or under it: her result says what she did (Ezra, 2026-11-11). Every beat MUST be in the markup from the start, hidden until it lands. The window SHALL be as tall as the finished conversation from the first frame: nothing in it scrolls, and its size never changes while the conversation plays. The conversation SHALL play once when about 40% of the window is in view, and play again from the start on Replay (`annaCalls.replay`). The `?chat=<seconds>` hold stays on `/` as a test hook. Pacing (Ezra, 2026-11-11: about 8 s to her question was too fast, 22 s too slow): her question SHALL land between 13 and 15 s after the play starts, and the whole play SHALL take at most 23 s.
+Beside (desktop) or below (phone) the copy, a frosted window titled `annaCalls.window` SHALL hold anna-site's "Close my week" conversation from `src/config/anna-demo.ts`: Joris's request, ANNA's answer, one line of her work (below), her question, Joris's reply typed into the compose box and sent, and her result. Her steps list and the record SHALL NOT be shown, in the window or under it: her result says what she did (Ezra, 2026-11-11). Every beat MUST be in the markup from the start, hidden until it lands. The window SHALL be as tall as the finished conversation from the first frame: nothing in it scrolls, and its size never changes while the conversation plays. The conversation SHALL play once when about 40% of the window is in view (where the window is taller than the screen, as on a short, narrow or zoomed one, when the part in view is about 40% of the screen's height: 40% of a window over 2.5 screens tall never fits at once; Codex review, 2026-11-12), and play again from the start on Replay (`annaCalls.replay`). The `?chat=<seconds>` hold stays on `/` as a test hook. Pacing (Ezra, 2026-11-11: about 8 s to her question was too fast, 22 s too slow): her question SHALL land between 13 and 15 s after the play starts, and the whole play SHALL take at most 23 s.
 
 #### Scenario: The words are anna-site's
 - **GIVEN** `src/config/anna-demo.ts` and an anna-site checkout
@@ -48,6 +48,11 @@ Beside (desktop) or below (phone) the copy, a frosted window titled `annaCalls.w
 - **GIVEN** the homepage loaded
 - **WHEN** the window is scrolled into view and the test waits for the window's `done` state
 - **THEN** every beat was shown in timeline order, the compose box held the reply typed out before it was sent, every beat lies inside the window's box, the page did not scroll, and no beat is replayed without Replay
+
+#### Scenario: A window taller than 2.5 screens
+- **GIVEN** the homepage at 390x260, where the window is more than 2.5 times the viewport's height
+- **WHEN** the window is scrolled into view
+- **THEN** the conversation starts playing
 
 #### Scenario: The pacing
 - **GIVEN** the timeline in a unit test, built from `annaCalls.work.lines` and `annaDemo.reply`

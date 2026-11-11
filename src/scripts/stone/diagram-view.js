@@ -8,7 +8,9 @@
 // Opening clones the diagram into the dialog's frosted panel, renames every id in the copy (and each
 // reference to one) so the page never repeats an id, names the dialog by the copy (its own
 // aria-labelledby, else the copy's aria-label), and calls showModal(). Escape, "Close" and a click on
-// the backdrop close it; focus goes back to the button.
+// the backdrop close it; focus goes back to the button. If a resize took the button away while the
+// dialog was open (widened past the natural width), focus goes to the diagram it showed instead, as a
+// one-time target: its tabindex goes again when focus leaves, so it stays no tab stop.
 const dialog = document.querySelector('dialog.dv');
 const template = document.querySelector('template.dv-open-tpl');
 // each: the element the button follows, and its drawing
@@ -19,7 +21,14 @@ const figures = [
 
 if (dialog && template) {
   const body = dialog.querySelector('.dv-body');
-  let opener = null;
+  let opener = null, shown = null;
+
+  /** Focus `fig` without making it a tab stop: tabindex -1 only until focus leaves it. */
+  function focusFigure(fig) {
+    fig.setAttribute('tabindex', '-1');
+    fig.addEventListener('blur', () => fig.removeAttribute('tabindex'), { once: true });
+    fig.focus({ preventScroll: true });
+  }
 
   /** A copy of `svg` whose ids, and the references to them, carry a dv- prefix. */
   function copyOf(svg) {
@@ -54,11 +63,12 @@ if (dialog && template) {
     return copy;
   }
 
-  function open(svg, button) {
+  function open(fig, svg, button) {
     const copy = copyOf(svg);
     body.replaceChildren(copy);
     dialog.setAttribute('aria-labelledby', copy.getAttribute('aria-labelledby') || copy.id);
     opener = button;
+    shown = fig;
     dialog.showModal();
   }
 
@@ -68,14 +78,15 @@ if (dialog && template) {
   dialog.addEventListener('close', () => {
     body.replaceChildren();
     if (opener?.isConnected) opener.focus();
-    opener = null;
+    else if (shown?.isConnected) focusFigure(shown);
+    opener = shown = null;
   });
 
   for (const { fig, svg } of figures) {
     if (!svg || !svg.viewBox.baseVal || !svg.viewBox.baseVal.width) continue;
     const button = template.content.firstElementChild.cloneNode(true);
-    button.addEventListener('click', () => open(svg, button));
-    svg.addEventListener('click', () => { if (fig.classList.contains('dv-larger')) open(svg, button); });
+    button.addEventListener('click', () => open(fig, svg, button));
+    svg.addEventListener('click', () => { if (fig.classList.contains('dv-larger')) open(fig, svg, button); });
     const measure = () => {
       const shrunk = svg.getBoundingClientRect().width < svg.viewBox.baseVal.width - 1;
       fig.classList.toggle('dv-larger', shrunk);

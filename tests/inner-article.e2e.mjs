@@ -548,6 +548,28 @@ test('Open and close: Tab and Enter, then Escape; the button and "Close"; the bu
   await isClosed();
 });
 
+// Widened past the natural width while the dialog is open, the button is gone by the time it closes
+// (Codex review, 2026-11-12): focus lands on the diagram it showed, which is still no tab stop.
+test('Open at 390, widened past the natural width, closed with Escape: no button, focus on the diagram, not lost', async () => {
+  const route = '/projects/Henk';
+  const page = await at(route, { width: 390, height: 844 });
+  await buttons(page, 1);
+  await page.locator(OPEN).focus();
+  await page.keyboard.press('Enter');
+  await page.waitForFunction((sel) => document.querySelector(sel).open, DIALOG);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await frames(page, 3);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction((sel) => !document.querySelector(sel).open, DIALOG);
+  await buttons(page, 0);
+  // the dialog's close event (which hands focus on) follows the close itself
+  await page.waitForFunction((sel) => !document.querySelector(sel).contains(document.activeElement), DIALOG, { timeout: 2000 }).catch(() => {});
+  const f = await page.evaluate((sel) => ({ at: document.activeElement?.outerHTML.slice(0, 90), onDiagram: document.activeElement === document.querySelector(sel) }), DIAGRAMS[route]);
+  assert.equal(f.onDiagram, true, `focus on the diagram, not ${f.at}`);
+  await page.keyboard.press('Tab');
+  assert.equal(await page.locator(DIAGRAMS[route]).getAttribute('tabindex'), null, 'and it is no tab stop once left');
+});
+
 test('Reduced motion: the sandbox\'s dialog opens with no animation, fully opaque in the first frame (and with motion, it fades)', async () => {
   const look = (page) => page.evaluate(([open, sel]) => {
     document.querySelector(open).click();
