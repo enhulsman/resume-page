@@ -23,7 +23,7 @@ const page = siteNav.links.find((l) => l.id === "contact")!;
   /* the address is the section's largest text, the heading above it included */
   .contact-mail {
     display: inline-block; max-width: 100%;
-    font: 850 clamp(40px, 8.4vw, 150px)/0.95 var(--stone-sans); font-stretch: 84%; letter-spacing: -0.035em;
+    font: 850 clamp(40px, calc(8.4 * var(--stone-vw)), 150px)/0.95 var(--stone-sans); font-stretch: 84%; letter-spacing: -0.035em;
     color: var(--stone-ink); text-decoration: none; overflow-wrap: anywhere;
   }
   .contact-mail:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.12em; }

@@ -41,7 +41,7 @@ const lights = glassCards.map((c) => ({
 
 <style>
   .hero {
-    padding: clamp(24px, 2.8vw, 40px) var(--stone-gutter) 40px;
+    padding: clamp(24px, 2.8vw, 40px) var(--stone-side) 40px;
     font-family: var(--stone-sans);
     color: var(--stone-ink);
     -webkit-font-smoothing: antialiased;
@@ -82,7 +82,7 @@ const lights = glassCards.map((c) => ({
     display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 1vw, 14px);
   }
   /* four across: the row never pushes the cards below the first screen */
-  .cards :global(.glass-card) { aspect-ratio: auto; width: 100%; height: min(40svh, 27vw); }
+  .cards :global(.glass-card) { aspect-ratio: auto; width: 100%; height: min(40svh, calc(27 * var(--stone-vw))); }
 
   @media (max-width: 1099px) { .hero-name { font-size: min(15vw, 26svh); } }
   @media (prefers-reduced-motion: reduce) { .hero-name::after { display: none; } }
