@@ -104,14 +104,17 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
       const submitText = submitButton.querySelector('.submit-text') as HTMLElement;
       const submitLoading = submitButton.querySelector('.submit-loading') as HTMLElement;
 
+      let hideTimer: ReturnType<typeof setTimeout> | undefined;
       function showStatus(message: string, isError: boolean = false) {
+        // a new message cancels an earlier success's auto-hide, so it cannot hide this one
+        clearTimeout(hideTimer);
         statusMessage.dataset.kind = isError ? 'error' : 'sent';
         statusMessage.textContent = message;
         statusMessage.hidden = false;
 
         // Auto-hide success messages after 5 seconds
         if (!isError) {
-          setTimeout(() => {
+          hideTimer = setTimeout(() => {
             statusMessage.hidden = true;
           }, 5000);
         }

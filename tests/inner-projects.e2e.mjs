@@ -4,12 +4,12 @@
 // site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/inner-projects.e2e.mjs
 //
-// Test cost: three loads in all. /projects loads once with reduced motion (every window finished,
+// Test cost: two loads in all. /projects loads once with reduced motion (every window finished,
 // the lights still, ANNA held at her end with ?chat=) and is reused across widths with
 // setViewportSize for the layout, the cards' contents, the still frame and the contrast across the
-// loop (__glass.at(t), one screenshot per moment and width). One load runs the loop (?guard=off,
-// WebGL contexts counted) for "One context, and only what shows"; one has no WebGL. Waits are on
-// state (__glassReady, frames), never on a fixed sleep.
+// loop (__glass.at(t), one screenshot per moment and width); one has no WebGL. The load that runs
+// the loop, "One context, and only what shows", is in tests/inner-projects.live.e2e.mjs (the live
+// lane, run alone). Waits are on state (__glassReady, frames), never on a fixed sleep.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -36,17 +36,6 @@ const AW = `${LEAD} [data-glass-moment="anna"]`;
 const CARD = '[data-glass-moment="project-cards"] .pc';
 const TEXTS = ['.pc-title', '.pc-idx', '.pc-status', '.pc-intro', '.pc-nums dt', '.pc-nums dd'];
 
-/** Count every canvas that got a WebGL context, before any page script runs. */
-function countGL() {
-  const orig = HTMLCanvasElement.prototype.getContext;
-  const gl = new Set();
-  window.__glCanvases = gl;
-  HTMLCanvasElement.prototype.getContext = function (kind, ...rest) {
-    const ctx = orig.call(this, kind, ...rest);
-    if (ctx && /webgl/i.test(kind)) gl.add(this);
-    return ctx;
-  };
-}
 /** A browser without WebGL: both getContext('webgl2') and getContext('webgl') give null. */
 function noGL() {
   const orig = HTMLCanvasElement.prototype.getContext;
@@ -398,7 +387,7 @@ async function acrossTheLoop(page, w) {
       const { png, y0: y } = await shootSlice(page, w, bar, sl);
       const res = await page.evaluate(async ([png, mine, y]) => {
         const img = new Image(); img.src = `data:image/png;base64,${png}`; await img.decode();
-        const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+        const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
         const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
         const L = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
         return mine.map(({ color, box }) => {
@@ -437,44 +426,6 @@ test('Measured across the loop: every text on every card at 4.5:1 at seven momen
   assert.deepEqual(fails, []);
 });
 
-// ---------- the loop: one context, only the panes that show ----------
-
-test('One context, and only what shows: one WebGL context; at 1440 and at 390 the visible panes are lit and drawn, the hidden never', async () => {
-  // which panes draw is all this reads: at half the device pixels each draw costs a quarter
-  const page = await load('?guard=off', { motion: 'no-preference', init: [countGL], scale: 0.5 });
-  assert.equal(await page.evaluate(() => window.__glCanvases.size), 1, 'one WebGL context on the page');
-  const panes = () => page.$$eval('[data-glass="ribbed"]', (ps) => ps.map((p) => ({ shown: getComputedStyle(p).display !== 'none', lit: p.classList.contains('lit'), card: !!p.closest('.pc') })));
-  const draws = () => page.evaluate(() => window.__glass.draws);
-  // 30 frames in all, every row of cards scrolled into view in turn
-  const tour = async () => {
-    const rows = await page.$$eval(CARD, (cs) => [...new Set(cs.map((c) => Math.round(c.getBoundingClientRect().top + scrollY)))]);
-    const each = Math.ceil(30 / rows.length);
-    for (const top of rows) {
-      await page.evaluate((y) => window.scrollTo(0, y - innerHeight / 3), top);
-      await frames(page, each);
-    }
-  };
-  for (const w of [1440, 390]) {
-    await width(page, w);
-    const p = await panes();
-    assert.equal(p.length, 8 * 5, 'five panes per card');
-    assert.ok(p.every((x) => x.card), 'every ribbed pane is a card\'s');
-    const a = await draws();
-    await tour();
-    const b = await draws();
-    p.forEach((x, i) => {
-      if (x.shown) {
-        assert.ok(x.lit, `${w}: pane ${i} is lit`);
-        assert.ok(b[i] > a[i], `${w}: pane ${i} was drawn (${a[i]} -> ${b[i]})`);
-      } else {
-        assert.equal(b[i], a[i], `${w}: hidden pane ${i} was drawn (${a[i]} -> ${b[i]})`);
-        if (w === 1440) assert.equal(b[i], 0, `${w}: hidden pane ${i} never drawn`);
-      }
-    });
-    assert.equal(p.filter((x) => x.shown).length, 8 * (w === 1440 ? 3 : 2), `${w}: panes shown`);
-  }
-});
-
 test('Without WebGL: no error, every card links to its page, and every card\'s ground varies', async () => {
   const page = await load('', { init: [noGL] });
   const hrefs = await page.$$eval(CARD, (cs) => cs.map((c) => (c.tagName === 'A' ? c.getAttribute('href') : null)));
@@ -487,7 +438,7 @@ test('Without WebGL: no error, every card links to its page, and every card\'s g
     const { png, y0 } = await shootSlice(page, 1440, bar, sl);
     const vs = await page.evaluate(async ([b64, boxes, y0]) => {
       const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
-      const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
       return boxes.map((b) => {
         const d = x.getImageData(Math.round(b.x + b.w * 0.04), Math.round(b.y - y0 + b.h * 0.06), Math.round(b.w * 0.92), Math.round(b.h * 0.88)).data;
         let lo = 255, hi = 0;

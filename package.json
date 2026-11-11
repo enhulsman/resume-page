@@ -9,7 +9,9 @@
     "start": "astro dev",
     "generate-pdf": "node scripts/generate-pdf.js",
     "test": "node --test tests/worker.test.ts tests/frontmatter.test.ts tests/post.test.ts tests/single-source.test.ts tests/shell-parser.test.ts tests/glass-anna-window.test.mjs tests/glass-hero.test.mjs tests/glass-home.test.mjs tests/glass-ink.test.mjs tests/glass-layers.test.mjs tests/glass-retired.test.mjs tests/inner-pages.test.mjs tests/inner-retired.test.mjs",
-    "test:e2e": "node --test --test-concurrency=1 tests/sheets.e2e.mjs tests/glass-anna-window.e2e.mjs tests/glass-chrome.e2e.mjs tests/glass-hero.e2e.mjs tests/glass-home.e2e.mjs tests/glass-retired.e2e.mjs tests/glass-terminal.e2e.mjs tests/inner-article.e2e.mjs tests/inner-blog.e2e.mjs tests/inner-contact.e2e.mjs tests/inner-projects.e2e.mjs tests/inner-resume.e2e.mjs tests/inner-site.e2e.mjs tests/inner-windows.e2e.mjs"
+    "test:e2e": "npm run test:e2e:still; still=$?; npm run test:e2e:live; live=$?; exit $((still || live))",
+    "test:e2e:still": "node --test --test-concurrency=${CONC:-4} --test-shard=${SHARD:-1/1} tests/glass-home.e2e.mjs tests/glass-anna-window.e2e.mjs tests/inner-projects.e2e.mjs tests/inner-site.e2e.mjs tests/glass-chrome.e2e.mjs tests/sheets.e2e.mjs tests/glass-hero.e2e.mjs tests/glass-terminal.e2e.mjs tests/inner-windows.e2e.mjs tests/inner-article.e2e.mjs tests/glass-retired.e2e.mjs tests/inner-blog.e2e.mjs tests/inner-contact.e2e.mjs tests/inner-resume.e2e.mjs",
+    "test:e2e:live": "node --test --test-concurrency=1 --test-shard=${SHARD:-1/1} tests/glass-hero.live.e2e.mjs tests/glass-home.live.e2e.mjs tests/glass-anna-window.live.e2e.mjs tests/glass-terminal.live.e2e.mjs tests/inner-projects.live.e2e.mjs tests/inner-site.live.e2e.mjs"
   },
   "devDependencies": {
     "@astrojs/mdx": "^8.0.1",

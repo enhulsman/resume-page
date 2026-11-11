@@ -4,9 +4,11 @@
 // inside it is the real terminal. Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/glass-terminal.e2e.mjs
 // Every wait is on state (__glassReady, terminal output, animation frames), never a fixed sleep.
-import { test, before, after } from 'node:test';
+// Lanes (tests/lib/glass-page.mjs): the light held still (?t=2.4) or reduced motion here; reduced
+// motion switched on while the light runs: tests/glass-terminal.live.e2e.mjs.
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chromium } from 'playwright';
+import { useBrowser, SWIFTSHADER } from './lib/browser.mjs';
 import { homeSections } from '../src/config/home.ts';
 import { glassCards, terminalReflection } from '../src/config/glass.ts';
 
@@ -14,12 +16,10 @@ const BASE = process.env.BASE || 'http://localhost:4321';
 const TERM = '[data-glass-moment="terminal"]';
 const WIN = `${TERM} [data-glass="frosted"]`;
 const BODY = `${WIN} .term-body`;
-let browser;
-before(async () => { browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); });
-after(async () => { await browser?.close(); });
+const pw = useBrowser({ args: SWIFTSHADER });
 
 async function open(q = '', { width = 1440, height = 900, reducedMotion = 'no-preference' } = {}) {
-  const context = await browser.newContext({ viewport: { width, height }, reducedMotion });
+  const context = await pw.newContext({ viewport: { width, height }, reducedMotion });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -52,7 +52,7 @@ async function run(page, cmd) {
 }
 
 test('the terminal window: frosted, see-through, titled from config, without the drawing-sheet head bar', async () => {
-  const { context, page, errors } = await open();
+  const { context, page, errors } = await open('?t=2.4');
   const look = await page.$eval(WIN, (el) => {
     const cs = getComputedStyle(el);
     const term = el.querySelector('.term');
@@ -78,7 +78,7 @@ test('the terminal window: frosted, see-through, titled from config, without the
 });
 
 test('one or two of the hero\'s lights reflect in it: ribbed, lit, upside down, decoration only, soft ovals', async () => {
-  const { context, page } = await open();
+  const { context, page } = await open('?t=2.4');
   const r = await page.$eval(`${WIN} .term-reflect`, (el) => ({
     hidden: el.getAttribute('aria-hidden'),
     panes: [...el.querySelectorAll('[data-glass="ribbed"]')].map((p) => ({ canvas: !!p.querySelector('canvas'), lit: p.classList.contains('lit'), link: p.tagName === 'A' })),
@@ -103,7 +103,7 @@ const hueA = (s) => {
 };
 
 test('the reflection and the glow behind the window use at most two hues', async () => {
-  const { context, page, errors } = await open();
+  const { context, page, errors } = await open('?t=2.4');
   const r = await page.$eval(TERM, (m) => ({
     washes: [...m.querySelectorAll('.term-reflect [data-glass="ribbed"]')].map((p) => JSON.parse(p.dataset.wash).color),
     glow: getComputedStyle(m.querySelector('[data-glow]')).backgroundImage,
@@ -132,7 +132,7 @@ for (const [width, height] of [[1440, 900], [390, 844]]) test(`the reflection ha
   const png = (await page.screenshot({ clip: { x: b.x, y: b.y, width: b.w, height: b.h } })).toString('base64');
   const m = await page.evaluate(async (b64) => {
     const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
-    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
     const d = x.getImageData(0, 0, img.width, img.height).data, W = img.width, H = img.height;
     const L = (i, j) => { const k = (j * W + i) * 4; return (d[k] + d[k + 1] + d[k + 2]) / 3; };
     // a straight edge is a step that holds along its own length: each step between neighbouring
@@ -159,7 +159,7 @@ for (const [width, height] of [[1440, 900], [390, 844]]) test(`the reflection ha
 });
 
 test('the terminal still runs: it types its intro, then ls lists the project directories and whoami answers "ezra"', async () => {
-  const { context, page, errors } = await open('?speed=10');
+  const { context, page, errors } = await open('?t=2.4&speed=10');
   await intoView(page);
   await ready(page);
   const home = await run(page, 'ls');
@@ -175,7 +175,7 @@ test('the terminal still runs: it types its intro, then ls lists the project dir
 });
 
 test('theme answers plainly that there is one theme, and changes nothing', async () => {
-  const { context, page, errors } = await open('?speed=10');
+  const { context, page, errors } = await open('?t=2.4&speed=10');
   await intoView(page);
   await ready(page);
   for (const cmd of ['theme', 'theme dark', 'theme toggle']) {
@@ -201,48 +201,5 @@ test('reduced motion from the start: the whole intro at once, an input line, a c
   assert.deepEqual(s.cmds, await introCmds(page));
   assert.equal(s.anims, 0, 'the caret is steady');
   await context.close();
-  assert.deepEqual(errors, []);
-});
-
-test('reduced motion switched on mid-typing: the rest of the intro at once, an input line, a steady caret, nothing moves', async () => {
-  const { context, page, errors } = await open('?guard=off');
-  await intoView(page);
-  // the intro is typing: a command has started, the input line is not there yet
-  await page.waitForFunction((sel) => { const b = document.querySelector(sel); return b.querySelector('.text-theme-primary') && !b.querySelector('.terminal-input-line'); }, BODY, { timeout: 30000, polling: 'raf' });
-  const typed = await page.$eval(BODY, (b) => b.querySelectorAll('.text-theme-primary').length);
-  const cmds = await introCmds(page);
-  assert.ok(typed < cmds.length, `still typing (${typed} of ${cmds.length})`);
-
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await frames(page, 3);
-  const s = await page.$eval(BODY, (b) => {
-    const caret = b.querySelector('.terminal-input-line .terminal-cursor');
-    return {
-      cmds: [...b.querySelectorAll('.text-theme-primary')].map((e) => e.textContent),
-      input: !!b.querySelector('.terminal-input-line'),
-      caret: caret ? { anims: caret.getAnimations().length, name: getComputedStyle(caret).animationName } : null,
-    };
-  });
-  assert.deepEqual(s.cmds, cmds, 'the whole intro');
-  assert.equal(s.input, true, 'an input line');
-  assert.ok(s.caret, 'a caret');
-  assert.equal(s.caret.anims, 0, `the caret does not blink (${s.caret.name})`);
-
-  // the cards hold the still frame: drawing the still moment again changes nothing
-  const cards = '[data-glass="ribbed"] canvas';
-  const a = await page.$$eval(cards, (cs) => cs.map((c) => c.toDataURL()));
-  await page.evaluate(() => window.__glass.at(2.4));
-  const b = await page.$$eval(cards, (cs) => cs.map((c) => c.toDataURL()));
-  assert.equal(a.length, 4 + terminalReflection.panes.length, 'four cards and the reflections');
-  a.forEach((x, i) => assert.equal(x, b[i], `pane ${i + 1} is not the still frame`));
-
-  // and nothing on screen moves: the terminal's passing hint gone, two screenshots 30 frames apart
-  await page.waitForFunction(() => !document.querySelector('.terminal-hint'), null, { timeout: 10000 });
-  await frames(page, 2);
-  const p = await page.screenshot();
-  await frames(page, 30);
-  const q = await page.screenshot();
-  await context.close();
-  assert.ok(p.equals(q), 'the screen changed with reduced motion on');
   assert.deepEqual(errors, []);
 });

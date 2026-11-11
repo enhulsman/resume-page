@@ -2,6 +2,13 @@ name: Test
 
 # Unit tests, then the browser tests against the production build (served by astro preview),
 # so a change that breaks the homepage, its glass or the inner pages fails before it deploys.
+#
+# The browser tests run in two lanes (package.json), each split over its own runners:
+# - still: every test that holds the glass light still (?t=2.4), or loads with reduced motion or
+#   without WebGL; its files run side by side on the runner's cores.
+# - live: the tests that need the light running (the loop, the arrival, the pointer's light, the
+#   slow-device guard, motion switched off mid-play), one at a time: SwiftShader draws the running
+#   light on the CPU, and a page running it starves any page beside it.
 on:
   push:
     branches: [ main ]
@@ -9,9 +16,9 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  unit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -28,6 +35,40 @@ jobs:
       - name: Build
         run: npm run build
 
+  # Each lane is split by file across runners (node --test --test-shard, files in sorted order): the
+  # light is drawn by SwiftShader on the CPU, so a runner's cores, not the test count, set the time.
+  browser:
+    name: browser (${{ matrix.lane }} ${{ matrix.shard }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { lane: still, shard: 1/6 }
+          - { lane: still, shard: 2/6 }
+          - { lane: still, shard: 3/6 }
+          - { lane: still, shard: 4/6 }
+          - { lane: still, shard: 5/6 }
+          - { lane: still, shard: 6/6 }
+          - { lane: live, shard: 1/2 }
+          - { lane: live, shard: 2/2 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cores
+        run: nproc
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
       - name: Install Chromium for Playwright
         run: npx playwright install chromium
 
@@ -39,10 +80,14 @@ jobs:
             sleep 1
           done
 
-      - name: Browser tests
-        run: npm run test:e2e
+      - name: Browser tests (${{ matrix.lane }} lane, shard ${{ matrix.shard }})
+        run: npm run test:e2e:${{ matrix.lane }}
         env:
           BASE: http://localhost:4321
+          SHARD: ${{ matrix.shard }}
+          # two still files at a time on a 4-core runner: at four, a running light in one starved the
+          # page loads of another past their 30 s (CI, 2026-11-11); the live lane ignores it
+          CONC: 2
 
       - name: Server log
         if: failure()

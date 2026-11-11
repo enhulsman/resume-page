@@ -252,7 +252,7 @@ async function measure() {
   await tag.evaluate((t) => t.remove());
   return page.evaluate(async ([png, items, edges]) => {
     const img = new Image(); img.src = `data:image/png;base64,${png}`; await img.decode();
-    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
     const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
     const L = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
     const ratio = (p, q) => { const [hi, lo] = [L(p), L(q)].sort((a, b) => b - a); return (hi + 0.05) / (lo + 0.05); };
@@ -280,6 +280,22 @@ async function measure() {
     return { texts, outlines };
   }, [png, items, edges]);
 }
+
+// The success hides itself after 5 s; that timer must not hide a later error (CI, 2026-11-11: a
+// failed send within 5 s of a success lost its error line when the success's timer fired).
+test('A failed send within 5 s of a success: the error stays once the success\'s 5 s are up', async () => {
+  await width(1440);
+  await fill();
+  await send(ok);
+  const sentAt = await page.evaluate(() => performance.now());
+  await fill();
+  await send(fail);
+  assert.equal(await page.getAttribute('#statusMessage', 'data-kind'), 'error');
+  await page.waitForFunction((t) => performance.now() - t > 5500, sentAt, { timeout: 15000 });
+  await frames();
+  assert.equal(await page.isVisible('#statusMessage'), true, 'the error is still shown after the success\'s 5 s');
+  assert.equal(await page.getAttribute('#statusMessage', 'data-kind'), 'error');
+});
 
 test('Measured: at 1440 and 390, every text in the window at 4.5:1 (title, labels, typed text, button, the success and the error) and every input outline at 3:1', async () => {
   const report = [];

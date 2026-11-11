@@ -62,12 +62,24 @@ test('no test still opens the lab', () => {
   assert.deepEqual(tests.filter((p) => /hero-lab|[?&]lab=1|h2Card|annaExploded|look=before/.test(read(p))), []);
 });
 
-// task 8.3: CI runs the glass suites (npm test before the build, test:e2e against the build)
+// task 8.3: CI runs the glass suites (npm test before the build, test:e2e against the build). Since
+// 2026-11-11 (Ezra: 11.5 min for a website's tests) test:e2e runs two lanes: the live lane, the files
+// whose tests need the light running (*.live.e2e.mjs), one at a time; the still lane, every other
+// browser file, side by side (tests/lib/glass-page.mjs).
 test('npm test runs every glass unit test and test:e2e every glass browser test', () => {
   const { scripts } = JSON.parse(read('package.json'));
   const files = readdirSync(new URL('tests/', root));
+  const still = scripts['test:e2e:still'] ?? '', live = scripts['test:e2e:live'] ?? '';
   for (const f of files.filter((f) => /^glass-.*\.test\.mjs$/.test(f))) assert.ok(scripts.test.includes(`tests/${f}`), `npm test runs ${f}`);
-  for (const f of files.filter((f) => /^glass-.*\.e2e\.mjs$/.test(f))) assert.ok(scripts['test:e2e'].includes(`tests/${f}`), `test:e2e runs ${f}`);
-  assert.match(scripts['test:e2e'], /tests\/sheets\.e2e\.mjs/, 'the inner pages\' suite stays');
-  assert.match(scripts['test:e2e'], /--test-concurrency=1/, 'one browser suite at a time');
+  for (const f of files.filter((f) => /^glass-.*\.e2e\.mjs$/.test(f))) assert.ok(`${still} ${live}`.includes(`tests/${f}`), `test:e2e runs ${f}`);
+  assert.match(scripts['test:e2e'], /test:e2e:still/, 'test:e2e runs the still lane');
+  assert.match(scripts['test:e2e'], /test:e2e:live/, 'and the live lane');
+  assert.match(still, /tests\/sheets\.e2e\.mjs/, 'the inner pages\' suite stays');
+  // every browser file in exactly one lane; the live files only in the live lane
+  for (const f of files.filter((f) => f.endsWith('.e2e.mjs'))) {
+    const lanes = [still, live].filter((s) => s.split(/\s+/).includes(`tests/${f}`)).length;
+    assert.equal(lanes, 1, `${f} runs in one lane`);
+    if (f.endsWith('.live.e2e.mjs')) assert.ok(live.split(/\s+/).includes(`tests/${f}`), `${f} runs in the live lane`);
+  }
+  assert.match(live, /--test-concurrency=1/, 'the live lane: one browser suite at a time');
 });

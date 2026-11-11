@@ -8,8 +8,9 @@
 // the grain, the glow beneath each window (one screenshot per window), the copy, the drawing-sheet
 // selectors, the running animations and two still screenshots; then the same page is resized to 390
 // (and 320 for the article pages) for sideways scroll, and at 1440 and 390 every window's text is
-// measured from one screenshot per window with all its text made transparent at once. Only
-// "Switched on after load" loads with motion, on /projects, the route its scenario names. Turnstile's
+// measured from one screenshot per window with all its text made transparent at once. "Switched on
+// after load", which loads /projects with motion (the route its scenario names) and needs its light
+// running, is in tests/inner-site.live.e2e.mjs (the live lane, run alone). Turnstile's
 // script is stubbed on /contact, as in every inner test of that page. The tests below assert on what
 // the sweep collected; waits are on state, never on a fixed sleep.
 import { test, before, after } from 'node:test';
@@ -70,7 +71,7 @@ const errors = [];
 const frames = (n = 2) => page.evaluate((n) => new Promise((done) => { const f = (k) => (k ? requestAnimationFrame(() => f(k - 1)) : done()); f(n); }), n);
 const decode = (png, fn, arg) => page.evaluate(async ([b64, fn, arg]) => {
   const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
-  const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
   return new Function(`return (${fn})`)()(x.getImageData(0, 0, img.width, img.height), arg);
 }, [png.toString('base64'), fn.toString(), arg]);
 
@@ -484,44 +485,6 @@ test('No running animations: with reduced motion nothing runs after load or at t
     assert.deepEqual(R[route].runningAtEnd, [], `${route}: after scrolling to the bottom`);
     assert.ok(R[route].still, `${route}: two screenshots 30 frames apart differ`);
   }
-});
-
-test('Switched on after load: /projects with its lights running and ANNA playing holds still at once when reduced motion comes on', async () => {
-  // which frames change is all this reads: at half the device pixels each draw costs a quarter
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'no-preference', deviceScaleFactor: 0.5 });
-  const p = await ctx.newPage();
-  const errs = [];
-  p.on('pageerror', (e) => errs.push(String(e)));
-  await p.goto(`${BASE}/projects?guard=off`, { waitUntil: 'load' });
-  await p.addStyleTag({ content: 'astro-dev-toolbar{display:none!important}' });
-  await p.waitForFunction(() => window.__glassReady === true);
-  const f = (n) => p.evaluate((n) => new Promise((done) => { const g = (k) => (k ? requestAnimationFrame(() => g(k - 1)) : done()); g(n); }), n);
-  // ANNA's window plays once it is in view; the cards' lights run
-  await p.locator('.pi-lead .anna-window').scrollIntoViewIfNeeded();
-  await p.waitForFunction(() => { const s = window.__annaWindow?.state(); return s && s.t > 0 && !s.done; }, null, { timeout: 15000 });
-  const card = p.locator('[data-glass-moment="project-cards"] .pc').first();
-  await card.evaluate((c) => c.scrollIntoView({ block: 'center', behavior: 'instant' }));
-  const canvases = () => card.evaluate((c) => [...c.querySelectorAll('canvas')].filter((x) => x.width).map((x) => x.toDataURL()).join());
-  const c0 = await canvases();
-  await f(20);
-  assert.notEqual(c0, await canvases(), 'the lights run before');
-  await p.emulateMedia({ reducedMotion: 'reduce' });
-  await f(3);
-  const s = await p.evaluate(() => window.__annaWindow.state());
-  assert.equal(s.done, true, 'the conversation shows finished');
-  // the cards where the page now stands, then ANNA's window at the top: each screen still for 30 frames
-  const a = await p.screenshot();
-  await f(30);
-  const b = await p.screenshot();
-  await p.evaluate(() => window.scrollTo(0, 0));
-  await f(3);
-  const c = await p.screenshot();
-  await f(30);
-  const d = await p.screenshot();
-  await ctx.close();
-  assert.ok(a.equals(b), 'the cards hold the still frame');
-  assert.ok(c.equals(d), 'ANNA\'s window holds still');
-  assert.deepEqual(errs, []);
 });
 
 // ---------- no inner page scrolls sideways ----------

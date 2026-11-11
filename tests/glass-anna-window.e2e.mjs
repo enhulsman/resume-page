@@ -3,9 +3,12 @@
 // right, a frosted window where anna-site's 'week' conversation plays once as it comes into view.
 // The timeline itself: tests/glass-anna-window.test.mjs. Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/glass-anna-window.e2e.mjs
-import { test, before, after } from 'node:test';
+// Lanes (tests/lib/glass-page.mjs): her conversation plays on its own clock, so these tests hold the
+// cards' light still (?t=2.4) and run beside the other files; reduced motion switched on while the
+// light runs: tests/glass-anna-window.live.e2e.mjs.
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chromium } from 'playwright';
+import { useBrowser, SWIFTSHADER } from './lib/browser.mjs';
 import { annaDemo } from '../src/config/anna-demo.ts';
 import { annaLead, annaCalls, homeSections } from '../src/config/home.ts';
 
@@ -22,13 +25,11 @@ const AT = (id) => TL.beats.find((b) => b.id === id).at;
 const END = TL.done;
 /** The sizes the spec names: two desktops and a phone. */
 const SIZES = [[1440, 900], [1280, 720], [390, 844]];
-let browser;
-before(async () => { browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); });
-after(async () => { await browser?.close(); });
+const pw = useBrowser({ args: SWIFTSHADER });
 
 /** The homepage (or `path`); `q` is the query string without its "?". */
 async function open(q = '', { width = 1440, height = 900, reducedMotion = 'no-preference', path = '/' } = {}) {
-  const context = await browser.newContext({ viewport: { width, height }, reducedMotion });
+  const context = await pw.newContext({ viewport: { width, height }, reducedMotion });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -51,7 +52,7 @@ const frames = (page, n = 2) => page.evaluate((n) => new Promise((done) => { con
 const workLine = (page) => page.$eval('.anna-window .aw-work-t', (e) => e.textContent.trim());
 
 test('the left copy, verbatim', async () => {
-  const { context, page, errors } = await open('');
+  const { context, page, errors } = await open('t=2.4');
   const copy = await page.$eval('.anna-window .aw-copy', (el) => ({
     h2: el.querySelector('h2').textContent,
     lead: el.querySelector('.aw-lead').textContent,
@@ -86,7 +87,7 @@ test('the left copy, verbatim', async () => {
 });
 
 test('before it plays: the whole conversation is already in the page, in order, out of sight, not announced; no steps list, no record', async () => {
-  const { context, page, errors } = await open('');
+  const { context, page, errors } = await open('t=2.4');
   const s = await state(page);
   assert.equal(s.t, 0);
   assert.equal(s.beat, null);
@@ -117,7 +118,7 @@ test('before it plays: the whole conversation is already in the page, in order, 
 });
 
 test('scrolled into view it plays once to the end: every beat in order, the reply typed into the box, all of it inside the window', async () => {
-  const { context, page, errors } = await open('');
+  const { context, page, errors } = await open('t=2.4');
   await intoView(page);
   const y0 = await page.evaluate(() => scrollY);
   // while the reply is being typed, the box shows exactly what has been typed so far
@@ -159,7 +160,7 @@ test('scrolled into view it plays once to the end: every beat in order, the repl
 // A short, narrow or zoomed screen can make the window taller than 2.5 screens, where 40% of it can
 // never be in view at once (Codex review, 2026-11-12): there the trigger is 40% of the screen.
 test('a window more than 2.5 screens tall still plays once it fills the screen', async () => {
-  const { context, page, errors } = await open('speed=10', { width: 390, height: 260 });
+  const { context, page, errors } = await open('t=2.4&speed=10', { width: 390, height: 260 });
   const g = await page.evaluate(() => ({ win: document.querySelector('.anna-window .aw-window').getBoundingClientRect().height, vh: innerHeight }));
   assert.ok(g.win > 2.5 * g.vh, `the window (${g.win}px) is more than 2.5 screens (${g.vh}px) tall`);
   assert.equal((await state(page)).t, 0, 'not playing out of view');
@@ -172,7 +173,7 @@ test('a window more than 2.5 screens tall still plays once it fills the screen',
 
 // One desktop play runs in real time, above; Replay starts from the held end and plays at ?speed=4
 test('Replay plays it again from the start', async () => {
-  const { context, page, errors } = await open(`chat=${END}&speed=4`);
+  const { context, page, errors } = await open(`t=2.4&chat=${END}&speed=4`);
   await intoView(page);
   assert.equal((await until(page, (s) => s.done)).done, true);
   await page.click('.anna-window .aw-replay');
@@ -189,7 +190,7 @@ test('Replay plays it again from the start', async () => {
 
 test('?chat=<seconds> holds one moment: her question, the work line settled', async () => {
   const t = +(AT('question') + 0.5).toFixed(2);
-  const { context, page, errors } = await open(`chat=${t}`);
+  const { context, page, errors } = await open(`t=2.4&chat=${t}`);
   await intoView(page);
   const s = await until(page, (s) => s.beat === 'question');
   assert.equal(s.beat, 'question');
@@ -207,10 +208,12 @@ test('?chat=<seconds> holds one moment: her question, the work line settled', as
 // clock the play itself reads, over seconds of play. The play may read the clock a frame before or
 // after this test does, so a slow frame at either end shifts the figure: the bounds allow for that,
 // and still tell 1x from 0.5x, 10x from 1x, and a capped factor from an uncapped one (which would
-// end the play in its first frame, measuring 0).
+// end the play in its first frame, measuring 0). The light is held still (?t=2.4): with it running
+// a frame took 0.4 to 3 s, enough to put a ~2 s play off by a frame at either end (3.39x measured
+// under load, 2026-11-11); held still, a frame is ~16 ms. The play's own clock is unchanged.
 test('?speed= only speeds a play up, and at most ten times: Infinity and 0.5 play at their own pace', async () => {
   const measure = async (q, ms) => {
-    const { context, page, errors } = await open(q);
+    const { context, page, errors } = await open(`t=2.4&${q}`);
     try {
       const r = await page.evaluate(([ms, end]) => new Promise((done) => {
         document.querySelector('.anna-window .aw-window').scrollIntoView({ block: 'center' });
@@ -251,7 +254,7 @@ const HOLDS = [
 ];
 for (const [width, height] of SIZES) {
   test(`${width} x ${height}: the window never changes size while she works, her work is one line that fits, and held at each moment it reads what she read, each step in turn, then the summary`, async () => {
-    const context = await browser.newContext({ viewport: { width, height } });
+    const context = await pw.newContext({ viewport: { width, height } });
     const errors = [];
     const log = [];
     let page;
@@ -261,7 +264,7 @@ for (const [width, height] of SIZES) {
       page = await context.newPage();
       page.on('pageerror', (e) => errors.push(String(e)));
       page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-      await page.goto(`${BASE}/?chat=${t}`, { waitUntil: 'load' });
+      await page.goto(`${BASE}/?t=2.4&chat=${t}`, { waitUntil: 'load' });
       await page.waitForFunction(() => window.__glassReady === true && window.__annaWindow);
       await page.evaluate(() => document.fonts.ready);
       log.push(await page.evaluate(() => {
@@ -299,7 +302,7 @@ for (const [width, height] of SIZES) {
 
 test('the window stands level with her heading, after today\'s stone under the hero', async () => {
   for (const [width, height] of [[1440, 900], [1280, 720]]) {
-    const { context, page, errors } = await open('', { width, height });
+    const { context, page, errors } = await open('t=2.4', { width, height });
     const g = await page.evaluate(() => {
       const top = (sel) => document.querySelector(sel).getBoundingClientRect().top + scrollY;
       const cards = [...document.querySelectorAll('[data-glass-moment="hero"] [data-glass="ribbed"]')].map((c) => c.getBoundingClientRect().bottom + scrollY);
@@ -328,7 +331,7 @@ test('reduced motion: the finished conversation at once, the work line settled a
 });
 
 test('the window is no focus trap: tabbing goes in, then out to the next section\'s first link', async () => {
-  const { context, page, errors } = await open('');
+  const { context, page, errors } = await open('t=2.4');
   await page.focus('.anna-window .aw-copy a.more');
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(() => document.activeElement.matches('.anna-window .aw-replay')), true, 'the next stop is Replay');
@@ -350,7 +353,7 @@ test('the window is no focus trap: tabbing goes in, then out to the next section
 });
 
 test('the transcript is a region named from config, and nothing in it scrolls (so it needs no keyboard stop of its own)', async () => {
-  const { context, page, errors } = await open(`chat=${END}`);
+  const { context, page, errors } = await open(`t=2.4&chat=${END}`);
   const chat = await page.$eval('.anna-window .aw-chat', (c) => ({ role: c.getAttribute('role'), label: c.getAttribute('aria-label'), tabindex: c.getAttribute('tabindex'), over: c.scrollHeight - c.clientHeight, overflow: getComputedStyle(c).overflowY }));
   await context.close();
   assert.equal(chat.role, 'region');
@@ -362,7 +365,7 @@ test('the transcript is a region named from config, and nothing in it scrolls (s
 });
 
 test('without JavaScript the whole conversation shows, from its first message, and no dead Replay', async () => {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, javaScriptEnabled: false });
+  const context = await pw.newContext({ viewport: { width: 1440, height: 900 }, javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.locator('.anna-window .aw-window').scrollIntoViewIfNeeded();
@@ -381,7 +384,7 @@ test('without JavaScript the whole conversation shows, from its first message, a
 });
 
 test('with JavaScript the transcript never shows before playback: hidden from the moment its messages are parsed', async () => {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const context = await pw.newContext({ viewport: { width: 1440, height: 900 } });
   // before any page script: note the section's state the moment each message enters the page
   await context.addInitScript(() => {
     window.__beatsSeen = [];
@@ -399,7 +402,7 @@ test('with JavaScript the transcript never shows before playback: hidden from th
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(`${BASE}/`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/?t=2.4`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__glassReady === true);
   const seen = await page.evaluate(() => window.__beatsSeen);
   assert.equal(seen.length, BEATS.length, 'every message observed');
@@ -409,7 +412,7 @@ test('with JavaScript the transcript never shows before playback: hidden from th
 });
 
 test('with JavaScript on but the window\'s script never loading, the conversation still shows after load', async () => {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const context = await pw.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
   // every script file fails (a blocked or broken bundle); the page's inline scripts still run
   await page.route('**/*', (r) => (r.request().resourceType() === 'script' ? r.abort() : r.continue()));
@@ -420,36 +423,8 @@ test('with JavaScript on but the window\'s script never loading, the conversatio
   await context.close();
 });
 
-test('reduced motion switched on after load, before the window is in view: the finished conversation, no replay', async () => {
-  const { context, page, errors } = await open('');
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  const s = await until(page, (s) => s.done, undefined, 5000);
-  assert.equal(s.done, true);
-  await intoView(page);
-  await frames(page);
-  assert.deepEqual(await onBeats(page), BEATS);
-  assert.equal(await page.isVisible('.anna-window .aw-replay'), false);
-  assert.equal(await workLine(page), annaCalls.work.done);
-  await context.close();
-  assert.deepEqual(errors, []);
-});
-
-test('reduced motion switched on mid-play: it stops and shows the end', async () => {
-  const { context, page, errors } = await open('');
-  await intoView(page);
-  await until(page, (s) => s.beat === 'answer');
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  const s = await until(page, (s) => s.done, undefined, 5000);
-  assert.equal(s.done, true);
-  assert.ok(s.t >= 18, `jumped to the end: ${s.t}`);
-  assert.equal(s.typed, 0);
-  assert.equal(await workLine(page), annaCalls.work.done);
-  await context.close();
-  assert.deepEqual(errors, []);
-});
-
 test('the quiet text is readable: at least 4.5:1 against what is behind it', async () => {
-  const { context, page, errors } = await open(`chat=${END}`);
+  const { context, page, errors } = await open(`t=2.4&chat=${END}`);
   await intoView(page);
   await until(page, (s) => s.done);
   await frames(page, 4);
@@ -464,7 +439,7 @@ test('the quiet text is readable: at least 4.5:1 against what is behind it', asy
   const png = (await page.screenshot()).toString('base64');
   const worst = await page.evaluate(async ([png, items]) => {
     const img = new Image(); img.src = `data:image/png;base64,${png}`; await img.decode();
-    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
     const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
     const L = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
     return items.map(({ sel, color, box }) => {
@@ -489,7 +464,7 @@ test('the quiet text is readable: at least 4.5:1 against what is behind it', asy
 
 // The conversation held at its end (?chat=), the same page its play leaves (Ezra, 2026-11-11)
 test('phone 390 x 844: copy first, window below, no sideways scroll', async () => {
-  const { context, page, errors } = await open(`chat=${END}`, { width: 390, height: 844 });
+  const { context, page, errors } = await open(`t=2.4&chat=${END}`, { width: 390, height: 844 });
   const geo = await page.evaluate(() => {
     const c = document.querySelector('.anna-window .aw-copy').getBoundingClientRect();
     const w = document.querySelector('.anna-window .aw-window').getBoundingClientRect();
