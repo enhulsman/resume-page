@@ -1,0 +1,45 @@
+---
+// Writing (openspec stone-glass-homepage, design 8): the five newest published posts, newest first,
+// each with its date and its one line (the post's diary line, or its description), then a link to
+// the blog. The list is the site diary's (latestEntries over diaryEntries); nothing sorts here.
+import "../../styles/stone.css";
+import { latestEntries } from "../../lib/frontmatter.ts";
+import { homeSections, siteNav } from "../../config/home.ts";
+
+const posts = latestEntries(
+  import.meta.glob("../../pages/blog/*.mdx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>,
+);
+const blog = siteNav.links.find((l) => l.id === "blog")!;
+---
+
+<section class="stone-section writing" aria-labelledby="writing-h">
+  <h2 id="writing-h">{homeSections.headings.writing}</h2>
+  <ol class="stone-rows">
+    {posts.map((p) => (
+      <li class="row">
+        <time datetime={p.iso}>{p.label}</time>
+        <div class="body">
+          <h3 class="title"><a href={p.href}>{p.title}</a></h3>
+          <p class="line">{p.line}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+  <a class="stone-more more" href={blog.href}>{homeSections.links.writing} <span aria-hidden="true">→</span></a>
+</section>
+
+<style>
+  .row {
+    display: grid; grid-template-columns: 6.5em minmax(0, 1.25fr) minmax(0, 1fr);
+    column-gap: clamp(16px, 2.6vw, 44px); align-items: baseline;
+    padding: clamp(16px, 1.6vw, 22px) 0;
+  }
+  time { font-size: var(--stone-t-small); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--stone-ink-2); }
+  .body { grid-column: 2 / -1; max-width: 46em; }
+  .line { margin: 0.4em 0 0; font-size: var(--stone-t-body); line-height: 1.42; color: var(--stone-ink-2); text-wrap: pretty; }
+
+  @media (max-width: 760px) {
+    .row { grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
+    .body { grid-column: 1; }
+  }
+</style>

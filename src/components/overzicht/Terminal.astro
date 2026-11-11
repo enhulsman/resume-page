@@ -1,7 +1,9 @@
 ---
-// The first sheet's terminal: the real interactive terminal (42 commands, pipes, a
-// virtual filesystem). It types its intro once it is in view, then becomes real.
+// The real interactive terminal (42 commands, pipes, a virtual filesystem). It types its intro
+// once it is in view, then becomes real. On the homepage it sits in About's frosted window, which
+// gives it its title bar; it has no head of its own.
 import site from "../../config/site";
+import { homeSections } from "../../config/home";
 import { experience, education, certifications, skillCategories } from "../../config/resume";
 import { terminal as projects } from "../../lib/project-pages";
 
@@ -47,6 +49,7 @@ const terminalLines: { type: 'cmd' | 'out' | 'blank'; text: string }[] = [
 // Data for interactive terminal (serialized to JSON for client-side)
 const terminalData = {
   prompt,
+  inputLabel: homeSections.terminalInput,
   site: {
     name: site.name,
     role: site.role,
@@ -64,8 +67,7 @@ const terminalData = {
   skills: skillCategories.map(s => ({ label: s.label, items: s.items })),
 };
 ---
-<div class="term" data-pen="700 450">
-  <p class="term-head" data-pen="1000 250"><span>A terminal is provided</span><span class="term-hint">type <kbd>help</kbd></span></p>
+<div class="term">
   <div
     id="terminal-body"
     class="term-body"
@@ -97,12 +99,6 @@ const terminalData = {
     const dataEl = document.getElementById('terminal-data');
     const terminal = new InteractiveTerminal(body, dataEl ? JSON.parse(dataEl.textContent || '{}') : {});
     body.addEventListener('terminal-animation-complete', () => terminal.activate(), { once: true });
-    // on the homepage's arrival it waits its turn (intro.js), so two things never talk at once
-    let typing = false;
-    const type = () => { if (!typing) { typing = true; initTerminalAnimation(body); } };
-    if (document.documentElement.classList.contains('intro')) {
-      document.addEventListener('ovz:arrived', type, { once: true });
-      setTimeout(type, 3500);
-    } else type();
+    initTerminalAnimation(body);
   }
 </script>

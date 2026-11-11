@@ -1,13 +1,21 @@
 ---
-// /projects: the set's drawing register. ANNA leads with its section drawing; every other project
-// follows under where it stands (running, paused, done), drawn in full where it has a drawing and
-// as a card where it has none yet.
+// /projects (openspec stone-inner-pages, stone-projects-index; Ezra 2026-11-10, I2e with its three
+// fixes): "Projects" and its line; ANNA's lead (her index in her card's hue, her name, her text,
+// status and "Case study", her four levels as rows under her text, and beside them her Teams window
+// playing "Close my week" as on the homepage); then every other project under where it stands
+// (Running, Paused, Done), each one piece of ribbed glass holding its own light (`projectLights`) and
+// one link to its page; then the side pieces, "Made for fun". Every word from config: siteNav,
+// pageWords, annaLead, annaLevels, groups, the listings joined to their pages, site.sidePieces.
+// The page's glass, top to bottom, is innerGlass['/projects']: `anna`, then `project-cards`.
 import OverzichtLayout from "../../layouts/OverzichtLayout.astro";
-import DetailCard from "../../components/overzicht/DetailCard.astro";
-import AnnaPlate from "../../components/overzicht/AnnaPlate.astro";
-import ProjectCard from "../../components/overzicht/ProjectCard.astro";
-import { groups } from "../../config/home";
+import AnnaWindow from "../../components/stone/AnnaWindow.astro";
+import AnnaLevels from "../../components/stone/AnnaLevels.astro";
+import ProjectGlassCard from "../../components/stone/ProjectGlassCard.astro";
+import { groups, siteNav } from "../../config/home";
+import { pageWords } from "../../config/pages";
+import { glassCards, hueInk, projectLights } from "../../config/glass";
 import { annaLead, details, register } from "../../lib/project-pages";
+import { bare } from "../../lib/article";
 import site from "../../config/site";
 
 const entries = Object.values(import.meta.glob("./*.mdx", { eager: true })) as any[];
@@ -15,6 +23,24 @@ const projects = entries.map((m) => ({ title: m.frontmatter?.title ?? "Untitled"
 
 const projectsDescription = `Explore ${site.name}'s portfolio of projects including ${projects.map((p) => p.title).join(", ")}. Case studies and technical write-ups for selected work.`;
 const projectsKeywords = `${site.seo.keywords}, projects, portfolio, case studies, ${projects.flatMap((p) => p.tags).join(", ")}`;
+
+const heading = siteNav.links.find((l) => l.id === "projects")!.label;
+const W = pageWords.projects;
+
+/** A project's hero card index ("01" for ANNA), where it has a card. */
+const indexOf = (id: string) => {
+  const i = glassCards.findIndex((c) => c.id === id);
+  return i >= 0 ? String(i + 1).padStart(2, "0") : undefined;
+};
+const annaCard = glassCards.find((c) => c.id === annaLead.id)!;
+
+const grouped = groups.map((g) => ({
+  ...g,
+  items: [
+    ...details.filter((d) => d.group === g.id).map((d) => ({ id: d.id, title: d.title, href: d.href, status: d.status, text: d.text, dims: d.dims.slice(0, 2) })),
+    ...register.filter((r) => r.group === g.id).map((r) => ({ id: r.id, title: r.title, href: r.href, status: r.status, text: r.text ?? r.what, dims: [] as { value: string; label: string }[] })),
+  ],
+}));
 ---
 
 <OverzichtLayout
@@ -25,39 +51,49 @@ const projectsKeywords = `${site.seo.keywords}, projects, portfolio, case studie
   ogTitle={`Projects & Portfolio — ${site.name}`}
   ogDescription={projectsDescription}
 >
-  <section class="sheet sheet-first" aria-labelledby="projects-h">
-    <header class="sheet-head">
-      <h1 id="projects-h">Projects</h1>
-      <p>Detailed write-ups for selected work.</p>
+  <section class="pi" aria-labelledby="pi-h">
+    <header class="pi-head">
+      <h1 id="pi-h" class="pi-title">{heading}</h1>
+      <p class="pi-line">{W.line}</p>
     </header>
 
-    <div class="details details-rows">
-      <article class="detail detail-lead" id={annaLead.id}>
-        <AnnaPlate />
-        <div class="detail-text">
-          <h2><a href={annaLead.href}>{annaLead.title}</a></h2>
-          <p>{annaLead.text}</p>
-          <p class="detail-status">{annaLead.status}</p>
-          <p class="links"><a href={annaLead.href}>Case study</a></p>
-        </div>
-      </article>
+    <article class="pi-lead" aria-labelledby="pi-anna-h">
+      <div class="pi-lead-text">
+        <span class="pi-idx" style={`color: ${hueInk(annaCard)}`}>{indexOf(annaLead.id)}</span>
+        <h2 id="pi-anna-h" class="pi-lead-title"><a href={annaLead.href}>{annaLead.title}</a></h2>
+        <p class="pi-lead-line">{annaLead.text}</p>
+        <p class="pi-status">{annaLead.status}</p>
+        <a class="pi-more" href={annaLead.href}>{W.caseStudy}</a>
+        <AnnaLevels class="pi-levels" />
+      </div>
+      <div class="anna-window pi-anna" data-glass-moment="anna"><AnnaWindow class="pi-stage" /></div>
+    </article>
+
+    <div class="pi-groups" data-glass-moment="project-cards">
+      {grouped.map((g) => (
+        <section class="pi-group" aria-labelledby={`pi-${g.id}`}>
+          <h2 id={`pi-${g.id}`}>{g.label}</h2>
+          <ul class="pi-cards">
+            {g.items.map((it) => (
+              <li>
+                <ProjectGlassCard card={projectLights[it.id].card} id={it.id} index={indexOf(it.id)} title={it.title} href={it.href} status={it.status} text={it.text} dims={it.dims} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </div>
 
-    {groups.map(g => {
-      const drawn = details.filter(d => d.group === g.id);
-      const cards = register.filter(r => r.group === g.id);
-      return (
-        <div class="status-group" data-group={g.id}>
-          <h2 class="group">{g.label}</h2>
-          {drawn.length > 0 && <div class="details details-rows">{drawn.map(d => <DetailCard detail={d} />)}</div>}
-          {cards.length > 0 && <ol class="register">{cards.map(c => <ProjectCard card={c} />)}</ol>}
-        </div>
-      );
-    })}
-
-    <h2 class="sub" id="side">Other sheets, drawn for fun</h2>
-    <ul class="side">
-      {site.sidePieces.map(p => <li><a href={p.url}>{p.url.replace("https://", "")}</a><span>{p.line}</span></li>)}
-    </ul>
+    <section class="pi-side" aria-labelledby="pi-side-h">
+      <h2 id="pi-side-h">{W.madeForFun}</h2>
+      <ul class="stone-rows">
+        {site.sidePieces.map((p) => <li class="pi-side-row"><a href={p.url}>{bare(p.url)}</a><span>{p.line}</span></li>)}
+      </ul>
+    </section>
   </section>
 </OverzichtLayout>
+
+<script>
+  import "../../scripts/glass/panes.js";
+  import "../../scripts/glass/anna-window.js";
+</script>

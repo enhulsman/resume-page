@@ -1,0 +1,83 @@
+---
+// ANNA's section (openspec stone-glass-homepage, anna-section): what she may do, and for whom, as
+// type on stone; beside it (below it on a phone) a frosted Teams window where anna-site's "Close my
+// week" plays once as it comes into view, with Replay. The second glass moment.
+// Every word comes from config: annaLead, annaCalls (home.ts) and annaDemo (anna-demo.ts); the index
+// is ANNA's card's. The window itself is AnnaWindow.astro (stone-inner-pages, 2026-11-10: it also
+// opens her project page); this section is the `.anna-window` its driver binds
+// (src/scripts/glass/anna-window.js) and its inline script marks pending. Every beat is in the page
+// from the start: without JavaScript the whole conversation shows; with it, the driver shows each
+// as it lands.
+//
+// Sketch round 2 (Ezra, 2026-11-11): her work is one line under her answer (C2), what she read and
+// then each step replacing the last, settling into a summary; no steps list and no record. The
+// window is as tall as the finished conversation from the first frame (every beat laid out, hidden
+// until it lands), so nothing in it scrolls and its size never changes; the work line is one line
+// at a fixed height (an ellipsis is the fallback, the copy in config fits). The window's top stands
+// level with the index "01", beside the heading, after today's stone under the hero.
+import "../../styles/stone.css";
+import AnnaWindow from "./AnnaWindow.astro";
+import { glassCards } from "../../config/glass.ts";
+import { annaLead, annaCalls } from "../../config/home.ts";
+
+const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padStart(2, "0");
+---
+
+<section class="anna-window" data-glass-moment="anna" aria-labelledby="anna-h">
+  <div class="aw-copy">
+    <header class="aw-head">
+      <span class="aw-idx">{idx}</span>
+      <h2 id="anna-h">{annaLead.title}</h2>
+      <p class="aw-lead">{annaLead.text}.</p>
+      <h3>{annaCalls.heading}</h3>
+    </header>
+    <ol class="aw-rules">
+      {annaCalls.rules.map((r) => <li><strong class="rule">{r.rule}</strong> <span class="why">{r.why}</span> <span class="how">{r.how}</span></li>)}
+    </ol>
+    <p class="aw-closing">{annaCalls.closing}</p>
+    <a class="more" href={annaCalls.more.href}>{annaCalls.more.label} <span aria-hidden="true">→</span></a>
+  </div>
+  <AnnaWindow class="aw-stage" />
+</section>
+
+<style>
+  /* desktop: the copy on the left; the window on the right, its top level with the index "01" */
+  .anna-window {
+    display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: start;
+    column-gap: clamp(24px, 5vw, 96px);
+    padding: clamp(120px, 22svh, 220px) var(--stone-gutter) clamp(72px, 12svh, 140px);
+    font-family: var(--stone-sans); color: var(--stone-ink);
+    -webkit-font-smoothing: antialiased;
+    /* the glow reaches past the window's sides; it never widens the page */
+    overflow-x: clip;
+  }
+  .aw-copy { grid-column: 1; grid-row: 1; max-width: 480px; }
+
+  .aw-idx {
+    display: block; margin-bottom: 0.6em;
+    font-size: var(--stone-t-small); font-weight: 600; letter-spacing: 0.06em; font-variant-numeric: tabular-nums;
+    color: var(--stone-ink-2);
+  }
+  h2 { margin: 0; font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); }
+  .aw-lead { margin: 0.8em 0 0; font-size: var(--stone-t-lead); line-height: 1.34; color: var(--stone-ink-2); text-wrap: pretty; }
+  h3 { margin: 1.7em 0 0; font-weight: 700; font-size: var(--stone-t-h3); letter-spacing: -0.02em; line-height: 1.15; }
+  .aw-rules { list-style: none; margin: 0; padding: 0; }
+  .aw-rules li { padding-top: 1.05em; font-size: var(--stone-t-body); line-height: 1.4; color: var(--stone-ink-2); text-wrap: pretty; }
+  .aw-rules li:first-child { padding-top: 0.9em; }
+  .aw-rules .rule { display: block; font-weight: 680; font-size: clamp(17px, 1.3vw, 19.5px); letter-spacing: -0.012em; color: var(--stone-ink); margin-bottom: 0.15em; }
+  .aw-rules .how { display: block; margin-top: 0.2em; font-size: 0.88em; font-style: italic; color: #645c53; }
+  .aw-closing { margin: 1.5em 0 0; font-size: var(--stone-t-body); line-height: 1.4; color: var(--stone-ink-2); }
+  .more { display: inline-block; margin-top: 1em; font-weight: 600; color: var(--stone-ink); }
+
+  /* the window's column: the stage is the window's own width, so the glow sits around the window */
+  .anna-window :global(.aw-stage) {
+    grid-column: 2; grid-row: 1; align-self: start; justify-self: center;
+    width: min(100%, 620px);
+  }
+  /* a phone: the copy, then the window under it */
+  @media (max-width: 760px) {
+    .anna-window { display: block; padding-block: 96px 72px; }
+    h2 { font-size: 56px; }
+    .anna-window :global(.aw-stage) { width: 100%; margin-top: 40px; }
+  }
+</style>

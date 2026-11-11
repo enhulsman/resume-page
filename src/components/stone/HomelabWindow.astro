@@ -1,0 +1,40 @@
+---
+// Homelab's own window (openspec stone-inner-pages, stone-project-pages "Homelab's window is its own
+// health check"; Ezra, 2026-11-10, H1, approved as written): `homelab-health` in a terminal, a real
+// run with every address left out, in the homelab card's sunset (the `dusk` glow). Every word from
+// projectWindows.homelab. Its lines land once through src/scripts/glass/artefacts.js, as the
+// projects' windows do (the article's inline script hides them first, so without a script or with
+// reduced motion they show whole). A row's text wraps in its own column; at 760 px and below the
+// empty host column folds away.
+import "../../styles/stone.css";
+import GlassWindow from "./GlassWindow.astro";
+import { projectWindows } from "../../config/home.ts";
+
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+const hl = projectWindows.homelab;
+---
+<GlassWindow title={hl.title} glow="dusk" dots class:list={["pj-stage", cls]} windowClass="pj-window pj-w-homelab">
+  <div class="pw hl" data-play data-gap="240">
+    <p class="b"><b class="pw-strong">{hl.prompt}</b> <span class="pw-text">{hl.command}</span></p>
+    <p class="b hl-h pw-strong">{hl.heading}</p>
+    {hl.rows.map((r) => <p class="b hl-row"><span class="hl-m pw-strong">{r.marker}</span><span class="hl-host pw-strong">{r.host}</span><span class="pw-text">{r.text}</span></p>)}
+  </div>
+</GlassWindow>
+
+<style is:global>
+  /* the longest row is 79 characters: the type shrinks with the window (from 12 px down to 10 px) so a
+     row stays one line, as a terminal prints it; only where even 10 px is too wide does the text wrap
+     inside its own column, the spacing kept, so nothing is cut and nothing scrolls */
+  .pj-w-homelab { container-type: inline-size; }
+  .pj-w-homelab .hl { padding: 18px 22px 20px; font: 12px/1.7 ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: clamp(10px, calc((100cqi - 46px) / 79 / 0.61), 12px); }
+  .pj-w-homelab .hl .b { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pj-window .hl-h { margin-top: 6px !important; }
+  .pj-window .hl-row { display: grid; grid-template-columns: 4ch 12ch minmax(0, 1fr); }
+  @media (max-width: 760px) {
+    .pj-w-homelab .hl { padding: 14px; }
+    .pj-window .hl-row { grid-template-columns: 4ch minmax(0, 1fr); }
+    .pj-window .hl-row .hl-host:empty { display: none; }
+    .pj-window .hl-row .hl-host + .pw-text { grid-column: 2; }
+  }
+</style>

@@ -1,0 +1,96 @@
+---
+// A project's own artefact in its frosted window (sketch A2, 2026-11-11): Henk's Signal chat, the
+// sandbox's session report, bible-tui's reader. One component for the homepage's chapters and the
+// project pages and posts (openspec stone-inner-pages, "Each project page holds its own window"), so
+// the three read the same everywhere. Every word from projectWindows. The lines land once, line by
+// line, through src/scripts/glass/artefacts.js, which the page imports; the page's inline script
+// hides them first (`pending`), so without a script or with reduced motion they show whole.
+import "../../styles/stone.css";
+import GlassWindow from "./GlassWindow.astro";
+import { projectWindows } from "../../config/home.ts";
+
+interface Props {
+  id: "henk" | "sandbox" | "bible";
+  /** Classes on the stage (its width is the caller's). */
+  class?: string;
+}
+const { id, class: cls } = Astro.props;
+const { henk, sandbox, bible } = projectWindows;
+---
+<GlassWindow title={projectWindows[id].title} glow={id} dots={id !== "henk"} class:list={["pj-stage", cls]} windowClass={`pj-window pj-w-${id}`}>
+  {id === "henk" && (
+    <div class="pw sgl" data-play data-gap="1100">
+      <div class="sgl-alert b"><span class="from pw-quiet">{henk.alert.from}</span><span class="pw-text">{henk.alert.text}</span></div>
+      {henk.messages.map((m, i) => (
+        <div class:list={["sgl-msg", "b", m.from]}>
+          {i === 0 && <span class="who pw-quiet">{henk.name}</span>}
+          <p><span class={m.from === "me" ? "pw-me" : "pw-text"}>{m.text}</span></p>
+        </div>
+      ))}
+    </div>
+  )}
+  {id === "sandbox" && (
+    <div class="pw rep" data-play data-gap="260">
+      <p class="b"><b class="pw-strong">$</b> <span class="pw-text">{sandbox.command}</span></p>
+      {sandbox.lines.map((l) => <p class="b"><span class="k pw-quiet">{l.key}</span><span class="pw-text">{l.value}</span></p>)}
+      <p class="b risk"><span class="k pw-quiet">{sandbox.risk.key}</span><b class="pw-strong">{sandbox.risk.score}</b> <span class="pw-text">{sandbox.risk.of}</span></p>
+      {sandbox.risk.why.map((w) => <p class="b"><span class="k"></span><span class="pw-text">{w}</span></p>)}
+    </div>
+  )}
+  {id === "bible" && (
+    <div class="pw tui" data-play data-gap="120">
+      <div class="tui-head b"><span class="pw-strong">{bible.book}</span><span class="pw-quiet">{bible.translation}</span></div>
+      <ol class="tui-vv">{bible.verses.map((v, k) => <li class:list={["b", k === 0 && "hl"]}><span class="n">{k + 1}</span><span class="pw-text">{v}</span></li>)}</ol>
+      <p class="tui-foot b pw-quiet">{bible.keys}</p>
+    </div>
+  )}
+</GlassWindow>
+
+<style is:global>
+  .glass-window.pj-window { background: rgb(250 248 244 / 0.32); }
+
+  /* the artefacts land line by line, once (artefacts.js) */
+  .pj-window [data-play].pending .b:not(.on) { opacity: 0; transform: translateY(5px); }
+  /* only the landing moves: hiding them is instant */
+  .pj-window [data-play].pending .b.on { transition: opacity 0.45s ease, transform 0.5s cubic-bezier(.2,.7,.2,1); }
+  .pj-window .pw { position: relative; z-index: 3; }
+  .pj-window .pw p { margin: 0; }
+
+  /* Henk in Signal */
+  .pj-window .sgl { display: flex; flex-direction: column; gap: 8px; padding: 20px 20px 18px; font-size: 14.5px; line-height: 1.42; }
+  .pj-window .sgl-alert { align-self: center; max-width: 92%; padding: 9px 12px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.1); font: 12.5px/1.45 ui-monospace, Menlo, monospace; }
+  .pj-window .sgl-alert .from { display: block; margin-bottom: 3px; font: 600 11.5px/1.2 var(--stone-sans); }
+  .pj-window .sgl-msg { max-width: 84%; }
+  .pj-window .sgl-msg .who { display: block; margin: 6px 0 4px; font-size: 12px; font-weight: 600; }
+  .pj-window .sgl-msg p { padding: 9px 13px; border-radius: 16px; }
+  .pj-window .sgl-msg.henk { align-self: flex-start; }
+  .pj-window .sgl-msg.henk p { background: rgb(255 255 255 / 0.4); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4); }
+  .pj-window .sgl-msg.me { align-self: flex-end; margin-top: 8px; }
+  .pj-window .sgl-msg.me p { background: rgb(36 70 140 / 0.86); }
+  .pj-window .sgl-msg.me + .henk { margin-top: 8px; }
+
+  /* the sandbox's report */
+  .pj-window .rep { padding: 20px 24px; font: 14px/1.75 ui-monospace, "JetBrains Mono", Menlo, monospace; overflow: hidden; }
+  .pj-window .rep .b { display: flex; white-space: pre; }
+  .pj-window .rep .k { flex: none; width: 9ch; }
+  .pj-window .rep .b > .pw-strong:first-child { margin-right: 1ch; }
+  .pj-window .rep .risk .pw-strong { font-size: 1.15em; margin-right: 0.5ch; }
+
+  /* bible-tui */
+  .pj-window .tui { display: flex; flex-direction: column; padding: 14px 18px 12px; font: 13.5px/1.6 ui-monospace, "JetBrains Mono", Menlo, monospace; }
+  .pj-window .tui-head { display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgb(17 17 16 / 0.12); font-weight: 700; }
+  .pj-window .tui-vv { list-style: none; margin: 8px 0 0; padding: 0; }
+  .pj-window .tui-vv li { display: grid; grid-template-columns: 2.2ch 1fr; gap: 1ch; padding: 2px 6px; border-radius: 4px; transition: background 0.3s, opacity 0.45s, transform 0.5s; }
+  .pj-window .tui-vv li.hl { background: rgb(17 17 16 / 0.07); }
+  .pj-window .tui-vv .n { color: var(--glass-ink-red); font-weight: 700; }
+  .pj-window .tui-foot { margin-top: 8px !important; padding-top: 8px; border-top: 1px solid rgb(17 17 16 / 0.12); white-space: pre; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pj-window [data-play].pending .b.on, .pj-window .tui-vv li { transition: none; }
+  }
+  @media (max-width: 760px) {
+    .pj-window .rep { font-size: 12px; padding: 16px; }
+    .pj-window .tui { font-size: 12.5px; padding: 12px; }
+    .pj-window .tui-foot { font-size: 11px; }
+  }
+</style>

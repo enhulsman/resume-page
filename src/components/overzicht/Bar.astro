@@ -1,25 +1,31 @@
 ---
-// The sheet's top bar: the signature (the favicon's "EH.", in the hero's letters) and the name,
-// then the same page links on every sheet, homepage included, with the one you are on marked. The theme button and the phone menu are driven by src/scripts/overzicht/chrome.js;
-// at 860px and below the links fold into the menu. The menu button comes before the links so they
-// follow it in keyboard order; CSS draws it last.
+// The stone bar on every page (openspec stone-glass-homepage, shared chrome): the signature (the
+// favicon's "EH.") with the full name beside it, linking home; the four page links with the one
+// you are on marked; and "Get in touch". At 860px and below the four links fold into the menu
+// (src/scripts/overzicht/chrome.js); the mark and "Get in touch" stay. The menu button comes before
+// the links so they follow it in keyboard order; CSS draws it last. Each link carries its label as
+// data-text, so it holds the width of both its cuts, current or not (overzicht.css). Every word is in config, and so is each link's hover light: its own page's
+// light from `pageLights` (Projects the flame, Blog the tide, Résumé the sunset, Contact the moss).
+import site from "../../config/site";
+import { siteNav } from "../../config/home.ts";
+import { pageLights } from "../../config/glass.ts";
+
 interface Props {
   /** The inner page this bar sits on; leave it out on the homepage. */
   current?: "projects" | "blog" | "resume" | "contact";
 }
 const { current } = Astro.props;
-const links = [["projects", "/projects", "Projects"], ["blog", "/blog", "Blog"], ["resume", "/resume", "Résumé"], ["contact", "/contact", "Contact"]];
 ---
 <header class="bar">
-  <a class="bar-name" href={current ? "/" : "#top"}><span class="sig" aria-hidden="true">EH<span class="sig-dot">.</span></span>Ezra Hulsman</a>
-  <button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="bar-nav">
+  <a class="bar-name" href="/"><span class="sig" aria-hidden="true">EH<span class="sig-dot">.</span></span>{site.name}</a>
+  <button class="menu-btn" type="button" aria-label={siteNav.menu} aria-expanded="false" aria-controls="bar-nav">
     <svg class="menu-lines" viewBox="0 0 18 14" aria-hidden="true">
-      <path pathLength="1" class="ml" d="M1 2 H17"/><path pathLength="1" class="ml" d="M1 7 H17"/><path pathLength="1" class="ml" d="M1 12 H17"/>
-      <path pathLength="1" class="mx" d="M3 1 L15 13"/><path pathLength="1" class="mx" d="M15 1 L3 13"/>
+      <path class="ml" d="M1 2 H17"/><path class="ml" d="M1 7 H17"/><path class="ml" d="M1 12 H17"/>
+      <path class="mx" d="M3 1 L15 13"/><path class="mx" d="M15 1 L3 13"/>
     </svg>
   </button>
   <nav id="bar-nav" aria-label="Site">
-    {links.map(([id, href, label], i) => <a href={href} style={`--i:${i}`} aria-current={id === current ? "page" : undefined}>{label}</a>)}
+    {siteNav.links.map((l, i) => <a href={l.href} style={`--i:${i};--glow-near:${pageLights[l.id].near.join(" ")};--glow-deep:${pageLights[l.id].deep.join(" ")}`} aria-current={l.id === current ? "page" : undefined} data-text={l.label}>{l.label}</a>)}
   </nav>
-  <button class="theme" type="button" aria-pressed="false" title="Switch to the dark sheet"><svg class="lamp" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 15h7M5 15v-5l4-4"/><path class="shade" d="M8 4.5 12 3l2.5 6.5-3.5.5z"/></svg><span class="theme-label">Light table</span></button>
+  <a class="bar-cta" href={siteNav.cta.href}>{siteNav.cta.label}</a>
 </header>

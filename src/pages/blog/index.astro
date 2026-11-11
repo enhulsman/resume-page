@@ -1,25 +1,33 @@
 ---
-// /blog: the whole site diary, newest first, each post with its description.
+// /blog (openspec stone-inner-pages, stone-blog "/blog is the titles, large" and "/blog's lights";
+// Ezra, 2026-11-10, BI2): "Blog", its line, then every published post newest first (the site
+// diary's order, `diaryEntries`), each its date small above, its title large as an h2 link and its
+// description as the lead, between hairlines. The blog's tide far behind the heading; a title lights
+// up on hover or keyboard focus in its project's light (`projectLights`), a post without a project
+// does not.
 import OverzichtLayout from "../../layouts/OverzichtLayout.astro";
+import PageLight from "../../components/stone/PageLight.astro";
 import site from "../../config/site";
+import { siteNav } from "../../config/home.ts";
+import { pageWords } from "../../config/pages.ts";
+import { projectLights } from "../../config/glass.ts";
+import { diaryEntries, readFrontmatter } from "../../lib/frontmatter.ts";
+import { relatedProject } from "../../lib/post.ts";
+import { cards, details } from "../../lib/project-pages.ts";
 
-// Auto-discover MDX posts in this folder, excluding drafts (leading underscore)
-const entries = Object.entries(import.meta.glob("./*.mdx", { eager: true })) as [string, any][];
+const sources = import.meta.glob("./*.mdx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
+const projectSources = import.meta.glob("../projects/*.mdx", { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
+const listings: { id: string; href: string }[] = [...details, ...cards];
 
-const posts = entries
-  .filter(([path]) => !path.split("/").pop()!.startsWith("_"))
-  .map(([, m]) => ({
-    title: m.frontmatter?.title ?? "Untitled",
-    description: m.frontmatter?.description ?? "",
-    href: m.url ?? "",
-    date: m.frontmatter?.date,
-  }))
-  .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+const posts = diaryEntries(sources).map((e) => {
+  const fm = readFrontmatter(sources[`./${e.href.split("/").pop()}.mdx`] ?? "");
+  const project = relatedProject(fm.project, projectSources);
+  const id = project && listings.find((l) => l.href === project.href)?.id;
+  const light = id && id in projectLights ? projectLights[id as keyof typeof projectLights].near.join(" ") : undefined;
+  return { ...e, description: fm.description ?? "", light };
+});
 
-const fmt = (d: string) =>
-  d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "";
-const iso = (d: string) => (d ? new Date(d).toISOString().slice(0, 10) : "");
-
+const heading = siteNav.links.find((l) => l.id === "blog")!.label;
 const blogDescription = `Writing from ${site.name} — ${site.summary}`;
 ---
 
@@ -30,13 +38,20 @@ const blogDescription = `Writing from ${site.name} — ${site.summary}`;
   ogTitle={`Blog — ${site.name}`}
   ogDescription={blogDescription}
 >
-  <section class="sheet sheet-first" aria-labelledby="blog-h">
-    <header class="sheet-head">
-      <h1 id="blog-h">Blog</h1>
-      <p>Notes on infrastructure, tooling, and the occasional detour.</p>
+  <section class="bl" aria-labelledby="bl-h">
+    <header class="page-head bl-head">
+      <PageLight id="blog" />
+      <h1 id="bl-h" class="page-title">{heading}</h1>
+      <p class="bl-line">{pageWords.blog.line}</p>
     </header>
-    <ul class="diary diary-full">
-      {posts.map((p) => <li><time datetime={iso(p.date)}>{fmt(p.date)}</time><a href={p.href}>{p.title}</a><span>{p.description}</span></li>)}
-    </ul>
+    <ol class="bl-list">
+      {posts.map((p) => (
+        <li class:list={[p.light && "lit"]} style={p.light ? `--light: ${p.light}` : undefined}>
+          <time datetime={p.iso}>{p.label}</time>
+          <h2><a href={p.href}>{p.title}</a></h2>
+          <p class="bl-lead">{p.description}</p>
+        </li>
+      ))}
+    </ol>
   </section>
 </OverzichtLayout>

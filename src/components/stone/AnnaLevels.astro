@@ -1,0 +1,24 @@
+---
+// ANNA's four levels as rows of type on stone (anna-section "The four levels live on /projects, not
+// on the homepage"; Ezra, 2026-11-10: they replace the plate's exploded building): each its name and
+// its text, from annaLevels as they are. On her page under her window; on /projects under her lead.
+// One column at 760 px and below. Never on the homepage.
+import "../../styles/stone.css";
+import { annaLevels } from "../../config/home.ts";
+
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+---
+<ol class:list={["stone-rows", "anna-levels", cls]}>
+  {annaLevels.map((l) => <li><b>{l.name}</b><span>{l.text}</span></li>)}
+</ol>
+
+<style is:global>
+  .anna-levels > li {
+    display: grid; grid-template-columns: minmax(9.5em, 0.42fr) minmax(0, 1fr); column-gap: 20px; align-items: baseline;
+    padding: 14px 0; font-size: var(--stone-t-body); line-height: 1.42;
+  }
+  .anna-levels b { font-weight: 700; font-size: clamp(16px, 1.2vw, 18px); letter-spacing: -0.01em; color: var(--stone-ink); }
+  .anna-levels span { color: var(--stone-ink-2); text-wrap: pretty; }
+  @media (max-width: 760px) { .anna-levels > li { grid-template-columns: 1fr; row-gap: 4px; } }
+</style>

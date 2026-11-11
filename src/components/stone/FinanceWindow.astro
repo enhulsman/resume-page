@@ -1,0 +1,50 @@
+---
+// Finance Bot's own window (openspec stone-inner-pages, stone-project-pages "Finance Bot's window is
+// its reply to an upload"; Ezra, 2026-11-10, approved as written): its reply in Discord to an
+// `/upload`, in place of its drawing. Every number, the date, the upload id and the merchants are
+// invented; the wording is the bot's own. Every word from projectWindows.finance; the glow is Finance
+// Bot's own light (windowGlows.finance). The summary carries Discord's green bar along its left edge,
+// one slice per line, and an indented line keeps its indent when it wraps. Its lines land once
+// through src/scripts/glass/artefacts.js (the article's inline script hides them first).
+import "../../styles/stone.css";
+import GlassWindow from "./GlassWindow.astro";
+import { projectWindows } from "../../config/home.ts";
+
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+const f = projectWindows.finance;
+---
+<GlassWindow title={f.title} glow="finance" class:list={["pj-stage", cls]} windowClass="pj-window pj-w-finance">
+  <div class="pw dc" data-play data-gap="420">
+    <p class="b dc-cmd"><span class="pw-strong">{f.command.user}</span> <span class="pw-quiet">{f.command.verb}</span> <span class="dc-slash pw-strong">{f.command.name}</span> <span class="pw-quiet">{f.command.file}</span></p>
+    <div class="b dc-msg">
+      <p class="dc-name"><b class="pw-strong">{f.bot.name}</b> <span class="dc-app pw-quiet">{f.bot.tag}</span></p>
+      <p class="pw-text">{f.bot.text} <span class="dc-ment pw-strong">{f.bot.mention}</span></p>
+    </div>
+    <p class="b dc-line pw-text">{f.progress}</p>
+    <p class="b dc-em dc-em-t pw-strong">{f.summary.title}</p>
+    {f.summary.lines.map((l) => <p class:list={["b", "dc-em", l.indent && "ind"]}><span class="pw-text">{l.text}</span></p>)}
+  </div>
+</GlassWindow>
+
+<style is:global>
+  .pj-window .dc { padding: 18px 22px 20px; font: 13.5px/1.5 var(--stone-sans); }
+  .pj-window .dc-cmd { font-size: 12.5px; }
+  .pj-window .dc-slash { padding: 1px 6px; border-radius: 5px; background: rgb(17 17 16 / 0.07); }
+  .pj-window .dc-msg { margin-top: 10px; }
+  .pj-window .dc-name { display: flex; align-items: center; gap: 7px; margin-bottom: 2px !important; }
+  .pj-window .dc-app { padding: 0 5px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.18); font-size: 10px; font-weight: 650; line-height: 16px; }
+  .pj-window .dc-ment { padding: 0 3px; border-radius: 4px; background: rgb(88 101 242 / 0.12); }
+  .pj-window .dc-line { margin-top: 10px !important; }
+  /* the summary: one line per beat, each carrying its slice of the green bar (Discord's green, complete) */
+  .pj-window .dc-em { padding: 0 14px; border-left: 4px solid rgb(46 160 96 / 0.85); background: rgb(255 255 255 / 0.22); white-space: pre-wrap; overflow-wrap: anywhere; text-wrap: pretty; }
+  .pj-window .dc-em-t { margin-top: 10px !important; padding-top: 10px; border-top-right-radius: 6px; font-weight: 700; }
+  .pj-window .dc-em:last-child { padding-bottom: 10px; border-bottom-right-radius: 6px; }
+  .pj-window .dc-em.ind { padding-left: calc(14px + 1.2em); }
+  @media (max-width: 760px) {
+    .pj-window .dc { padding: 14px; font-size: 12.5px; }
+    .pj-window .dc-cmd { font-size: 12px; }
+    .pj-window .dc-em { padding-right: 10px; padding-left: 10px; }
+    .pj-window .dc-em.ind { padding-left: calc(10px + 1em); }
+  }
+</style>

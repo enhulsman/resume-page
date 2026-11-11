@@ -1,0 +1,106 @@
+---
+// The hero (openspec stone-glass-homepage): the name as plain type on two lines, the role and
+// intro line, and the four ribbed glass cards, one light per project, each a link to its page.
+// The first glass moment. Every word comes from config: site.ts, homeSections and glassCards.
+// The arrival (src/scripts/glass/arrival.js): the cards fade in one after another and their lights
+// reach the name. Each card's hue (`spill`) and its light over the loop (`data-amount`, 40 samples,
+// computed here at build time) ride on its <li>; the name's light is its ::after, a copy of the
+// name silent to readers (data-ink), its background clipped to the letters.
+import "../../styles/stone.css";
+import GlassCard from "./GlassCard.astro";
+import { glassCards } from "../../config/glass.ts";
+import { homeSections } from "../../config/home.ts";
+import { loopAmounts } from "../../scripts/glass/arrival-model.js";
+import site from "../../config/site";
+
+const lights = glassCards.map((c) => ({
+  "data-spill": (c.spill ?? c.wash.color).join(" "),
+  "data-amount": loopAmounts(c).map((v) => +v.toFixed(2)).join(" "),
+}));
+---
+
+<script is:inline>
+  // the cards wait for their arrival from the first paint, only when it will run; if arrival.js
+  // never starts, they show after 2.5 s
+  (function () {
+    var h = document.documentElement;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || new URLSearchParams(location.search).has('t')) return;
+    h.classList.add('arrive-pending');
+    setTimeout(function () { h.classList.remove('arrive-pending'); }, 2500);
+  })();
+</script>
+<section class="hero" data-glass-moment="hero" aria-labelledby="hero-name">
+  <div class="hero-top">
+    <h1 id="hero-name" class="hero-name" data-ink={site.name}>{site.name}</h1>
+    <p class="hero-intro">{homeSections.role} {homeSections.intro}</p>
+  </div>
+  <ul class="cards" aria-label={homeSections.headings.projects}>
+    {glassCards.map((c, i) => <li {...lights[i]}><GlassCard card={c} index={i + 1} /></li>)}
+  </ul>
+</section>
+
+<style>
+  .hero {
+    padding: clamp(24px, 2.8vw, 40px) var(--stone-gutter) 40px;
+    font-family: var(--stone-sans);
+    color: var(--stone-ink);
+    -webkit-font-smoothing: antialiased;
+    word-spacing: 0.06em;
+  }
+  .hero-top {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end;
+    column-gap: clamp(28px, 3.2vw, 48px);
+  }
+  /* plain type, one word to a line: min-content breaks at the space, one text node stays; about
+     two thirds of the row wide, the svh cap keeps the cards on the first screen */
+  .hero-name {
+    position: relative;
+    margin: 0 0 0 -0.04em; inline-size: min-content;
+    font: 900 var(--stone-t-name)/0.84 var(--stone-sans);
+    font-stretch: 88%;
+    letter-spacing: -0.045em;
+    word-spacing: var(--stone-display-word);
+    color: var(--stone-ink);
+  }
+  /* the cards' light on the name: a copy of it over the ink, its background (--spill, arrival.js)
+     clipped to the letters; readers hear the name once */
+  .hero-name::after {
+    content: attr(data-ink) / "";
+    position: absolute; inset: 0; pointer-events: none;
+    white-space: normal; color: transparent;
+    background-image: var(--spill, none);
+    -webkit-background-clip: text; background-clip: text;
+  }
+  .hero-intro {
+    margin: 0 0 0.35em; max-width: 18em; justify-self: end;
+    font-size: clamp(16px, 1.45vw, 21px); line-height: 1.32; color: var(--stone-ink-2); text-wrap: pretty;
+  }
+  /* waiting for the arrival (the inline script above) */
+  :global(.arrive-pending) .cards > li { opacity: 0; }
+  .cards {
+    list-style: none; margin: clamp(24px, 2.5vw, 36px) 0 0; padding: 0;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 1vw, 14px);
+  }
+  /* four across: the row never pushes the cards below the first screen */
+  .cards :global(.glass-card) { aspect-ratio: auto; width: 100%; height: min(40svh, 27vw); }
+
+  @media (max-width: 1099px) { .hero-name { font-size: min(15vw, 26svh); } }
+  @media (prefers-reduced-motion: reduce) { .hero-name::after { display: none; } }
+
+  @media (max-width: 760px) {
+    .hero-top { grid-template-columns: 1fr; row-gap: 18px; }
+    /* the name spans the width, gutter to gutter */
+    .hero-name { font-size: calc((100vw - 2 * var(--stone-gutter)) * 0.245); }
+    .hero-intro { justify-self: start; font-size: 18px; max-width: 33ch; }
+    /* the cards scroll sideways in their own row; the page never does */
+    .cards {
+      grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%;
+      overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--stone-gutter));
+      padding: 4px var(--stone-gutter) 16px; scroll-padding-inline: var(--stone-gutter); scrollbar-width: none;
+    }
+    .cards li { scroll-snap-align: start; }
+    .cards :global(.glass-card) { height: auto; aspect-ratio: 296 / 340; }
+    .cards :global(.glass-card .title) { font-size: 19px; }
+    .cards :global(.glass-card .readout) { font-size: 14px; }
+  }
+</style>

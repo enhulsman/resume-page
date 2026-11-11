@@ -6,10 +6,12 @@
  * appear instantly after each command finishes.
  *
  * Dispatches `terminal-animation-complete` on the element when done.
- * Click anywhere on the element to skip the animation instantly.
+ * Click anywhere on the element to skip the animation instantly. With reduced motion the intro is
+ * there at once, also when reduced motion is switched on while it waits or types.
  */
 
 import { esc, makePromptHtml, makeCursorHtml, scrollToBottom, updateTitleDimensions } from './terminal-utils';
+import { pageSpeed } from './glass/speed.js';
 
 interface Line {
   type: 'cmd' | 'out';
@@ -56,9 +58,8 @@ function renderAllInstantly(
 }
 
 export function initTerminalAnimation(body: HTMLElement): void {
-  const prefersReduced = window.matchMedia(
-    '(prefers-reduced-motion: reduce)',
-  ).matches;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const prefersReduced = reducedMotion.matches;
   const promptStr = body.getAttribute('data-prompt') || 'user@host';
   const lines: Line[] = JSON.parse(
     body.getAttribute('data-lines') || '[]',
@@ -80,11 +81,13 @@ export function initTerminalAnimation(body: HTMLElement): void {
 
   const pendingTimeouts: Set<ReturnType<typeof setTimeout>> = new Set();
 
+  // ?speed=<n>, a test hook: the intro types n times faster (1..10)
+  const speed = pageSpeed();
   function track(fn: () => void, delay: number): ReturnType<typeof setTimeout> {
     const id = setTimeout(() => {
       pendingTimeouts.delete(id);
       fn();
-    }, delay);
+    }, delay / speed);
     pendingTimeouts.add(id);
     return id;
   }
@@ -115,6 +118,7 @@ export function initTerminalAnimation(body: HTMLElement): void {
   function finish(): void {
     if (animationComplete) return;
     animationComplete = true;
+    reducedMotion.removeEventListener('change', onReducedMotion);
     body.dispatchEvent(new CustomEvent('terminal-animation-complete'));
   }
 
@@ -127,6 +131,14 @@ export function initTerminalAnimation(body: HTMLElement): void {
   }
 
   body.addEventListener('click', handleSkip, { once: true });
+
+  // reduced motion switched on while the intro waits or types: the rest of it at once
+  function onReducedMotion(e: MediaQueryListEvent): void {
+    if (!e.matches) return;
+    observer.disconnect();
+    handleSkip();
+  }
+  reducedMotion.addEventListener('change', onReducedMotion);
 
   /**
    * Type a command character-by-character. When `reuseExisting` is true,

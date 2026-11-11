@@ -1,9 +1,16 @@
 ---
-// /contact: the form, drawn as a transmittal sheet with the homepage's stamp. The Worker
-// (/api/contact) checks Turnstile, the honeypot and the elapsed time server-side.
+// /contact (openspec stone-inner-pages, stone-contact; Ezra, 2026-11-10, C2 wide): the heading, the
+// message and the address set large on the left; the form inside a frosted "New message" window over
+// the moss's glow on the right (the page's own light, as on the bar's Contact link). The form's fields, names, script and Turnstile are unchanged; its
+// words come from pageWords. The Worker (/api/contact) checks Turnstile, the honeypot and the elapsed
+// time server-side.
 import OverzichtLayout from "../layouts/OverzichtLayout.astro";
+import GlassWindow from "../components/stone/GlassWindow.astro";
 import site from "../config/site";
+import { homeSections, siteNav } from "../config/home.ts";
+import { pageWords } from "../config/pages.ts";
 
+const w = pageWords.contact;
 const contactDescription = `Get in touch with ${site.name}. Send me a message about work opportunities, projects, or just to chat about Formula 1 and tech.`;
 const contactKeywords = `${site.seo.keywords}, contact, hire, collaborate, message, email`;
 
@@ -20,40 +27,48 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
   ogTitle={`Contact ${site.name} — ${site.role}`}
   ogDescription={contactDescription}
 >
-  <section class="sheet sheet-first sheet-transmittal" aria-labelledby="contact-h">
-    <header class="sheet-head">
-      <h1 id="contact-h">Get in touch</h1>
-      <p>{site.contactMessage}</p>
+  <section class="ct" aria-labelledby="ct-h">
+    <header class="ct-head">
+      <h1 id="ct-h" class="ct-title">{siteNav.cta.label}</h1>
+      <p class="ct-lead">{site.contactMessage}</p>
     </header>
 
-    <div class="tm-wrap">
-    <div class="tm-main">
-    <form id="contactForm" class="transmittal" method="POST" data-turnstile-sitekey={turnstileSiteKey}>
-      <div class="tm-row"><label for="name">Name</label><input id="name" name="name" autocomplete="name" required /></div>
-      <div class="tm-row"><label for="email">Email</label><input id="email" type="email" name="email" autocomplete="email" required /></div>
-      <div class="tm-row tm-msg"><label for="message">Message</label><textarea id="message" name="message" rows="7" required></textarea></div>
+    <div class="ct-formcol" data-glass-moment="compose">
+      <GlassWindow title={w.window} glow="moss" class="ct-stage" windowClass="ct-window">
+        <div class="ct-body">
+          <form id="contactForm" class="ct-form" method="POST" data-turnstile-sitekey={turnstileSiteKey}>
+            <div class="ct-row"><label for="name">{w.name}</label><input id="name" name="name" autocomplete="name" required /></div>
+            <div class="ct-row"><label for="email">{w.email}</label><input id="email" type="email" name="email" autocomplete="email" required /></div>
+            <div class="ct-row"><label for="message">{w.message}</label><textarea id="message" name="message" rows="7" required></textarea></div>
 
-      <!-- Honeypot: humans never see or fill this; bots that fill every field do. Checked server-side. -->
-      <div class="hp-field" aria-hidden="true">
-        <label for="website">Website</label>
-        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
-      </div>
-      <!-- Milliseconds between page load and submit, set by the script below. -->
-      <input type="hidden" name="elapsed" id="elapsed" value="" />
+            <!-- Honeypot: humans never see or fill this; bots that fill every field do. Checked server-side. -->
+            <div class="hp-field" aria-hidden="true">
+              <label for="website">{w.website}</label>
+              <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+            <!-- Milliseconds between page load and submit, set by the script below. -->
+            <input type="hidden" name="elapsed" id="elapsed" value="" />
 
-      <div class="tm-foot">
-        <!-- Cloudflare Turnstile widget, rendered explicitly by the script below -->
-        <div id="turnstile-container"></div>
-        <button type="submit" id="submitButton" class="act act-main">
-          <span class="submit-text">Send Message</span>
-          <span class="submit-loading" hidden>Sending...</span>
-        </button>
-      </div>
-      <p id="statusMessage" role="status" hidden></p>
-    </form>
-    <p class="tm-mail">Prefer your own mail app? Write to <a href={`mailto:${site.social.email}`}>{site.social.email}</a>.</p>
+            <div class="ct-foot">
+              <!-- Cloudflare Turnstile widget, rendered explicitly by the script below -->
+              <div id="turnstile-container"></div>
+              <button type="submit" id="submitButton" class="ct-send">
+                <span class="submit-text">{w.send}</span>
+                <span class="submit-loading" hidden>{w.sending}</span>
+              </button>
+            </div>
+            <p id="statusMessage" role="status" hidden></p>
+          </form>
+        </div>
+      </GlassWindow>
     </div>
-      <div class="stamp" aria-hidden="true"><span>Issued for</span><b>conversation</b><span>2026</span></div>
+
+    <div class="ct-ways">
+      <a class="ct-mail" href={`mailto:${site.social.email}`}>{site.social.email}</a>
+      <ul class="ct-links">
+        <li><a href={site.social.LinkedIn}>{homeSections.contact.linkedin}</a></li>
+        <li><a href={site.social.GitHub}>{homeSections.contact.github}</a></li>
+      </ul>
     </div>
   </section>
 
@@ -68,8 +83,8 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
       window.__turnstileWidgetId = window.turnstile.render('#turnstile-container', {
         sitekey: sitekey,
         action: 'contact',
-        // follow the sheet's chosen theme, not just the system's
-        theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : document.documentElement.dataset.theme === 'light' ? 'light' : 'auto',
+        // the site is light stone in every system theme
+        theme: 'light',
         size: 'flexible',
       });
     };
@@ -77,7 +92,9 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
   <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
 
   <script>
-    // Contact form submission handler
+    // Contact form submission handler; its messages from pageWords
+    import { pageWords } from "../config/pages.ts";
+    const words = pageWords.contact;
     document.addEventListener('DOMContentLoaded', function() {
       const loadedAt = Date.now();
       const form = document.getElementById('contactForm') as HTMLFormElement;
@@ -118,7 +135,7 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
           const widgetId = (window as any).__turnstileWidgetId;
           const token: string = turnstile && widgetId !== undefined ? turnstile.getResponse(widgetId) || '' : '';
           if (!token) {
-            showStatus('Verification is still loading. Please wait a moment and try again.', true);
+            showStatus(words.waiting, true);
             setLoading(false);
             return;
           }
@@ -135,13 +152,13 @@ const turnstileSiteKey = import.meta.env.DEV ? '1x00000000000000000000AA' : site
           const result = await response.json();
 
           if (response.ok && result.success) {
-            showStatus('Thank you! Your message has been sent successfully. I\'ll get back to you soon.');
+            showStatus(words.sent);
             form.reset();
           } else {
-            showStatus(result.error || 'Something went wrong. Please try again.', true);
+            showStatus(result.error || words.failed, true);
           }
         } catch (error) {
-          showStatus('Network error. Please check your connection and try again.', true);
+          showStatus(words.offline, true);
         } finally {
           // Tokens are single-use: get a fresh one for any retry.
           const turnstile = (window as any).turnstile;

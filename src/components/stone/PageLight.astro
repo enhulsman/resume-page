@@ -1,0 +1,14 @@
+---
+// A page's head light (openspec stone-inner-pages, "One light per page"; Ezra, 2026-11-10: /blog the
+// tide, /resume the sunset, the same light as the page's link in the bar): one soft light far
+// behind the heading, two radial gradients of the page's near and deep colour (`pageLights`) under
+// a wide blur. Not glass, not a word, never moving, not printed. Place it as the FIRST child of the
+// head it lights; stone.css makes the head `.page-head` an isolated stack so the light paints
+// beneath the h1 (z-index -1) and the page's own overflow-x clip keeps it off the sides.
+import { pageLights, type PageLightId } from "../../config/glass.ts";
+
+interface Props { id: PageLightId }
+const { near, deep } = pageLights[Astro.props.id];
+---
+
+<div class="page-light" data-page-light aria-hidden="true" style={`--l1: ${near.join(" ")}; --l2: ${deep.join(" ")}`}></div>

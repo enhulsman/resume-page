@@ -1,15 +1,15 @@
 ---
-// The Claude Sandbox architecture, drawn in the sheet's tokens so it follows the theme
+// The Claude Sandbox architecture, drawn in the stone tokens (src/styles/stone.css)
 // (it used to be an <img> with its own palette, which could only follow the system's).
 ---
 <figure class="sbx">
   <svg viewBox="0 0 640 460" role="img" aria-label="Claude Sandbox architecture diagram showing namespace boundary, filesystem isolation, socat bridge, and egress proxy">
   <defs>
     <marker id="sbx-ah" markerWidth="6" markerHeight="5" refX="5" refY="2.5" orient="auto">
-      <path d="M0,0 L6,2.5 L0,5" fill="none" stroke="var(--ink)" stroke-width="1"/>
+      <path d="M0,0 L6,2.5 L0,5" fill="none" stroke="var(--stone-ink)" stroke-width="1"/>
     </marker>
     <marker id="sbx-ah-red" markerWidth="6" markerHeight="5" refX="5" refY="2.5" orient="auto">
-      <path d="M0,0 L6,2.5 L0,5" fill="none" stroke="var(--red)" stroke-width="1"/>
+      <path d="M0,0 L6,2.5 L0,5" fill="none" stroke="var(--glass-ink-red)" stroke-width="1"/>
     </marker>
   </defs>
 
@@ -59,7 +59,7 @@
 
   <!-- ═══════════ NAMESPACE BOUNDARY ═══════════ -->
   <line x1="16" y1="210" x2="624" y2="210" class="line-accent"/>
-  <rect x="245" y="201" width="150" height="18" rx="9" class="bg"/>
+  <rect x="245" y="201" width="150" height="18" rx="9" class="knock"/>
   <text x="320" y="214" text-anchor="middle" class="label">namespace boundary</text>
 
   <!-- ═══════════ HOST (bottom region) ═══════════ -->
@@ -100,20 +100,24 @@
 </figure>
 
 <style>
+  /* a line drawing on stone (stone-article-layout): stone ink, labels in Archivo; the bridge and the
+     boundary in the glass red */
   .sbx { margin: 8px 0 32px; max-width: 640px; }
-  .sbx svg { display: block; width: 100%; height: auto; font: 400 9.5px var(--mono); }
+  .sbx svg { display: block; width: 100%; height: auto; font: 400 9.5px var(--stone-sans); }
   .bg { fill: none; }
-  .box, .box-accent { fill: var(--sheet); stroke: var(--ink); stroke-width: 1; rx: 0; transition: fill .5s ease; }
+  /* the gap in the boundary line where its name sits */
+  .knock { fill: var(--stone); }
+  .box, .box-accent { fill: var(--stone); stroke: var(--stone-ink); stroke-width: 1; rx: 0; }
   .box-accent { stroke-width: 1.5; }
-  .t1 { fill: var(--ink); font: 600 12px var(--sans); font-stretch: 88%; }
-  .t2 { fill: var(--ink-2); font-size: 8.6px; }
-  .t3 { fill: var(--label); font-size: 8px; }
-  .label { fill: var(--ink); font: 700 9.5px var(--sans); font-stretch: 80%; letter-spacing: .1em; text-transform: uppercase; }
-  .line { stroke: var(--hair); stroke-width: 1; }
-  .line-accent { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 6 3; }
-  .arrow { stroke: var(--ink); stroke-width: 1; fill: none; marker-end: url(#sbx-ah); }
-  .arrow-bridge { stroke: var(--red); stroke-width: 1.5; fill: none; marker-end: url(#sbx-ah-red); }
-  .green { fill: var(--ink); }
-  .red { fill: var(--red); }
-  .hollow { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+  .t1 { fill: var(--stone-ink); font: 600 12px var(--stone-sans); font-stretch: 88%; }
+  .t2 { fill: #4A453F; font-size: 9.4px; }
+  .t3 { fill: var(--glass-ink-quiet); font-size: 8.8px; }
+  .label { fill: var(--stone-ink); font: 700 9.5px var(--stone-sans); font-stretch: 80%; letter-spacing: .1em; text-transform: uppercase; }
+  .line { stroke: var(--stone-hair); stroke-width: 1; }
+  .line-accent { stroke: var(--glass-ink-red); stroke-width: 1.5; stroke-dasharray: 6 3; }
+  .arrow { stroke: var(--stone-ink); stroke-width: 1; fill: none; marker-end: url(#sbx-ah); }
+  .arrow-bridge { stroke: var(--glass-ink-red); stroke-width: 1.5; fill: none; marker-end: url(#sbx-ah-red); }
+  .green { fill: var(--stone-ink); }
+  .red { fill: var(--glass-ink-red); }
+  .hollow { fill: none; stroke: var(--stone-ink); stroke-width: 1.2; }
 </style>

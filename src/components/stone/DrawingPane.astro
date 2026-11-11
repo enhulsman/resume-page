@@ -1,0 +1,48 @@
+---
+// One Overzicht drawing in a frosted pane (openspec stone-inner-pages, stone-project-pages
+// "pytaiga-mcp's drawing in a frosted pane"; Ezra, 2026-11-10, D1): window dots, the page's title, the
+// glow beneath. The one place glass holds a drawing (glass-material names the exceptions). The pane
+// carries its own hatch and arrow definitions, placed before the drawing so `url(#hatch)` and
+// `url(#arrow)` resolve to them; the drawing plots itself in through chrome.js (it plots every .dwg,
+// and draws them at once under reduced motion). On glass its labels lose the paper halo.
+import "../../styles/stone.css";
+import GlassWindow from "./GlassWindow.astro";
+import { drawings, postDrawings } from "../overzicht/drawings";
+import type { windowGlows } from "../../config/glass.ts";
+
+interface Props {
+  /** A project's drawing by its home.ts id, or a post's by its slug. */
+  id: keyof typeof drawings | keyof typeof postDrawings;
+  title?: string;
+  glow?: keyof typeof windowGlows;
+  class?: string;
+}
+const { id, title = "", glow = "cards", class: cls } = Astro.props;
+const Drawing = (drawings as Record<string, unknown>)[id] ?? postDrawings[id];
+if (!Drawing) throw new Error(`DrawingPane: no drawing ${id}`);
+const D = Drawing as typeof postDrawings[string];
+---
+<GlassWindow title={title} glow={glow} dots class:list={["dp-stage", cls]} windowClass="dp-window">
+  <div class="dp-body">
+    <svg class="dp-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0 V7" class="hatch-line"/></pattern><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="currentColor" stroke-width="1.2"/></marker></defs></svg>
+    <D />
+  </div>
+</GlassWindow>
+
+<style is:global>
+  .dp-body { position: relative; z-index: 3; padding: 22px 26px 18px; }
+  .dp-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .dp-body .dwg { display: block; width: 100%; max-width: 100%; height: auto; }
+  /* the labels sat on paper with a paper-coloured halo; on glass the halo goes */
+  .dp-body .dwg .lbl text { stroke: none; }
+  /* its red labels in the glass red, an opaque ink that holds 4.5:1 over the glow */
+  .dp-body .dwg .lbl .red-t { fill: var(--glass-ink-red); }
+  .dp-body .dwg .ln .faint, .dp-body .dwg .ln .plot { stroke: #6b645c; }
+  /* still on request: the labels arrive with the lines, no delayed fade */
+  @media (prefers-reduced-motion: reduce) {
+    .dp-body .dwg text, .dp-body .dwg .fill { transition: none !important; }
+  }
+  @media (max-width: 760px) {
+    .dp-body { padding: 16px 14px 12px; }
+  }
+</style>

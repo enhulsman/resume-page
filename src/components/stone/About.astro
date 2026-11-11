@@ -1,0 +1,100 @@
+---
+// About (openspec stone-glass-homepage, design 8): the notes and the site photo, type and a plain
+// image on stone; beside them (below them on a phone) the real terminal in a frosted window over a
+// soft glow of two of the hero's lights, one warm and one cool. The third glass moment. Those two
+// lights reflect in the glass, upside down, faint and far behind it: two mini ribbed panes, each an
+// oval that fades to nothing, placed off-centre from config (terminalReflection), decoration only.
+// Every word comes from config: notes and homeSections (home.ts); the terminal's own output is the
+// terminal's (src/components/overzicht/Terminal.astro). The colours of its text on glass are in
+// stone.css, keyed on the terminal's .terminal-* and .text-theme-* class names.
+// One moment per screen: Projects, Experience and Writing lie between ANNA's window and this one.
+import "../../styles/stone.css";
+import GlassWindow from "./GlassWindow.astro";
+import GlassCard from "./GlassCard.astro";
+import Terminal from "../overzicht/Terminal.astro";
+import { glassCards, terminalReflection } from "../../config/glass.ts";
+import { homeSections, notes } from "../../config/home.ts";
+
+const reflect = terminalReflection.panes.map((p) => ({ card: glassCards.find((c) => c.id === p.card)!, box: p.box }));
+---
+
+<section class="stone-section about" aria-labelledby="about-h">
+  <h2 id="about-h">{homeSections.headings.about}</h2>
+  <div class="about-body">
+    <div class="about-copy">
+      <img class="about-photo" src="/images/ezra-site-photo.webp" width="280" height="280" alt={homeSections.photoAlt} loading="lazy" decoding="async" />
+      <ol class="about-notes">
+        {notes.map((n) => <li>{n}</li>)}
+      </ol>
+    </div>
+    <div class="about-term" data-glass-moment="terminal">
+      <GlassWindow title={homeSections.terminalTitle} glow="cards" dots class="term-stage" windowClass="term-window">
+        <div slot="reflect" class="term-reflect" aria-hidden="true" style={`--reflect-blur: ${terminalReflection.blur}px; --reflect-opacity: ${terminalReflection.opacity}`}>
+          {/* the container is flipped, so `bottom` is the upright top */}
+          {reflect.map(({ card, box: [x, y, w, h] }) => (
+            <span class="reflect-pane" style={`left: ${x}%; bottom: ${y}%; width: ${w}%; height: ${h}%`}><GlassCard card={card} mini /></span>
+          ))}
+        </div>
+        <Terminal />
+      </GlassWindow>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* the glow reaches past the window's sides; it never widens the page */
+  .about { overflow-x: clip; }
+  .about-body {
+    display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    column-gap: clamp(24px, 5vw, 96px); align-items: start;
+  }
+  .about-photo { display: block; width: clamp(140px, 12vw, 200px); height: auto; margin: 0 0 clamp(18px, 1.8vw, 28px); }
+  .about-notes { list-style: none; margin: 0; padding: 0; max-width: 34em; border-bottom: 1px solid var(--stone-hair); }
+  .about-notes li {
+    padding: 0.85em 0; border-top: 1px solid var(--stone-hair);
+    font-size: var(--stone-t-body); line-height: 1.45; color: var(--stone-ink-2); text-wrap: pretty;
+  }
+
+  /* the window's column: the stage is the window's own width, so the glow sits around the window */
+  .about-term { min-width: 0; }
+  .about :global(.term-stage) { width: min(100%, 780px); margin-inline: auto; }
+  .about :global(.term-window) { height: 460px; }
+
+  /* two of the hero's lights, reflected: mirrored top to bottom, far behind the glass, each an oval
+     that fades to nothing, so no side of a pane ever shows */
+  .term-reflect {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    transform: scaleY(-1); opacity: var(--reflect-opacity);
+    /* lifted to the glass's own brightness, so the panes' stone ground never shows as a grey smudge */
+    filter: blur(var(--reflect-blur)) brightness(1.08) saturate(1.2);
+  }
+  .reflect-pane { position: absolute; display: block; }
+  .term-reflect :global(.glass-card.mini) {
+    width: 100%; height: 100%; border-radius: 50%;
+    -webkit-mask-image: radial-gradient(closest-side, black 20%, transparent 100%);
+    mask-image: radial-gradient(closest-side, black 20%, transparent 100%);
+  }
+
+  /* the terminal inside the glass: no sheet border, no ground, no ring of its own (the window has one) */
+  .about :global(.term-window .term) { position: relative; z-index: 3; flex: 1; min-height: 0; border: 0; background: none; }
+  .about :global(.term-window .term:focus-within) { outline: none; }
+  .about :global(.term-window .term-body) {
+    height: 100%; padding: 16px 22px 20px; overflow-y: auto; overflow-x: hidden;
+    font: 14px/1.6 ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    outline: none; cursor: text;
+    scrollbar-width: thin; scrollbar-color: rgb(17 17 16 / 0.18) transparent;
+  }
+  .about :global(.term-window .terminal-cursor) { background: var(--stone-ink); color: var(--stone); }
+  /* a steady caret when motion is reduced, also when that is switched on later */
+  @media (prefers-reduced-motion: reduce) {
+    .about :global(.term-window .terminal-cursor) { animation: none; }
+  }
+
+  /* a phone: the photo and notes, then the window under them */
+  @media (max-width: 760px) {
+    .about-body { display: block; }
+    .about :global(.term-stage) { margin-top: 40px; }
+    .about :global(.term-window) { height: min(460px, 70svh); }
+    .about :global(.term-window .term-body) { padding: 14px 14px 16px; font-size: 13px; }
+  }
+</style>

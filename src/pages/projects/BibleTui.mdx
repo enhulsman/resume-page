@@ -5,20 +5,16 @@ date: 2026-04-25
 github: "https://github.com/enhulsman/bible-tui"
 preview: "https://bible.hulsman.dev"
 tech: ["Rust", "ratatui", "crossterm", "ratzilla", "WebAssembly", "postcard"]
+stats:
+  - { value: "102", label: "lines to put it in the browser" }
+  - { value: "~5,500", label: "lines of Rust in all" }
+  - { value: "3", label: "translations, nothing leaves the device" }
+  - { value: "13.3 MB", label: "of WASM, scripture included" }
 layout: "../../layouts/ProjectLayout.astro"
 showcase: false
 dateLabel: "Online since"
 hook: "A terminal Bible reader in Rust, with vim keys and three translations built in. The same UI code runs in the browser at bible.hulsman.dev: putting it there took 102 lines, and fixing what that surfaced took the rest of the two days."
 ---
-
-import StatStrip from "../../components/StatStrip.astro";
-
-<StatStrip stats={[
-  { value: "102", label: "lines to put it in the browser" },
-  { value: "~5,500", label: "lines of Rust in all" },
-  { value: "3", label: "translations, nothing leaves the device" },
-  { value: "13.3 MB", label: "of WASM, scripture included" },
-]} />
 
 ## What I Built
 

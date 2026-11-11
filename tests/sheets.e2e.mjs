@@ -1,5 +1,7 @@
-// End-to-end checks for the inner pages, drawn as "sheets in the set": same frame, bar,
-// tokens and type as the homepage. Needs a running site, like tests/overzicht.e2e.mjs:
+// End-to-end checks for the inner pages: their drawing-sheet bodies under the stone chrome
+// (openspec stone-glass-homepage: the stone bar and footer on every page, no sheet frame, no dark
+// theme). The homepage is stone and glass, tested in tests/glass-*.e2e.mjs, and so is the chrome
+// itself, in tests/glass-chrome.e2e.mjs. Needs a running site:
 //
 //   BASE=http://localhost:4321 node --test tests/sheets.e2e.mjs
 import { test, before, after } from 'node:test';
@@ -15,37 +17,36 @@ const INNER = ['/projects', '/projects/Henk', '/projects/AnnaAssistant', '/proje
 const ours = errors => errors.filter(e => !/turnstile|challenges\.cloudflare/i.test(e));
 
 let browser;
-before(async () => { browser = await chromium.launch(); });
+// swiftshader's GL, as the glass files use: /projects (ribbed cards since stone-inner-pages chunk 9)
+// loads and draws in a tenth of the default headless GL's time, and nothing here screenshots it often
+before(async () => { browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); });
 after(async () => { await browser?.close(); });
 
 async function open(path, { width = 1440, height = 900, scale = 1, reducedMotion = 'no-preference', colorScheme = 'light', storage } = {}) {
   const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: scale, reducedMotion, colorScheme });
-  // the homepage's arrival is tested on its own (tests/intro.e2e.mjs); here the page is as it settles
-  await context.addInitScript(() => { try { sessionStorage.setItem('ovz-arrived', '1'); } catch {} });
   if (storage) await context.addInitScript(s => { for (const [k, v] of Object.entries(s)) if (localStorage.getItem(k) === null) localStorage.setItem(k, v); }, storage);
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   page.on('console', m => m.type() === 'error' && errors.push(m.text()));
-  const res = await page.goto(BASE + path, { waitUntil: 'load' });
+  // /projects' ribbed cards draw their light on the CPU in a headless browser; no test here looks at
+  // that light, so /projects loads with it frozen (?t=, the glass's test hook): the same page, still
+  const res = await page.goto(BASE + path + (path === '/projects' ? '?t=2.4' : ''), { waitUntil: 'load' });
   return { context, page, errors, res };
 }
 
-const inked = page => page.evaluate(() => {
-  const c = document.querySelector('canvas.drawing');
-  if (!c || !c.width) return 0;
-  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-  let n = 0; for (let i = 3; i < d.length; i += 4 * 16) if (d[i] > 0) n++;
-  return n;
-});
+/** Let the page render `n` more frames. */
+const frames = (page, n = 2) => page.evaluate(n => new Promise(done => { const f = k => (k ? requestAnimationFrame(() => f(k - 1)) : done()); f(n); }), n);
 
 // ---------- every inner page is a sheet in the set ----------
 
 for (const path of INNER) {
-  test(`${path} is drawn on the sheet: frame, bar, tokens, no old stylesheet, no errors`, async () => {
+  test(`${path} sits on the stone: the stone bar and footer, no frame, no old stylesheet, no errors`, async () => {
     const { context, page, errors, res } = await open(path);
     assert.equal(res.status(), 200);
-    assert.equal(await page.locator('.frame').count(), 1, 'the sheet frame');
+    assert.equal(await page.locator('header.bar').count(), 1, 'the stone bar');
+    assert.equal(await page.locator('.bar .bar-cta').count(), 1, 'its "Get in touch"');
+    assert.equal(await page.locator('.frame').count(), 0, 'no sheet frame');
     assert.equal(await page.locator('.foot').count(), 1, 'the foot');
     // main h1: Playwright also sees into the dev toolbar's shadow DOM, which has its own
     assert.equal(await page.locator('main h1').count(), 1, 'one h1');
@@ -53,30 +54,25 @@ for (const path of INNER) {
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-bg-primary')), '');
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--tw-ring-color')), '');
     assert.equal(await page.evaluate(() => document.documentElement.classList.contains('lenis')), false);
-    // the sheet's own ground and type
-    assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(239, 237, 243)');
+    // the stone ground and the sheet's type
+    assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(238, 234, 227)');
+    assert.equal(await page.locator('.bar').evaluate(b => getComputedStyle(b).backgroundColor), 'rgb(238, 234, 227)');
     assert.match(await page.evaluate(() => getComputedStyle(document.body).fontFamily), /^"?Archivo/);
     await page.waitForTimeout(400);
     assert.deepEqual(ours(errors), []);
     await context.close();
   });
 
-  test(`${path} has no sideways scroll at 390px`, async () => {
-    const { context, page } = await open(path, { width: 390, height: 844 });
-    await page.waitForTimeout(500);
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(300);
-    const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    assert.ok(over <= 0, `page is ${over}px wider than the viewport`);
-    await context.close();
-  });
+  // '${path} has no sideways scroll at 390px' retired (openspec stone-inner-pages 11.3, decision
+  // 2026-11-10: every page in stone): stone-inner-pages "Every route" (tests/inner-site.e2e.mjs) checks
+  // every inner route at 390, and the article pages at 320, in the loads it already makes.
 }
 
-test('one bar on every page, homepage included: EH. | Ezra Hulsman, Projects, Blog, Résumé, Contact, and the theme button', async () => {
-  for (const [path, current] of [['/', null], ['/projects', 'PROJECTS'], ['/projects/Henk', 'PROJECTS'], ['/blog', 'BLOG'], [`/blog/${POSTS[0]}`, 'BLOG'], ['/resume', 'RÉSUMÉ'], ['/contact', 'CONTACT']]) {
+test('one stone bar on every page: EH. | Ezra Hulsman, Projects, Blog, Résumé, Contact, Get in touch, no theme button', async () => {
+  for (const [path, current] of [['/projects', 'Projects'], ['/projects/Henk', 'Projects'], ['/blog', 'Blog'], [`/blog/${POSTS[0]}`, 'Blog'], ['/resume', 'Résumé'], ['/contact', 'Contact']]) {
     const { context, page } = await open(path);
     // the signature from the old site, then the name in full; read out as the name alone
-    assert.equal((await page.locator('.bar-name').innerText()).replace(/\s+/g, ' ').trim(), 'EH. EZRA HULSMAN');
+    assert.equal((await page.locator('.bar-name').innerText()).replace(/\s+/g, ' ').trim(), 'EH. Ezra Hulsman');
     assert.equal(await page.locator('.bar-name .sig').getAttribute('aria-hidden'), 'true');
     const [dot, red] = await page.locator('.bar-name .sig-dot').evaluate(e => {
       const i = document.body.appendChild(document.createElement('i'));
@@ -87,43 +83,36 @@ test('one bar on every page, homepage included: EH. | Ezra Hulsman, Projects, Bl
     });
     assert.equal(dot, red, 'the full stop in red');
     assert.equal(await page.getByRole('link', { name: 'Ezra Hulsman', exact: true }).count(), 1);
-    assert.equal(await page.locator('.bar-name').getAttribute('href'), path === '/' ? '#top' : '/');
-    assert.deepEqual(await page.locator('.bar nav a').allInnerTexts(), ['PROJECTS', 'BLOG', 'RÉSUMÉ', 'CONTACT']);
+    assert.equal(await page.locator('.bar-name').getAttribute('href'), '/');
+    assert.deepEqual(await page.locator('.bar nav a').allInnerTexts(), ['Projects', 'Blog', 'Résumé', 'Contact']);
     assert.deepEqual(await page.locator('.bar nav a').evaluateAll(as => as.map(a => a.getAttribute('href'))), ['/projects', '/blog', '/resume', '/contact']);
     assert.equal(await page.locator('.bar nav').getAttribute('aria-label'), 'Site');
     // the page you are on is marked, for eyes and for screen readers
     assert.deepEqual(await page.locator('.bar nav a[aria-current="page"]').allInnerTexts(), current ? [current] : [], `${path} marks ${current}`);
-    assert.equal(await page.locator('.theme').isVisible(), true);
+    // "Get in touch" goes to the contact page; the theme button is gone with the dark theme
+    const cta = page.locator('.bar .bar-cta');
+    assert.equal((await cta.innerText()).trim(), 'Get in touch');
+    assert.equal(await cta.getAttribute('href'), '/contact');
+    assert.equal(await cta.isVisible(), true);
+    assert.equal(await page.locator('.theme').count(), 0, 'no theme button');
     await context.close();
   }
 });
 
-test('inner pages share the stored theme and the toggle', async () => {
-  const { context, page } = await open('/blog', { storage: { theme: 'light' } });
-  const html = page.locator('html');
-  assert.equal(await html.getAttribute('data-theme'), 'light');
-  await page.locator('.theme').click();
-  assert.equal(await html.getAttribute('data-theme'), 'dark');
-  assert.equal(await page.locator('.theme').innerText(), 'WHITEPRINT');
-  await page.waitForTimeout(700); // the sheet fades over half a second
-  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(22, 20, 29)');
-  await page.goto(BASE + '/projects');
-  assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
-  assert.equal(await page.locator('.theme').getAttribute('aria-pressed'), 'true');
-  await context.close();
-});
-
-test('phones reach every page through the drawn menu', async () => {
+test('phones reach every page through the stone menu', async () => {
   const { context, page } = await open('/resume', { width: 390, height: 844 });
   const btn = page.locator('.menu-btn');
   const links = page.locator('.bar nav a');
   assert.equal(await btn.isVisible(), true);
   assert.equal(await btn.getAttribute('aria-label'), 'Menu');
   assert.equal(await links.first().isVisible(), false);
+  // the mark and "Get in touch" stay in the bar beside the button
+  assert.equal(await page.locator('.bar-name .sig').isVisible(), true);
+  assert.equal(await page.locator('.bar .bar-cta').isVisible(), true);
   await btn.click();
   assert.equal(await btn.getAttribute('aria-expanded'), 'true');
-  await page.waitForTimeout(700);
-  assert.deepEqual(await links.allInnerTexts(), ['PROJECTS', 'BLOG', 'RÉSUMÉ', 'CONTACT']);
+  await links.last().waitFor({ state: 'visible' });
+  assert.deepEqual(await links.allInnerTexts(), ['Projects', 'Blog', 'Résumé', 'Contact']);
   await links.filter({ hasText: 'Blog' }).click();
   await page.waitForURL(/\/blog\/?$/); // the live site adds a trailing slash
   await context.close();
@@ -138,167 +127,108 @@ test('keyboard focus is visible on the inner pages', async () => {
   await context.close();
 });
 
-// ---------- /projects: the lead drawings, then the register ----------
+// ---------- /projects: ANNA's lead, then a ribbed card per project under its status ----------
 
-const DRAWN = ['henk', 'finance', 'homelab', 'bible', 'pytaiga', 'sandbox'];
+// rewritten for openspec stone-inner-pages 9.2 (decision 2026-11-10: I2e; the plate and the drawings
+// on /projects retire): ANNA's lead with her window and levels, then one card per project
+const CARDED = ['henk', 'finance', 'homelab', 'site', 'bible', 'chat', 'pytaiga', 'sandbox'];
 
-test('/projects leads with ANNA, then every project under its status: running, paused, done', async () => {
+test('/projects leads with ANNA, then every project under its status as a ribbed card: running, paused, done', async () => {
   const { context, page } = await open('/projects');
-  assert.deepEqual(await page.locator('.detail').evaluateAll(els => els.map(e => e.id)), ['anna', ...DRAWN]);
-  // ANNA's plate is the real section drawing; the others are their detail drawings
-  assert.equal(await page.locator('#anna canvas.drawing').count(), 1);
-  assert.equal(await page.locator('.detail .dwg').count(), DRAWN.length);
-  // every drawn project links to its case study, and every case study exists
-  const cases = await page.locator('.detail .links a', { hasText: 'Case study' }).evaluateAll(as => as.map(a => a.getAttribute('href')));
-  assert.equal(cases.length, DRAWN.length + 1);
-  // each drawn project carries its two strongest dimensions, not a row of three
-  for (const id of DRAWN) assert.equal(await page.locator(`#${id} .dims > div`).count(), 2, `${id} dims`);
-  // the undrawn ones are cards; together they cover every project page exactly once
-  const reg = await page.locator('.register .reg-title a').evaluateAll(as => as.map(a => a.getAttribute('href')));
-  const all = [...cases, ...reg].map(h => h.replace('/projects/', '')).sort();
-  assert.deepEqual(all, [...PROJECTS].sort());
+  // ANNA leads: her name to her page, her case study, her window and her four levels; no plate
+  assert.equal(await page.locator('.pi-lead h2 a').getAttribute('href'), '/projects/AnnaAssistant');
+  assert.equal(await page.locator('.pi-lead a', { hasText: 'Case study' }).getAttribute('href'), '/projects/AnnaAssistant');
+  assert.equal(await page.locator('.pi-lead [data-glass-moment="anna"] [data-glass="frosted"]').count(), 1);
+  assert.equal(await page.locator('.pi-lead .anna-levels > li').count(), 4);
+  assert.equal(await page.locator('.plate, .anna-plate, canvas.drawing, .dwg').count(), 0, 'no plate, no drawing');
+  // then a card per project, each one link, together every project page except ANNA's, once
+  assert.deepEqual(await page.locator('.pc').evaluateAll(cs => cs.map(c => c.dataset.project)), CARDED);
+  const hrefs = await page.locator('.pc').evaluateAll(cs => cs.map(c => c.getAttribute('href')));
+  assert.deepEqual(hrefs.map(h => h.replace('/projects/', '')).sort(), PROJECTS.filter(p => p !== 'AnnaAssistant').sort());
+  // a detailed project carries its two strongest dimensions, not a row of three; a register entry none
+  for (const id of ['henk', 'finance', 'homelab', 'bible', 'pytaiga', 'sandbox']) assert.equal(await page.locator(`.pc[data-project="${id}"] .pc-nums > div`).count(), 2, `${id} dims`);
+  for (const id of ['site', 'chat']) assert.equal(await page.locator(`.pc[data-project="${id}"] .pc-nums`).count(), 0, `${id} dims`);
   // grouped by status, so a lighter treatment reads as paused, not as less
-  assert.deepEqual(await page.locator('section:has(#projects-h) h2.group').allInnerTexts(), ['Running', 'Paused', 'Done']);
-  const groupOf = async sel => page.locator(sel).evaluate(el => el.closest('.status-group')?.dataset.group);
-  for (const [sel, g] of [['#henk', 'running'], ['#finance', 'running'], ['#homelab', 'running'], ['a[href="/projects/ResumePage"]', 'running'],
-    ['#bible', 'paused'], ['a[href="/projects/EncryptedChatTUI"]', 'paused'], ['#pytaiga', 'done'], ['#sandbox', 'done']]) {
-    assert.equal(await groupOf(sel), g, `${sel} is ${g}`);
+  assert.deepEqual(await page.locator('.pi-group > h2').allInnerTexts(), ['Running', 'Paused', 'Done']);
+  const groupOf = async id => page.locator(`.pc[data-project="${id}"]`).evaluate(el => el.closest('.pi-group')?.querySelector('h2')?.textContent);
+  for (const [id, g] of [['henk', 'Running'], ['finance', 'Running'], ['homelab', 'Running'], ['site', 'Running'],
+    ['bible', 'Paused'], ['chat', 'Paused'], ['pytaiga', 'Done'], ['sandbox', 'Done']]) {
+    assert.equal(await groupOf(id), g, `${id} is ${g}`);
   }
   assert.equal(await page.locator('#register-h').count(), 0);
   // the fun side pieces are in the set too; bible-tui has its own project now
-  assert.ok(await page.locator('.side li').count() >= 3);
-  assert.equal(await page.locator('.side a[href="https://bible.hulsman.dev"]').count(), 0);
-  await page.locator('#anna').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(3000);
-  assert.ok(await inked(page) > 500, 'the ANNA plate plotted');
+  assert.ok(await page.locator('.pi-side li').count() >= 3);
+  assert.equal(await page.locator('.pi-side a[href="https://bible.hulsman.dev"]').count(), 0);
   await context.close();
 });
 
-test('the ANNA plate turns by hand and by its buttons', async () => {
-  const { context, page } = await open('/projects');
-  await page.locator('#anna').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(2500);
-  const spin = () => page.evaluate(() => window.__plate?.state.spin);
-  const before = await spin();
-  assert.equal(typeof before, 'number', 'the plate exposes its scene in tests');
-  await page.locator('#anna [data-turn="1"]').click();
-  assert.ok(await spin() > before, 'the turn button turns it');
-  await context.close();
-});
+// 'the ANNA plate turns by hand and by its buttons', 'turning the ANNA plate by hand draws no pencil
+// line on the page' and 'reduced motion: every plate arrives drawn' retired (openspec
+// stone-inner-pages 9.2, decision 2026-11-10: the plate retires on /projects, her window and her levels
+// take its place): tests/inner-projects.e2e.mjs checks the lead instead.
 
-test('ANNA\'s project page draws the model large: most of its box is model', async () => {
-  const { context, page } = await open('/projects/AnnaAssistant', { reducedMotion: 'reduce' });
-  await page.locator('.plate-stage').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(1200);
-  const h = await page.evaluate(() => {
-    const c = document.querySelector('.plate-stage canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-    let y0 = 1e9, y1 = -1;
-    for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 4) if (d[(y * c.width + x) * 4 + 3] > 20) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
-    return (y1 - y0) / devicePixelRatio;
-  });
-  assert.ok(h >= 480, `the model is ${Math.round(h)}px tall`);
-  await context.close();
-});
-
-test('turning the ANNA plate by hand draws no pencil line on the page', async () => {
-  const { context, page } = await open('/projects/AnnaAssistant');
-  const stage = page.locator('.plate-stage');
-  await stage.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(1500);
-  const b = await stage.boundingBox();
-  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
-  await page.mouse.down();
-  for (let i = 1; i <= 10; i++) await page.mouse.move(b.x + b.width / 2 + 12 * i, b.y + b.height / 2);
-  await page.mouse.up();
-  await page.waitForTimeout(150);
-  assert.equal(await page.locator('.pencil-line, .pencil-mark').count(), 0);
-  await context.close();
-});
-
-test('reduced motion: every plate arrives drawn', async () => {
-  const { context, page } = await open('/projects', { reducedMotion: 'reduce' });
-  await page.waitForTimeout(400);
-  assert.equal(await page.locator('.dwg:not(.drawn)').count(), 0);
-  await page.locator('#anna').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(400);
-  assert.ok(await inked(page) > 500);
-  await context.close();
-});
+// 'ANNA's project page draws the model large' retired (openspec stone-inner-pages 4.2, decision
+// 2026-11-10: ANNA's plate retires on her page, her window and levels take its place):
+// tests/inner-windows.e2e.mjs checks her page instead.
 
 // ---------- a project page: title block, plate, then the write-up ----------
 
-test('a project page opens with its title block and its own drawing', async () => {
-  const src = readFileSync(new URL('../src/pages/projects/Henk.mdx', import.meta.url), 'utf8');
-  const label = src.match(/^dateLabel: "(.*)"/m)[1];
-  const { context, page } = await open('/projects/Henk');
-  const block = page.locator('.titleblock');
-  assert.deepEqual(await block.locator('th').allInnerTexts(), ['PROJECT', label.toUpperCase(), 'STACK', 'CODE']);
-  assert.match(await block.innerText(), /July 2026/);
-  assert.equal(await page.locator('.plate .dwg').count(), 1, 'Henk\'s detail drawing');
-  // drawn near its own scale, so its lettering matches the page's and the write-up keeps the stage
-  const w = await page.locator('.plate .dwg').evaluate(d => d.getBoundingClientRect().width);
-  assert.ok(w >= 480 && w <= 680, `the drawing is ${Math.round(w)}px wide`);
-  // the stats are dimension strings, and the write-up is set in the sheet's type
-  assert.ok(await page.locator('.prose .dims div').count() >= 4);
-  assert.match(await page.locator('.prose h2').first().evaluate(h => getComputedStyle(h).fontFamily), /^"?Archivo/);
-  await context.close();
-});
+// 'a project page opens with its title block and its own drawing' retired (openspec stone-inner-pages,
+// decision 2026-11-10: P1 head with layout ac, the drawings retire): tests/inner-article.e2e.mjs
+// checks the stone head, the facts, the numbers and the window instead.
 
-test('ANNA\'s case study carries the section drawing; a project without a drawing has none', async () => {
-  let { context, page } = await open('/projects/AnnaAssistant');
-  assert.equal(await page.locator('.plate canvas.drawing').count(), 1);
-  const h = await page.locator('.plate .plate-stage').evaluate(s => s.getBoundingClientRect().height);
-  // tall enough to draw the exploded model large, never the whole screen (2026-10-09: was 60%)
-  assert.ok(h <= 900 * 0.75, `the model is ${Math.round(h)}px tall on a 900px screen`);
-  await page.locator('.plate').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(3000);
-  assert.ok(await inked(page) > 500);
-  await context.close();
-
-  ({ context, page } = await open('/projects/EncryptedChatTUI'));
-  assert.equal(await page.locator('.plate').count(), 0);
-  assert.equal(await page.locator('.titleblock th', { hasText: 'Preview' }).count(), 0, 'no empty rows');
-  await context.close();
-});
+// 'ANNA's case study carries the section drawing; a project without a drawing has none' retired
+// (openspec stone-inner-pages 4.2, decision 2026-11-10: her plate retires on her page, her window and
+// levels take its place): tests/inner-windows.e2e.mjs ("Window and levels") and
+// tests/inner-article.e2e.mjs ("The window per page") check both pages instead.
 
 // ---------- the blog: the site diary, then a post ----------
 
-test('/blog is the site diary: every post, newest first, dated', async () => {
+// (openspec stone-inner-pages 7.2, decision 2026-11-10: /blog BI2, the titles large)
+test('/blog lists every post, newest first, dated, each title a large link', async () => {
   const { context, page } = await open('/blog');
-  const rows = page.locator('.diary li');
+  const rows = page.locator('.bl-list > li');
   assert.equal(await rows.count(), POSTS.length);
   const dates = await rows.locator('time').evaluateAll(ts => ts.map(t => t.getAttribute('datetime')));
   assert.deepEqual(dates, [...dates].sort().reverse());
+  assert.equal(await rows.locator('h2 > a').count(), POSTS.length);
+  assert.equal(await page.locator('.diary').count(), 0, 'no diary table left');
   assert.equal(await page.locator('a[href="/rss.xml"]').count(), 0, 'no new links nobody asked for');
   await context.close();
 });
 
-test('a post opens with its date in a title block and reads at a sane measure', async () => {
+// (openspec stone-inner-pages 6.2, decision 2026-11-10: B1 with layout ac, the title block goes)
+test('a post opens with its date in the side\'s facts and reads at a sane measure', async () => {
   const { context, page } = await open(`/blog/${POSTS[0]}`);
-  assert.equal((await page.locator('.titleblock th').first().innerText()).trim(), 'DATE');
-  const measure = await page.locator('.prose p').first().evaluate(p => p.getBoundingClientRect().width / parseFloat(getComputedStyle(p).fontSize));
-  assert.ok(measure < 44, `a line is about ${measure.toFixed(0)}em`);
+  assert.equal((await page.locator('.art-facts dt').first().innerText()).trim(), 'Date');
+  assert.match(await page.locator('.art-facts dd').first().locator('time').getAttribute('datetime'), /^\d{4}-\d{2}-\d{2}$/);
+  const width = await page.locator('.art .prose').evaluate(p => p.getBoundingClientRect().width);
+  assert.ok(width <= 672.5, `the prose column is ${width}px wide`);
   await context.close();
 });
 
-// ---------- the résumé: revisions and schedules, and it still prints ----------
+// ---------- the résumé: the years as the spine, rows of type, and it still prints ----------
 
-test('/resume: every role as a revision, skills and schooling as schedules', async () => {
+// (openspec stone-inner-pages 7.2, decision 2026-11-10: /resume R3, no revision letters)
+test('/resume: every role a row on the years\' spine, skills and schooling as rows', async () => {
   const src = readFileSync(new URL('../src/config/resume.ts', import.meta.url), 'utf8');
   const roles = (src.match(/^\s+role: '/gm) || []).length;
   const { context, page } = await open('/resume');
-  assert.equal(await page.locator('.revs li').count(), roles);
-  assert.deepEqual(await page.locator('.schedule caption').allInnerTexts(), ['SKILLS', 'EDUCATION', 'CERTIFICATIONS']);
+  assert.equal(await page.locator('.cv-row').count(), roles);
+  assert.equal(await page.locator('.cv-row .cv-years b').count(), roles, 'each row\'s start year set large');
+  assert.equal(await page.locator('main .revs, main .rev, main .schedule').count(), 0, 'no revisions, no schedules');
+  assert.deepEqual((await page.locator('.cv-more h2').allInnerTexts()).map(t => t.trim()), ['Skills', 'Education', 'Certifications']);
+  assert.ok(await page.locator('.cv-more dl > div').count() > 0, 'their rows');
   // one says the form, the other says mail
-  assert.equal(await page.locator('.actions a', { hasText: 'Request my full CV' }).getAttribute('href'), '/contact');
-  assert.match(await page.locator('.actions a', { hasText: 'Email me' }).getAttribute('href'), /^mailto:/);
+  assert.equal(await page.locator('.cv-actions a', { hasText: 'Request my full CV' }).getAttribute('href'), '/contact');
+  assert.match(await page.locator('.cv-actions a', { hasText: 'Email me' }).getAttribute('href'), /^mailto:/);
   await context.close();
 });
 
-test('/resume prints on white with no chrome', async () => {
+test('/resume prints on white with no chrome, no actions and no page light', async () => {
   const { context, page } = await open('/resume');
   await page.emulateMedia({ media: 'print' });
-  for (const sel of ['.bar', '.frame', '.foot', '.skip']) {
+  for (const sel of ['.bar', '.foot', '.skip', '.cv-actions', '[data-page-light]']) {
     assert.equal(await page.locator(sel).evaluate(el => getComputedStyle(el).display), 'none', `${sel} is hidden in print`);
   }
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(255, 255, 255)');
@@ -308,36 +238,36 @@ test('/resume prints on white with no chrome', async () => {
   await context.close();
 });
 
-test('/resume prints on white from the dark theme too', async () => {
-  const { context, page } = await open('/resume', { storage: { theme: 'dark' } });
-  await page.emulateMedia({ media: 'print' });
-  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(255, 255, 255)');
-  await context.close();
-});
+// ---------- /contact: the form in a frosted window ----------
+// Rewritten (openspec stone-inner-pages 8.2, decision 2026-11-10: C2 wide; the stamp and the
+// transmittal go). tests/inner-contact.e2e.mjs checks the layout, the send and the contrast in full.
 
-// ---------- /contact: the transmittal ----------
-
-test('/contact is a transmittal: stamp, labelled fields, honeypot, Turnstile', async () => {
+test('/contact: labelled fields, honeypot and Turnstile inside the frosted window, no stamp', async () => {
   const { context, page } = await open('/contact');
   assert.equal((await page.locator('main h1').innerText()).trim(), 'Get in touch');
-  assert.match(await page.locator('.stamp').innerText(), /ISSUED FOR\s+CONVERSATION\s+2026/);
+  assert.equal(await page.locator('.stamp').count(), 0, 'no stamp');
+  const win = page.locator('[data-glass-moment="compose"] [data-glass="frosted"]');
+  assert.equal(await win.count(), 1);
+  assert.equal(await win.locator('#contactForm').count(), 1, 'the form inside the window');
   for (const [id, label] of [['name', 'Name'], ['email', 'Email'], ['message', 'Message']]) {
-    assert.equal((await page.locator(`label[for="${id}"]`).innerText()).trim().toLowerCase(), label.toLowerCase());
+    assert.equal((await win.locator(`label[for="${id}"]`).innerText()).trim().toLowerCase(), label.toLowerCase());
     assert.equal(await page.locator(`#${id}`).getAttribute('required'), '');
   }
   // the honeypot stays off-screen, not display:none, so bots still see it
   const hp = await page.locator('.hp-field').evaluate(el => ({ d: getComputedStyle(el).display, l: el.getBoundingClientRect().left }));
   assert.notEqual(hp.d, 'none');
   assert.ok(hp.l < -1000);
-  assert.equal(await page.locator('#turnstile-container').count(), 1);
+  assert.equal(await win.locator('#turnstile-container').count(), 1);
   assert.equal((await page.locator('#submitButton').innerText()).trim().toLowerCase(), 'send message');
-  // fields are drawn as ruled lines, focus is still unmistakable
+  // focus is still unmistakable: a ring drawn by box-shadow or outline (read a frame later)
   await page.locator('#name').focus();
-  assert.notEqual(await page.locator('#name').evaluate(el => getComputedStyle(el).outlineStyle), 'none');
+  await frames(page);
+  const f = await page.locator('#name').evaluate(el => { const cs = getComputedStyle(el); return { o: cs.outlineStyle, s: cs.boxShadow }; });
+  assert.ok(f.o !== 'none' || /2px/.test(f.s), JSON.stringify(f));
   await context.close();
 });
 
-test('/contact reports a failed send in the sheet\'s red, without Tailwind', async () => {
+test('/contact reports a failed send in --glass-ink-red at 4.5:1, without Tailwind', async () => {
   const { context, page } = await open('/contact');
   await page.route('**/api/contact', r => r.fulfill({ status: 500, contentType: 'application/json', body: '{"success":false,"error":"Nope"}' }));
   // stand in for Turnstile, which a test cannot solve
@@ -350,142 +280,88 @@ test('/contact reports a failed send in the sheet\'s red, without Tailwind', asy
   await status.waitFor({ state: 'visible' });
   assert.equal((await status.innerText()).trim(), 'Nope');
   assert.equal(await status.getAttribute('role'), 'status');
-  assert.equal(await status.evaluate(el => getComputedStyle(el).color), 'rgb(184, 48, 26)');
+  assert.equal(await status.evaluate(el => getComputedStyle(el).color), 'rgb(143, 51, 32)', '--glass-ink-red');
+  // the text made transparent, the pixels behind its own box against that red
+  await page.mouse.move(2, 2);
+  await status.evaluate(el => el.scrollIntoView({ block: 'center' }));
+  const box = await status.evaluate(el => { const r = document.createRange(); r.selectNodeContents(el); const b = r.getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height }; });
+  await status.evaluate(el => { el.style.color = 'transparent'; });
+  await frames(page);
+  const png = (await page.screenshot({ clip: box })).toString('base64');
+  const min = await page.evaluate(async (png) => {
+    const img = new Image(); img.src = 'data:image/png;base64,' + png; await img.decode();
+    const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, img.width, img.height).data;
+    const lin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    const L = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    const red = L([143, 51, 32]);
+    let m = 99; for (let i = 0; i < d.length; i += 4) m = Math.min(m, (L([d[i], d[i + 1], d[i + 2]]) + 0.05) / (red + 0.05));
+    return m;
+  }, png);
+  assert.ok(min >= 4.5, `the error at ${min.toFixed(2)}:1`);
   await context.close();
 });
 
-// ---------- the paper: nothing shows past the frame ----------
+// ---------- the bar: scrolled content never shows above or through it ----------
 
-// Paints the whole document green under the chrome, then counts green pixels in the strips
-// between the screen's edge and the bar or frame. Scrolled content must never show there.
-async function greenAtTheEdges(page) {
+// Paints the whole document green under the chrome, scrolls, then counts green pixels from the
+// top of the screen to the bottom of the bar. The stone bar is stuck to the top of the screen,
+// opaque and above the page, so scrolled content must never show there.
+async function greenAboveTheBar(page) {
   await page.evaluate(() => {
     const g = document.createElement('div');
     g.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${document.documentElement.scrollHeight}px;background:#00c800;z-index:30;pointer-events:none`;
     document.body.append(g);
     scrollTo(0, Math.min(1200, document.documentElement.scrollHeight - innerHeight));
   });
-  await page.waitForTimeout(300);
-  const { w, h, barTop, frame } = await page.evaluate(() => ({
-    w: innerWidth, h: innerHeight,
-    barTop: Math.floor(document.querySelector('.bar').getBoundingClientRect().top),
-    frame: Math.floor(document.querySelector('.frame').getBoundingClientRect().left),
-  }));
-  const strips = [
-    { x: 0, y: 0, width: w, height: barTop },
-    { x: 0, y: h - frame - 5, width: w, height: frame + 5 },
-    { x: 0, y: 0, width: frame + 5, height: h },
-    { x: w - frame - 5, y: 0, width: frame + 5, height: h },
-  ];
-  let n = 0;
-  for (const clip of strips) {
-    const png = (await page.screenshot({ clip })).toString('base64');
-    n += await page.evaluate(async b64 => {
-      const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
-      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
-      const x = c.getContext('2d'); x.drawImage(img, 0, 0);
-      const d = x.getImageData(0, 0, c.width, c.height).data;
-      // any green tint counts, so a half-covered seam pixel is caught too
-      let k = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 1] - Math.max(d[i], d[i + 2]) > 30) k++;
-      return k;
-    }, png);
-  }
-  return n;
+  await page.waitForFunction(() => scrollY > 0);
+  const { w, barTop, barBottom } = await page.evaluate(() => {
+    const r = document.querySelector('.bar').getBoundingClientRect();
+    return { w: innerWidth, barTop: r.top, barBottom: Math.floor(r.bottom) };
+  });
+  assert.equal(barTop, 0, 'the bar stays at the top of the screen');
+  const png = (await page.screenshot({ clip: { x: 0, y: 0, width: w, height: barBottom } })).toString('base64');
+  return page.evaluate(async b64 => {
+    const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, c.width, c.height).data;
+    // any green tint counts, so a half-covered seam pixel is caught too
+    let k = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 1] - Math.max(d[i], d[i + 2]) > 30) k++;
+    return k;
+  }, png);
 }
 
-for (const path of ['/', '/projects', '/projects/Henk', '/resume']) {
+for (const path of ['/projects', '/projects/Henk', '/resume']) {
   for (const [width, height] of [[1440, 900], [390, 844]]) {
-    test(`${path} at ${width}px: scrolled content never shows above the bar or past the frame`, async () => {
+    test(`${path} at ${width}px: scrolled content never shows above the bar`, async () => {
       const { context, page } = await open(path, { width, height });
       await page.addStyleTag({ content: 'astro-dev-toolbar{display:none!important}' });
-      assert.equal(await greenAtTheEdges(page), 0);
+      assert.equal(await greenAboveTheBar(page), 0);
       await context.close();
     });
   }
 }
 
-// Phones draw at fractional pixel ratios, where the paper's edge and the bar's edge can both
-// land mid-pixel and leave a seam of page between them. 408x912 is whole device pixels at
-// each ratio, as a real screen is, so the screenshot has no half pixel past its edge.
-for (const scale of [2.625, 2.75, 3]) {
-  test(`at a ${scale}x phone screen no seam of scrolled content shows above the bar`, async () => {
-    const { context, page } = await open('/projects', { width: 408, height: 912, scale });
-    await page.addStyleTag({ content: 'astro-dev-toolbar{display:none!important}' });
-    assert.equal(await greenAtTheEdges(page), 0);
-    await context.close();
-  });
-}
-
 // ---------- a drawn project is one target: drawing, title or link ----------
 
-test('clicking a project\'s drawing opens its case study, on /projects and on the homepage', async () => {
-  for (const path of ['/projects', '/']) {
-    const { context, page } = await open(path);
-    const dwg = page.locator('#henk .dwg');
-    await dwg.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(300);
-    const r = await dwg.boundingBox();
-    await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
-    await page.waitForURL(/\/projects\/Henk\/?$/); // the live site adds a trailing slash
-    await context.close();
-  }
-  // the numbers are part of the card too
-  {
-    const { context, page } = await open('/projects');
-    const dims = page.locator('#henk .dims');
-    await dims.scrollIntoViewIfNeeded();
-    const hit = await dims.evaluate(d => { const r = d.getBoundingClientRect(); return document.elementFromPoint(r.x + 20, r.y + r.height / 2)?.closest('a')?.getAttribute('href'); });
-    assert.equal(hit, '/projects/Henk');
-    await context.close();
-  }
-  // the card's own Code link still goes to the code, not to the case study
-  const { context, page } = await open('/projects');
-  const code = page.locator('#pytaiga .links a', { hasText: 'Code' });
-  await code.scrollIntoViewIfNeeded();
-  const top = await code.evaluate(a => { const r = a.getBoundingClientRect(); return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === a; });
-  assert.ok(top, 'the Code link is on top of the card link');
-  await context.close();
-});
-
-test('on a phone a project\'s drawing fits the screen whole', async () => {
-  const { context, page } = await open('/projects', { width: 390, height: 844 });
-  for (const id of DRAWN) {
-    const r = await page.locator(`#${id} .dwg`).evaluate(d => ({ right: d.getBoundingClientRect().right, left: d.getBoundingClientRect().left }));
-    assert.ok(r.left >= 0 && r.right <= 390, `${id}: drawing spans ${Math.round(r.left)}..${Math.round(r.right)}`);
-  }
-  await context.close();
-});
-
-test('/projects on a wide screen: the text sits beside each drawing, and ANNA is read on arrival', async () => {
-  const { context, page } = await open('/projects');
-  // ANNA's name and line are on the first screen, not under a screen of drawing
-  const lead = await page.locator('#anna .detail-text p').first().evaluate(p => p.getBoundingClientRect().bottom);
-  assert.ok(lead < 900, `ANNA's line ends at ${Math.round(lead)}px`);
-  for (const id of ['anna', ...DRAWN]) {
-    const [art, text] = await page.locator(`#${id}`).evaluate(a => [a.querySelector('.dwg-wrap, .anna-plate').getBoundingClientRect().right, a.querySelector('.detail-text').getBoundingClientRect().left]);
-    assert.ok(text >= art, `${id}: text starts at ${Math.round(text)}, drawing ends at ${Math.round(art)}`);
-  }
-  // each project gets room to breathe before the next one starts
-  for (const id of DRAWN) {
-    const pad = await page.locator(`#${id}`).evaluate(a => parseFloat(getComputedStyle(a).paddingTop));
-    assert.ok(pad >= 56, `${id}: ${pad}px above it`);
-  }
-  // the smaller projects read at body size, not as a footnote
-  const size = await page.locator('.register .reg-title').first().evaluate(t => parseFloat(getComputedStyle(t).fontSize));
-  assert.ok(size >= 18, `register titles are ${size}px`);
-  await context.close();
-});
+// 'clicking a project's drawing opens its case study, on /projects', 'on a phone a project's drawing
+// fits the screen whole' and '/projects on a wide screen: the text sits beside each drawing' retired
+// (openspec stone-inner-pages 9.2, decision 2026-11-10: I2e, the drawings on /projects retire):
+// tests/inner-projects.e2e.mjs checks "A card's contents" (each card is one link), "Two per row, then
+// one" and "The lead" instead.
 
 // ---------- keyboard and screen-reader paths ----------
 
-test('on a phone the opened menu\'s links come next in keyboard order', async () => {
-  for (const path of ['/', '/projects']) {
+test('on a phone the opened stone menu\'s links come next in keyboard order', async () => {
+  for (const path of ['/projects']) {
     const { context, page } = await open(path, { width: 390, height: 844 });
     await page.locator('.menu-btn').focus();
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(400);
+    await page.waitForFunction(() => document.querySelector('.bar').classList.contains('open'));
     await page.keyboard.press('Tab');
-    assert.ok(await page.evaluate(() => !!document.activeElement.closest('.bar nav')), `${path}: Tab after opening lands in the menu`);
+    const at = await page.evaluate(() => ({ inMenu: !!document.activeElement.closest('.bar nav'), text: document.activeElement.textContent.trim() }));
+    assert.deepEqual(at, { inMenu: true, text: 'Projects' }, `${path}: Tab after opening lands on the menu's first link`);
     await context.close();
   }
 });
@@ -499,45 +375,29 @@ test('/resume: every section is a heading a screen reader can jump to', async ()
 
 // ---------- the drawings keep legible lettering at every width ----------
 
-for (const width of [900, 1024, 1180, 1440]) {
-  test(`at ${width}px every detail drawing is drawn at a legible scale`, async () => {
-    for (const path of ['/', '/projects', '/projects/Henk']) {
-      const { context, page } = await open(path, { width, height: 900 });
-      const scales = await page.locator('.dwg').evaluateAll(ds => ds.map(d => d.getBoundingClientRect().width / d.viewBox.baseVal.width));
-      // 11.5px lettering at the drawing's own scale; 0.9 keeps it above 10px
-      for (const k of scales) assert.ok(k >= 0.9 && k <= 1.3, `${path}: scales ${scales.map(x => x.toFixed(2)).join(', ')}`);
-      await context.close();
-    }
-  });
-}
-
-test('no project drawing scrolls sideways at any width, and none says it does', async () => {
-  for (const path of ['/', '/projects']) for (const [width, height] of [[390, 844], [820, 1180], [844, 390]]) {
-    const { context, page } = await open(path, { width, height });
-    const r = await page.locator('.dwg-scroll').evaluateAll(els => els.map(el => ({ over: el.scrollWidth > el.clientWidth + 1, hint: getComputedStyle(el, '::after').content })));
-    for (const x of r) {
-      assert.equal(x.over, false, `${path} ${width}: a drawing overflows`);
-      assert.ok(x.hint === 'none' || x.hint === 'normal', `${path} ${width}: hint ${x.hint}`);
-    }
-    await context.close();
-  }
-});
+// 'every detail drawing is drawn at a legible scale' and 'no project drawing scrolls sideways at any
+// width' retired (openspec stone-inner-pages 9.2, decision 2026-11-10: the drawings retire):
+// pytaiga-mcp's "It fits" (tests/inner-windows.e2e.mjs) and "The post drawing fits"
+// (tests/inner-blog.e2e.mjs) check the two drawings left.
 
 // ---------- the 2026-10-09 additions: the workstation, Finance Bot and bible-tui drawn ----------
 
-test('the homelab counts the workstation: in the drawing, the figure and the write-up', async () => {
+// rewritten for openspec stone-inner-pages 9.2 (decision 2026-11-10: the drawings retire): the figures
+// on Homelab's card and its page, and the write-up
+test('the homelab counts the workstation: the figures on its card and its page, and the write-up', async () => {
   const { context, page } = await open('/projects');
-  assert.match(await page.locator('#homelab .dwg').textContent(), /w11/);
-  assert.match(await page.locator('#homelab .dwg title').textContent(), /workstation/);
-  assert.deepEqual(await page.locator('#homelab .dims dt').allInnerTexts(), ['4', '7']);
+  const card = page.locator('.pc[data-project="homelab"]');
+  assert.deepEqual(await card.locator('.pc-nums dt').allInnerTexts(), ['4', '7']);
   // and the card says the same: three servers and the workstation, not three devices
-  assert.match(await page.locator('#homelab .detail-text p').first().innerText(), /^Three servers and my workstation/);
+  assert.match(await card.locator('.pc-intro').innerText(), /^Three servers and my workstation/);
   await page.goto(BASE + '/projects/HomelabInfrastructure');
+  const nums = await page.locator('.art-nums .value').allInnerTexts();
+  assert.ok(nums.includes('4') && nums.includes('7'), `its page's numbers: ${nums}`);
   assert.match(await page.locator('main').innerText(), /is the fourth machine on the mesh/);
   await context.close();
 });
 
-test('bible-tui has its own sheet, linked to the live reader, the code and the blog post', async () => {
+test('bible-tui has its own page, linked to the live reader, the code and the blog post', async () => {
   const { context, page, errors, res } = await open('/projects/BibleTui');
   assert.equal(res.status(), 200);
   assert.match(await page.locator('h1').innerText(), /bible-tui/i);
@@ -586,89 +446,83 @@ test('the favicon is the EH. signature in one frame, its full stop red, with its
   await context.close();
 });
 
-test('/contact offers plain mail under the form', async () => {
+// Rewritten (openspec stone-inner-pages 8.2, decision 2026-11-10: C2 wide; the mail line goes and
+// the address is set large beside the form).
+test('/contact sets the address large: in the left column on a desktop, under the window on a phone', async () => {
   const { context, page } = await open('/contact');
-  const line = page.locator('.tm-mail');
-  assert.equal((await line.innerText()).trim(), 'Prefer your own mail app? Write to info@hulsman.dev.');
-  assert.equal(await line.locator('a').getAttribute('href'), 'mailto:info@hulsman.dev');
-  // under the form, not inside it
-  assert.equal(await line.evaluate(el => !!el.closest('form')), false);
-  const [form, mail] = await Promise.all([page.locator('#contactForm').boundingBox(), line.boundingBox()]);
-  assert.ok(mail.y >= form.y + form.height - 1, 'below the form');
+  assert.equal(await page.locator('.tm-mail').count(), 0, 'no mail line');
+  const mail = page.locator('main a[href^="mailto:"]');
+  assert.equal(await mail.count(), 1);
+  assert.equal((await mail.innerText()).trim(), 'info@hulsman.dev');
+  assert.equal(await mail.getAttribute('href'), 'mailto:info@hulsman.dev');
+  assert.equal(await mail.evaluate(el => !!el.closest('form')), false, 'not inside the form');
+  assert.ok(parseFloat(await mail.evaluate(el => getComputedStyle(el).fontSize)) >= 36, 'set large');
+  const win = '[data-glass-moment="compose"] [data-glass="frosted"]';
+  let [w, m] = await Promise.all([page.locator(win).boundingBox(), mail.boundingBox()]);
+  assert.ok(m.x + m.width <= w.x, 'left of the window on a desktop');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await frames(page);
+  [w, m] = await Promise.all([page.locator(win).boundingBox(), mail.boundingBox()]);
+  assert.ok(m.y >= w.y + w.height, 'under the window on a phone');
   await context.close();
 });
 
 const box = (page, sel) => page.locator(sel).first().evaluate(el => { const r = el.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom }; });
 
-test('a post\'s text starts beside its title, right under the title block', async () => {
-  const { context, page } = await open('/blog/henk-exactly-once');
-  const [h1, tb, p] = await Promise.all([box(page, 'main h1'), box(page, '.titleblock'), box(page, '.post-intro p')]);
-  assert.ok(p.l > h1.r, 'the text is in the column beside the title');
-  assert.ok(Math.abs(p.l - tb.l) < 2, 'aligned with the title block');
-  assert.ok(p.t > tb.b && p.t - tb.b < 64, `right under the title block (gap ${Math.round(p.t - tb.b)}px)`);
-  assert.ok(p.t < h1.t + 400, 'it starts up beside the title, not a screen further down');
-  await context.close();
-});
+// Retired (openspec stone-inner-pages 6.2, decision 2026-11-10: B1 with layout ac; the hanging heads
+// and the title block go): "a post's text starts beside its title" and "every heading of a post still
+// hangs in the left column". tests/inner-blog.e2e.mjs checks the post's head, columns and order.
 
-test('a post\'s title block gives its reading time and, where it has one, its project', async () => {
-  const rows = async page => page.locator('.titleblock tr').evaluateAll(trs => trs.map(tr => [tr.querySelector('th').innerText.trim(), tr.querySelector('td').innerText.trim()]));
+test('a post\'s facts give its reading time and, where it has one, its project', async () => {
   let { context, page } = await open('/blog/henk-exactly-once');
-  const henk = Object.fromEntries(await rows(page));
-  assert.match(henk.READING, /^\d+ min$/);
-  assert.equal(await page.locator('.titleblock a[href="/projects/Henk"]').count(), 1, 'links its project');
-  assert.ok(henk.PROJECT, 'names its project');
+  const facts = async page => Object.fromEntries(await page.locator('.art-facts > div').evaluateAll(ds => ds.map(d => [d.querySelector('dt').innerText.trim(), d.querySelector('dd').innerText.trim()])));
+  assert.match((await facts(page)).Reading, /^\d+ min$/);
+  assert.equal(await page.locator('.art-stick .art-proj a[href="/projects/Henk"]').count(), 1, 'its project, linked');
   await context.close();
   ({ context, page } = await open('/blog/spec-factory'));
-  const spec = Object.fromEntries(await rows(page));
-  assert.match(spec.READING, /^\d+ min$/);
-  assert.equal(spec.PROJECT, undefined, 'no project row when the post names none');
+  assert.match((await facts(page)).Reading, /^\d+ min$/);
+  assert.equal(await page.locator('.art-proj').count(), 0, 'no project when the post names none');
   await context.close();
 });
 
-test('on a phone a post reads in order: title, title block, text', async () => {
+test('on a phone a post reads in order: title, lead, window, text, facts', async () => {
   const { context, page } = await open('/blog/henk-exactly-once', { width: 390, height: 844 });
-  const [h1, tb, p] = await Promise.all([box(page, 'main h1'), box(page, '.titleblock'), box(page, '.post-intro p')]);
-  assert.ok(h1.b <= tb.t && tb.b <= p.t);
+  const [h1, lead, win, prose, facts] = await Promise.all(['main h1', '.art-lead', '.art-window', '.art .prose', '.art-facts'].map(sel => box(page, sel)));
+  assert.ok(h1.b <= lead.t && lead.b <= win.t && win.b <= prose.t && prose.b <= facts.t);
   await context.close();
 });
 
-test('every heading of a post still hangs in the left column after the intro', async () => {
-  const { context, page } = await open('/blog/henk-exactly-once');
-  const [h1, h2s] = await Promise.all([box(page, 'main h1'), page.locator('.prose > h2').evaluateAll(hs => hs.map(h => h.getBoundingClientRect().left))]);
-  assert.ok(h2s.length > 0);
-  for (const l of h2s) assert.ok(Math.abs(l - h1.l) < 2);
-  await context.close();
-});
-
-test('the Henk post carries its own drawing under the title; a post without one has none', async () => {
+test('the Henk post carries its own drawing in the frosted pane opening the right column; a post without one has none', async () => {
   let { context, page } = await open('/blog/henk-exactly-once');
-  const dwg = page.locator('.post-dwg svg.dwg');
+  const dwg = page.locator('.art-window [data-glass="frosted"] svg.dwg');
   assert.equal(await dwg.count(), 1);
   assert.match(await dwg.locator('title').textContent(), /cursor/);
-  const [h1, tb, d] = await Promise.all([box(page, 'main h1'), box(page, '.titleblock'), box(page, '.post-dwg svg')]);
-  assert.ok(d.t >= h1.b, 'under the title');
-  assert.ok(d.r < tb.l, 'in the title\'s column, not over the text');
+  assert.equal(await page.locator('.art > aside > :first-child').evaluate(el => el.classList.contains('art-window')), true, 'the pane opens the right column');
+  const [h1, d] = await Promise.all([box(page, 'main h1'), box(page, '.art-window svg.dwg')]);
+  assert.ok(d.l > h1.r || d.l >= h1.l + 672, 'beside the text, not over it');
   assert.ok(d.r - d.l > 280, `drawn at a legible size (${Math.round(d.r - d.l)}px)`);
-  await page.waitForFunction(() => document.querySelector('.post-dwg svg').classList.contains('drawn'));
+  await page.waitForFunction(() => document.querySelector('.art-window svg.dwg').classList.contains('drawn'));
   await context.close();
   ({ context, page } = await open('/blog/spec-factory'));
-  assert.equal(await page.locator('.post-dwg').count(), 0);
+  assert.equal(await page.locator('svg.dwg').count(), 0);
   await context.close();
 });
 
 test('on a phone the post drawing fits the screen whole', async () => {
   const { context, page } = await open('/blog/henk-exactly-once', { width: 390, height: 844 });
-  const d = await box(page, '.post-dwg svg');
+  const d = await box(page, '.art-window [data-glass="frosted"] svg.dwg');
   assert.ok(d.l >= 0 && d.r <= 390);
   await context.close();
 });
 
-test('the site\'s own case study says what it is, how it is checked, and the two jokes worth pointing at', async () => {
+// Rewritten for openspec stone-inner-pages chunk 10 (decision 2026-11-10: the drawing-sheet sections are
+// rewritten): the approved section headings, ANNA's room and its two jokes gone with it.
+test('the site\'s own case study says what it is, how it is checked and built, and two things worth pointing at', async () => {
   const { context, page } = await open('/projects/ResumePage');
   assert.deepEqual(await page.locator('.prose > h2').allInnerTexts(), ['The Idea', 'Built Like It Matters', 'Stack Choices', 'The Terminal', 'Two Things You Might Have Missed']);
   const text = await page.locator('.prose').innerText();
-  assert.match(text, /it['’]s mine: 2,00\./);
-  assert.match(text, /Dom tower/);
+  assert.doesNotMatch(text, /2,00|Dom tower/, 'the room\'s jokes left with the room');
+  assert.match(text, /There is one theme: light\./);
   assert.doesNotMatch(text, /Claude|prompt/i, 'the page leaves Claude out');
   await context.close();
 });

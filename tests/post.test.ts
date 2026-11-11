@@ -1,8 +1,7 @@
-// Helpers behind a post's head (src/lib/post.ts): reading time, the intro that runs beside
-// the title, and the related project named in its title block.
+// Helpers behind a post's facts (src/lib/post.ts): reading time and the related project.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readingMinutes, splitIntro, relatedProject } from '../src/lib/post.ts';
+import { readingMinutes, relatedProject } from '../src/lib/post.ts';
 
 const words = (n: number) => Array.from({ length: n }, (_, i) => `w${i}`).join(' ');
 
@@ -15,27 +14,6 @@ test('reading time counts words, not markup, and rounds up to whole minutes', ()
 
 test('reading time is never zero, even for an empty post', () => {
   assert.equal(readingMinutes(''), 1);
-});
-
-test('the intro is everything before the first h2; the rest starts at it', () => {
-  const { intro, rest } = splitIntro('<p>one</p><p>two</p><h2 id="a">A</h2><p>three</p><h2>B</h2>');
-  assert.equal(intro, '<p>one</p><p>two</p>');
-  assert.equal(rest, '<h2 id="a">A</h2><p>three</p><h2>B</h2>');
-});
-
-test('a post without headings is all intro; one that opens on a heading has none', () => {
-  assert.deepEqual(splitIntro('<p>only</p>'), { intro: '<p>only</p>', rest: '' });
-  assert.deepEqual(splitIntro('<h2>A</h2><p>x</p>'), { intro: '', rest: '<h2>A</h2><p>x</p>' });
-});
-
-test('an escaped "<h2" inside code does not split the post', () => {
-  const html = '<p>x</p><pre><code>&lt;h2&gt;</code></pre><h2>A</h2>';
-  assert.equal(splitIntro(html).intro, '<p>x</p><pre><code>&lt;h2&gt;</code></pre>');
-});
-
-test('h2 means h2: an h3 or a <header> does not split the post', () => {
-  const html = '<p>x</p><h3>sub</h3><header>h</header><h2>A</h2>';
-  assert.equal(splitIntro(html).intro, '<p>x</p><h3>sub</h3><header>h</header>');
 });
 
 test('the related project is looked up by its page, with the title its page gives', () => {

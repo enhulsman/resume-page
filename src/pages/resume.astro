@@ -1,19 +1,22 @@
 ---
-// /resume: the CV as a sheet. Experience is the revision table (newest first, lettered from A),
-// skills and schooling are schedules. It prints on white: see the print block in overzicht.css.
+// /resume (openspec stone-inner-pages, stone-resume; Ezra, 2026-11-10, R3): the name, the role
+// line, the summary and four actions, with the résumé's sunset far behind the name; then Experience
+// with the years as the spine (each role's start year set large, its end under it), and Skills,
+// Education and Certifications as hairline rows of type. Every word from site.ts, resume.ts and
+// pageWords. It prints on white: the print block in stone.css.
 import OverzichtLayout from "../layouts/OverzichtLayout.astro";
+import PageLight from "../components/stone/PageLight.astro";
 import site from "../config/site";
+import { pageWords } from "../config/pages.ts";
+import { plainLocation } from "../lib/article.ts";
 import { certifications, education, experience, skillCategories, spokenLanguages } from "../config/resume";
 
-// The CV letters every role, oldest A, as the homepage's revision table does.
-const letter = (e: (typeof experience)[number]) => String.fromCharCode(65 + experience.length - 1 - experience.indexOf(e));
-const when = (e: (typeof experience)[number]) => `${e.startDate} – ${e.endDate ?? "present"}`;
+const w = pageWords.resume;
 const groups = [
   { id: "consulting", entries: experience.filter((e) => e.group === "consulting") },
   { id: "prior", entries: experience.filter((e) => e.group === "prior") },
 ];
-// a drawing has no emoji: the flag stays in the terminal's `whoami`
-const location = site.location.replace(/\s*[\u{1F1E6}-\u{1F1FF}]+/gu, "");
+const note = (e: (typeof education)[number]) => [e.result, e.gpa && `${e.gpa} ${w.gpa}`].filter(Boolean).join(" · ");
 ---
 
 <OverzichtLayout
@@ -24,59 +27,64 @@ const location = site.location.replace(/\s*[\u{1F1E6}-\u{1F1FF}]+/gu, "");
   ogTitle={`Resume — ${site.name}`}
   ogDescription={`${site.role} at ${site.company}. Work experience, skills, education, and certifications.`}
 >
-  <section class="sheet sheet-first cv-head" aria-labelledby="cv-h">
-    <header class="sheet-head">
-      <h1 id="cv-h">{site.name}</h1>
+  <div class="cv">
+    <header class="page-head cv-top">
+      <PageLight id="resume" />
+      <h1 class="page-title cv-name">{site.name}</h1>
+      <p class="cv-role">{site.role} {w.at} <a href={site.social.employer}>{site.company}</a> · {plainLocation(site.location)}</p>
+      <p class="cv-summary">{site.summary}</p>
+      <p class="cv-actions">
+        <a class="cv-main" href="/contact">{w.actions.cv}</a>
+        <a href={`mailto:${site.social.email}`}>{w.actions.email}</a>
+        <a href={site.social.LinkedIn}>{w.actions.linkedin}</a>
+        <a href={site.social.GitHub}>{w.actions.github}</a>
+      </p>
+    </header>
+
+    <section class="cv-exp" aria-labelledby="cv-exp-h">
+      <h2 id="cv-exp-h" class="cv-h2">{w.experience}</h2>
+      {groups.map((g) => (
+        <>
+          <h3 class="cv-group">
+            {g.id === "consulting" ? <>{w.consulting.before} <a href={w.consulting.href}>{site.company}</a> ({w.consulting.since} – {w.present})</> : w.prior}
+          </h3>
+          <ol class="stone-rows cv-rows">
+            {g.entries.map((e) => (
+              <li class="cv-row">
+                <span class="cv-years"><b>{e.startDate}</b><span>– {e.endDate ?? w.present}</span></span>
+                <div>
+                  <h4>{e.role} <span class="cv-client">{e.client}</span></h4>
+                  <p>{e.summary}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </>
+      ))}
+    </section>
+
+    <div class="cv-more">
+      <section aria-labelledby="cv-skills-h">
+        <h2 id="cv-skills-h" class="cv-h3">{w.skills}</h2>
+        <dl class="stone-rows cv-table">
+          <div><dt>{w.languages}</dt><dd>{spokenLanguages.map((l) => `${l.name} (${l.level})`).join(" · ")}</dd></div>
+          {skillCategories.map((c) => <div><dt>{c.label}</dt><dd>{c.items.join(" · ")}</dd></div>)}
+        </dl>
+      </section>
       <div>
-        <p class="role">{site.role} at <a href={site.social.employer}>{site.company}</a> · {location}</p>
-        <p>{site.summary}</p>
-      </div>
-    </header>
-    <p class="actions">
-      <a class="act act-main" href="/contact">Request my full CV</a>
-      <a class="act" href={`mailto:${site.social.email}`}>Email me</a>
-      <a class="act" href={site.social.LinkedIn}>LinkedIn</a>
-      <a class="act" href={site.social.GitHub}>GitHub</a>
-    </p>
-  </section>
-
-  <section class="sheet" aria-labelledby="exp-h">
-    <header class="sheet-head">
-      <h2 id="exp-h">Experience</h2>
-    </header>
-    {groups.map((g) => (
-      <>
-        <h3 class="sub">
-          {g.id === "consulting" ? <>Consultant via <a href="https://anamata.nl">Anamata</a> (2023 – present)</> : "Prior Experience"}
-        </h3>
-        <ol class="revs">
-          {g.entries.map((e) => (
-            <li><span class="rev">{letter(e)}</span><span class="when">{when(e)}</span><div><h4>{e.role} <i>{e.client}</i></h4><p>{e.summary}</p></div></li>
-          ))}
-        </ol>
-      </>
-    ))}
-
-    <div class="schedules schedules-cv">
-      <table class="schedule">
-        <caption><h2>Skills</h2></caption>
-        <tr><th scope="row">Languages</th><td>{spokenLanguages.map((l) => `${l.name} (${l.level})`).join(" · ")}</td></tr>
-        {skillCategories.map((c) => <tr><th scope="row">{c.label}</th><td>{c.items.join(" · ")}</td></tr>)}
-      </table>
-      <div class="schedule-stack">
-        <table class="schedule">
-          <caption><h2>Education</h2></caption>
-          {education.map((e) => (
-            <tr><th scope="row">{e.startYear} – {e.endYear}</th><td>{e.degree} — {e.institution}{(e.result || e.gpa) && <span class="sched-note">{[e.result, e.gpa && `${e.gpa} GPA`].filter(Boolean).join(" · ")}</span>}</td></tr>
-          ))}
-        </table>
-        <table class="schedule">
-          <caption><h2>Certifications</h2></caption>
-          {certifications.map((c) => (
-            <tr><th scope="row">{c.year}</th><td>{c.name} — {c.institution}{c.credential && <span class="sched-note">{c.credential}</span>}</td></tr>
-          ))}
-        </table>
+        <section aria-labelledby="cv-edu-h">
+          <h2 id="cv-edu-h" class="cv-h3">{w.education}</h2>
+          <dl class="stone-rows cv-table">
+            {education.map((e) => <div><dt>{e.startYear} – {e.endYear}</dt><dd>{e.degree} — {e.institution}{note(e) && <span class="cv-note">{note(e)}</span>}</dd></div>)}
+          </dl>
+        </section>
+        <section aria-labelledby="cv-cert-h">
+          <h2 id="cv-cert-h" class="cv-h3">{w.certifications}</h2>
+          <dl class="stone-rows cv-table">
+            {certifications.map((c) => <div><dt>{c.year}</dt><dd>{c.name} — {c.institution}{c.credential && <span class="cv-note">{c.credential}</span>}</dd></div>)}
+          </dl>
+        </section>
       </div>
     </div>
-  </section>
+  </div>
 </OverzichtLayout>

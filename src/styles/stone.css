@@ -1,0 +1,435 @@
+/* Stone (openspec stone-glass-homepage): warm stone ground, black type in Archivo, hairlines,
+   and the inks for text on glass. Tokens carry a stone- prefix while the drawing-sheet sheet
+   (overzicht.css) still defines --ink and --hair for the inner pages. */
+@font-face { font-family: "Archivo"; src: url(/fonts/Archivo.woff2) format("woff2-variations"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+
+:root {
+  --stone: #EEEAE3;
+  --stone-ink: #111110;
+  --stone-ink-2: #2a2826;
+  --stone-hair: #D3CCC1;
+  --stone-sans: "Archivo", system-ui, sans-serif;
+  --stone-gutter: clamp(16px, 2.2vw, 32px);
+
+  /* the Archivo scale */
+  --stone-t-name: min(16.2vw, 26svh); /* the hero name; Hero.astro narrows it below 1100 px */
+  --stone-t-h2: clamp(48px, 6.4vw, 104px);
+  --stone-t-h3: clamp(20px, 1.75vw, 26px);
+  --stone-t-lead: clamp(18px, 1.6vw, 23px);
+  --stone-t-body: clamp(15px, 1.1vw, 16.5px);
+  --stone-t-small: 13px;
+  /* the display type's word gap: tracked in at -0.04em, its spaces need this back to read */
+  --stone-display-word: 0.08em;
+
+  /* The one shared fix for text on glass: opaque inks, never alpha-blended, so a light behind
+     the glass can never pull them under 4.5:1. If the measured test fails, darken here only. */
+  --glass-ink-quiet: #5C5650;
+  --glass-ink-red: #8F3320;
+}
+
+/* ---- text on glass: every colour a text inside a frosted window takes ---- */
+[data-glass="frosted"] { color: var(--stone-ink); }
+/* the lab's alpha inks (window titles 0.55 and 0.66, Replay, message names), the terminal's dim
+   text (#8a8278, about 3.8:1 even on white), and ANNA's work line once it has settled */
+[data-glass="frosted"] .glass-title,
+[data-glass="frosted"] .aw-replay,
+[data-glass="frosted"] .msg .who,
+[data-glass="frosted"] .terminal-dim,
+[data-glass="frosted"] .aw-work.settled { color: var(--glass-ink-quiet); }
+[data-glass="frosted"] .aw-replay:hover { color: var(--stone-ink); }
+/* the terminal's prompt and errors: a darker red, so they read over the four-colour glow */
+[data-glass="frosted"] .terminal-user,
+[data-glass="frosted"] .terminal-separator,
+[data-glass="frosted"] .terminal-path,
+[data-glass="frosted"] .terminal-dollar,
+[data-glass="frosted"] .terminal-error { color: var(--glass-ink-red); }
+[data-glass="frosted"] .terminal-cmd,
+[data-glass="frosted"] .terminal-accent,
+[data-glass="frosted"] .term-body .text-theme-primary { color: var(--stone-ink); }
+/* already opaque and darker: kept (the terminal's output, as in the lab) */
+[data-glass="frosted"] .term-body,
+[data-glass="frosted"] .term-body .text-theme-secondary { color: #3a3632; }
+/* ANNA's work line while she works, and the projects' artefacts: opaque and darker. The artefacts'
+   quiet text (the alert's source, the report's keys, the reader's keys) sits over the projects'
+   brighter glows, where the shared quiet ink measured 4.0:1, so it takes the darker #4a453f */
+[data-glass="frosted"] .aw-work,
+[data-glass="frosted"] .pw-quiet { color: #4a453f; }
+[data-glass="frosted"] .pw-text { color: #3a3632; }
+[data-glass="frosted"] .pw-strong { color: var(--stone-ink); }
+/* the owner's messages in Henk's Signal chat: white on Signal's blue bubble */
+[data-glass="frosted"] .pw-me { color: #FFFFFF; }
+
+/* ---- type on stone: the homepage's sections of rows (Projects, Experience, Writing) ---- */
+.stone-section {
+  padding: 0 var(--stone-gutter) clamp(72px, 12svh, 140px);
+  font-family: var(--stone-sans); color: var(--stone-ink);
+  -webkit-font-smoothing: antialiased;
+}
+.stone-section > h2 {
+  margin: 0 0 clamp(20px, 2.6vw, 40px);
+  font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word);
+}
+/* rows divided by hairlines, one above each and one closing the list */
+.stone-rows { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid var(--stone-hair); }
+.stone-rows > li { border-top: 1px solid var(--stone-hair); }
+.stone-rows h3 { margin: 0; font-weight: 700; font-size: var(--stone-t-h3); letter-spacing: -0.02em; line-height: 1.15; }
+.stone-rows a { color: inherit; text-decoration: none; }
+.stone-rows a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+.stone-rows a:focus-visible, .stone-more:focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
+.stone-more { display: inline-block; margin-top: 1.4em; font-weight: 600; color: var(--stone-ink); }
+@media (max-width: 760px) {
+  .stone-section > h2 { font-size: 56px; }
+}
+
+/* ---- the stone article: project pages and posts, layout ac (openspec stone-article-layout) ----
+   Head and prose in the left column, at most 42rem; one wide right column (aside) the article's
+   length: the window opens it and scrolls away, the block under it sticks below the bar. Below
+   1000 px one column: head, window, prose, then the block, without its contents list. */
+.art {
+  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
+  overflow-x: clip; /* the window's glow reaches past its sides; never the page */
+}
+.art :focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
+.art a:hover { color: inherit; }
+
+.art-idx { display: block; margin-bottom: 0.7em; font-size: var(--stone-t-small); font-weight: 650; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+.art-title {
+  margin: 0; padding-bottom: 0.1em; max-width: 15ch;
+  font: 900 clamp(48px, 5.6vw, 92px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); text-wrap: balance;
+}
+.art-lead { margin: 0.9em 0 0; max-width: 36em; font-size: var(--stone-t-lead); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
+
+/* the window, as wide as the column allows, never more than 600 px; ANNA's levels under hers */
+.art-window { min-width: 0; }
+.art-window .glass-stage { width: 100%; max-width: 600px; }
+.art-window .art-levels { max-width: 600px; margin-top: 32px; }
+
+/* the block: contents, facts, numbers */
+.art-label { margin: 0 0 8px; font-size: var(--stone-t-small); font-weight: 600; color: #5C5650; }
+.art-toc ol { list-style: none; margin: 0; padding: 0; }
+.art-toc li { padding: 7px 0; border-top: 1px solid var(--stone-hair); font-size: 14.5px; line-height: 1.35; }
+.art-toc li:last-child { border-bottom: 1px solid var(--stone-hair); }
+.art-toc a { color: var(--stone-ink); font-weight: 400; text-decoration: none; }
+.art-toc a:hover { text-decoration: underline; }
+.art-toc a[aria-current="true"] { font-weight: 800; }
+.art-toc a[aria-current="true"]::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 8px 2px -14px; border-radius: 50%; background: var(--stone-ink);
+}
+.art-facts {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 28px; align-items: start;
+  margin: 28px 0 0; font-size: 14.5px; line-height: 1.4;
+}
+.art-stick > .art-facts:first-child { margin-top: 0; }
+.art-facts dt { font-size: var(--stone-t-small); font-weight: 600; color: #5C5650; }
+.art-facts dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.art-facts a { color: var(--stone-ink); }
+.art-nums {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 28px; align-items: start;
+  list-style: none; margin: 28px 0 0; padding: 0;
+}
+.art-nums li { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.art-nums .value { font-weight: 800; font-size: 30px; line-height: 1; font-stretch: 88%; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.art-nums .label { max-width: 15em; font-size: var(--stone-t-small); line-height: 1.35; color: var(--stone-ink-2); text-wrap: pretty; }
+/* a post's project, ending the block: its index in its hue, its title, its line, its status */
+.art-proj { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--stone-hair); }
+.art-proj-idx { display: block; margin-bottom: 0.5em; font-size: var(--stone-t-small); font-weight: 650; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+.art-proj-title { display: block; font: 800 22px/1.1 var(--stone-sans); letter-spacing: -0.02em; color: var(--stone-ink); text-decoration: none; text-wrap: balance; }
+.art-proj-title:hover { text-decoration: underline; text-decoration-thickness: 1px; }
+.art-proj p { margin: 0.5em 0 0; font-size: 14.5px; line-height: 1.42; color: var(--stone-ink-2); text-wrap: pretty; }
+.art-proj .art-proj-status { font-size: var(--stone-t-small); }
+/* "Other writing", for a post on its own: the three newest other posts, title and date */
+.art-others { margin-top: 36px; }
+.art-others ol { list-style: none; margin: 0; padding: 0; }
+.art-others li { padding: 12px 0; border-top: 1px solid var(--stone-hair); }
+.art-others li:last-child { border-bottom: 1px solid var(--stone-hair); }
+.art-others a { display: block; font: 700 19px/1.2 var(--stone-sans); letter-spacing: -0.015em; color: var(--stone-ink); text-decoration: none; text-wrap: balance; }
+.art-others a:hover { text-decoration: underline; text-decoration-thickness: 1px; }
+.art-others time { display: block; margin-top: 4px; font-size: var(--stone-t-small); color: #5C5650; }
+
+/* the prose on stone: Archivo, its h2s at the h3 scale. Overrides the drawing sheet's .prose
+   (hanging heads, red markers, mono code), which the posts still use until they move here. */
+.art .prose { display: block; max-width: 42rem; font-size: 17px; line-height: 1.62; color: var(--stone-ink-2); }
+.art .prose > * { max-width: none; }
+.art .prose > :first-child { margin-top: 0; }
+.art .prose p, .art .prose li { color: var(--stone-ink-2); }
+.art .prose p { margin: 0 0 1.05em; text-wrap: pretty; }
+.art .prose > h2, .art .prose h2 {
+  margin: 2.4em 0 0.6em; padding: 0; border: 0;
+  font: 700 var(--stone-t-h3)/1.15 var(--stone-sans); font-stretch: 100%; letter-spacing: -0.02em; color: var(--stone-ink); text-wrap: balance;
+}
+.art .prose > h2:first-child { margin-top: 0; }
+.art .prose > h2 + * { margin-top: 0; padding-top: 0; }
+.art .prose h3 { margin: 1.8em 0 0.4em; font: 700 19px/1.2 var(--stone-sans); font-stretch: 100%; letter-spacing: -0.01em; color: var(--stone-ink); }
+.art .prose strong { font-weight: 680; color: var(--stone-ink); }
+.art .prose a { color: var(--stone-ink); text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+.art .prose ul, .art .prose ol { margin: 0 0 1.2em; padding-left: 1.2em; }
+.art .prose li { margin-bottom: 0.5em; padding-left: 0.2em; }
+.art .prose ul li::marker, .art .prose ol li::marker { content: normal; font: inherit; color: #5C5650; }
+.art .prose blockquote { margin: 0 0 1em; padding: 2px 0 2px 18px; border-left: 1px solid var(--stone-hair); }
+.art .prose hr { border: 0; border-top: 1px solid var(--stone-hair); margin: 2em 0; }
+.art .prose code { font: 0.86em/1 ui-monospace, "JetBrains Mono", Menlo, monospace; color: var(--stone-ink); overflow-wrap: anywhere; }
+.art .prose pre {
+  margin: 0 0 1.2em; padding: 14px 16px; overflow-x: auto; border: 0;
+  border-top: 1px solid var(--stone-hair); border-bottom: 1px solid var(--stone-hair);
+  font: 13.5px/1.6 ui-monospace, "JetBrains Mono", Menlo, monospace;
+}
+.art .prose pre, .art .prose pre * { background: none !important; color: var(--stone-ink) !important; }
+.art .prose pre code { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* a long line wraps rather than scrolling sideways, and hangs 2ch in under its start, so it never
+   reads as a line of its own (each source line is a .line from the highlighter) */
+.art .prose pre .line { display: inline-block; width: 100%; padding-left: 2ch; text-indent: -2ch; }
+/* a post's fenced code in a frosted window: dots, no title, the project's glow beneath; the text in
+   the artefacts' opaque ink, wrapping rather than scrolling (inline code stays on stone) */
+.art .prose .art-code { margin: 0.6em 0 1.6em; }
+.art .prose .art-code .glass-window { border-radius: 14px; }
+.art .prose .art-code pre {
+  position: relative; z-index: 3; margin: 0; padding: 4px 20px 18px; border: 0; overflow-x: visible;
+  font: 13.5px/1.65 ui-monospace, "JetBrains Mono", Menlo, monospace;
+}
+.art .prose .art-code pre, .art .prose .art-code pre * { color: #3a3632 !important; }
+@media (max-width: 760px) { .art .prose .art-code pre { padding: 2px 16px 16px; font-size: 12.5px; } }
+.art .prose img { max-width: 100%; height: auto; border: 0; }
+.art .prose th, .art .prose td { border: 1px solid var(--stone-hair); padding: 6px 10px; text-align: left; }
+
+@media (min-width: 1000px) {
+  .art {
+    display: grid; grid-template-columns: minmax(0, 7fr) minmax(18rem, 5fr); grid-template-rows: auto 1fr;
+    column-gap: clamp(40px, 6vw, 120px); align-items: start;
+  }
+  .art-head { grid-column: 1; grid-row: 1; max-width: 42rem; }
+  .art .prose { grid-column: 1; grid-row: 2; margin-top: clamp(40px, 6svh, 72px); }
+  .art-side { grid-column: 2; grid-row: 1 / span 2; align-self: stretch; }
+  .art-window, .art-stick { max-width: 36rem; margin-left: auto; }
+  .art-window + .art-stick { margin-top: 56px; }
+  .art-stick { position: sticky; top: calc(var(--bar) + 32px); }
+}
+@media (max-width: 999px) {
+  .art { display: flex; flex-direction: column; }
+  .art-side { display: contents; }
+  .art-head { order: 0; }
+  .art-window { order: 1; margin-top: 32px; }
+  .art .prose { order: 2; margin-top: clamp(40px, 6svh, 72px); }
+  .art-stick { order: 3; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--stone-hair); }
+  .art-toc { display: none; }
+}
+@media (max-width: 760px) {
+  .art-title { font-size: clamp(40px, 11vw, 56px); }
+  .art .prose { font-size: 16.5px; }
+}
+
+/* ---- a page's head light (openspec stone-inner-pages, "One light per page"): /blog's tide and
+   /resume's sunset, far behind the heading. Two radial gradients that fade to nothing under a wide
+   blur, beneath the head's text in an isolated head; the page clips it at the screen's sides. ---- */
+.page-head { position: relative; isolation: isolate; }
+.page-light {
+  position: absolute; z-index: -1; pointer-events: none;
+  /* its box starts at the screen's edge, where both gradients have faded to nothing: the light
+     never tints the page's sides on a desktop (glass-chrome "no sheet frame") */
+  left: calc(var(--stone-gutter) * -1); top: -30%; width: min(78vw, 980px); height: 150%;
+  background:
+    radial-gradient(closest-side at 32% 46%, rgb(var(--l1) / 0.42), rgb(var(--l1) / 0)),
+    radial-gradient(closest-side at 64% 62%, rgb(var(--l2) / 0.3), rgb(var(--l2) / 0));
+  filter: blur(36px);
+}
+@media (max-width: 760px) { .page-light { left: -30%; width: 150%; } }
+.page-head .page-title {
+  margin: 0; padding-bottom: 0.1em;
+  font: 900 var(--stone-t-h2)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink); text-wrap: balance;
+}
+
+/* ---- /blog (stone-blog, BI2): the titles, large, each between hairlines; a title lights up in its
+   project's light on hover or focus ---- */
+.bl, .cv {
+  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
+  overflow-x: clip; /* the lights reach past the sides; never the page */
+}
+.bl :focus-visible, .cv :focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
+.bl-head .page-title { font-size: clamp(64px, 9vw, 150px); }
+.bl-line { margin: 0.6em 0 0; font-size: var(--stone-t-body); color: var(--stone-ink-2); }
+.bl-list { list-style: none; margin: clamp(56px, 8svh, 104px) 0 0; padding: 0; }
+.bl-list > li { padding: clamp(32px, 4svh, 56px) 0; border-top: 1px solid var(--stone-hair); }
+.bl-list > li:last-child { border-bottom: 1px solid var(--stone-hair); }
+.bl-list time { font-size: var(--stone-t-small); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--stone-ink-2); }
+.bl-list h2 {
+  margin: 0.35em 0 0; max-width: 20ch;
+  font: 900 clamp(36px, 4vw, 64px)/0.98 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.035em; word-spacing: var(--stone-display-word); color: var(--stone-ink); text-wrap: balance;
+  overflow-wrap: break-word;
+}
+.bl-list h2 a { position: relative; isolation: isolate; color: inherit; text-decoration: none; }
+.bl-list h2 a:hover { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+.bl-list .lit h2 a::before {
+  content: ""; position: absolute; z-index: -1; inset: -30% -8%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(var(--light) / 0.4), rgb(var(--light) / 0));
+  filter: blur(20px); opacity: 0; transition: opacity 0.6s ease;
+}
+.bl-list .lit h2 a:hover::before, .bl-list .lit h2 a:focus-visible::before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .bl-list .lit h2 a::before { transition: none !important; } }
+.bl-lead { margin: 0.6em 0 0; max-width: 40em; font-size: var(--stone-t-lead); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
+
+/* ---- /resume (stone-resume, R3): the head, then the years as the spine, then rows of type ---- */
+.cv a { color: var(--stone-ink); }
+.cv-top .cv-name { font-size: clamp(56px, 8.4vw, 140px); }
+.cv-role { margin: 0.9em 0 0; font-weight: 700; font-size: var(--stone-t-h3); letter-spacing: -0.015em; color: var(--stone-ink); }
+.cv-summary { margin: 0.9em 0 0; max-width: 38em; font-size: var(--stone-t-lead); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
+.cv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin: 1.8em 0 0; font-weight: 600; font-size: var(--stone-t-body); }
+.cv-actions .cv-main { padding: 11px 20px; border-radius: 999px; background: var(--stone-ink); color: var(--stone); text-decoration: none; }
+.cv-actions .cv-main:hover { background: var(--stone-ink-2); color: var(--stone); }
+.cv-h2 { margin: 0; font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink); }
+.cv-exp { margin-top: clamp(72px, 11svh, 132px); }
+.cv-group { margin: 2.2em 0 0.8em; font-size: var(--stone-t-small); font-weight: 700; letter-spacing: 0.01em; color: var(--stone-ink-2); }
+.cv-row { display: grid; grid-template-columns: minmax(6.5em, 0.32fr) minmax(0, 1fr); column-gap: clamp(16px, 2.6vw, 44px); align-items: baseline; padding: clamp(18px, 1.8vw, 26px) 0; }
+.cv-years { display: flex; flex-direction: column; font-size: var(--stone-t-small); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--stone-ink-2); }
+.cv-years b { font: 800 clamp(40px, 4vw, 64px)/0.95 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--stone-ink); }
+.cv-years span { margin-top: 0.3em; }
+.cv-row h4 { margin: 0; font-weight: 700; font-size: var(--stone-t-lead); letter-spacing: -0.015em; line-height: 1.2; color: var(--stone-ink); }
+.cv-client { font-weight: 450; color: var(--stone-ink-2); }
+.cv-row p { margin: 0.5em 0 0; max-width: 44em; font-size: var(--stone-t-body); line-height: 1.5; color: var(--stone-ink-2); text-wrap: pretty; }
+.cv-more { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(32px, 5vw, 96px); align-items: start; margin-top: clamp(72px, 10svh, 120px); }
+.cv-h3 { margin: 0 0 0.6em; font: 900 clamp(32px, 3vw, 48px)/0.95 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.035em; word-spacing: var(--stone-display-word); color: var(--stone-ink); }
+.cv-more section + section { margin-top: 1.6em; }
+.cv-table { margin: 0; }
+.cv-table > div { display: grid; grid-template-columns: 9em minmax(0, 1fr); column-gap: 20px; padding: 13px 0; border-top: 1px solid var(--stone-hair); font-size: var(--stone-t-body); line-height: 1.45; }
+.cv-table dt { font-weight: 650; }
+.cv-table dd { margin: 0; color: var(--stone-ink-2); }
+.cv-note { display: block; font-size: var(--stone-t-small); color: #5C5650; }
+@media (max-width: 760px) {
+  .bl-head .page-title { font-size: 64px; }
+  .cv-top .cv-name { font-size: clamp(44px, 12vw, 56px); }
+  .cv-row { grid-template-columns: 1fr; row-gap: 6px; }
+  .cv-years { flex-direction: row; align-items: baseline; gap: 0.6em; }
+  .cv-years span { margin-top: 0; }
+  .cv-more { grid-template-columns: 1fr; }
+  .cv-more > div { margin-top: 1.6em; }
+  .cv-table > div { grid-template-columns: 1fr; row-gap: 2px; }
+}
+
+/* ---- /contact (stone-contact, C2 wide): the heading and the address set large on the left, the
+   form in a frosted "New message" window over the moss's glow on the right; from 980 px the
+   columns are 0.78 / 1.22 and the window as wide as its column up to 820 px. Below 980 px: heading
+   and lead, the window, then the address. ---- */
+.ct {
+  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
+  overflow-x: clip; /* the window's glow reaches past its sides; never the page */
+}
+.ct :focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
+.ct-title {
+  margin: 0; padding-bottom: 0.1em;
+  font: 900 clamp(56px, 6.6vw, 112px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink); text-wrap: balance;
+}
+.ct-lead { margin: 0.9em 0 0; max-width: 34em; font-size: clamp(19px, 1.7vw, 25px); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
+.ct-mail {
+  display: inline-block; max-width: 100%;
+  font: 850 clamp(36px, 5.6vw, 96px)/0.95 var(--stone-sans); font-stretch: 84%; letter-spacing: -0.035em;
+  color: var(--stone-ink); text-decoration: none; overflow-wrap: anywhere;
+}
+.ct-mail:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.12em; }
+.ct-links { list-style: none; display: flex; gap: 28px; margin: 18px 0 0; padding: 0; font-weight: 600; }
+.ct-links a { color: var(--stone-ink); }
+.ct-ways { margin-top: clamp(72px, 11svh, 132px); padding-top: 28px; border-top: 1px solid var(--stone-hair); }
+
+/* the form on glass: labels and typed text in the opaque artefact ink, the fields a light wash with
+   an ink outline (3:1 against the glass), a 2 px ink ring on focus */
+.ct-stage { width: 100%; }
+.ct-body { position: relative; z-index: 3; padding: 22px 24px 24px; }
+.ct-form { display: flex; flex-direction: column; gap: 22px; }
+.ct-row { display: flex; flex-direction: column; gap: 6px; }
+.ct-row label { font-size: var(--stone-t-small); font-weight: 650; color: #3a3632; }
+.ct-row input, .ct-row textarea {
+  appearance: none; width: 100%; min-width: 0; margin: 0; padding: 10px 12px; border: 0; border-radius: 10px;
+  background: rgb(255 255 255 / 0.45); box-shadow: inset 0 0 0 1px rgb(17 17 16 / 0.55);
+  font: 400 17px/1.45 var(--stone-sans); color: var(--stone-ink);
+}
+.ct-row textarea { resize: vertical; min-height: 9em; }
+.ct .ct-row input:focus-visible, .ct .ct-row textarea:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--stone-ink); }
+.ct-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 6px; }
+#turnstile-container { min-width: 0; flex: 1 1 260px; max-width: 320px; }
+.ct-send {
+  margin-left: auto; padding: 12px 24px; border: 0; border-radius: 999px; background: var(--stone-ink); color: var(--stone);
+  font: 600 16px/1 var(--stone-sans); cursor: pointer;
+}
+.ct-send:hover { background: var(--stone-ink-2); }
+.ct-send:disabled { cursor: progress; }
+.ct #statusMessage { margin: 0; font-size: 15px; line-height: 1.45; color: #3a3632; }
+.ct #statusMessage[data-kind="error"] { color: var(--glass-ink-red); }
+/* the honeypot: off-screen, never display none, so bots still see it */
+.hp-field { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+@media (min-width: 980px) {
+  .ct { display: grid; grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr); column-gap: clamp(40px, 5vw, 88px); align-items: start; }
+  .ct-head { grid-column: 1; grid-row: 1; }
+  .ct-ways { grid-column: 1; grid-row: 2; margin-top: 56px; padding-top: 0; border-top: 0; }
+  .ct-ways .ct-mail { font-size: clamp(36px, 4vw, 64px); }
+  .ct-formcol { grid-column: 2; grid-row: 1 / span 2; width: 100%; max-width: 820px; justify-self: end; }
+  .ct-body { padding: 28px 32px 32px; }
+  .ct-form { gap: 26px; }
+  .ct-row textarea { min-height: 13em; }
+}
+@media (max-width: 979px) {
+  .ct-formcol { margin-top: 48px; }
+}
+
+/* ---- /projects (stone-projects-index, I2e): the heading and its line; ANNA's lead, her text and
+   levels beside her window (after the levels at 860 px and below); the groups, two ribbed cards per
+   row (one at 760 px and below; the card itself is ProjectGlassCard.astro); "Made for fun" as rows. ---- */
+.pi {
+  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
+  overflow-x: clip; /* ANNA's glow reaches past her window's sides; never the page */
+}
+.pi :focus-visible { outline: 2px solid var(--stone-ink); outline-offset: 3px; border-radius: 2px; }
+.pi .pc:focus-visible { border-radius: clamp(12px, 1.3vw, 18px); }
+.pi-title {
+  margin: 0; padding-bottom: 0.1em;
+  font: 900 clamp(64px, 9vw, 150px)/0.92 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink); text-wrap: balance;
+}
+.pi-line { margin: 0.6em 0 0; font-size: var(--stone-t-body); color: var(--stone-ink-2); }
+.pi h2 a { color: inherit; text-decoration: none; }
+.pi h2 a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+
+.pi-lead {
+  display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); column-gap: clamp(32px, 5vw, 96px);
+  align-items: start; margin-top: clamp(56px, 8svh, 104px);
+}
+.pi-idx { display: block; margin-bottom: 0.7em; font-size: var(--stone-t-small); font-weight: 650; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+.pi-lead-title { margin: 0; font: 900 var(--stone-t-h2)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink); }
+.pi-lead-line { margin: 0.9em 0 0; max-width: 36em; font-size: var(--stone-t-lead); line-height: 1.38; color: var(--stone-ink-2); text-wrap: pretty; }
+.pi-status { margin: 0.6em 0 0; font-size: var(--stone-t-small); color: var(--stone-ink-2); }
+.pi-more { display: inline-block; margin-top: 1.2em; font-weight: 600; color: var(--stone-ink); }
+.pi-levels { margin-top: 36px; }
+.pi-anna { min-width: 0; width: min(100%, 620px); justify-self: end; }
+.pi-anna .pi-stage { width: 100%; }
+
+.pi-group { margin: clamp(56px, 8svh, 96px) 0 0; }
+.pi-group > h2, .pi-side > h2 {
+  margin: 0 0 clamp(16px, 2vw, 28px);
+  font: 900 clamp(40px, 4.4vw, 72px)/0.9 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.04em; word-spacing: var(--stone-display-word); color: var(--stone-ink);
+}
+.pi-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 1.2vw, 18px); }
+
+.pi-side { margin: clamp(56px, 8svh, 96px) 0 0; }
+.pi-side > h2 { font-size: clamp(32px, 3vw, 48px); }
+.pi-side-row { display: grid; grid-template-columns: minmax(0, 16em) minmax(0, 1fr); column-gap: 24px; padding: 16px 0; font-size: var(--stone-t-body); }
+.pi-side-row a { font-weight: 650; color: var(--stone-ink); }
+.pi-side-row span { color: var(--stone-ink-2); }
+
+@media (max-width: 860px) {
+  .pi-lead { display: block; }
+  .pi-anna { margin-top: 40px; width: 100%; }
+  .pi-side-row { grid-template-columns: 1fr; row-gap: 4px; }
+}
+@media (max-width: 760px) {
+  .pi-title { font-size: 64px; }
+  .pi-cards { grid-template-columns: 1fr; }
+}
+
+/* ---- print: the résumé on white, black type; no actions, no light ---- */
+@media print {
+  .page-light, .cv-actions { display: none !important; }
+  .bl, .cv { padding: 0; overflow: visible; }
+  .cv, .cv a, .cv h1, .cv h2, .cv h3, .cv h4, .cv-years, .cv-years b, .cv-client, .cv-row p, .cv-summary, .cv-role, .cv-group, .cv-table dd, .cv-note { color: #000; }
+  .cv-row, .cv-table > div { break-inside: avoid; }
+  .cv-exp, .cv-more { margin-top: 28px; }
+}

@@ -45,3 +45,8 @@ export function diaryEntries(sources: Record<string, string>): DiaryEntry[] {
       label: `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`,
     }));
 }
+
+/** The homepage's Writing: the five newest published posts, as the diary lists them. */
+export function latestEntries(sources: Record<string, string>, n = 5): DiaryEntry[] {
+  return diaryEntries(sources).slice(0, n);
+}

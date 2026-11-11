@@ -1,7 +1,7 @@
 name: Test
 
 # Unit tests, then the browser tests against the production build (served by astro preview),
-# so a change that breaks the homepage, its arrival or the inner sheets fails before it deploys.
+# so a change that breaks the homepage, its glass or the inner pages fails before it deploys.
 on:
   push:
     branches: [ main ]
@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
         run: npm run build
 
       - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Serve the build
         run: |
