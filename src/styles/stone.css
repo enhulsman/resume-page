@@ -10,9 +10,19 @@
   --stone-hair: #D3CCC1;
   --stone-sans: "Archivo", system-ui, sans-serif;
   --stone-gutter: clamp(16px, 2.2vw, 32px);
+  /* Wide screens: past --stone-cap the page stops stretching. Every page's content keeps to one
+     column, the cap wide (gutters included) and centred on the page, with the stone ground on both
+     sides; at the cap and below the column is the page and nothing changes. --stone-side is a
+     section's (or the bar's, or the footer's) side padding: the gutter, plus half of whatever the
+     page is wider than the cap. Its % is the page's width, so use it only on a box as wide as the
+     page (main's sections, the bar, the footer). --stone-vw is 1vw that stops at the cap: a size
+     that would otherwise keep growing past it (a gap, the hero's name) takes it instead of vw. */
+  --stone-cap: 1760px;
+  --stone-side: max(var(--stone-gutter), calc((100% - var(--stone-cap)) / 2 + var(--stone-gutter)));
+  --stone-vw: min(1vw, calc(var(--stone-cap) / 100));
 
   /* the Archivo scale */
-  --stone-t-name: min(16.2vw, 26svh); /* the hero name; Hero.astro narrows it below 1100 px */
+  --stone-t-name: min(calc(16.2 * var(--stone-vw)), 26svh); /* the hero name; Hero.astro narrows it below 1100 px */
   --stone-t-h2: clamp(48px, 6.4vw, 104px);
   --stone-t-h3: clamp(20px, 1.75vw, 26px);
   --stone-t-lead: clamp(18px, 1.6vw, 23px);
@@ -61,7 +71,7 @@
 
 /* ---- type on stone: the homepage's sections of rows (Projects, Experience, Writing) ---- */
 .stone-section {
-  padding: 0 var(--stone-gutter) clamp(72px, 12svh, 140px);
+  padding: 0 var(--stone-side) clamp(72px, 12svh, 140px);
   font-family: var(--stone-sans); color: var(--stone-ink);
   -webkit-font-smoothing: antialiased;
 }
@@ -86,7 +96,7 @@
    length: the window opens it and scrolls away, the block under it sticks below the bar. Below
    1000 px one column: head, window, prose, then the block, without its contents list. */
 .art {
-  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  padding: clamp(48px, 7svh, 96px) var(--stone-side) clamp(80px, 12svh, 140px);
   font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
   overflow-x: clip; /* the window's glow reaches past its sides; never the page */
 }
@@ -195,7 +205,7 @@
 @media (min-width: 1000px) {
   .art {
     display: grid; grid-template-columns: minmax(0, 7fr) minmax(18rem, 5fr); grid-template-rows: auto 1fr;
-    column-gap: clamp(40px, 6vw, 120px); align-items: start;
+    column-gap: clamp(40px, calc(6 * var(--stone-vw)), 120px); align-items: start;
   }
   .art-head { grid-column: 1; grid-row: 1; max-width: 42rem; }
   .art .prose { grid-column: 1; grid-row: 2; margin-top: clamp(40px, 6svh, 72px); }
@@ -225,7 +235,8 @@
 .page-light {
   position: absolute; z-index: -1; pointer-events: none;
   /* its box starts at the screen's edge, where both gradients have faded to nothing: the light
-     never tints the page's sides on a desktop (glass-chrome "no sheet frame") */
+     never tints the page's sides on a desktop (glass-chrome "no sheet frame"). Past the cap it
+     starts at the column's edge and moves with the heading (wide-cap.e2e.mjs) */
   left: calc(var(--stone-gutter) * -1); top: -30%; width: min(78vw, 980px); height: 150%;
   background:
     radial-gradient(closest-side at 32% 46%, rgb(var(--l1) / 0.42), rgb(var(--l1) / 0)),
@@ -241,7 +252,7 @@
 /* ---- /blog (stone-blog, BI2): the titles, large, each between hairlines; a title lights up in its
    project's light on hover or focus ---- */
 .bl, .cv {
-  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  padding: clamp(48px, 7svh, 96px) var(--stone-side) clamp(80px, 12svh, 140px);
   font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
   overflow-x: clip; /* the lights reach past the sides; never the page */
 }
@@ -286,7 +297,7 @@
 .cv-row h4 { margin: 0; font-weight: 700; font-size: var(--stone-t-lead); letter-spacing: -0.015em; line-height: 1.2; color: var(--stone-ink); }
 .cv-client { font-weight: 450; color: var(--stone-ink-2); }
 .cv-row p { margin: 0.5em 0 0; max-width: 44em; font-size: var(--stone-t-body); line-height: 1.5; color: var(--stone-ink-2); text-wrap: pretty; }
-.cv-more { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(32px, 5vw, 96px); align-items: start; margin-top: clamp(72px, 10svh, 120px); }
+.cv-more { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(32px, calc(5 * var(--stone-vw)), 96px); align-items: start; margin-top: clamp(72px, 10svh, 120px); }
 .cv-h3 { margin: 0 0 0.6em; font: 900 clamp(32px, 3vw, 48px)/0.95 var(--stone-sans); font-stretch: 88%; letter-spacing: -0.035em; word-spacing: var(--stone-display-word); color: var(--stone-ink); }
 .cv-more section + section { margin-top: 1.6em; }
 .cv-table { margin: 0; }
@@ -310,7 +321,7 @@
    columns are 0.78 / 1.22 and the window as wide as its column up to 820 px. Below 980 px: heading
    and lead, the window, then the address. ---- */
 .ct {
-  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  padding: clamp(48px, 7svh, 96px) var(--stone-side) clamp(80px, 12svh, 140px);
   font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
   overflow-x: clip; /* the window's glow reaches past its sides; never the page */
 }
@@ -375,7 +386,7 @@
    levels beside her window (after the levels at 860 px and below); the groups, two ribbed cards per
    row (one at 760 px and below; the card itself is ProjectGlassCard.astro); "Made for fun" as rows. ---- */
 .pi {
-  padding: clamp(48px, 7svh, 96px) var(--stone-gutter) clamp(80px, 12svh, 140px);
+  padding: clamp(48px, 7svh, 96px) var(--stone-side) clamp(80px, 12svh, 140px);
   font-family: var(--stone-sans); color: var(--stone-ink); -webkit-font-smoothing: antialiased;
   overflow-x: clip; /* ANNA's glow reaches past her window's sides; never the page */
 }
@@ -390,7 +401,7 @@
 .pi h2 a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
 
 .pi-lead {
-  display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); column-gap: clamp(32px, 5vw, 96px);
+  display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); column-gap: clamp(32px, calc(5 * var(--stone-vw)), 96px);
   align-items: start; margin-top: clamp(56px, 8svh, 104px);
 }
 .pi-idx { display: block; margin-bottom: 0.7em; font-size: var(--stone-t-small); font-weight: 650; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }

@@ -46,7 +46,7 @@ const reflect = terminalReflection.panes.map((p) => ({ card: glassCards.find((c)
   .about { overflow-x: clip; }
   .about-body {
     display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-    column-gap: clamp(24px, 5vw, 96px); align-items: start;
+    column-gap: clamp(24px, calc(5 * var(--stone-vw)), 96px); align-items: start;
   }
   .about-photo { display: block; width: clamp(140px, 12vw, 200px); height: auto; margin: 0 0 clamp(18px, 1.8vw, 28px); }
   .about-notes { list-style: none; margin: 0; padding: 0; max-width: 34em; border-bottom: 1px solid var(--stone-hair); }

@@ -44,8 +44,8 @@ const idx = String(glassCards.findIndex((c) => c.id === annaLead.id) + 1).padSta
   /* desktop: the copy on the left; the window on the right, its top level with the index "01" */
   .anna-window {
     display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: start;
-    column-gap: clamp(24px, 5vw, 96px);
-    padding: clamp(120px, 22svh, 220px) var(--stone-gutter) clamp(72px, 12svh, 140px);
+    column-gap: clamp(24px, calc(5 * var(--stone-vw)), 96px);
+    padding: clamp(120px, 22svh, 220px) var(--stone-side) clamp(72px, 12svh, 140px);
     font-family: var(--stone-sans); color: var(--stone-ink);
     -webkit-font-smoothing: antialiased;
     /* the glow reaches past the window's sides; it never widens the page */
