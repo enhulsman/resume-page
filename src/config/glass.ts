@@ -287,10 +287,6 @@ export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible
   finance: projectGlow(projectLights.finance),
   moss: projectGlow(pageLights.contact),
 };
-// TEMPORARY, goes in stone-inner-pages task 12.2 with src/pages/sketches/: the untracked sketches
-// pick a window's glow by its projectWindows id, so `homelab` (now a projectWindows entry) must
-// resolve for them to build. Not enumerable: no page or test lists it; the real windows use `dusk`.
-Object.defineProperty(windowGlows, 'homelab', { value: windowGlows.dusk, enumerable: false });
 /** The glow's CSS background: one soft radial gradient per light, each fading to nothing. */
 export const glowBackground = (g: WindowGlow) =>
   g.lights.map((l) => `radial-gradient(closest-side at ${l.at[0]}% ${l.at[1]}%, ${rgba(l.color, l.opacity)}, ${rgba(l.color, 0)})`).join(', ');

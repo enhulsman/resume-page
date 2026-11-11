@@ -101,7 +101,6 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .dwg .ln .thin { stroke-width: .8; }
 .dwg .ln .plot { stroke: var(--faint); stroke-width: 1; stroke-dasharray: 14 4 2 4; }
 .dwg .lbl .room { font: 700 11px var(--sans); font-stretch: 80%; letter-spacing: .14em; fill: var(--ink); }
-.dwg .fill .poche { fill: var(--ink); }
 .dwg .fill .hatch { fill: url(#hatch); }
 /* the pane's own hatch and arrow definitions (DrawingPane.astro) */
 #arrow path { stroke: var(--ink); }

@@ -21,7 +21,7 @@ A site like this only works if it's exact, so it's tested like something in prod
 
 ## Stack Choices
 
-Astro over Next or Remix because this site has no client-side app state: pages are static HTML with small scripts where interactivity demands it. The glass is one small WebGL shader, about 700 lines with its pane logic, that draws the ribbed and frosted panes and the soft lights behind them; with reduced motion, or on a device too slow for it, every pane holds still. The windows themselves are plain HTML, so the site ships no animation library and no CSS framework (about 86 KB of JavaScript in total). The contact form runs server-side on Cloudflare Workers with the Resend API: no separate backend, no CORS proxy, just an edge function co-deployed with the static assets.
+Astro over Next or Remix because this site has no client-side app state: pages are static HTML with small scripts where interactivity demands it. The glass is one small WebGL shader, about 700 lines with its pane logic, that draws the ribbed and frosted panes and the soft lights behind them; with reduced motion, or on a device too slow for it, every pane holds still. The windows themselves are plain HTML, so the site ships no animation library and no CSS framework (about 84 KB of JavaScript in total). The contact form runs server-side on Cloudflare Workers with the Resend API: no separate backend, no CORS proxy, just an edge function co-deployed with the static assets.
 
 ## The Terminal
 

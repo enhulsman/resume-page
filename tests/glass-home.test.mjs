@@ -709,8 +709,9 @@ test('the terminal\'s theme command no longer switches anything: the theme helpe
 
 // ---- the whole page (chunk 7): what the old homepage alone used is gone ----
 
-// Deleted with the drawing-sheet homepage. scene.js and depth.js are not on this list: AnnaPlate's
-// plate.js on /projects draws scene.js's model, and scene.js orders its planes with depth.js.
+// Deleted with the drawing-sheet homepage. AnnaPlate, plate.js and the model it drew (scene.js, which
+// orders its planes with depth.js) stayed for /projects until the inner pages changed; rewritten for
+// openspec stone-inner-pages 12.1 (decision 2026-11-10: the plate retires), they are gone too.
 const RETIRED = [
   'src/scripts/overzicht/intro.js',
   'src/scripts/overzicht/main.js',
@@ -722,21 +723,18 @@ const RETIRED = [
   'tests/span.test.mjs',
   // the paper grain left with the drawing sheet (chunk 3)
   'public/tex/grain.jpg',
+  // ANNA's plate on /projects and the model it drew (stone-inner-pages: her window and levels instead)
+  'src/components/overzicht/AnnaPlate.astro', 'src/scripts/overzicht/plate.js', 'src/scripts/overzicht/scene.js', 'src/scripts/overzicht/depth.js',
 ];
 
-test('retired files are gone: the old homepage\'s scripts and sheets; AnnaPlate and plate.js stay, with the model plate.js draws', () => {
+test('retired files are gone: the old homepage\'s scripts and sheets, AnnaPlate, plate.js and the model plate.js drew', () => {
   const left = RETIRED.filter((p) => existsSync(new URL(p, root)));
   assert.deepEqual(left, []);
-  for (const p of ['src/components/overzicht/AnnaPlate.astro', 'src/scripts/overzicht/plate.js', 'src/scripts/overzicht/scene.js', 'src/scripts/overzicht/depth.js']) {
-    assert.ok(existsSync(new URL(p, root)), `${p} stays`);
-  }
-  assert.match(read('src/scripts/overzicht/plate.js'), /from '\.\/scene\.js'/, 'scene.js stays because plate.js draws it');
-  assert.match(read('src/components/overzicht/AnnaPlate.astro'), /overzicht\/plate\.js/);
   // nothing still imports what went
   const srcFiles = (dir) => readdirSync(new URL(dir, root), { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? srcFiles(`${dir}${d.name}/`) : [`${dir}${d.name}`]));
   const code = [...srcFiles('src/'), ...srcFiles('scripts/')].filter((p) => /\.(astro|ts|js|mjs|mdx)$/.test(p));
   for (const p of code) {
-    assert.doesNotMatch(read(p), /overzicht\/(intro|main|span)(\.js)?['"]|(YouSheet|DetailsSheet|RegisterSheet|RevisionsSheet|NotesSheet|ContactSheet)\.astro|overzicht\/AnnaSection|name-glyphs|tex\/grain/, p);
+    assert.doesNotMatch(read(p), /overzicht\/(intro|main|span|plate|scene|depth)(\.js)?['"]|(YouSheet|DetailsSheet|RegisterSheet|RevisionsSheet|NotesSheet|ContactSheet|AnnaPlate)(\.astro)?\b|overzicht\/AnnaSection|name-glyphs|tex\/grain/, p);
   }
 });
 
@@ -768,7 +766,7 @@ test('every class overzicht.css styles is used by a page, a component, a layout 
   const walk = (dir) => readdirSync(new URL(dir, root), { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? walk(`${dir}${d.name}/`) : [`${dir}${d.name}`]));
   const code = walk('src/').filter((p) => /\.(astro|ts|js|mjs|mdx)$/.test(p)).map(read).join('\n');
   const classes = [...new Set(rules(read('src/styles/overzicht.css')).flatMap((r) => [...r.selector.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1])))];
-  // set from the layout's `current` prop: page-projects, page-blog, ...
+  // `js` is set on <html> by the layout's inline script, never written as a class attribute
   const dynamic = new Set(['js']);
   const unused = classes.filter((c) => !dynamic.has(c) && !new RegExp(`(?<![\\w-])${c}(?![\\w-])`).test(code));
   assert.deepEqual(unused, []);

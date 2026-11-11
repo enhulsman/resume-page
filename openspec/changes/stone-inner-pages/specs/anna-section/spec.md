@@ -6,7 +6,7 @@
 #### Scenario: Not on the homepage
 - **GIVEN** the homepage loaded
 - **WHEN** its text is read
-- **THEN** none of the four `annaLevels` names or texts appears
+- **THEN** none of the four `annaLevels` texts appears anywhere in it, and none of the four names is the whole text of any element (the names are plain words since 2026-11-10, and "Claude" and "MCP connectors" also occur inside other homepage text, so a name counts as a level only where it is set alone)
 
 #### Scenario: On /projects
 - **GIVEN** /projects loaded

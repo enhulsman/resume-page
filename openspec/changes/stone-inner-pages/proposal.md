@@ -66,9 +66,9 @@
    frontmatter (`stats`)**, so the layout can place them in the right column; the values do not
    change. A post shows its project's first number.
 10. **The link-preview generator retires with `scene.js`.** `scripts/og-image.mjs` draws
-    `public/og-image.png` from ANNA's 3D drawing, which this change deletes. The script goes; the
-    image itself stays as it is, so link previews keep the drawing-sheet ANNA drawing until a
-    stone preview is made (a follow-up, not in this change).
+    `public/og-image.png` from ANNA's 3D drawing, which this change deletes. The script goes, and
+    the image becomes a 1200x630 still of the stone hero, its four glass cards with the light
+    frozen (Ezra, 2026-11-10), taken from the running site.
 
 **What a visitor sees change:**
 
@@ -178,5 +178,4 @@ These three are deltas against `stone-glass-homepage`, which is built but not ar
 - **No new dependencies.** No change to the Worker, the contact form's handling or the PDF résumé.
 - **Not in this change** (FINAL-PICKS follow-ups): dark mode; frame time on a mid Android phone;
   the unused `fontkit`/`wawoff2` devDependencies; /resume's empty fifth column at 1800 px and
-  wider; the homelab docs' missing `agent-read` lines. Also not here: a stone link-preview image
-  (call 10).
+  wider; the homelab docs' missing `agent-read` lines.

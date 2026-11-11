@@ -32,8 +32,7 @@ const ci = glassCards.findIndex((c) => c.id === cardId);
 const index = ci >= 0 ? String(ci + 1).padStart(2, "0") : undefined;
 const hue = ci >= 0 ? hueInk(glassCards[ci]) : undefined;
 
-// every built project route has an entry (tests/inner-pages.test.mjs); a sketch that renders a
-// project's MDX under its own route gets none
+// every built project route has an entry (tests/inner-pages.test.mjs); a route without one gets none
 const moments = innerGlass[path] ?? [];
 const ARTEFACTS = ["henk", "sandbox", "bible"] as const;
 const WINDOWS = [...ARTEFACTS, "homelab", "finance", "pytaiga", "anna"] as const;

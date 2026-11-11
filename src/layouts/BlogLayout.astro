@@ -37,8 +37,7 @@ const ci = detail ? glassCards.findIndex((c) => c.id === detail.id) : -1;
 const index = ci >= 0 ? String(ci + 1).padStart(2, "0") : undefined;
 const hue = ci >= 0 ? hueInk(glassCards[ci]) : undefined;
 
-// every built post has an entry (tests/inner-pages.test.mjs); a sketch rendering a post's MDX under
-// its own route gets none
+// every built post has an entry (tests/inner-pages.test.mjs); a route without one gets none
 const moments = innerGlass[path] ?? [];
 const WINDOWS = ["henk", "bible", "post-drawing"] as const;
 const moment = moments.find((m): m is (typeof WINDOWS)[number] => (WINDOWS as readonly string[]).includes(m));

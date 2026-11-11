@@ -160,7 +160,7 @@ deploying.
     removes `src/pages/sketches/` first, then deletes the retired files, then runs every suite and
     stops. Deleted then: the five drawings, `AnnaPlate.astro`, `plate.js`, `scene.js`,
     `depth.js` (with `tests/depth.test.mjs`), `scripts/og-image.mjs` (it imports `scene.js`; the
-    PNG it drew stays), `StatStrip.astro`, `DetailCard.astro`,
+    PNG it drew becomes a still of the stone hero), `StatStrip.astro`, `DetailCard.astro`,
     `ProjectCard.astro` (overzicht), `scripts/overzicht/pointer.js`, and the drawing-sheet body
     rules in `overzicht.css` (title block, dims ticks, revisions, schedules, stamp, transmittal,
     plate, detail and register cards, crosshair, pencil, hatch). `overzicht.css` keeps the bar,

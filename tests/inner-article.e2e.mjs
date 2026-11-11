@@ -248,9 +248,8 @@ test('No ticks, no numbers where there are none: no pseudo-element on a number; 
   for (const route of ['/projects/AnnaAssistant', '/projects/EncryptedChatTUI', '/projects/ResumePage']) {
     assert.equal(s[route].numbersList, 0, `${route} shows no numbers`);
   }
-  // the sketches (untracked, deleted in chunk 12) hold the old strip as a reference
   const walk = (dir) => readdirSync(new URL(`../${dir}`, import.meta.url), { withFileTypes: true })
-    .flatMap((d) => (d.isDirectory() ? (d.name === 'sketches' ? [] : walk(`${dir}${d.name}/`)) : [`${dir}${d.name}`]));
+    .flatMap((d) => (d.isDirectory() ? walk(`${dir}${d.name}/`) : [`${dir}${d.name}`]));
   assert.deepEqual(walk('src/pages/').filter((f) => read(f).includes('<StatStrip')), []);
 });
 

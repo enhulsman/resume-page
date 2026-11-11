@@ -16,7 +16,7 @@ export const groups: { id: Group; label: string }[] = [
 ];
 
 export interface DetailListing {
-  /** Also selects the drawing in src/components/overzicht/drawings/. */
+  /** Also the key of its window, its light and, for pytaiga, its drawing in src/components/overzicht/drawings/. */
   id: 'henk' | 'finance' | 'homelab' | 'bible' | 'pytaiga' | 'sandbox';
   title: string;
   text: string;

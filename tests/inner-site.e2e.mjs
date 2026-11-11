@@ -1,6 +1,6 @@
 // Every inner page at once, in a real browser (openspec stone-inner-pages, chunk 11: the glass list,
 // the windows, their text on glass, the copy, still on request, no sideways scroll, the drawing sheet
-// gone; glass-material "Only the three exceptions hold a drawing"). Needs a running site:
+// gone; glass-material "Only the three exceptions hold a drawing"; chunk 12: no sketch routes). Needs a running site:
 //   BASE=http://127.0.0.1:4399 node --test --test-concurrency=1 tests/inner-site.e2e.mjs
 //
 // Test cost: one browser context with reduced motion (every window finished on arrival, nothing to
@@ -551,4 +551,15 @@ test('Only the three exceptions hold a drawing: at 390, the dialog open, every s
 
 test('No page or console error on any inner route', () => {
   assert.deepEqual(errors, []);
+});
+
+// ---- the sketches are gone (chunk 12; the files and dist/: tests/inner-retired.test.mjs) ----
+test('No sketch routes: /sketches/inner/ answers 404 and the sitemap lists no /sketches/ page', async () => {
+  for (const path of ['/sketches/inner/', '/sketches/inner/r2-i2e-projects', '/sketches/inner/p1-homelab']) {
+    const res = await fetch(`${BASE}${path}`, { redirect: 'follow' });
+    assert.equal(res.status, 404, path);
+  }
+  const sitemap = await (await fetch(`${BASE}/sitemap-index.xml`)).text();
+  assert.match(sitemap, /<loc>/);
+  assert.doesNotMatch(sitemap, /\/sketches\//);
 });

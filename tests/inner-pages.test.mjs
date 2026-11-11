@@ -463,7 +463,7 @@ const uncomment = (src) => src
 /** The inner pages' style sources: stone.css, and every <style> block of the stone components, the layouts and the pages. */
 const INNER_SOURCES = [
   ...walk('src/components/stone/'), ...walk('src/layouts/'),
-  ...walk('src/pages/').filter((p) => !p.startsWith('src/pages/sketches/')),
+  ...walk('src/pages/'),
 ].filter((p) => p.endsWith('.astro'));
 const styleBlocks = (src) => [...src.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]);
 /** Every rule of a stylesheet (nested @media walked): its selector and its declarations. */
@@ -528,7 +528,7 @@ test('The labels live in config: pageWords holds the approved labels; no stone c
   for (const w of LABELS) assert.ok(words.includes(w), `pageWords holds "${w}"`);
   const files = [
     ...walk('src/components/stone/'), ...walk('src/layouts/'),
-    ...walk('src/pages/').filter((p) => !p.startsWith('src/pages/sketches/')),
+    ...walk('src/pages/'),
   ].filter((p) => /\.(astro|ts|js|mjs)$/.test(p));
   assert.ok(files.length > 20, `${files.length} files read`);
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
