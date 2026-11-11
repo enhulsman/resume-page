@@ -431,18 +431,37 @@ test('the sitemap the pages advertise exists and lists every page', async () => 
 
 // ---------- round 3: favicon, mail line, the post head ----------
 
-test('the favicon is the EH. signature in one frame, its full stop red, with its own light and dark', async () => {
+// Rewritten 2026-11-11 (Ezra: the favicon follows the stone-and-glass site; of the options in
+// threads-saved/2026-11-12-inner-pages/favicon-options he took "E. with the flame"): an E in stone
+// ink, signed off with the red full stop, over a small ribbed-glass tile with ANNA's flame behind it;
+// no drawing frame and none of the Overzicht's indigo or lavender. An H read as a helipad sign.
+test('the favicon is an E. over ribbed glass with the flame behind it, with its own light and dark', async () => {
   const { context, page } = await open('/');
   const href = await page.locator('link[rel="icon"]').getAttribute('href');
   const res = await page.request.get(BASE + href);
   assert.equal(res.status(), 200);
   const svg = await res.text();
   assert.match(svg, /prefers-color-scheme:\s*dark/);
-  assert.equal((svg.match(/<rect[^>]*fill="none"/g) || []).length, 1, 'one frame');
-  // the H alone in a square read as a hospital sign: the initials, signed off in red
+  assert.equal((svg.match(/<rect[^>]*class="hi"/g) || []).length, 1, 'one glass edge, no drawing frame');
   assert.match(svg, /class="r"/, 'a red full stop');
   assert.match(svg, /\.r\{fill:#B8301A\}/);
-  assert.doesNotMatch(svg, /Gradient|filter|#c9942b/i, 'none of the old amber glow');
+  assert.match(svg, /\.i\{fill:#111110\}/i, 'in stone ink');
+  assert.equal((svg.match(/<g class="i">([\s\S]*?)<\/g>/)[1].match(/<rect/g) || []).length, 4, 'one letter: the E (a stem and three arms)');
+  assert.match(svg, /<pattern id="rib"/, 'ribbed glass');
+  assert.match(svg, /feGaussianBlur/, 'a soft light behind it');
+  assert.match(svg, /#E0451F/i, "ANNA's flame");
+  assert.doesNotMatch(svg, /#2B2766|#EFEDF3|#c9942b/i, 'none of the Overzicht indigo, lavender or old amber');
+  await context.close();
+});
+
+test('a home-screen icon: a 180 x 180 PNG of the same mark', async () => {
+  const { context, page } = await open('/');
+  const href = await page.locator('link[rel="apple-touch-icon"]').getAttribute('href');
+  const res = await page.request.get(BASE + href);
+  assert.equal(res.status(), 200);
+  const png = await res.body();
+  assert.equal(png.subarray(1, 4).toString(), 'PNG');
+  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [180, 180]);
   await context.close();
 });
 
