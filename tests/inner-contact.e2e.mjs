@@ -281,6 +281,22 @@ async function measure() {
   }, [png, items, edges]);
 }
 
+// The success hides itself after 5 s; that timer must not hide a later error (CI, 2026-11-11: a
+// failed send within 5 s of a success lost its error line when the success's timer fired).
+test('A failed send within 5 s of a success: the error stays once the success\'s 5 s are up', async () => {
+  await width(1440);
+  await fill();
+  await send(ok);
+  const sentAt = await page.evaluate(() => performance.now());
+  await fill();
+  await send(fail);
+  assert.equal(await page.getAttribute('#statusMessage', 'data-kind'), 'error');
+  await page.waitForFunction((t) => performance.now() - t > 5500, sentAt, { timeout: 15000 });
+  await frames();
+  assert.equal(await page.isVisible('#statusMessage'), true, 'the error is still shown after the success\'s 5 s');
+  assert.equal(await page.getAttribute('#statusMessage', 'data-kind'), 'error');
+});
+
 test('Measured: at 1440 and 390, every text in the window at 4.5:1 (title, labels, typed text, button, the success and the error) and every input outline at 3:1', async () => {
   const report = [];
   for (const w of [1440, 390]) {
