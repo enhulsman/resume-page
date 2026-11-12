@@ -38,6 +38,7 @@ const ONCE = '/blog/henk-exactly-once';
 const BIBLE = '/blog/bible-tui';
 const SPEC = '/blog/spec-factory';
 const SCORE = '/blog/successor-scoreboard';
+const HERDR = '/blog/herdr-android';
 
 let browser;
 before(async () => { browser = await chromium.launch(); });
@@ -257,9 +258,9 @@ test('On spec-factory: the block ends with "Other writing", the three newest oth
   assert.deepEqual({ tag: p.others.tag, ariaLabel: p.others.ariaLabel, name: p.others.name, visible: p.others.visible }, { tag: 'NAV', ariaLabel: null, name: 'Other writing', visible: true });
   assert.equal(pageWords.article.otherWriting, 'Other writing');
   assert.deepEqual(p.others.items, [
+    { title: fmOf(HERDR).title, href: HERDR, date: '12 November 2026', iso: '2026-11-12' },
     { title: fmOf(WATCHDOG).title, href: WATCHDOG, date: '9 October 2026', iso: '2026-10-09' },
     { title: fmOf(BIBLE).title, href: BIBLE, date: '16 September 2026', iso: '2026-09-16' },
-    { title: fmOf(ONCE).title, href: ONCE, date: '28 August 2026', iso: '2026-08-28' },
   ]);
   // successor-scoreboard has neither a window nor a project, so it ends with the list too
   assert.equal(surveyed[SCORE].others?.items.length, 3, 'successor-scoreboard ends with it too');
@@ -452,7 +453,7 @@ test('/blog, every post, newest first: "Blog", its line, then each published pos
   assert.equal(r.h1, siteNav.links.find((l) => l.id === 'blog').label);
   assert.equal(r.line, pageWords.blog.line);
   assert.equal(r.line, 'Notes on infrastructure, tooling, and the occasional detour.');
-  assert.deepEqual(r.entries.map((e) => e.href), [WATCHDOG, BIBLE, ONCE, SCORE, SPEC], 'five, newest first');
+  assert.deepEqual(r.entries.map((e) => e.href), [HERDR, WATCHDOG, BIBLE, ONCE, SCORE, SPEC], 'six, newest first');
   const diary = diaryEntries(blogSources);
   assert.equal(diary.length, POSTS.length, 'no draft');
   r.entries.forEach((e, i) => {
