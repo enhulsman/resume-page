@@ -255,6 +255,7 @@ export const innerGlass: Record<string, InnerMoment[]> = {
   '/blog/bible-tui': ['bible'],
   '/blog/spec-factory': [],
   '/blog/successor-scoreboard': [],
+  '/blog/herdr-android': [],
   '/resume': [],
   '/contact': ['compose'],
 };

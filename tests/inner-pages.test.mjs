@@ -65,6 +65,7 @@ test('innerGlass lists each route\'s moments top to bottom, as the spec names th
     '/blog/henk-watchdog': ['henk', 'code'],
     '/blog/henk-exactly-once': ['post-drawing', 'diagram'],
     '/blog/bible-tui': ['bible'],
+    '/blog/herdr-android': [],
     '/contact': ['compose'],
   });
 });
@@ -378,14 +379,14 @@ test('The function: otherWriting gives the three newest other published posts, n
   assert.deepEqual(otherWriting(sources, { href: '/blog/c', window: true }), []);
 });
 
-test('otherWriting on the real posts: spec-factory gets henk-watchdog, bible-tui and henk-exactly-once', () => {
+test('otherWriting on the real posts: spec-factory gets herdr-android, henk-watchdog and bible-tui', () => {
   const others = otherWriting(blogSources, { href: '/blog/spec-factory' });
   assert.deepEqual(others.map((p) => [p.href, p.date]), [
+    ['/blog/herdr-android', '12 November 2026'],
     ['/blog/henk-watchdog', '9 October 2026'],
     ['/blog/bible-tui', '16 September 2026'],
-    ['/blog/henk-exactly-once', '28 August 2026'],
   ]);
-  assert.equal(others[0].title, 'Is he asleep?');
+  assert.equal(others[0].title, 'herdr, on my phone');
 });
 
 // ---- the derivations the copy check needs ----
