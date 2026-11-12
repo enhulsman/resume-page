@@ -453,7 +453,7 @@ test('/blog, every post, newest first: "Blog", its line, then each published pos
   assert.equal(r.h1, siteNav.links.find((l) => l.id === 'blog').label);
   assert.equal(r.line, pageWords.blog.line);
   assert.equal(r.line, 'Notes on infrastructure, tooling, and the occasional detour.');
-  assert.deepEqual(r.entries.map((e) => e.href), [WATCHDOG, BIBLE, ONCE, SCORE, SPEC], 'five, newest first');
+  assert.deepEqual(r.entries.map((e) => e.href), [HERDR, WATCHDOG, BIBLE, ONCE, SCORE, SPEC], 'six, newest first');
   const diary = diaryEntries(blogSources);
   assert.equal(diary.length, POSTS.length, 'no draft');
   r.entries.forEach((e, i) => {
