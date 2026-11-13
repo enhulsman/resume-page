@@ -48,6 +48,9 @@ test('the listings carry each page\'s own date, label and code link', () => {
   assert.equal(built.annaLead.status, 'In development since Dec 2025');
   assert.equal(built.details.find(d => d.id === 'sandbox')!.status, 'Released Feb 2026, now retired');
   assert.equal(built.register.find(r => r.href === '/projects/EncryptedChatTUI')!.status, 'Started Aug 2024');
+  const herdr = built.register.find(r => r.href === '/projects/HerdrAndroid')!;
+  assert.equal(herdr.status, 'Running since Nov 2026');
+  assert.equal(built.terminal.find(p => p.link === '/projects/HerdrAndroid')!.github, 'https://github.com/enhulsman/herdr-android');
   // cards: the drawn projects and the register, in /projects' group order
   assert.deepEqual(built.cards.map(c => c.group), [...built.cards.map(c => c.group)].sort((a, b) =>
     home.groups.findIndex(g => g.id === a) - home.groups.findIndex(g => g.id === b)));

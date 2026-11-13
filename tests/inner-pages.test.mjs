@@ -57,6 +57,7 @@ test('innerGlass lists each route\'s moments top to bottom, as the spec names th
     // the drawings in panes get "View larger" too (Ezra, 2026-11-10, chunk 11): the dialog is a moment
     '/projects/PytaigaMcp': ['pytaiga', 'diagram'],
     '/projects/EncryptedChatTUI': [],
+    '/projects/HerdrAndroid': [],
     '/projects/ResumePage': [],
     '/blog': [],
     '/resume': [],
@@ -91,7 +92,7 @@ test('Lights in config (page lights): projects, blog, resume, contact; each near
 
 test('Lights in config (projects): one per project except ANNA, the hero three their cards\', no two alike', () => {
   const ids = [...details.map((d) => d.id), ...register.map((r) => r.id)].sort();
-  assert.equal(ids.length, 8);
+  assert.equal(ids.length, 9);
   assert.deepEqual(Object.keys(projectLights).sort(), ids);
   for (const id of ['henk', 'homelab', 'sandbox']) {
     assert.equal(projectLights[id].card, glassCards.find((c) => c.id === id), `${id}: its hero card`);
@@ -336,6 +337,12 @@ test('Henk.mdx\'s and BibleTui.mdx\'s stats are their StatStrip values, in order
     STAT('3', 'translations, nothing leaves the device'),
     STAT('13.3 MB', 'of WASM, scripture included'),
   ]);
+  assert.deepEqual(statsOf(read('src/pages/projects/HerdrAndroid.mdx')), [
+    STAT('14 ms', '95% of frames, on my own phone'),
+    STAT('66 ms', 'to show an agent\'s last screen'),
+    STAT('0', 'Google services'),
+    STAT('6', 'working days to v0.3.0'),
+  ]);
   for (const name of ['AnnaAssistant', 'EncryptedChatTUI', 'ResumePage']) {
     assert.equal(statsOf(read(`src/pages/projects/${name}.mdx`)), null, `${name} has no stats`);
   }
@@ -409,6 +416,9 @@ test('introFromHook: This site\'s card reads its intro from ResumePage.mdx\'s ho
   assert.equal(card.text, readFrontmatter(read('src/pages/projects/ResumePage.mdx')).hook);
   const chat = built.register.find((r) => r.href === '/projects/EncryptedChatTUI');
   assert.equal(chat.text, undefined, 'Encrypted Chat TUI keeps its one-liner (`what`)');
+  const herdr = built.register.find((r) => r.href === '/projects/HerdrAndroid');
+  assert.equal(herdr.text, undefined, 'herdr-android keeps its one-liner (`what`)');
+  assert.equal(herdr.group, 'running');
 });
 
 // ---- stone-project-pages: This site's page speaks stone (chunk 10) ----

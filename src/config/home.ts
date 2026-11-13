@@ -192,13 +192,14 @@ export const details: DetailListing[] = [
 /** The projects without a drawing yet, each with a project page; they show as cards. */
 export interface CardListing {
   /** Its light in glass.ts' projectLights. */
-  id: 'chat' | 'site';
+  id: 'chat' | 'site' | 'herdr';
   title: string; href: string; what: string; group: Group;
   /** Left off the homepage's cards. */ hideOnHome?: boolean;
   /** Its card on /projects reads its intro from its page's `hook` (buildProjects joins it as `text`). */
   introFromHook?: boolean;
 }
 export const register: CardListing[] = [
+  { id: 'herdr', title: 'herdr-android', href: '/projects/HerdrAndroid', what: 'An Android client for herdr with a live terminal, an agent list and alerts through my own ntfy server', group: 'running' },
   { id: 'chat', title: 'Encrypted Chat TUI', href: '/projects/EncryptedChatTUI', what: 'Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL', group: 'paused' },
   { id: 'site', title: 'This site', href: '/projects/ResumePage', what: 'Static-first Astro portfolio on Cloudflare Workers', group: 'running', hideOnHome: true, introFromHook: true }, // you are on it
 ];

@@ -495,9 +495,9 @@ test('the rows: the hero-card projects first in card order with their index, the
   const rows = homeRows(joined, register, cardIds);
   assert.deepEqual(rows.map((r) => r.title), [
     listing('henk').title, listing('homelab').title, listing('sandbox').title,
-    'Finance Bot', 'bible-tui', 'pytaiga-mcp', 'Encrypted Chat TUI',
+    'Finance Bot', 'bible-tui', 'pytaiga-mcp', 'herdr-android', 'Encrypted Chat TUI',
   ]);
-  assert.deepEqual(rows.map((r) => r.index ?? null), ['02', '03', '04', null, null, null, null]);
+  assert.deepEqual(rows.map((r) => r.index ?? null), ['02', '03', '04', null, null, null, null, null]);
   assert.ok(!rows.some((r) => r.title === 'This site' || r.title === home.annaLead.title));
   // each row is its listing joined to its page: link, line and status, nothing rewritten
   for (const r of rows) {
@@ -513,7 +513,7 @@ test('the rows: the hero-card projects first in card order with their index, the
 test('the number is the project\'s: dims[homeDim ?? 0] with its label; the register\'s entries have none', () => {
   const { details: joined, register } = buildProjects(projectSources);
   const rows = homeRows(joined, register, cardIds);
-  assert.deepEqual(rows.map((r) => r.number?.value ?? null), ['4', '4', '3,700', '0.75', '102', '50 → 5', null]);
+  assert.deepEqual(rows.map((r) => r.number?.value ?? null), ['4', '4', '3,700', '0.75', '102', '50 → 5', null, null]);
   for (const r of rows.filter((x) => x.number)) {
     const d = details.find((x) => x.href === r.href);
     assert.deepEqual(r.number, d.dims[d.homeDim ?? 0], r.title);

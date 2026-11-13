@@ -110,7 +110,7 @@ test('Every project once, in its group: each card links to its project page; ANN
   })));
   assert.deepEqual(shown.map((g) => g.label), ['Running', 'Paused', 'Done']);
   assert.deepEqual(shown.map((g) => g.items.map((i) => i.title)), [
-    ['Henk, homelab agent', 'Finance Bot', 'Homelab infrastructure', 'This site'],
+    ['Henk, homelab agent', 'Finance Bot', 'Homelab infrastructure', 'herdr-android', 'This site'],
     ['bible-tui', 'Encrypted Chat TUI'],
     ['pytaiga-mcp', 'Claude Sandbox'],
   ]);

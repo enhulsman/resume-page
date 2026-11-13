@@ -330,11 +330,11 @@ test('the sections in order: ANNA, Projects, Experience, Writing, About, Contact
 });
 
 /** The Projects section's chapters and rows, in page order, as their words. */
-const ENTRY_ORDER = ['henk', 'sandbox', 'bible', 'homelab', 'finance', 'pytaiga', null];
-const byId = (id) => (id ? homeConfig.details.find((d) => d.id === id) : homeConfig.register.find((r) => r.title === 'Encrypted Chat TUI'));
+const ENTRY_ORDER = ['henk', 'sandbox', 'bible', 'homelab', 'finance', 'pytaiga', 'herdr', 'chat'];
+const byId = (id) => homeConfig.details.find((d) => d.id === id) ?? homeConfig.register.find((r) => r.id === id);
 const rowOf = (id) => ROWS.find((r) => r.href === byId(id).href);
 
-test('the projects, in order: Henk, Claude Sandbox and bible-tui in their windows, then Homelab, Finance Bot, pytaiga-mcp and Encrypted Chat TUI as rows', async () => {
+test('the projects, in order: Henk, Claude Sandbox and bible-tui in their windows, then Homelab, Finance Bot, pytaiga-mcp, herdr-android and Encrypted Chat TUI as rows', async () => {
   const { context, page, errors } = await open('?t=2.4');
   const entries = await page.$$eval(`${SECTION.projects} .pj-entry`, (els) => els.map((el) => ({
     chapter: el.classList.contains('pj-chapter'),
@@ -348,9 +348,9 @@ test('the projects, in order: Henk, Claude Sandbox and bible-tui in their window
   const more = await page.$eval(`${SECTION.projects} a.more`, (a) => [a.getAttribute('href'), a.textContent.replace(/→/, '').trim()]);
   await context.close();
   assert.deepEqual(entries.map((e) => e.title), ENTRY_ORDER.map((id) => byId(id).title));
-  assert.deepEqual(entries.map((e) => e.chapter), [true, true, true, false, false, false, false], 'three chapters, then rows');
-  assert.deepEqual(entries.map((e) => e.moment), ['henk', 'sandbox', 'bible', null, null, null, null], 'each chapter its own glass moment');
-  assert.deepEqual(entries.map((e) => e.idx), ['02', '04', null, '03', null, null, null], 'the card projects keep their card\'s index');
+  assert.deepEqual(entries.map((e) => e.chapter), [true, true, true, false, false, false, false, false], 'three chapters, then rows');
+  assert.deepEqual(entries.map((e) => e.moment), ['henk', 'sandbox', 'bible', null, null, null, null, null], 'each chapter its own glass moment');
+  assert.deepEqual(entries.map((e) => e.idx), ['02', '04', null, '03', null, null, null, null], 'the card projects keep their card\'s index');
   assert.ok(!entries.some((e) => e.title === 'This site' || e.title === annaLead.title));
   for (const [i, e] of entries.entries()) {
     const r = rowOf(ENTRY_ORDER[i]);
@@ -362,7 +362,7 @@ test('the projects, in order: Henk, Claude Sandbox and bible-tui in their window
   assert.deepEqual(errors, []);
 });
 
-test('the number is the project\'s: set large in tabular figures, its label beside it; the register\'s entry has none', async () => {
+test('the number is the project\'s: set large in tabular figures, its label beside it; the register\'s entries have none', async () => {
   const { context, page, errors } = await open('?t=2.4');
   const rows = await page.$$eval(`${SECTION.projects} .pj-entry`, (lis) => lis.map((li) => {
     const v = li.querySelector('.num .value'), l = li.querySelector('.num .label'), w = li.querySelector('.what');
@@ -376,7 +376,7 @@ test('the number is the project\'s: set large in tabular figures, its label besi
     };
   }));
   await context.close();
-  assert.deepEqual(rows.map((r) => r.value), ['4', '3,700', '102', '4', '0.75', '50 → 5', null]);
+  assert.deepEqual(rows.map((r) => r.value), ['4', '3,700', '102', '4', '0.75', '50 → 5', null, null]);
   for (const [i, r] of rows.entries()) {
     if (!r.value) continue;
     const d = byId(ENTRY_ORDER[i]);
