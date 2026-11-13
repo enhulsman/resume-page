@@ -20,8 +20,8 @@ hook: "An Android client for herdr, the tool I run my coding agents in. It shows
 **The agent list.** Every agent on every machine in one list, the ones that need me first, then the ones that finished and I haven't looked at yet, then working and idle. It's the view I open most, usually just to see who's waiting. New terminals and agents start from here as well, so a session is already running when I pick it up somewhere else.
 
 <div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; margin: 0.6em 0 1.4em;">
-  <img src="/images/blog/herdr-android-agents.webp" alt="The Agents screen of the app: three finished agents and one idle one, each with its session title, space and machine" width="1344" height="1025" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
-  <img src="/images/blog/herdr-android-new-terminal.webp" alt="The New terminal sheet: pick a space, then start a plain terminal, Claude Code, Codex, OpenCode, Cursor or Gemini" width="1344" height="1397" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
+  <img src="/images/blog/herdr-android-agents-dark.webp" alt="The Agents screen of the app: one finished agent and three idle ones, each with its session title, space and machine" width="1344" height="1020" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
+  <img src="/images/blog/herdr-android-new-terminal-dark.webp" alt="The New terminal sheet: pick a machine and a space, then start a plain terminal, Claude Code, Codex, OpenCode, Cursor or Gemini" width="1344" height="1592" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
 </div>
 
 **The live terminal.** Tapping an agent opens its terminal as the desk draws it, with colours, zoom and scrollback, and switches it to the phone's size. When I type at the desk again, the desk gets its size back and the phone keeps watching. Typing goes through the phone keyboard plus two rows of terminal keys, and a compose sheet takes longer prompts with autocorrect and dictation.
@@ -34,7 +34,7 @@ hook: "An Android client for herdr, the tool I run my coding agents in. It shows
 **Alerts with the app closed.** A small companion on each machine, `herdr-push`, sends an encrypted alert when an agent needs me or has finished. "Needs you" makes a sound, "Finished" is silent by default, and both go through my own [ntfy](https://ntfy.sh) server.
 
 <div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; margin: 0.6em 0 1.4em;">
-  <img src="/images/blog/herdr-android-machine.webp" alt="The Machines screen: one connected machine with its alert status, a test alert button, and the phone key settings" width="1344" height="1632" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
+  <img src="/images/blog/herdr-android-machine-dark.webp" alt="The Machines screen: a connected machine with its alert status, a mute switch and a test alert button" width="1344" height="915" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
 </div>
 
 **One Rust core under a Compose app.** The app itself is Kotlin and Jetpack Compose. SSH, the herdr-core protocol and the terminal engine (libghostty-vt) live in a Rust core that the app calls through UniFFI.
