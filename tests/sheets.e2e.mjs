@@ -145,8 +145,8 @@ test('/projects leads with ANNA, then every project under its status as a ribbed
   const hrefs = await page.locator('.pc').evaluateAll(cs => cs.map(c => c.getAttribute('href')));
   assert.deepEqual(hrefs.map(h => h.replace('/projects/', '')).sort(), PROJECTS.filter(p => p !== 'AnnaAssistant').sort());
   // a detailed project carries its two strongest dimensions, not a row of three; a register entry none
-  for (const id of ['henk', 'finance', 'homelab', 'bible', 'pytaiga', 'sandbox']) assert.equal(await page.locator(`.pc[data-project="${id}"] .pc-nums > div`).count(), 2, `${id} dims`);
-  for (const id of ['site', 'chat', 'herdr']) assert.equal(await page.locator(`.pc[data-project="${id}"] .pc-nums`).count(), 0, `${id} dims`);
+  for (const id of ['henk', 'finance', 'homelab', 'herdr', 'bible', 'pytaiga', 'sandbox']) assert.equal(await page.locator(`.pc[data-project="${id}"] .pc-nums > div`).count(), 2, `${id} dims`);
+  for (const id of ['site', 'chat']) assert.equal(await page.locator(`.pc[data-project="${id}"] .pc-nums`).count(), 0, `${id} dims`);
   // grouped by status, so a lighter treatment reads as paused, not as less
   assert.deepEqual(await page.locator('.pi-group > h2').allInnerTexts(), ['Running', 'Paused', 'Done']);
   const groupOf = async id => page.locator(`.pc[data-project="${id}"]`).evaluate(el => el.closest('.pi-group')?.querySelector('h2')?.textContent);

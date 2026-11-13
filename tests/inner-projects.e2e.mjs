@@ -251,7 +251,7 @@ test('The text column: 60% of the card at 1440; the light\'s pane starts at the 
     const cb = c.getBoundingClientRect(), t = c.querySelector('.pc-text').getBoundingClientRect(), l = c.querySelector('.pc-light').getBoundingClientRect();
     return { href: c.getAttribute('href'), share: t.width / cb.width, textLeft: t.left - cb.left, lightAt: (l.left - cb.left) / cb.width, lightEnd: l.right - cb.right };
   }));
-  assert.equal(m.length, 8);
+  assert.equal(m.length, detailListings.length + registerListings.length);
   for (const x of m) {
     assert.ok(Math.abs(x.share - 0.6) <= 0.01, `${x.href}: text column ${(x.share * 100).toFixed(1)}%`);
     assert.ok(Math.abs(x.textLeft) <= 0.5, `${x.href}: the text column starts at the card's edge`);

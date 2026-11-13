@@ -17,7 +17,7 @@ export const groups: { id: Group; label: string }[] = [
 
 export interface DetailListing {
   /** Also the key of its window, its light and, for pytaiga, its drawing in src/components/overzicht/drawings/. */
-  id: 'henk' | 'finance' | 'homelab' | 'bible' | 'pytaiga' | 'sandbox';
+  id: 'henk' | 'finance' | 'homelab' | 'herdr' | 'bible' | 'pytaiga' | 'sandbox';
   title: string;
   text: string;
   /** Strongest first: /projects shows the first two. */
@@ -148,6 +148,19 @@ export const details: DetailListing[] = [
     href: '/projects/HomelabInfrastructure',
   },
   {
+    id: 'herdr',
+    title: 'herdr-android',
+    text: 'An unofficial Android client for herdr, the tool I run my coding agents in. Every agent on every machine in one list, each terminal live as the desk draws it, and an alert through my own ntfy server when one needs me or has finished.',
+    dims: [
+      { value: '14 ms', label: 'for 95% of terminal frames' },
+      { value: '0', label: 'Google services' },
+      { value: '66 ms', label: 'to show an agent\'s last screen' },
+    ],
+    what: 'An Android client for herdr with a live terminal, an agent list and alerts through my own ntfy server',
+    group: 'running',
+    href: '/projects/HerdrAndroid',
+  },
+  {
     id: 'bible',
     title: 'bible-tui',
     text: 'A terminal Bible reader in Rust with three translations built in. The same UI code runs in the browser: the web port is 102 lines, and the three bugs it surfaced are fixed on a fork of its web backend.',
@@ -192,14 +205,13 @@ export const details: DetailListing[] = [
 /** The projects without a drawing yet, each with a project page; they show as cards. */
 export interface CardListing {
   /** Its light in glass.ts' projectLights. */
-  id: 'chat' | 'site' | 'herdr';
+  id: 'chat' | 'site';
   title: string; href: string; what: string; group: Group;
   /** Left off the homepage's cards. */ hideOnHome?: boolean;
   /** Its card on /projects reads its intro from its page's `hook` (buildProjects joins it as `text`). */
   introFromHook?: boolean;
 }
 export const register: CardListing[] = [
-  { id: 'herdr', title: 'herdr-android', href: '/projects/HerdrAndroid', what: 'An Android client for herdr with a live terminal, an agent list and alerts through my own ntfy server', group: 'running' },
   { id: 'chat', title: 'Encrypted Chat TUI', href: '/projects/EncryptedChatTUI', what: 'Self-hosted terminal chat in Rust: Tokio, a typed ndjson protocol, checked SQL', group: 'paused' },
   { id: 'site', title: 'This site', href: '/projects/ResumePage', what: 'Static-first Astro portfolio on Cloudflare Workers', group: 'running', hideOnHome: true, introFromHook: true }, // you are on it
 ];

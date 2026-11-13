@@ -165,8 +165,8 @@ export const terminalReflection: { blur: number; opacity: number; panes: Reflect
 // Every project's own light (openspec stone-inner-pages, Ezra 2026-11-10): a near and a deep colour
 // for its windows' glows and /blog's hover lights, and a ribbed light (`card`) for its card on
 // /projects. The hero's three projects keep their card's light; bible-tui (amber), pytaiga-mcp (teal),
-// Encrypted Chat TUI (violet), herdr-android (orchid) and This site (warm, ANNA's flame without its tongue) are tuned as in
-// the inner-page sketches; Finance Bot has a light of its own (Ezra's fix), a jade green, no longer the
+// Encrypted Chat TUI (violet) and This site (warm, ANNA's flame without its tongue) are tuned as in
+// the inner-page sketches; herdr-android's muted orchid came later (2026-11-13), without a sketch; Finance Bot has a light of its own (Ezra's fix), a jade green, no longer the
 // benched mist: its deep colour at least 30 degrees of hue from every other project's and the mist's.
 export type ProjectLightId = DetailListing['id'] | CardListing['id'];
 export interface ProjectLight { near: RGB; deep: RGB; card: GlassCard }
@@ -209,9 +209,9 @@ export const projectLights: Record<ProjectLightId, ProjectLight> = {
     { scale: 2.2, set: { color: [206, 194, 230], sigma: 1.0, opacity: 0.6 } },
     { scale: 1.1, dy: 10, set: { color: [210, 190, 244], color2: [96, 70, 160], g0: 140, g1: 290, sigma: 0.07, opacity: 1 } },
   ]) },
-  // orchid: the tide's band again, between the chat's violet and the homelab's plum
-  herdr: { near: [226, 170, 232], deep: [150, 60, 160], card: ownLight('herdr', 1, tint([1, -2, 2]), [206, 150, 212], 0.6, [
-    { scale: 0.95, set: { color: [226, 170, 232], color2: [150, 60, 160], g0: 130, g1: 260, sigma: 0.1 } },
+  // a muted orchid: the tide's band again, between the chat's violet and the homelab's plum
+  herdr: { near: [218, 188, 224], deep: [138, 92, 148], card: ownLight('herdr', 1, tint([1, -2, 2]), [200, 170, 206], 0.6, [
+    { scale: 0.95, set: { color: [218, 188, 224], color2: [138, 92, 148], g0: 130, g1: 260, sigma: 0.1 } },
   ]) },
   // warm: the bar's hover light, ANNA's flame without its tongue
   site: { near: [242, 168, 112], deep: [214, 58, 34], card: ownLight('site', 0, tint([4, -1, -5]), [236, 150, 96], 0.5, [

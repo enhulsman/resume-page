@@ -338,7 +338,7 @@ test('Henk.mdx\'s and BibleTui.mdx\'s stats are their StatStrip values, in order
     STAT('13.3 MB', 'of WASM, scripture included'),
   ]);
   assert.deepEqual(statsOf(read('src/pages/projects/HerdrAndroid.mdx')), [
-    STAT('14 ms', '95% of frames, on my own phone'),
+    STAT('14 ms', 'for 95% of terminal frames'),
     STAT('66 ms', 'to show an agent\'s last screen'),
     STAT('0', 'Google services'),
     STAT('6', 'working days to v0.3.0'),
@@ -416,9 +416,9 @@ test('introFromHook: This site\'s card reads its intro from ResumePage.mdx\'s ho
   assert.equal(card.text, readFrontmatter(read('src/pages/projects/ResumePage.mdx')).hook);
   const chat = built.register.find((r) => r.href === '/projects/EncryptedChatTUI');
   assert.equal(chat.text, undefined, 'Encrypted Chat TUI keeps its one-liner (`what`)');
-  const herdr = built.register.find((r) => r.href === '/projects/HerdrAndroid');
-  assert.equal(herdr.text, undefined, 'herdr-android keeps its one-liner (`what`)');
+  const herdr = built.details.find((d) => d.href === '/projects/HerdrAndroid');
   assert.equal(herdr.group, 'running');
+  assert.deepEqual(herdr.dims.slice(0, 2), [{ value: '14 ms', label: 'for 95% of terminal frames' }, { value: '0', label: 'Google services' }], 'the card\'s two numbers');
 });
 
 // ---- stone-project-pages: This site's page speaks stone (chunk 10) ----

@@ -5,7 +5,7 @@ date: 2026-11-01
 github: "https://github.com/enhulsman/herdr-android"
 tech: ["Kotlin", "Jetpack Compose", "Rust", "UniFFI", "libghostty-vt", "russh", "ntfy"]
 stats:
-  - { value: "14 ms", label: "95% of frames, on my own phone" }
+  - { value: "14 ms", label: "for 95% of terminal frames" }
   - { value: "66 ms", label: "to show an agent's last screen" }
   - { value: "0", label: "Google services" }
   - { value: "6", label: "working days to v0.3.0" }
@@ -17,27 +17,35 @@ hook: "An Android client for herdr, the tool I run my coding agents in. It shows
 
 ## What I Built
 
-**The agent list.** Every agent on every machine in one list, the ones that need me first, then the ones that finished and I haven't looked at yet, then working and idle. It's the view I open most, usually just to see who's waiting.
+**The agent list.** Every agent on every machine in one list, the ones that need me first, then the ones that finished and I haven't looked at yet, then working and idle. It's the view I open most, usually just to see who's waiting. New terminals and agents start from here as well, so a session is already running when I pick it up somewhere else.
 
-<img src="/images/blog/herdr-android-agents.webp" alt="The Agents screen of the app: three finished agents and one idle one, each with its session title, space and machine" width="450" style="display: block; max-width: 100%; height: auto; margin: 0.6em 0 1.4em; border-radius: 12px;" />
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; margin: 0.6em 0 1.4em;">
+  <img src="/images/blog/herdr-android-agents.webp" alt="The Agents screen of the app: three finished agents and one idle one, each with its session title, space and machine" width="1344" height="1025" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
+  <img src="/images/blog/herdr-android-new-terminal.webp" alt="The New terminal sheet: pick a space, then start a plain terminal, Claude Code, Codex, OpenCode, Cursor or Gemini" width="1344" height="1397" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
+</div>
 
-**The live terminal.** Tapping an agent opens its terminal as the desk draws it, with colours, zoom and scrollback, and switches it to the phone's size for as long as I'm in it. Typing goes through the phone keyboard plus two rows of terminal keys, and a compose sheet takes longer prompts with autocorrect and dictation. New terminals and agents can be started from the phone as well.
+**The live terminal.** Tapping an agent opens its terminal as the desk draws it, with colours, zoom and scrollback, and switches it to the phone's size. When I type at the desk again, the desk gets its size back and the phone keeps watching. Typing goes through the phone keyboard plus two rows of terminal keys, and a compose sheet takes longer prompts with autocorrect and dictation.
 
-<img src="/images/blog/herdr-android-new-terminal.webp" alt="The New terminal sheet: pick a space, then start a plain terminal, Claude Code, Codex, OpenCode, Cursor or Gemini" width="450" style="display: block; max-width: 100%; height: auto; margin: 0.6em 0 1.4em; border-radius: 12px;" />
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; margin: 0.6em 0 1.4em;">
+  <img src="/images/blog/herdr-android-terminal.webp" alt="An agent's terminal on the phone: a Claude Code session with its full output, the prompt line and status bar, and two rows of terminal keys underneath" width="1344" height="2715" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
+  <img src="/images/blog/herdr-android-compose.webp" alt="The compose sheet over the terminal: a text box for a longer prompt, with Cancel and Paste, above the phone keyboard" width="1344" height="2715" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
+</div>
 
 **Alerts with the app closed.** A small companion on each machine, `herdr-push`, sends an encrypted alert when an agent needs me or has finished. "Needs you" makes a sound, "Finished" is silent by default, and both go through my own [ntfy](https://ntfy.sh) server.
 
-**One Rust core under a Compose app.** The app itself is Kotlin and Jetpack Compose. SSH, the herdr-core protocol and the terminal engine (libghostty-vt) live in a Rust core that the app calls through UniFFI.
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; margin: 0.6em 0 1.4em;">
+  <img src="/images/blog/herdr-android-machine.webp" alt="The Machines screen: one connected machine with its alert status, a test alert button, and the phone key settings" width="1344" height="1632" loading="lazy" style="flex: 1 1 240px; min-width: 0; max-width: 320px; height: auto; border-radius: 12px;" />
+</div>
 
-<img src="/images/blog/herdr-android-machine.webp" alt="The Machines screen: one connected machine with its alert status, a test alert button, and the phone key settings" width="450" style="display: block; max-width: 100%; height: auto; margin: 0.6em 0 1.4em; border-radius: 12px;" />
+**One Rust core under a Compose app.** The app itself is Kotlin and Jetpack Compose. SSH, the herdr-core protocol and the terminal engine (libghostty-vt) live in a Rust core that the app calls through UniFFI.
 
 ## Key Decisions
 
 **Terminal first.** Three reviewers of the spec advised starting with a text view and a message box, and doing the live terminal last. I started with the terminal. herdr is a terminal-first tool, and what I wanted was the desktop app's equal on a phone, so it works the same everywhere.
 
-**The riskiest parts on day one.** The same review pointed out that the three things most likely to sink the project were scheduled last: whether the terminal engine keeps up on a phone, whether the SSH key can stay in secure hardware, and whether encrypted alerts arrive with the app closed. Those moved to the front, and all three passed on the second day.
+**The riskiest parts first.** The same review pointed out that the three things most likely to sink the project were scheduled last: whether the terminal engine keeps up on a phone, whether the SSH key can stay in secure hardware, and whether encrypted alerts arrive with the app closed. Those moved to the front, and all three passed on 1 November, the day after I wrote the spec.
 
-**The key never leaves the phone.** The SSH key is made in the phone's secure hardware and works for 30 minutes after an unlock or a fingerprint. Its line in `authorized_keys` lets it run only herdr-core, no shell session and no forwarding. Each machine's host key is confirmed once, and a changed key stops the connection.
+**The key never leaves the phone.** The SSH key is made in the phone's secure hardware and works for 30 minutes after an unlock or a fingerprint. Its line in `authorized_keys` lets it run only herdr-core, no shell session and no forwarding. herdr-core can still run commands as that user though, so I treat the key like a shell login. Each machine's host key is confirmed once, and a changed key stops the connection.
 
 **Alerts in my own hands.** No Google service sits between a machine and the phone. What reaches me, when, and whether it makes a sound is mine to change, without waiting for someone else to build it.
 
