@@ -432,6 +432,10 @@ test('the copy check covers joined config values and catches a typed-in word', (
   assert.equal(check('Blogs about'), 'Blogs about', 'a corpus value inside a longer word is not removed');
   assert.equal(check('Made in Utrecht by Ezra Hulsman.'), null, 'the footer line, joined with a full stop');
   assert.equal(check(`${home.annaLead.text}.`), null, 'the lead and its full stop');
+  // a number with its unit is a config value too, though it has under three letters
+  const units = coverer(['14 ms', 'for 95% of terminal frames']);
+  assert.equal(units('14 ms'), null, 'a number with its unit');
+  assert.equal(units('15 ms'), '15 ms', 'another number is still typed in');
   assert.equal(check('Ezra Hulsman · Blog'), null, 'values joined by punctuation');
   assert.equal(check('01 → 4'), null, 'no letters, nothing to cover');
   assert.deepEqual(strings({ a: 'x', b: ['y', { c: 'z' }], n: 3 }), ['x', 'y', 'z']);
