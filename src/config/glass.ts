@@ -222,6 +222,27 @@ export const projectLights: Record<ProjectLightId, ProjectLight> = {
 };
 
 /**
+ * A card's light on a phone (/projects at 760 px and below), where it sits in a band along the
+ * card's bottom, under the text: moved by (dx, dy) study px and scaled by k. The bands and the sun
+ * fill that band as they are; the narrow lights (a flame, a pod) are drawn larger there and the mist
+ * higher, or they read as a tinted box (Ezra, 2026-11-14).
+ */
+export interface PhoneBand { dx: number; dy: number; k: number; /** The light's own layers on a phone, where the card's would not carry. */ tune?: GlassCard['tune'] }
+const BAND: PhoneBand = { dx: 74, dy: 22, k: 1.05 };
+const phoneBands: Partial<Record<ProjectLightId, Partial<PhoneBand>>> = {
+  // the mist's pale band is a hairline on a phone: there it stands taller and runs down into its jade
+  finance: { dy: 22, k: 1.05, tune: [
+    { scale: 2.6, dy: -30, set: { color: [150, 214, 164], sigma: 1.0 } },
+    { scale: 1.25, stretch: [1, 2.4], dy: -24, lean: 0.15, set: { color: [214, 240, 220], color2: [52, 150, 78], g0: 150, g1: 230, sigma: 0.08 } },
+  ] },
+  site: { dx: 50, dy: 52, k: 1.7 },
+  bible: { dx: 50, dy: 86, k: 1.6 },
+  chat: { dx: 46, dy: 16, k: 1.6 },
+  sandbox: { dx: 46, dy: 16, k: 1.5 },
+};
+export const phoneBand = (id: string): PhoneBand => ({ ...BAND, ...(phoneBands[id as ProjectLightId] ?? {}) });
+
+/**
  * Each page's light (openspec stone-inner-pages, Ezra 2026-11-10: "the hero's four lights, card
  * order"): the bar's hover glow per link, and the head light far behind /blog's and /resume's
  * heading. The near colour is its hero card's first light; the deep one as tuned in the sketches.

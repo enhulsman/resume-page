@@ -353,7 +353,7 @@ test('The light shows on a phone: under its last text every card holds its light
   }
   await width(still, 1440);
   if (process.env.SHOW) console.log(least);
-  for (const [href, v] of Object.entries(least)) assert.ok(v >= 0.25, `${href}: its light fills ${(v * 100).toFixed(0)}% of the strip under its text`);
+  for (const [href, v] of Object.entries(least)) assert.ok(v >= 0.35, `${href}: its light fills ${(v * 100).toFixed(0)}% of the strip under its text`);
 });
 
 test('On a phone (lead): the window after the levels, within 0..390, no sideways scroll', async () => {

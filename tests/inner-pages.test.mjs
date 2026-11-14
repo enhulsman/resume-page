@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { innerGlass, pageLights, projectLights, windowGlows, glassCards, benched } from '../src/config/glass.ts';
+import { innerGlass, pageLights, projectLights, windowGlows, glassCards, benched, phoneBand } from '../src/config/glass.ts';
 import { projectWindows, annaLevels, details, register } from '../src/config/home.ts';
 import { pageWords } from '../src/config/pages.ts';
 import { factsOf, numbersOf, contentsOf, otherWriting, bare, plainLocation } from '../src/lib/article.ts';
@@ -123,6 +123,19 @@ test('Finance Bot\'s own hue: 30 degrees from every other project light and from
   }
   // its ribbed light is its own, not the benched mist's
   assert.notDeepEqual(projectLights.finance.card.tune, mist.tune);
+});
+
+// ---- /projects on a phone: each card's light in its band ----
+
+test('phoneBand: every project has a band; the narrow lights are drawn larger there, the bands as they are; Finance Bot keeps its jade', () => {
+  const wide = phoneBand('henk');
+  assert.deepEqual(wide, { dx: 74, dy: 22, k: 1.05 });
+  for (const id of ['homelab', 'herdr', 'pytaiga']) assert.deepEqual(phoneBand(id), wide, id);
+  for (const id of ['site', 'bible', 'chat', 'sandbox']) assert.ok(phoneBand(id).k >= 1.5, `${id}: drawn larger (${phoneBand(id).k})`);
+  for (const id of Object.keys(projectLights)) assert.ok(phoneBand(id).k >= 1, `${id}: never smaller than on a desktop`);
+  const fin = phoneBand('finance');
+  assert.equal(fin.tune.length, projectLights.finance.card.tune.length, 'the same layers');
+  assert.deepEqual(fin.tune[1].set.color2, projectLights.finance.deep, 'its band runs into its own deep colour');
 });
 
 // ---- stone-project-pages: the windows' glows ----

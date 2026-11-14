@@ -18,7 +18,7 @@
 // Without WebGL the light's panes keep the card's ground and a soft gradient of its light; the wash
 // panes keep the ground alone, so the text half stays plain.
 import "../../styles/stone.css";
-import { fallbackFor, type GlassCard } from "../../config/glass.ts";
+import { fallbackFor, phoneBand, type GlassCard } from "../../config/glass.ts";
 
 interface Props {
   /** The project's ribbed light (`projectLights[id].card`). */
@@ -39,8 +39,9 @@ const { card, id, index, title, href, status, text, dims } = Astro.props;
 
 type Tune = NonNullable<GlassCard["tune"]>;
 /** The card's light moved by (dx, dy) study px and scaled by k, every layer alike. */
-const shift = (dx: number, dy = 0, k = 1): Tune => (card.tune ?? []).map((t) => (t ? { ...t, dx: (t.dx ?? 0) + dx, dy: (t.dy ?? 0) + dy, scale: (t.scale ?? 1) * k } : t));
+const shift = (dx: number, dy = 0, k = 1, tune: Tune = card.tune ?? []): Tune => tune.map((t) => (t ? { ...t, dx: (t.dx ?? 0) + dx, dy: (t.dy ?? 0) + dy, scale: (t.scale ?? 1) * k } : t));
 /** Every layer of the light off: the pane holds its ground and the faint wash only. */
+const band = phoneBand(id);
 const washOnly: Tune = [0, 1, 2, 3].map(() => ({ set: { opacity: 0 } }));
 const pane = (tune: Tune, light: boolean) => ({
   "data-glass": "ribbed",
@@ -60,7 +61,7 @@ const pane = (tune: Tune, light: boolean) => ({
   <span class="glass-card pc-pane pc-under" {...pane(washOnly, false)}><canvas aria-hidden="true"></canvas></span>
   <span class="glass-card pc-pane pc-light" {...pane(shift(28), true)}><canvas aria-hidden="true"></canvas></span>
   <span class="glass-card pc-pane pc-wash" {...pane(washOnly, false)}><canvas aria-hidden="true"></canvas></span>
-  <span class="glass-card pc-pane pc-band" {...pane(shift(74, 22, 1.05), true)}><canvas aria-hidden="true"></canvas></span>
+  <span class="glass-card pc-pane pc-band" {...pane(shift(band.dx, band.dy, band.k, band.tune), true)}><canvas aria-hidden="true"></canvas></span>
   <div class="pc-text">
     <div class="pc-top">
       <h3 class="pc-title">{title}</h3>
