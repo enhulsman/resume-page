@@ -10,7 +10,9 @@
 // over it fading in across its left 40%. The text column is 60% of the card (the sketch's 52%, made
 // a bit wider: Ezra's fix). At 760 px and below a wash pane spans the card, and the light pane, as
 // wide as the card (the same pitch), is pinned to its bottom at 300 px and masked upward, so the
-// light keeps its place whatever the text's length and no text sits low over it. A pane hidden at
+// light keeps its place whatever the text's length. There the light is drawn a little larger and
+// high enough to fill the 116 px the text leaves free under it (Ezra, 2026-11-14: on a phone the
+// cards read as flat tinted boxes; the light had mostly slid off the bottom edge). A pane hidden at
 // the current width has no size and is never drawn.
 //
 // Without WebGL the light's panes keep the card's ground and a soft gradient of its light; the wash
@@ -58,7 +60,7 @@ const pane = (tune: Tune, light: boolean) => ({
   <span class="glass-card pc-pane pc-under" {...pane(washOnly, false)}><canvas aria-hidden="true"></canvas></span>
   <span class="glass-card pc-pane pc-light" {...pane(shift(28), true)}><canvas aria-hidden="true"></canvas></span>
   <span class="glass-card pc-pane pc-wash" {...pane(washOnly, false)}><canvas aria-hidden="true"></canvas></span>
-  <span class="glass-card pc-pane pc-band" {...pane(shift(74, 70, 0.8), true)}><canvas aria-hidden="true"></canvas></span>
+  <span class="glass-card pc-pane pc-band" {...pane(shift(74, 22, 1.05), true)}><canvas aria-hidden="true"></canvas></span>
   <div class="pc-text">
     <div class="pc-top">
       <h3 class="pc-title">{title}</h3>
@@ -107,8 +109,8 @@ const pane = (tune: Tune, light: boolean) => ({
   .pc .pc-wash { left: 0; width: 100%; display: none; }
   .pc .pc-band {
     left: 0; width: 100%; display: none; top: auto; height: 300px;
-    -webkit-mask-image: linear-gradient(to top, black 55%, transparent 85%);
-    mask-image: linear-gradient(to top, black 55%, transparent 85%);
+    -webkit-mask-image: linear-gradient(to top, black 50%, transparent 92%);
+    mask-image: linear-gradient(to top, black 50%, transparent 92%);
   }
   .pc .pc-text { position: relative; z-index: 1; display: flex; flex-direction: column; box-sizing: border-box; width: 60%; min-height: inherit; padding: 18px 20px; }
   .pc .pc-top { display: flex; align-items: baseline; gap: 12px; }
@@ -126,7 +128,7 @@ const pane = (tune: Tune, light: boolean) => ({
   @media (max-width: 760px) {
     .pc .pc-left, .pc .pc-under, .pc .pc-light { display: none; }
     .pc .pc-wash, .pc .pc-band { display: block; }
-    .pc .pc-text { width: auto; padding: 16px 16px 84px; }
+    .pc .pc-text { width: auto; padding: 16px 16px 116px; }
     .pc .pc-intro { font-size: 14.5px; }
     .pc .pc-nums dt { font-size: 22px; }
   }

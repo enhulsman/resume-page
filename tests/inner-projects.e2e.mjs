@@ -313,7 +313,7 @@ test('Two per row, then one: at 1440 and 999 two cards share each row; at 390 on
   assert.ok(await sideways(still) <= 0, 'no sideways scroll');
 });
 
-test('The light keeps its band on a phone: as wide as the card, 300 px tall, at its bottom; the text ends 84 px above it', async () => {
+test('The light keeps its band on a phone: as wide as the card, 300 px tall, at its bottom; the text ends 116 px above it', async () => {
   await width(still, 390);
   const m = await still.$$eval(CARD, (cs, TEXTS) => cs.map((c) => {
     const cb = c.getBoundingClientRect(), band = c.querySelector('.pc-band').getBoundingClientRect();
@@ -324,8 +324,36 @@ test('The light keeps its band on a phone: as wide as the card, 300 px tall, at 
     assert.ok(Math.abs(x.w - x.cw) <= 0.5 && Math.abs(x.left) <= 0.5, `${x.href}: band ${x.w} wide, card ${x.cw}`);
     assert.ok(Math.abs(x.h - 300) <= 0.5, `${x.href}: band ${x.h} px tall`);
     assert.ok(Math.abs(x.gap) <= 0.5, `${x.href}: band bottom ${x.gap} px off the card's bottom`);
-    assert.ok(x.clear >= 83.5, `${x.href}: the lowest text ends ${x.clear.toFixed(1)} px above the bottom`);
+    assert.ok(x.clear >= 115.5, `${x.href}: the lowest text ends ${x.clear.toFixed(1)} px above the bottom`);
   }
+});
+
+test('The light shows on a phone: under its last text every card holds its light, clearly off its ground, at every moment measured', async () => {
+  const { bar, slices } = await cardSlices(still, 390);
+  await still.mouse.move(195, 20);
+  const boxes = await still.$$eval(CARD, (cs) => cs.map((c) => { const r = c.getBoundingClientRect(); return { href: c.getAttribute('href'), base: getComputedStyle(c).backgroundColor.match(/\d+/g).slice(0, 3).map(Number), x: r.x, y: r.y + scrollY, w: r.width, h: r.height }; }));
+  const least = {};
+  for (const t of [0, 3, 6, 9]) {
+    await still.evaluate((t) => window.__glass.at(t), t);
+    for (const sl of slices) {
+      const { png, y0 } = await shootSlice(still, 390, bar, sl);
+      const shares = await still.evaluate(async ([b64, boxes, y0]) => {
+        const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
+        const c = new OffscreenCanvas(img.width, img.height), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
+        // the strip the text leaves free: the card's lowest 100 px, inside its edge
+        return boxes.map((b) => {
+          const d = x.getImageData(Math.round(b.x + 8), Math.round(b.y - y0 + b.h - 104), Math.round(b.w - 16), 100).data;
+          let off = 0, n = 0;
+          for (let k = 0; k < d.length; k += 4) { n++; if (Math.hypot(d[k] - b.base[0], d[k + 1] - b.base[1], d[k + 2] - b.base[2]) > 28) off++; }
+          return off / n;
+        });
+      }, [png, sl.cards.map((ci) => boxes[ci]), y0]);
+      shares.forEach((v, i) => { const h = boxes[sl.cards[i]].href; least[h] = Math.min(least[h] ?? 1, v); });
+    }
+  }
+  await width(still, 1440);
+  if (process.env.SHOW) console.log(least);
+  for (const [href, v] of Object.entries(least)) assert.ok(v >= 0.25, `${href}: its light fills ${(v * 100).toFixed(0)}% of the strip under its text`);
 });
 
 test('On a phone (lead): the window after the levels, within 0..390, no sideways scroll', async () => {
