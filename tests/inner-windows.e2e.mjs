@@ -320,13 +320,14 @@ test('herdr-android: a phone of frosted glass with the agent list, verbatim from
     const win = document.querySelector(HD);
     const glass = win.querySelector('[data-glass="frosted"]');
     const glow = win.querySelector('[data-glow]');
-    const r = glass.getBoundingClientRect();
+    const r = glass.getBoundingClientRect(), gr = glow.getBoundingClientRect();
     return {
       first: win.closest('aside')?.firstElementChild === win,
       frosted: win.querySelectorAll('[data-glass="frosted"]').length,
       title: win.querySelector('.glass-title')?.textContent,
       dots: win.querySelectorAll('.glass-dots').length,
       glow: glow ? getComputedStyle(glow).backgroundImage : '',
+      spill: Math.max(r.left - gr.left, gr.right - r.right),
       width: r.width, height: r.height, radius: parseFloat(getComputedStyle(glass).borderTopLeftRadius),
       centred: Math.abs((r.left + r.right) / 2 - (win.getBoundingClientRect().left + win.getBoundingClientRect().right) / 2),
       groups: [...win.querySelectorAll('.ag-group')].map((g) => ({
@@ -349,7 +350,9 @@ test('herdr-android: a phone of frosted glass with the agent list, verbatim from
   assert.equal(w.title, 'Agents');
   assert.equal(w.dots, 0, 'a phone has no window dots');
   // a phone: narrow, upright, well rounded, centred in its column
-  assert.ok(w.width >= 260 && w.width <= 340, `as wide as a phone: ${w.width}`);
+  assert.ok(w.width >= 350 && w.width <= 400, `as wide as a phone: ${w.width}`);
+  // the light stays with the phone, as with every other window: at most 7% of its width past each side
+  assert.ok(w.spill <= w.width * 0.08, `the glow reaches ${w.spill} px past a ${w.width} px phone`);
   assert.ok(w.height >= w.width * 1.5, `upright: ${w.width} x ${w.height}`);
   assert.ok(w.radius >= 28, `rounded like a phone: ${w.radius}`);
   assert.ok(w.centred <= 1, 'centred in the column');
