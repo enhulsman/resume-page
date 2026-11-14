@@ -252,6 +252,18 @@ test('A project without a card: bible-tui\'s block has no index, links to its pa
   assert.deepEqual(p.numbers, [[bible.dims[0].value, bible.dims[0].label]]);
 });
 
+test('herdr-android\'s post names its project: no index, its page linked, its what and status, the number 14 ms; no "Other writing"', async () => {
+  const p = (await survey())[HERDR];
+  const herdr = details.find((d) => d.href === '/projects/HerdrAndroid');
+  assert.equal(p.project.index, null);
+  assert.deepEqual(p.project.links, [[herdr.title, '/projects/HerdrAndroid']]);
+  assert.equal(p.project.what, herdr.what);
+  assert.equal(p.project.status, herdr.status);
+  assert.deepEqual(p.numbers, [['14 ms', 'for 95% of terminal frames']]);
+  assert.equal(p.others, null);
+  assert.equal(p.glassInAside, 0, 'the post itself holds no window');
+});
+
 test('On spec-factory: the block ends with "Other writing", the three newest other posts, each its title and date', async () => {
   const p = (await survey())[SPEC];
   assert.match(p.block.at(-1), /\bart-others\b/, 'it ends the block');

@@ -4,7 +4,8 @@
 // the title, the hook); the right column holds the window `innerGlass` names for the route, then
 // the contents, the facts and the numbers (its `stats` frontmatter, else its listing's first three
 // dims). The windows: Henk's, the sandbox's and bible-tui's artefacts (ProjectWindow), Homelab's
-// health check, Finance Bot's reply, pytaiga-mcp's drawing in a frosted pane, and ANNA's Teams window
+// health check, Finance Bot's reply, herdr-android's agent list on a phone, pytaiga-mcp's drawing in a
+// frosted pane, and ANNA's Teams window
 // with her four levels as rows under it. A page whose moments name `diagram` (Henk's, the sandbox's,
 // pytaiga-mcp's for its pane's drawing) gets the "View larger" dialog after the article.
 import OverzichtLayout from "./OverzichtLayout.astro";
@@ -12,6 +13,7 @@ import Article from "../components/stone/Article.astro";
 import ProjectWindow from "../components/stone/ProjectWindow.astro";
 import HomelabWindow from "../components/stone/HomelabWindow.astro";
 import FinanceWindow from "../components/stone/FinanceWindow.astro";
+import HerdrWindow from "../components/stone/HerdrWindow.astro";
 import DrawingPane from "../components/stone/DrawingPane.astro";
 import AnnaWindow from "../components/stone/AnnaWindow.astro";
 import AnnaLevels from "../components/stone/AnnaLevels.astro";
@@ -35,7 +37,7 @@ const hue = ci >= 0 ? hueInk(glassCards[ci]) : undefined;
 // every built project route has an entry (tests/inner-pages.test.mjs); a route without one gets none
 const moments = innerGlass[path] ?? [];
 const ARTEFACTS = ["henk", "sandbox", "bible"] as const;
-const WINDOWS = [...ARTEFACTS, "homelab", "finance", "pytaiga", "anna"] as const;
+const WINDOWS = [...ARTEFACTS, "homelab", "finance", "herdr", "pytaiga", "anna"] as const;
 const moment = moments.find((m): m is (typeof WINDOWS)[number] => (WINDOWS as readonly string[]).includes(m));
 const artefact = moments.find((m): m is (typeof ARTEFACTS)[number] => (ARTEFACTS as readonly string[]).includes(m));
 
@@ -61,6 +63,7 @@ const projectKeywords =
     {artefact && <ProjectWindow slot="window" id={artefact} class="art-stage" />}
     {moment === "homelab" && <HomelabWindow slot="window" class="art-stage" />}
     {moment === "finance" && <FinanceWindow slot="window" class="art-stage" />}
+    {moment === "herdr" && <HerdrWindow slot="window" class="art-stage" />}
     {moment === "pytaiga" && <DrawingPane slot="window" id="pytaiga" title={title} glow="cards" class="art-stage" />}
     {moment === "anna" && (
       <Fragment slot="window">

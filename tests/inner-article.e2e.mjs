@@ -19,7 +19,7 @@ const BASE = process.env.BASE || 'http://localhost:4321';
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 const PROJECTS = readdirSync(new URL('../src/pages/projects/', import.meta.url)).filter((f) => f.endsWith('.mdx')).map((f) => `/projects/${f.slice(0, -4)}`);
 // The windows built so far: every project page's (chunk 4 added homelab, finance, pytaiga and ANNA's).
-const BUILT_WINDOWS = ['henk', 'sandbox', 'bible', 'homelab', 'finance', 'pytaiga', 'anna'];
+const BUILT_WINDOWS = ['henk', 'sandbox', 'bible', 'homelab', 'finance', 'pytaiga', 'anna', 'herdr'];
 const windowOf = (route) => (innerGlass[route] ?? []).find((m) => BUILT_WINDOWS.includes(m));
 const norm = (s) => s.replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
 const rgb = (s) => s.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number).join(',');
@@ -191,7 +191,7 @@ test('The window per page: each project page holds its window in the aside; Encr
     ['/projects/Henk', 'henk', projectWindows.henk.title], ['/projects/ClaudeSandbox', 'sandbox', projectWindows.sandbox.title],
     ['/projects/BibleTui', 'bible', projectWindows.bible.title], ['/projects/HomelabInfrastructure', 'homelab', 'ezra@workstation: ~'],
     ['/projects/FinanceBot', 'finance', 'Discord · #finance'], ['/projects/PytaigaMcp', 'pytaiga', 'pytaiga-mcp'],
-    ['/projects/AnnaAssistant', 'anna', annaCalls.window],
+    ['/projects/AnnaAssistant', 'anna', annaCalls.window], ['/projects/HerdrAndroid', 'herdr', 'Agents'],
   ]) {
     assert.equal(windowOf(route), id, `innerGlass names ${id} for ${route}`);
     assert.deepEqual(s[route].windowTitles, [title], route);

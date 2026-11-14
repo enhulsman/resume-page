@@ -241,7 +241,7 @@ export const pageLights: Record<PageLightId, { near: RGB; deep: RGB }> = {
  * an entry, so a new post or project page cannot gain or lose glass by accident.
  */
 export type InnerMoment = 'anna' | 'project-cards' | 'henk' | 'sandbox' | 'bible' | 'homelab' | 'finance'
-  | 'pytaiga' | 'diagram' | 'code' | 'post-drawing' | 'compose';
+  | 'pytaiga' | 'herdr' | 'diagram' | 'code' | 'post-drawing' | 'compose';
 export const innerGlass: Record<string, InnerMoment[]> = {
   '/projects': ['anna', 'project-cards'],
   '/projects/AnnaAssistant': ['anna'],
@@ -252,7 +252,7 @@ export const innerGlass: Record<string, InnerMoment[]> = {
   '/projects/FinanceBot': ['finance'],
   '/projects/PytaigaMcp': ['pytaiga', 'diagram'],
   '/projects/EncryptedChatTUI': [],
-  '/projects/HerdrAndroid': [],
+  '/projects/HerdrAndroid': ['herdr'],
   '/projects/ResumePage': [],
   '/blog': [],
   '/blog/henk-watchdog': ['henk', 'code'],
@@ -275,7 +275,7 @@ const projectGlow = ({ near, deep }: { near: RGB; deep: RGB }): WindowGlow => ({
   { at: [30, 38], color: near, opacity: 0.95 },
   { at: [70, 66], color: deep, opacity: 0.62 },
 ] });
-export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible' | 'dusk' | 'finance' | 'moss', WindowGlow> = {
+export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible' | 'dusk' | 'finance' | 'herdr' | 'moss', WindowGlow> = {
   henk: projectGlow(projectLights.henk),
   sandbox: projectGlow(projectLights.sandbox),
   bible: projectGlow(projectLights.bible),
@@ -293,6 +293,7 @@ export const windowGlows: Record<'flame' | 'cards' | 'henk' | 'sandbox' | 'bible
     { at: [68, 66], color: projectLights.homelab.deep, opacity: 0.6 },
   ] },
   finance: projectGlow(projectLights.finance),
+  herdr: projectGlow(projectLights.herdr),
   moss: projectGlow(pageLights.contact),
 };
 /** The glow's CSS background: one soft radial gradient per light, each fading to nothing. */
