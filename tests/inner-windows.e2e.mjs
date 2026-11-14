@@ -26,6 +26,7 @@ const HOMELAB = '/projects/HomelabInfrastructure';
 const FINANCE = '/projects/FinanceBot';
 const PYTAIGA = '/projects/PytaigaMcp';
 const ANNA = '/projects/AnnaAssistant';
+const HERDR = '/projects/HerdrAndroid';
 
 const TL = timeline({ lines: annaCalls.work.lines, reply: annaDemo.reply });
 const END = TL.done;
@@ -308,13 +309,90 @@ test('Finance Bot on a phone: an indented line that wraps keeps its indent; no s
   assert.ok(await sideways(page) <= 0, 'no sideways scroll');
 });
 
+// ---------- herdr-android: the agent list on a phone ----------
+
+const HD = `.art-window[data-glass-moment="herdr"]`;
+const HD_PLAY = `${HD} [data-play]`;
+
+test('herdr-android: a phone of frosted glass with the agent list, verbatim from config, in its own light; every line at once with reduced motion', async () => {
+  const page = await at(HERDR);
+  const w = await page.evaluate((HD) => {
+    const win = document.querySelector(HD);
+    const glass = win.querySelector('[data-glass="frosted"]');
+    const glow = win.querySelector('[data-glow]');
+    const r = glass.getBoundingClientRect(), gr = glow.getBoundingClientRect();
+    return {
+      first: win.closest('aside')?.firstElementChild === win,
+      frosted: win.querySelectorAll('[data-glass="frosted"]').length,
+      title: win.querySelector('.glass-title')?.textContent,
+      dots: win.querySelectorAll('.glass-dots').length,
+      glow: glow ? getComputedStyle(glow).backgroundImage : '',
+      spill: Math.max(r.left - gr.left, gr.right - r.right),
+      width: r.width, height: r.height, radius: parseFloat(getComputedStyle(glass).borderTopLeftRadius),
+      centred: Math.abs((r.left + r.right) / 2 - (win.getBoundingClientRect().left + win.getBoundingClientRect().right) / 2),
+      groups: [...win.querySelectorAll('.ag-group')].map((g) => ({
+        state: g.dataset.state,
+        head: [g.querySelector('.ag-label')?.textContent, g.querySelector('.ag-count')?.textContent],
+        rows: [...g.querySelectorAll('.ag-row')].map((row) => ({
+          title: row.querySelector('.ag-title')?.textContent, where: row.querySelector('.ag-where')?.textContent,
+          age: row.querySelector('.ag-age')?.textContent, kind: row.querySelector('.ag-kind')?.textContent ?? null,
+          ask: row.querySelector('.ag-ask')?.textContent ?? null, askFamily: row.querySelector('.ag-ask') ? getComputedStyle(row.querySelector('.ag-ask')).fontFamily : null,
+          marks: row.querySelectorAll('.ag-mark[aria-hidden="true"]').length,
+        })),
+      })),
+      ops: [...win.querySelectorAll('[data-play] .b')].map((b) => getComputedStyle(b).opacity),
+      images: win.querySelectorAll('img').length,
+    };
+  }, HD);
+  const h = projectWindows.herdr;
+  assert.ok(w.first, 'the window opens the right column');
+  assert.equal(w.frosted, 1);
+  assert.equal(w.title, 'Agents');
+  assert.equal(w.dots, 0, 'a phone has no window dots');
+  // a phone: narrow, upright, well rounded, centred in its column
+  assert.ok(w.width >= 350 && w.width <= 400, `as wide as a phone: ${w.width}`);
+  // the light stays with the phone, as with every other window: at most 7% of its width past each side
+  assert.ok(w.spill <= w.width * 0.08, `the glow reaches ${w.spill} px past a ${w.width} px phone`);
+  assert.ok(w.height >= w.width * 1.5, `upright: ${w.width} x ${w.height}`);
+  assert.ok(w.radius >= 28, `rounded like a phone: ${w.radius}`);
+  assert.ok(w.centred <= 1, 'centred in the column');
+  // the list, word for word from config: each group its label and count, each agent its row
+  assert.deepEqual(w.groups.map((g) => g.state), h.groups.map((g) => g.state));
+  assert.deepEqual(w.groups.map((g) => g.head), h.groups.map((g) => [g.label, String(g.rows.length)]));
+  assert.deepEqual(w.groups.flatMap((g) => g.rows.map((r) => [r.title, r.where, r.age, r.kind, r.ask])),
+    h.groups.flatMap((g) => g.rows.map((r) => [r.title, r.where, r.age, r.kind ?? null, r.ask ?? null])));
+  const needs = w.groups[0].rows[0];
+  assert.match(needs.askFamily, /mono/i, 'the request in terminal type');
+  for (const r of w.groups.flatMap((g) => g.rows)) assert.equal(r.marks, 1, `${r.title}: one status mark, hidden from readers`);
+  assert.equal(w.ops.length, 7, 'three headings and four agents');
+  assert.ok(w.ops.every((o) => o === '1'), 'reduced motion: every line shows on arrival');
+  assert.equal(w.images, 0, 'drawn in the page, not a screenshot');
+  // its own light
+  const rgb = (c) => `rgba(${c.join(', ')}`;
+  const { near, deep } = projectLights.herdr;
+  assert.ok(w.glow.includes(rgb(near)) && w.glow.includes(rgb(deep)), `the glow: ${w.glow}`);
+
+  const c = await windowContrast(page, 'herdr', ['.glass-title', '.pw-text', '.pw-quiet', '.pw-strong']);
+  for (const sel of ['.glass-title', '.pw-text', '.pw-quiet', '.pw-strong']) assert.ok(c.some((x) => x.sel === sel), `${sel} measured`);
+  for (const x of c) assert.ok(x.ratio >= 4.5, `herdr-android ${x.sel} at ${x.ratio}:1 (${x.color})`);
+});
+
+test('herdr-android on a phone: the window within 0..390 px, no title cut, no sideways scroll', async () => {
+  const page = await at(HERDR, { width: 390, height: 844 });
+  const b = await box(page, `${HD} [data-glass="frosted"]`);
+  assert.ok(b.left >= 0 && b.right <= 390, `${b.left}..${b.right}`);
+  const over = await page.locator(`${HD} .ag-title, ${HD} .ag-where, ${HD} .ag-ask`).evaluateAll((es) => es.map((e) => e.scrollWidth - e.clientWidth));
+  assert.ok(over.every((o) => o <= 0), `no text cut: ${over}`);
+  assert.ok(await sideways(page) <= 0, 'no sideways scroll');
+});
+
 // ---------- Homelab and Finance Bot: still without JavaScript; the lines land once ----------
 
 test('Still and without JavaScript: Homelab\'s and Finance Bot\'s lines all show', async () => {
-  for (const [route, play] of [[HOMELAB, HL_PLAY], [FINANCE, FIN_PLAY]]) {
+  for (const [route, play, n] of [[HOMELAB, HL_PLAY, 10], [FINANCE, FIN_PLAY, 10], [HERDR, HD_PLAY, 7]]) {
     const page = await at(route, { js: false, motion: 'no-preference' });
     const ops = await opacities(page, play);
-    assert.ok(ops.length >= 10, `${route}: ${ops.length} lines`);
+    assert.ok(ops.length >= n, `${route}: ${ops.length} lines`);
     assert.ok(ops.every((o) => o === '1'), `${route}: every line shows without JavaScript`);
   }
 });

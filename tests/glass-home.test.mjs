@@ -243,7 +243,7 @@ test('each card\'s no-WebGL ground is a soft radial gradient of its own light\'s
 test('each window has a glow of soft radial lights in config: the flame for ANNA, two card lights for the terminal, each project its own', () => {
   // the homepage's five, plus Homelab's dusk and Finance Bot's own (decision 2026-11-10: their windows get their own glows),
   // and /contact's moss (Ezra, 2026-11-10: the bar mapping carries into the pages, Contact = moss)
-  assert.deepEqual(Object.keys(windowGlows).sort(), ['bible', 'cards', 'dusk', 'finance', 'flame', 'henk', 'moss', 'sandbox']);
+  assert.deepEqual(Object.keys(windowGlows).sort(), ['bible', 'cards', 'dusk', 'finance', 'flame', 'henk', 'herdr', 'moss', 'sandbox']);
   // the projects' windows: two lights each, near high on the left, deep low on the right
   for (const id of home.projectChapters) {
     const g = windowGlows[id];

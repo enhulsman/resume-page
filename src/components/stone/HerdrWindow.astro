@@ -1,0 +1,62 @@
+---
+// herdr-android's own window (Ezra, 2026-11-14): the app's Agents screen on a phone of frosted
+// glass, in place of a screenshot: who needs me first (a card with the agent's request in terminal
+// type), then done, then idle, as the app orders them. Every session, space and machine name is
+// invented. Every word from projectWindows.herdr; the glow is herdr-android's own light
+// (windowGlows.herdr). The status marks are drawn, hidden from readers; the state is the group's
+// label. Its lines land once through src/scripts/glass/artefacts.js (the article's inline script
+// hides them first).
+import "../../styles/stone.css";
+import GlassWindow from "./GlassWindow.astro";
+import { projectWindows } from "../../config/home.ts";
+
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+const h = projectWindows.herdr;
+---
+<GlassWindow title={h.title} glow="herdr" class:list={["pj-stage", "pj-stage-herdr", cls]} windowClass="pj-window pj-w-herdr">
+  <div class="pw ag" data-play data-gap="260">
+    {h.groups.map((g) => (
+      <section class="ag-group" data-state={g.state}>
+        <p class="b ag-head"><span class="ag-label pw-strong">{g.label}</span> <span class="ag-count pw-quiet">{g.rows.length}</span></p>
+        {g.rows.map((r) => (
+          <div class="b ag-row">
+            <div class="ag-body">
+              <p class="ag-title pw-strong">{r.title}</p>
+              {"ask" in r && <p class="ag-need"><span class="ag-kind pw-strong">{r.kind}</span> <code class="ag-ask pw-text">{r.ask}</code></p>}
+              <p class="ag-where pw-quiet">{r.where}</p>
+            </div>
+            <span class="ag-age pw-quiet">{r.age}</span>
+            <i class="ag-mark" aria-hidden="true"></i>
+          </div>
+        ))}
+      </section>
+    ))}
+    <i class="ag-home" aria-hidden="true"></i>
+  </div>
+</GlassWindow>
+
+<style is:global>
+  /* a phone: narrow, upright, well rounded; its title is the screen's heading */
+  /* the stage is the phone's own width, so its light stays with it instead of filling the column */
+  .glass-stage.pj-stage-herdr { width: min(100%, 376px); margin-inline: auto; }
+  .glass-window.pj-w-herdr { min-height: 640px; border-radius: 44px; }
+  .pj-w-herdr .glass-bar { height: 70px; padding: 18px 26px 0; border-bottom: 0; }
+  .pj-w-herdr .glass-title { font: 700 24px/1 var(--stone-sans); }
+  .pj-window .ag { display: flex; flex: 1; flex-direction: column; gap: 22px; padding: 10px 16px 16px; font: 14.5px/1.35 var(--stone-sans); }
+  .pj-window .ag-head { padding: 0 10px 6px; font-size: 14px; font-weight: 600; }
+  .pj-window .ag-count { margin-left: 3px; font-weight: 500; }
+  .pj-window .ag-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 9px; align-items: center; gap: 12px; padding: 10px; }
+  .pj-window .ag-title { font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+  .pj-window .ag-where { margin-top: 3px !important; font-size: 13.5px; overflow-wrap: anywhere; }
+  .pj-window .ag-age { font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  /* the marks: done is filled, idle a ring, needs-you the card's own edge and a filled red dot */
+  .pj-window .ag-mark { width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgb(17 17 16 / 0.42); }
+  .pj-window [data-state="done"] .ag-mark { background: rgb(52 96 190); box-shadow: none; }
+  .pj-window [data-state="needs"] .ag-mark { background: rgb(190 52 40); box-shadow: none; }
+  .pj-window [data-state="needs"] .ag-row { padding: 12px 10px 12px 14px; border-radius: 14px; border-left: 3px solid rgb(190 52 40 / 0.9); background: rgb(255 255 255 / 0.34); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4); }
+  .pj-window .ag-need { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 7px; margin: 5px 0 4px !important; }
+  .pj-window .ag-kind { font-size: 13px; font-weight: 650; }
+  .pj-window .ag-ask { padding: 1px 6px; border-radius: 5px; background: rgb(17 17 16 / 0.07); font: 12.5px/1.5 ui-monospace, "JetBrains Mono", Menlo, monospace; overflow-wrap: anywhere; }
+  .pj-window .ag-home { align-self: center; width: 96px; height: 4px; margin-top: auto; border-radius: 2px; background: rgb(17 17 16 / 0.22); }
+</style>

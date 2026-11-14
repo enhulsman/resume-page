@@ -57,7 +57,7 @@ test('innerGlass lists each route\'s moments top to bottom, as the spec names th
     // the drawings in panes get "View larger" too (Ezra, 2026-11-10, chunk 11): the dialog is a moment
     '/projects/PytaigaMcp': ['pytaiga', 'diagram'],
     '/projects/EncryptedChatTUI': [],
-    '/projects/HerdrAndroid': [],
+    '/projects/HerdrAndroid': ['herdr'],
     '/projects/ResumePage': [],
     '/blog': [],
     '/resume': [],
@@ -135,6 +135,10 @@ test('Its own light (config half): Finance Bot\'s window glows in its near and d
   for (const l of g.lights) assert.ok(!mistColours.includes(l.color.join()), `${l.color} is the mist's`);
 });
 
+test('herdr-android\'s window glows in its own light: windowGlows.herdr is its near and deep colours', () => {
+  assert.deepEqual(windowGlows.herdr.lights.map((l) => l.color), [projectLights.herdr.near, projectLights.herdr.deep]);
+});
+
 test('windowGlows.dusk: the homelab card\'s sun and plum, soft, as Homelab\'s light', () => {
   const g = windowGlows.dusk;
   assert.ok(g, 'dusk exists');
@@ -187,6 +191,30 @@ test('Nothing private (config half): no address, secret or path in Homelab\'s wi
   }
   const hosts = projectWindows.homelab.rows.map((r) => r.host).filter(Boolean);
   assert.deepEqual([...new Set(hosts)].sort(), ['rp2', 'rp5', 'vps', 'workstation']);
+});
+
+// ---- herdr-android's window: the agent list on a phone ----
+
+test('The agent list (config half): projectWindows.herdr is the approved list, every name invented', () => {
+  const h = projectWindows.herdr;
+  assert.equal(h.title, 'Agents');
+  assert.deepEqual(h.groups.map((g) => [g.state, g.label, g.rows.length]), [['needs', 'Needs you', 1], ['done', 'Done', 1], ['idle', 'Idle', 2]]);
+  assert.deepEqual(h.groups.flatMap((g) => g.rows.map((r) => [r.title, r.where, r.age])), [
+    ['Docs navigation', 'site / docs · laptop', '2m'],
+    ['Invoice export tests', 'shop / api · desktop', '8m'],
+    ['Changelog draft', 'notes / main · desktop', '3h'],
+    ['Dependency updates', 'shop / web · laptop', '16h'],
+  ]);
+  const [needs] = h.groups[0].rows;
+  assert.deepEqual([needs.kind, needs.ask], ['Permission', 'git push origin main']);
+  // only the agent that needs me carries its request
+  for (const r of h.groups.slice(1).flatMap((g) => g.rows)) assert.equal(r.ask, undefined, r.title);
+  // nothing from a real session: no machine, client or project name of mine
+  assert.doesNotMatch(JSON.stringify(h), /wsl|rp5|rp2|vps|raspberry|anna|anamata|henk|nightshift|herdr/i);
+});
+
+test('The post names its project: herdr-android\'s post links to its project page', () => {
+  assert.equal(readFrontmatter(read('src/pages/blog/herdr-android.mdx')).project, '/projects/HerdrAndroid');
 });
 
 // ---- stone-project-pages: Finance Bot's window ----

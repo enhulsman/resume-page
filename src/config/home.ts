@@ -361,6 +361,25 @@ export const projectWindows = {
       ],
     },
   },
+  /**
+   * herdr-android's page (Ezra, 2026-11-14): the app's Agents screen, who needs me first, then done,
+   * then idle. Every session, space and machine name is invented; nothing is from a real session.
+   */
+  herdr: {
+    title: 'Agents',
+    groups: [
+      { state: 'needs', label: 'Needs you', rows: [
+        { title: 'Docs navigation', where: 'site / docs · laptop', age: '2m', kind: 'Permission', ask: 'git push origin main' },
+      ] },
+      { state: 'done', label: 'Done', rows: [
+        { title: 'Invoice export tests', where: 'shop / api · desktop', age: '8m' },
+      ] },
+      { state: 'idle', label: 'Idle', rows: [
+        { title: 'Changelog draft', where: 'notes / main · desktop', age: '3h' },
+        { title: 'Dependency updates', where: 'shop / web · laptop', age: '16h' },
+      ] },
+    ],
+  },
 };
 /** The projects that hold a window, in page order. */
 export const projectChapters = ['henk', 'sandbox', 'bible'] as const satisfies readonly (keyof typeof projectWindows)[];
