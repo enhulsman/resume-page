@@ -17,7 +17,7 @@ export const groups: { id: Group; label: string }[] = [
 
 export interface DetailListing {
   /** Also the key of its window, its light and, for pytaiga, its drawing in src/components/overzicht/drawings/. */
-  id: 'henk' | 'finance' | 'homelab' | 'bible' | 'pytaiga' | 'sandbox';
+  id: 'henk' | 'finance' | 'homelab' | 'herdr' | 'bible' | 'pytaiga' | 'sandbox';
   title: string;
   text: string;
   /** Strongest first: /projects shows the first two. */
@@ -146,6 +146,19 @@ export const details: DetailListing[] = [
     what: 'Three servers and a workstation on a Tailscale mesh behind Cloudflare tunnels, with Prometheus, recursive DNS and nightly cross-device backups',
     group: 'running',
     href: '/projects/HomelabInfrastructure',
+  },
+  {
+    id: 'herdr',
+    title: 'herdr-android',
+    text: 'An unofficial Android client for herdr, the tool I run my coding agents in. Every agent on every machine in one list, each terminal live as the desk draws it, and an alert through my own ntfy server when one needs me or has finished.',
+    dims: [
+      { value: '14 ms', label: 'for 95% of terminal frames' },
+      { value: '0', label: 'Google services' },
+      { value: '66 ms', label: 'to show an agent\'s last screen' },
+    ],
+    what: 'An Android client for herdr with a live terminal, an agent list and alerts through my own ntfy server',
+    group: 'running',
+    href: '/projects/HerdrAndroid',
   },
   {
     id: 'bible',

@@ -29,7 +29,8 @@ export function strings(...values) {
  */
 export function coverer(corpus) {
   const values = [...new Set(corpus.map(norm))]
-    .filter((v) => (v.match(/\p{L}/gu) || []).length >= 3)
+    // a number with its unit ("14 ms") counts as well, short as it is
+    .filter((v) => (v.match(/\p{L}/gu) || []).length >= 3 || /^\p{N}[\p{N}.,]* \p{L}{1,2}$/u.test(v))
     .sort((a, b) => b.length - a.length)
     .map((v) => new RegExp(
       `${WORDISH.test(v[0]) ? '(?<![\\p{L}\\p{N}])' : ''}${escape(v)}${WORDISH.test(v.at(-1)) ? '(?![\\p{L}\\p{N}])' : ''}`,

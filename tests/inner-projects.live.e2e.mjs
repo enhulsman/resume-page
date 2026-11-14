@@ -5,6 +5,10 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { useBrowser } from './lib/browser.mjs';
+import { details, register } from '../src/config/home.ts';
+
+/** One card per project except ANNA. */
+const CARDS = details.length + register.length;
 
 const BASE = process.env.BASE || 'http://localhost:4321';
 const CARD = '[data-glass-moment="project-cards"] .pc';
@@ -70,7 +74,7 @@ test('One context, and only what shows: one WebGL context; at 1440 and at 390 th
   for (const w of [1440, 390]) {
     await width(page, w);
     const p = await panes();
-    assert.equal(p.length, 8 * 5, 'five panes per card');
+    assert.equal(p.length, CARDS * 5, 'five panes per card');
     assert.ok(p.every((x) => x.card), 'every ribbed pane is a card\'s');
     const a = await draws();
     await tour();
@@ -84,6 +88,6 @@ test('One context, and only what shows: one WebGL context; at 1440 and at 390 th
         if (w === 1440) assert.equal(b[i], 0, `${w}: hidden pane ${i} never drawn`);
       }
     });
-    assert.equal(p.filter((x) => x.shown).length, 8 * (w === 1440 ? 3 : 2), `${w}: panes shown`);
+    assert.equal(p.filter((x) => x.shown).length, CARDS * (w === 1440 ? 3 : 2), `${w}: panes shown`);
   }
 });
